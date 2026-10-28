@@ -208,6 +208,38 @@
   background-color: rgba(46, 37, 32, 0.5) !important;
 }
 
+/* Universal Dark Mode Gradient Adaptation for Cream/Peach Banners */
+.dark [class*="bg-gradient-"][class*="from-\[\#F2DCB5"],
+[data-theme="dark"] [class*="bg-gradient-"][class*="from-\[\#F2DCB5"],
+.dark [class*="bg-gradient-"][class*="from-\[\#FAF6E9"],
+[data-theme="dark"] [class*="bg-gradient-"][class*="from-\[\#FAF6E9"],
+.dark [class*="bg-gradient-"][class*="from-\[\#F4F1E1"],
+[data-theme="dark"] [class*="bg-gradient-"][class*="from-\[\#F4F1E1"] {
+  background-image: linear-gradient(135deg, #2A231E 0%, #201A16 50%, #1A1513 100%) !important;
+  color: #F4F1E1 !important;
+}
+
+/* Ensure secondary / subtle text inside dark gradient containers is crisp */
+.dark [class*="bg-gradient-"] .text-\[\#7A6862\],
+[data-theme="dark"] [class*="bg-gradient-"] .text-\[\#7A6862\] {
+  color: rgba(244, 241, 225, 0.82) !important;
+}
+
+/* Contrast enhancement for accent text colors in dark mode */
+.dark .text-\[\#B26A1B\],
+[data-theme="dark"] .text-\[\#B26A1B\] {
+  color: #F2CAB3 !important;
+}
+.dark .text-\[\#2E7D5E\],
+[data-theme="dark"] .text-\[\#2E7D5E\] {
+  color: #4EE2A7 !important;
+}
+.dark .text-\[\#C54738\],
+[data-theme="dark"] .text-\[\#C54738\] {
+  color: #FA8C7C !important;
+}
+
+
 body {
   background-color: var(--background);
   color: var(--foreground);

@@ -139,25 +139,25 @@ export default function TutorialPage() {
         {/* ============================================================== */}
         {/* HERO SECTION (3D Bridge / ShikshaBot Graphic + Action Buttons)  */}
         {/* ============================================================== */}
-        <div className="relative rounded-3xl bg-gradient-to-br from-[#FAF6E9] via-[#F4F1E1] to-[#F2DCB5]/40 border border-[#49352F]/15 p-6 sm:p-10 shadow-[0_12px_40px_rgba(73,53,47,0.06)] overflow-hidden text-[#49352F]">
+        <div className="relative rounded-3xl bg-gradient-to-br from-[#FAF6E9] via-[#F4F1E1] to-[#F2DCB5]/40 dark:from-[#2A231E] dark:via-[#221C18] dark:to-[#1E1916] border border-[#49352F]/15 dark:border-[#F2CAB3]/25 p-6 sm:p-10 shadow-[0_12px_40px_rgba(73,53,47,0.06)] overflow-hidden text-[#49352F] dark:text-[#F4F1E1]">
           {/* Subtle Ambient Glows */}
-          <div className="absolute top-0 right-0 w-80 h-80 rounded-full bg-[#F2CAB3]/30 blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-1/3 w-80 h-80 rounded-full bg-[#F2DCB5]/40 blur-3xl pointer-events-none" />
+          <div className="absolute top-0 right-0 w-80 h-80 rounded-full bg-[#F2CAB3]/30 dark:bg-[#F2CAB3]/10 blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-1/3 w-80 h-80 rounded-full bg-[#F2DCB5]/40 dark:bg-[#F2DCB5]/10 blur-3xl pointer-events-none" />
 
           <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
             <div className="max-w-2xl space-y-3">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F2CAB3]/60 border border-[#49352F]/15 text-[#49352F] text-xs font-bold">
-                <Sparkles className="w-3.5 h-3.5 text-[#B26A1B]" />
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F2CAB3]/60 dark:bg-[#F2CAB3]/20 border border-[#49352F]/15 dark:border-[#F2CAB3]/30 text-[#49352F] dark:text-[#F4F1E1] text-xs font-bold">
+                <Sparkles className="w-3.5 h-3.5 text-[#B26A1B] dark:text-[#F2CAB3]" />
                 <span>
                   {t.tutorial?.badge || (language === "gu" ? "ગુજરાત પ્રાથમિક શિક્ષક માર્ગદર્શિકા" : "Gujarat Primary Teacher Guide")}
                 </span>
               </div>
 
-              <h1 className="font-heading text-2xl sm:text-4xl font-extrabold tracking-tight text-[#49352F] leading-tight">
+              <h1 className="font-heading text-2xl sm:text-4xl font-extrabold tracking-tight text-[#49352F] dark:text-[#F4F1E1] leading-tight">
                 {t.tutorial?.heroTitle || (language === "gu" ? "૫ મિનિટમાં StudySaathi AI શીખો" : "Learn StudySaathi AI in 5 Minutes")}
               </h1>
 
-              <p className="text-xs sm:text-sm text-[#7A6862] leading-relaxed font-normal">
+              <p className="text-xs sm:text-sm text-[#7A6862] dark:text-[#FAF6E9]/80 leading-relaxed font-normal">
                 {t.tutorial?.heroSubtitle ||
                   (language === "gu"
                     ? "શિક્ષણ ત્રુટિઓ શોધવા, ૫-પગલાંની ઉપચાર યોજના અમલમાં મૂકવા અને પરિણામ સુધારવા માટેની સરળ, દ્રશ્ય અને દ્વિભાષી માર્ગદર્શિકા."
@@ -170,7 +170,7 @@ export default function TutorialPage() {
                   variant="saffron"
                   size="sm"
                   onClick={() => triggerPageTour("dashboard")}
-                  className="rounded-full text-xs font-bold shadow-md"
+                  className="rounded-full text-xs font-bold shadow-md cursor-pointer"
                 >
                   <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
                   <span>{t.tutorial?.replayTour || (language === "gu" ? "માર્ગદર્શિત ટૂર ફરી જુઓ" : "Replay Guided Tour")}</span>
@@ -180,30 +180,30 @@ export default function TutorialPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => setShowPrintModal(true)}
-                  className="rounded-full text-xs border-[#49352F]/15 bg-white text-[#49352F] hover:bg-[#FAF6E9]"
+                  className="rounded-full text-xs border-[#49352F]/15 dark:border-[#F2CAB3]/25 bg-white dark:bg-[#26201C] text-[#49352F] dark:text-[#F4F1E1] hover:bg-[#FAF6E9] dark:hover:bg-[#352B24] cursor-pointer"
                 >
-                  <Printer className="w-3.5 h-3.5 mr-1.5 text-[#B26A1B]" />
+                  <Printer className="w-3.5 h-3.5 mr-1.5 text-[#B26A1B] dark:text-[#F2CAB3]" />
                   <span>{t.tutorial?.quickStartPrint || (language === "gu" ? "ઝડપી શરૂઆત માર્ગદર્શિકા પ્રિન્ટ કરો" : "Download / Print Quick-Start Guide")}</span>
                 </Button>
 
                 <button
                   type="button"
                   onClick={() => setActiveTab("sandbox")}
-                  className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/80 hover:bg-white text-[#49352F] border border-[#49352F]/12 transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
+                  className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/80 dark:bg-[#26201C] hover:bg-white dark:hover:bg-[#352B24] text-[#49352F] dark:text-[#F4F1E1] border border-[#49352F]/12 dark:border-[#F2CAB3]/20 transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
                 >
-                  <Play className="w-3 h-3 text-[#2E7D5E]" />
+                  <Play className="w-3 h-3 text-[#2E7D5E] dark:text-[#5FE3B2]" />
                   <span>{t.tutorial?.trySandbox || (language === "gu" ? "ઇન્ટરેક્ટિવ ડેમો અજમાવો" : "Try Interactive Sandbox")}</span>
                 </button>
               </div>
             </div>
 
             {/* Visual 3D Bridge / ShikshaBot Graphic Card */}
-            <div className="relative w-full lg:w-72 h-48 sm:h-56 rounded-3xl bg-white border border-[#49352F]/15 p-4 flex flex-col justify-between shadow-md shrink-0">
+            <div className="relative w-full lg:w-72 h-48 sm:h-56 rounded-3xl bg-white dark:bg-[#221C18] border border-[#49352F]/15 dark:border-[#F2CAB3]/25 p-4 flex flex-col justify-between shadow-md shrink-0 text-[#49352F] dark:text-[#F4F1E1]">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-mono uppercase font-bold text-[#7A6862]">
+                <span className="text-[10px] font-mono uppercase font-bold text-[#7A6862] dark:text-[#FAF6E9]/60">
                   Pedagogical Bridge Engine
                 </span>
-                <span className="px-2 py-0.5 rounded-full bg-[#2E7D5E]/15 text-[#2E7D5E] text-[10px] font-extrabold border border-[#2E7D5E]/20">
+                <span className="px-2 py-0.5 rounded-full bg-[#2E7D5E]/15 text-[#2E7D5E] dark:text-[#5FE3B2] text-[10px] font-extrabold border border-[#2E7D5E]/20 dark:border-[#2E7D5E]/40">
                   100% Offline PWA
                 </span>
               </div>
@@ -211,20 +211,20 @@ export default function TutorialPage() {
               {/* Miniature Bridge Diagram Visual */}
               <div className="space-y-2 py-1">
                 <div className="flex items-center justify-between text-xs font-bold">
-                  <span className="text-[#C54738] flex items-center gap-1">
+                  <span className="text-[#C54738] dark:text-[#FA8C7C] flex items-center gap-1">
                     <span>Gap: 35%</span>
                   </span>
-                  <span className="text-[#B26A1B] font-extrabold text-[11px]">+50 pp Gain</span>
-                  <span className="text-[#2E7D5E] flex items-center gap-1">
+                  <span className="text-[#B26A1B] dark:text-[#F2CAB3] font-extrabold text-[11px]">+50 pp Gain</span>
+                  <span className="text-[#2E7D5E] dark:text-[#5FE3B2] flex items-center gap-1">
                     <span>Mastery: 85%</span>
                   </span>
                 </div>
 
-                <div className="relative h-3 w-full bg-[#FAF6E9] border border-[#49352F]/10 rounded-full overflow-hidden p-0.5">
+                <div className="relative h-3 w-full bg-[#FAF6E9] dark:bg-[#1B1614] border border-[#49352F]/10 dark:border-[#F2CAB3]/20 rounded-full overflow-hidden p-0.5">
                   <div className="h-full bg-gradient-to-r from-[#C54738] via-[#B26A1B] to-[#2E7D5E] rounded-full w-full animate-pulse" />
                 </div>
 
-                <div className="flex items-center justify-between text-[10px] text-[#7A6862] font-mono">
+                <div className="flex items-center justify-between text-[10px] text-[#7A6862] dark:text-[#FAF6E9]/60 font-mono">
                   <span>Baseline</span>
                   <span>5-Step Remedial</span>
                   <span>Verified Re-test</span>
@@ -232,11 +232,11 @@ export default function TutorialPage() {
               </div>
 
               {/* Bot Avatar Callout */}
-              <div className="p-2 rounded-2xl bg-[#FAF6E9] border border-[#49352F]/10 flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-[#F2CAB3] text-[#49352F] flex items-center justify-center shrink-0">
-                  <Bot className="w-3.5 h-3.5 text-[#49352F]" aria-hidden="true" />
+              <div className="p-2 rounded-2xl bg-[#FAF6E9] dark:bg-[#1B1614] border border-[#49352F]/10 dark:border-[#F2CAB3]/20 flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full bg-[#F2CAB3] dark:bg-[#F2CAB3]/25 text-[#49352F] dark:text-[#F4F1E1] flex items-center justify-center shrink-0">
+                  <Bot className="w-3.5 h-3.5 text-[#49352F] dark:text-[#F4F1E1]" aria-hidden="true" />
                 </div>
-                <p className="text-[10px] text-[#49352F] leading-tight">
+                <p className="text-[10px] text-[#49352F] dark:text-[#F4F1E1] leading-tight">
                   {language === "gu"
                     ? "સાથીબોટ: કોઈ જટિલ સેટઅપ નથી. ૨ મિનિટમાં પરિણામ જુઓ!"
                     : "SaathiBot: Zero configuration needed. See student gains in 2 minutes!"}

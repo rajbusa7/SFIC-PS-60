@@ -23,3 +23,4 @@ CREATE INDEX IF NOT EXISTS idx_users_email ON users(LOWER(email));
 CREATE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id);
 CREATE INDEX IF NOT EXISTS idx_users_school ON users(school_id);
 CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+

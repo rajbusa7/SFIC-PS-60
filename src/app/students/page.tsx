@@ -28,6 +28,8 @@ import {
   Trash2,
   Edit,
   AlertCircle,
+  Clock,
+  Building,
 } from "lucide-react";
 
 export default function StudentsPage() {
@@ -36,6 +38,7 @@ export default function StudentsPage() {
 
   const [students, setStudents] = useState<any[]>([]);
   const [gaps, setGaps] = useState<any[]>([]);
+  const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState<{
     type: "success" | "error";
@@ -59,13 +62,19 @@ export default function StudentsPage() {
   const fetchStudents = async () => {
     setLoading(true);
     try {
-      const [stdRes, gapsRes] = await Promise.all([
+      const [stdRes, gapsRes, resultsRes] = await Promise.all([
         fetch("/api/students", { cache: "no-store" }),
         fetch("/api/learning-gaps", { cache: "no-store" }),
+        fetch("/api/assessments/results", { cache: "no-store" }),
       ]);
-      const [stdData, gapsData] = await Promise.all([stdRes.json(), gapsRes.json()]);
+      const [stdData, gapsData, resultsData] = await Promise.all([
+        stdRes.json(),
+        gapsRes.json(),
+        resultsRes.json(),
+      ]);
       if (stdData.success) setStudents(stdData.students || []);
       if (gapsData.success) setGaps(gapsData.gaps || []);
+      if (resultsData.success) setResults(resultsData.results || []);
     } catch (e) {
       console.error("Failed to load students", e);
       showToast(
@@ -386,6 +395,8 @@ export default function StudentsPage() {
           {filteredStudents.map((std) => {
             const gapCount = getStudentGapCount(std.id);
             const isDemoCase = std.id === "std-aarav";
+            const studentResults = results.filter((r) => r.studentId === std.id);
+            const hasAssessments = studentResults.length > 0;
 
             return (
               <Card
@@ -423,11 +434,16 @@ export default function StudentsPage() {
                       </div>
                     </div>
 
-                    <Badge variant="outline" size="sm">
-                      {language === "gu"
-                        ? `ધોરણ ${std.grade}-${std.section}`
-                        : `Class ${std.grade}-${std.section}`}
-                    </Badge>
+                    <div className="flex flex-col items-end gap-1">
+                      <Badge variant="outline" size="sm">
+                        {language === "gu"
+                          ? `ધોરણ ${std.grade}-${std.section}`
+                          : `Class ${std.grade}-${std.section}`}
+                      </Badge>
+                      <span className="text-[10px] text-[#7A6862] font-medium hidden sm:inline">
+                        Model Primary School
+                      </span>
+                    </div>
                   </div>
 
                   {std.notes && (
@@ -439,7 +455,12 @@ export default function StudentsPage() {
 
                 <div className="mt-4 pt-3 border-t border-[#49352F]/10 flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
-                    {gapCount > 0 ? (
+                    {!hasAssessments ? (
+                      <Badge variant="outline" size="sm" className="bg-[#FAF6E9] border-[#49352F]/15 text-[#7A6862]">
+                        <Clock className="w-3 h-3 mr-1 text-[#B26A1B]" aria-hidden="true" />
+                        <span>{language === "gu" ? "મૂલ્યાંકન બાકી" : "Assessment Pending"}</span>
+                      </Badge>
+                    ) : gapCount > 0 ? (
                       <Badge variant="needsSupport" size="sm" dot>
                         <AlertTriangle className="w-3 h-3 mr-1 text-[#C54738]" aria-hidden="true" />
                         <span>

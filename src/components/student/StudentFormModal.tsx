@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Dialog } from "../ui/Dialog";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Building, Sparkles } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { broadcastDataUpdate } from "@/lib/events";
 import type { Student } from "@/lib/types";
@@ -68,11 +68,20 @@ export function StudentFormModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!displayName.trim() || !studentCode.trim()) {
+    if (!displayName.trim()) {
       setError(
         language === "gu"
-          ? "કૃપા કરીને વિદ્યાર્થીનું નામ અને રોલ કોડ બંને આપો."
-          : "Please provide both student name and roll code."
+          ? "કૃપા કરીને વિદ્યાર્થીનું પૂરું નામ દાખલ કરો."
+          : "Please enter the student's full name."
+      );
+      return;
+    }
+
+    if (!studentCode.trim()) {
+      setError(
+        language === "gu"
+          ? "કૃપા કરીને વિદ્યાર્થી કોડ / રોલ નંબર દાખલ કરો."
+          : "Please enter student code / roll number."
       );
       return;
     }
@@ -100,19 +109,23 @@ export function StudentFormModal({
       });
 
       const data = await res.json();
-      if (data.success) {
+      if (res.ok && data.success) {
         broadcastDataUpdate("students", student ? "update" : "create", data.student?.id);
         onSuccess();
         onClose();
       } else {
         setError(
           data.error ||
-            (language === "gu" ? "વિદ્યાર્થી રેકોર્ડ સાચવવામાં નિષ્ફળ" : "Failed to save student record")
+            (language === "gu"
+              ? "વિદ્યાર્થી રેકોર્ડ સાચવવામાં નિષ્ફળ"
+              : "Failed to save student record")
         );
       }
     } catch {
       setError(
-        language === "gu" ? "નેટવર્ક ભૂલ: વિદ્યાર્થી સાચવી શકાયો નથી" : "Network error saving student"
+        language === "gu"
+          ? "નેટવર્ક ભૂલ: વિદ્યાર્થી સાચવી શકાયો નથી"
+          : "Network error saving student to database"
       );
     } finally {
       setIsSubmitting(false);
@@ -140,6 +153,17 @@ export function StudentFormModal({
       maxWidth="md"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* School Association Display */}
+        <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#FAF6E9] border border-[#49352F]/10 text-xs">
+          <span className="text-[#7A6862] font-semibold flex items-center gap-1.5">
+            <Building className="w-3.5 h-3.5 text-[#B26A1B]" />
+            {language === "gu" ? "શાળા સંલગ્નતા:" : "School Association:"}
+          </span>
+          <span className="font-bold text-[#49352F] font-heading">
+            Model Primary School, Gandhinagar
+          </span>
+        </div>
+
         <div>
           <label className="block text-xs font-semibold text-[#49352F] mb-1">
             {language === "gu" ? "વિદ્યાર્થીનું પૂરું નામ" : "Student Full Name"}{" "}
@@ -149,7 +173,10 @@ export function StudentFormModal({
             type="text"
             required
             value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
+            onChange={(e) => {
+              setDisplayName(e.target.value);
+              if (error) setError(null);
+            }}
             placeholder={language === "gu" ? "દા.ત. આરવ પટેલ" : "e.g. Aarav Patel"}
             className="w-full rounded-xl border border-[#49352F]/15 bg-white p-2.5 text-sm text-[#49352F] focus:border-[#B26A1B] focus:ring-1 focus:ring-[#B26A1B] outline-hidden"
           />
@@ -241,19 +268,28 @@ export function StudentFormModal({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="px-5 py-2 text-xs font-bold bg-[#F2CAB3] hover:bg-white text-[#49352F] border border-[#49352F]/16 rounded-xl shadow-xs transition-colors cursor-pointer disabled:opacity-50"
+            className="px-5 py-2 text-xs font-bold bg-[#F2CAB3] hover:bg-white text-[#49352F] border border-[#49352F]/16 rounded-xl shadow-xs transition-colors cursor-pointer disabled:opacity-50 inline-flex items-center gap-1.5"
           >
-            {isSubmitting
-              ? language === "gu"
-                ? "સાચવી રહ્યું છે..."
-                : "Saving..."
-              : student
-              ? language === "gu"
-                ? "વિદ્યાર્થી અપડેટ કરો"
-                : "Update Student"
-              : language === "gu"
-              ? "વિદ્યાર્થી નોંધણી કરો"
-              : "Register Student"}
+            {isSubmitting ? (
+              <>
+                <Sparkles className="w-3.5 h-3.5 animate-spin text-[#B26A1B]" />
+                <span>
+                  {language === "gu"
+                    ? "ડેટાબેઝમાં સાચવી રહ્યું છે..."
+                    : "Saving to Database..."}
+                </span>
+              </>
+            ) : student ? (
+              language === "gu" ? (
+                "વિદ્યાર્થી અપડેટ કરો"
+              ) : (
+                "Update Student"
+              )
+            ) : language === "gu" ? (
+              "વિદ્યાર્થી નોંધણી કરો"
+            ) : (
+              "Register Student"
+            )}
           </button>
         </div>
       </form>

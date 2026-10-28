@@ -34,19 +34,48 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { studentCode, displayName, classroomId, grade, section, enrollmentStatus, notes } = body;
-
-    if (!studentCode?.trim() || !displayName?.trim() || !grade) {
+    if (!body || typeof body !== "object") {
       return NextResponse.json(
-        { success: false, error: "Missing required student fields (name, student code, grade)" },
+        { success: false, error: "Invalid JSON request body" },
         { status: 400, headers: noCacheHeaders }
       );
     }
 
-    const trimmedCode = studentCode.trim();
-    const trimmedName = displayName.trim();
+    const { studentCode, displayName, classroomId, grade, section, enrollmentStatus, notes } = body;
+
+    const trimmedName = typeof displayName === "string" ? displayName.trim() : "";
+    const trimmedCode = typeof studentCode === "string" ? studentCode.trim() : "";
     const parsedGrade = Number(grade);
-    const sec = (section || "A").trim().toUpperCase();
+    const sec = typeof section === "string" && section.trim() ? section.trim().toUpperCase() : "A";
+
+    if (!trimmedName || trimmedName.length < 2) {
+      return NextResponse.json(
+        { success: false, error: "Student full name is required (minimum 2 characters)" },
+        { status: 400, headers: noCacheHeaders }
+      );
+    }
+
+    if (!trimmedCode || trimmedCode.length < 2) {
+      return NextResponse.json(
+        { success: false, error: "Student code / roll number is required (minimum 2 characters)" },
+        { status: 400, headers: noCacheHeaders }
+      );
+    }
+
+    if (isNaN(parsedGrade) || parsedGrade < 1 || parsedGrade > 5) {
+      return NextResponse.json(
+        { success: false, error: "Grade must be an integer between 1 and 5 (Primary School)" },
+        { status: 400, headers: noCacheHeaders }
+      );
+    }
+
+    if (!["A", "B", "C"].includes(sec)) {
+      return NextResponse.json(
+        { success: false, error: "Section must be A, B, or C" },
+        { status: 400, headers: noCacheHeaders }
+      );
+    }
+
     const clsId = classroomId || `cls-${parsedGrade}${sec.toLowerCase()}`;
 
     // Duplicate check on roll / student code
@@ -68,17 +97,17 @@ export async function POST(request: Request) {
       grade: parsedGrade,
       section: sec,
       enrollmentStatus: enrollmentStatus || "active",
-      notes: notes?.trim() || "",
+      notes: typeof notes === "string" ? notes.trim() : "",
     });
 
     return NextResponse.json(
       { success: true, student: newStudent },
-      { status: 200, headers: noCacheHeaders }
+      { status: 201, headers: noCacheHeaders }
     );
   } catch (error) {
     console.error("API POST /api/students error:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to add student" },
+      { success: false, error: "Failed to add student to database" },
       { status: 500, headers: noCacheHeaders }
     );
   }

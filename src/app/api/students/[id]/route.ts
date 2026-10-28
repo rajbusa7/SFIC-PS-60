@@ -77,6 +77,15 @@ export async function PUT(
       }
     }
 
+    if (updates.grade !== undefined || updates.section !== undefined) {
+      const existing = await db.getStudentByIdAsync(id);
+      if (existing) {
+        const g = updates.grade !== undefined ? Number(updates.grade) : existing.grade;
+        const s = updates.section !== undefined ? String(updates.section).trim().toUpperCase() : existing.section;
+        updates.classroomId = `cls-${g}${s.toLowerCase()}`;
+      }
+    }
+
     const updated = await db.updateStudentAsync(id, updates);
 
     if (!updated) {

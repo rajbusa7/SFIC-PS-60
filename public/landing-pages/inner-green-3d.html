@@ -177,11 +177,12 @@
 
   /* dock brand anchor mark */
   .dock-mark{
-    width:calc(36 * var(--u)); padding:0;
+    width:auto; padding:0 calc(12 * var(--u));
     background:var(--color-peach); border-color:rgba(73,53,47,.14); color:var(--ink);
-    overflow:hidden;
+    overflow:hidden; display:inline-flex; align-items:center; gap:calc(8 * var(--u));
   }
-  .dock-mark svg{ width:58%; height:58%; display:block; fill:currentColor; }
+  .dock-mark svg{ width:calc(16 * var(--u)); height:calc(18 * var(--u)); display:block; fill:currentColor; shrink:0; }
+  .dock-mark .dock-brand-text{ font-weight:800; font-size:calc(13 * var(--u)); letter-spacing:-0.01em; white-space:nowrap; }
   .dock-mark[data-near="true"]{ background:#ffffff; border-color:var(--color-peach); color:var(--ink); }
 
   .dock-item.is-active{
@@ -1129,6 +1130,7 @@
           <path d="M11 1.3c-2.1 0-3.95 1.2-4.75 2.95C3.95 4.55 2.3 6.25 2.3 8.35c0 2.3 1.9 4.2 4.3 4.2h8.8c2.4 0 4.3-1.9 4.3-4.2 0-2.1-1.65-3.8-4-4.1C14.95 2.5 13.1 1.3 11 1.3Z"/>
           <path d="M9.6 12.55h2.8v4.2c1.35.3 2.45 1.15 3.15 2.4-1.35.4-2.4.15-3.15-.4v4.15H9.6v-4.15c-.75.55-1.8.8-3.15.4.7-1.25 1.8-2.1 3.15-2.4v-4.2Z"/>
         </svg>
+        <span class="dock-brand-text">StudySaathi <span style="color:#B26A1B;">AI</span></span>
       </a>
       <a class="dock-item is-active" data-dock data-spec data-burst href="#hero" style="--d:180ms" aria-label="Home">
         <span class="glyph" aria-hidden="true">
@@ -1208,6 +1210,7 @@
     </span>
 
     <h1 class="headline" style="--pd:18; --pr:1.2">
+      <span style="display:inline-flex; align-items:center; gap:calc(8 * var(--u)); padding:calc(4 * var(--u)) calc(12 * var(--u)); border-radius:calc(16 * var(--u)); background:var(--color-peach); border:1px solid rgba(73,53,47,0.18); font-size:calc(13 * var(--u)); font-weight:800; color:var(--ink); letter-spacing:0.04em; text-transform:uppercase; margin-bottom:calc(12 * var(--u));"><i style="--d:180ms">✨ StudySaathi AI Platform</i></span>
       <span><i style="--d:260ms">Every Child Can Learn.</i></span>
       <span><i style="--d:360ms">AI Helps Us Find the Way.</i></span>
     </h1>

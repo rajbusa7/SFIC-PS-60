@@ -210,7 +210,7 @@ export default function LearningGapsPage() {
           </div>
 
           {/* Sandbox Live Impact Stat Banner */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-[#49352F]/10 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-[#49352F]/10 text-xs">
             <div className="p-2.5 rounded-xl bg-white/90 border border-[#49352F]/10 text-center shadow-xs">
               <span className="text-[10px] text-[#7A6862] block font-semibold">
                 {language === "gu" ? "મર્યાદા નીચે ચિહ્નિત" : "Flagged Under Threshold"}
@@ -226,20 +226,6 @@ export default function LearningGapsPage() {
               <span className="text-lg font-black text-[#2E7D5E]">
                 {masteredCount} {language === "gu" ? "સંકલ્પનાઓ" : "Concepts"}
               </span>
-            </div>
-            <div className="p-2.5 rounded-xl bg-white/90 border border-[#49352F]/10 text-center shadow-xs">
-              <span className="text-[10px] text-[#7A6862] block font-semibold">
-                {language === "gu" ? "નિર્ણય એન્જિન" : "Decision Engine"}
-              </span>
-              <span className="text-lg font-black text-[#B26A1B]">
-                {language === "gu" ? "ચોક્કસ નિયમ આધારિત" : "Deterministic"}
-              </span>
-            </div>
-            <div className="p-2.5 rounded-xl bg-white/90 border border-[#49352F]/10 text-center shadow-xs">
-              <span className="text-[10px] text-[#7A6862] block font-semibold">
-                {language === "gu" ? "API વિલંબ / ખર્ચ" : "API Latency / Cost"}
-              </span>
-              <span className="text-lg font-black text-[#2E7D5E]">0ms • $0.00</span>
             </div>
           </div>
         </Card>

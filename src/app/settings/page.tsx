@@ -6,9 +6,13 @@ import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/Ca
 import { Badge } from "@/components/ui/Badge";
 import { useLanguage } from "@/context/LanguageContext";
 import { useTheme } from "@/context/ThemeContext";
+import { useAuth } from "@/context/AuthContext";
+import { useSettings } from "@/context/SettingsContext";
 import { broadcastDataUpdate } from "@/lib/events";
 import {
   Settings,
+  Bot,
+  Sparkles,
   ShieldCheck,
   RotateCcw,
   Sliders,
@@ -31,6 +35,67 @@ export default function SettingsPage() {
   const [developingThreshold, setDevelopingThreshold] = useState<number>(60);
   const [preferredLang, setPreferredLang] = useState<"en" | "gu">("en");
   const [enableAiAssist, setEnableAiAssist] = useState<boolean>(true);
+
+  // Authentication & AI Assistant Name
+  const { role } = useAuth();
+  const { aiAssistantName, updateAssistantName } = useSettings();
+  const [assistantNameInput, setAssistantNameInput] = useState<string>("Study Buddy");
+  const [assistantSavedSuccess, setAssistantSavedSuccess] = useState<boolean>(false);
+  const [assistantError, setAssistantError] = useState<string | null>(null);
+  const [assistantSaving, setAssistantSaving] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (aiAssistantName) {
+      setAssistantNameInput(aiAssistantName);
+    }
+  }, [aiAssistantName]);
+
+  const handleSaveAssistantName = async () => {
+    const trimmed = assistantNameInput.trim();
+    if (!trimmed) {
+      setAssistantError(
+        language === "gu"
+          ? "AI સહાયકનું નામ ખાલી ન હોઈ શકે."
+          : "AI Assistant Name cannot be empty or contain only whitespace."
+      );
+      return;
+    }
+    if (trimmed.length > 60) {
+      setAssistantError(
+        language === "gu"
+          ? "AI સહાયકનું નામ 60 અક્ષરોથી વધુ ન હોઈ શકે."
+          : "AI Assistant Name cannot exceed 60 characters."
+      );
+      return;
+    }
+    if (role !== "admin") {
+      setAssistantError(
+        language === "gu"
+          ? "ફક્ત પ્રશાસક (Admin) જ AI સહાયકનું નામ બદલી શકે છે."
+          : "Only administrators have privileges to modify the global AI assistant name."
+      );
+      return;
+    }
+
+    setAssistantSaving(true);
+    setAssistantError(null);
+    setAssistantSavedSuccess(false);
+
+    const result = await updateAssistantName(trimmed);
+    setAssistantSaving(false);
+
+    if (result.success) {
+      setAssistantSavedSuccess(true);
+      setTimeout(() => setAssistantSavedSuccess(false), 3500);
+    } else {
+      setAssistantError(result.error || "Failed to save AI assistant name.");
+    }
+  };
+
+  const handleResetAssistantName = () => {
+    setAssistantNameInput("Study Buddy");
+    setAssistantError(null);
+  };
 
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
@@ -79,6 +144,9 @@ export default function SettingsPage() {
           setDevelopingThreshold(data.settings.developingThreshold);
           setPreferredLang(data.settings.preferredLanguage);
           setEnableAiAssist(data.settings.enableAiAssist);
+          if (data.settings.aiAssistantName) {
+            setAssistantNameInput(data.settings.aiAssistantName);
+          }
         }
       } catch (e) {
         console.error("Failed to load settings", e);
@@ -433,6 +501,220 @@ export default function SettingsPage() {
                       : "Works 100% offline with zero paid API keys required."}
                   </span>
                 </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* Card: AI Assistant Settings & Customization */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-2">
+                  <Bot className="w-5 h-5 text-[#B26A1B]" />
+                  <div>
+                    <CardTitle>
+                      {language === "gu" ? "AI સહાયક સેટિંગ્સ" : "AI Assistant Settings"}
+                    </CardTitle>
+                    <CardDescription>
+                      {language === "gu"
+                        ? "શિક્ષક ડેશબોર્ડ, AI વર્કસ્પેસ અને વિદ્યાર્થી હસ્તક્ષેપમાં વપરાતું પ્રદર્શન નામ કસ્ટમાઇઝ કરો."
+                        : "Customize the display name used across the teacher dashboard, AI workspace, and student interventions."}
+                    </CardDescription>
+                  </div>
+                </div>
+                <Badge
+                  variant={role === "admin" ? "mint" : "saffron"}
+                  size="sm"
+                  className="hidden sm:inline-flex"
+                >
+                  {role === "admin"
+                    ? (language === "gu" ? "પ્રશાસક સત્તા" : "Admin Authorized")
+                    : (language === "gu" ? "શિક્ષક મોડ (વાંચન માત્ર)" : "Teacher View (Read Only)")}
+                </Badge>
+              </div>
+            </CardHeader>
+
+            <div className="space-y-4">
+              {/* RBAC Notice if user is not admin */}
+              {role !== "admin" && (
+                <div className="p-3 rounded-xl bg-[#FAF6E9] border border-[#B26A1B]/20 text-xs text-[#49352F] flex items-start gap-2">
+                  <Lock className="w-4 h-4 text-[#B26A1B] shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-bold text-[#8D4E10]">
+                      {language === "gu" ? "પ્રશાસક વિશેષાધિકાર આવશ્યક છે:" : "Administrative Privileges Required:"}
+                    </p>
+                    <p className="text-[11px] text-[#7A6862] mt-0.5">
+                      {language === "gu"
+                        ? "માત્ર પ્રશાસક ભૂમિકા ધરાવતા વપરાશકર્તાઓ વૈશ્વિક AI સહાયકનું નામ બદલી શકે છે. નામ બદલવા માટે હેડરમાં પ્રશાસક મોડ સ્વિચ કરો."
+                        : "Only users with administrative privileges can modify the global AI assistant name. Switch to Admin role in the top header to edit."}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Name Input Field */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-semibold text-[#49352F]">
+                    {language === "gu" ? "AI સહાયકનું નામ" : "AI Assistant Name"}
+                  </label>
+                  <span className="text-[11px] font-mono text-[#7A6862]">
+                    {assistantNameInput.length}/60
+                  </span>
+                </div>
+                <div className="relative">
+                  <input
+                    type="text"
+                    maxLength={60}
+                    disabled={role !== "admin" || assistantSaving}
+                    value={assistantNameInput}
+                    onChange={(e) => {
+                      setAssistantNameInput(e.target.value);
+                      setAssistantError(null);
+                    }}
+                    placeholder="e.g. Study Buddy, Vidya Assistant, Shiksha AI"
+                    className="w-full rounded-xl border border-[#49352F]/15 bg-white p-2.5 text-sm font-bold text-[#49352F] focus:border-[#B26A1B] focus:ring-1 focus:ring-[#B26A1B] outline-hidden disabled:bg-gray-50 disabled:text-[#7A6862]"
+                  />
+                </div>
+                <p className="text-[11px] text-[#7A6862] mt-1.5 leading-relaxed">
+                  {language === "gu"
+                    ? "શિક્ષક ડેશબોર્ડ, AI વર્કસ્પેસ અને વિદ્યાર્થી હસ્તક્ષેપમાં વપરાતું પ્રદર્શન નામ કસ્ટમાઇઝ કરો."
+                    : "Customize the display name used across the teacher dashboard, AI workspace, and student interventions."}
+                </p>
+              </div>
+
+              {/* Quick Presets */}
+              {role === "admin" && (
+                <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                  <span className="text-[11px] font-semibold text-[#7A6862] mr-1">
+                    {language === "gu" ? "સૂચવેલા નામો:" : "Suggested Examples:"}
+                  </span>
+                  {[
+                    "Study Buddy",
+                    "Vidya Assistant",
+                    "Shiksha AI",
+                    "Classroom Copilot",
+                    "Pratham Saathi",
+                  ].map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => {
+                        setAssistantNameInput(preset);
+                        setAssistantError(null);
+                      }}
+                      className={`text-[11px] px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
+                        assistantNameInput === preset
+                          ? "bg-[#261B16] text-[#FAF6E9] border-[#261B16] font-bold shadow-xs"
+                          : "bg-white border-[#49352F]/15 text-[#49352F] hover:bg-[#FAF6E9]"
+                      }`}
+                    >
+                      {preset}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Real-Time Live Preview Card */}
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-[#FAF6E9] via-white to-[#F2CAB3]/30 border border-[#49352F]/15 space-y-3">
+                <div className="flex items-center justify-between border-b border-[#49352F]/10 pb-2">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-[#B26A1B]" />
+                    <span className="text-xs font-bold text-[#49352F]">
+                      {language === "gu" ? "રીઅલ-ટાઇમ પ્રિવ્યૂ" : "Real-Time Preview"}
+                    </span>
+                  </div>
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#2E7D5E]/15 border border-[#2E7D5E]/20 text-[10px] font-bold text-[#2E7D5E]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#2E7D5E] animate-pulse" />
+                    <span>[{assistantNameInput.trim() || "Study Buddy"}] Active</span>
+                  </div>
+                </div>
+
+                {/* Sample Chat Message Header Preview */}
+                <div className="p-2.5 rounded-xl bg-white border border-[#49352F]/10 shadow-xs flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-[#FAF6E9] border border-[#49352F]/15 flex items-center justify-center text-xs font-bold text-[#8D4E10]">
+                      {(assistantNameInput.trim() || "Study Buddy").charAt(0)}
+                    </div>
+                    <div>
+                      <span className="text-xs font-bold text-[#49352F] block">
+                        Chat with {assistantNameInput.trim() || "Study Buddy"}
+                      </span>
+                      <span className="text-[10px] text-[#7A6862]">
+                        {language === "gu" ? "શિક્ષણશાસ્ત્રીય કોચિંગ અને ઉપચાર યોજનાઓ" : "Pedagogical coaching & classroom support"}
+                      </span>
+                    </div>
+                  </div>
+                  <Badge variant="mint" size="sm">Online</Badge>
+                </div>
+
+                {/* Live Chat Bubble Preview */}
+                <div className="p-3 rounded-xl bg-white border border-[#49352F]/10 shadow-xs flex items-start gap-2.5">
+                  <div className="w-6 h-6 rounded-md bg-[#2E7D5E]/15 border border-[#2E7D5E]/25 flex items-center justify-center text-[11px] font-bold text-[#2E7D5E] shrink-0 mt-0.5">
+                    <Bot className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="text-xs text-[#49352F] leading-relaxed">
+                    <p className="font-semibold text-[#8D4E10] text-[11px] mb-0.5">
+                      {assistantNameInput.trim() || "Study Buddy"}
+                    </p>
+                    <p>
+                      {language === "gu"
+                        ? `નમસ્તે! હું આપનો ${assistantNameInput.trim() || "Study Buddy"} છું. આજે તમારા વર્ગખંડમાં અધ્યયન ત્રુટિઓ ઉકેલવામાં હું કેવી રીતે મદદ કરી શકું?`
+                        : `Hello! I am your ${assistantNameInput.trim() || "Study Buddy"}. How can I help your classroom today?`}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Feedback messages */}
+              {assistantSavedSuccess && (
+                <div className="p-3 rounded-xl bg-[#2E7D5E]/10 border border-[#2E7D5E]/20 text-xs text-[#2E7D5E] flex items-center gap-2 font-medium">
+                  <CheckCircle2 className="w-4 h-4 shrink-0 text-[#2E7D5E]" />
+                  <span>
+                    {language === "gu"
+                      ? `AI સહાયકનું નામ બદલીને "${assistantNameInput.trim()}" કરવામાં આવ્યું અને તમામ પૃષ્ઠો પર સિંક થઈ ગયું!`
+                      : `AI Assistant name successfully updated to "${assistantNameInput.trim()}" and synchronized system-wide!`}
+                  </span>
+                </div>
+              )}
+
+              {assistantError && (
+                <div className="p-3 rounded-xl bg-[#C54738]/10 border border-[#C54738]/20 text-xs text-[#C54738] flex items-center gap-2 font-medium">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-[#C54738]" />
+                  <span>{assistantError}</span>
+                </div>
+              )}
+
+              {/* Card Action Buttons */}
+              <div className="flex items-center justify-end gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={handleResetAssistantName}
+                  disabled={role !== "admin" || assistantSaving}
+                  className="px-3.5 py-2 rounded-xl border border-[#49352F]/15 bg-white hover:bg-[#FAF6E9] text-xs font-bold text-[#49352F] transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 inline mr-1" />
+                  <span>{language === "gu" ? "ડિફોલ્ટ પર રીસેટ કરો" : "Reset to Default"}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleSaveAssistantName}
+                  disabled={role !== "admin" || assistantSaving}
+                  className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-[#261B16] hover:bg-[#3D2C24] text-[#FAF6E9] text-xs font-bold shadow-xs transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {assistantSaving ? (
+                    <>
+                      <RotateCcw className="w-3.5 h-3.5 animate-spin" />
+                      <span>{language === "gu" ? "સાચવી રહ્યું છે..." : "Saving..."}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-3.5 h-3.5" />
+                      <span>{language === "gu" ? "ફેરફારો સાચવો" : "Save Changes"}</span>
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           </Card>

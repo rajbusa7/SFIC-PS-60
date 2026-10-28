@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { useLanguage } from "@/context/LanguageContext";
+import { useSettings } from "@/context/SettingsContext";
 import { ActivityPlayerModal } from "@/components/activities/ActivityPlayerModal";
 import { SpotlightTour } from "@/components/tutorial/SpotlightTour";
 import { ContextualHelp } from "@/components/shared/ContextualHelp";
@@ -98,6 +99,7 @@ function ProgressRing({
 
 export default function RemedialPlansPage() {
   const { t, language, formatSubject, formatStatus } = useLanguage();
+  const { aiAssistantName } = useSettings();
 
   const [plans, setPlans] = useState<any[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
@@ -242,7 +244,7 @@ export default function RemedialPlansPage() {
             <Link href="/ai?tab=remedial" className="print:hidden">
               <Button variant="saffron" size="sm" className="rounded-full text-xs font-bold">
                 <Sparkles className="w-3.5 h-3.5 mr-1" />
-                <span>{language === "gu" ? "યોજના બનાવો" : "Generate Plan"}</span>
+                <span>{language === "gu" ? `${aiAssistantName || "Study Buddy"} યોજના બનાવો` : `Generate with ${aiAssistantName || "Study Buddy"}`}</span>
               </Button>
             </Link>
           </div>

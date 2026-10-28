@@ -361,6 +361,12 @@ function LoginCardContent() {
         {/* ============================================================== */}
         {authMode === "login" && (
           <div className="space-y-4">
+            <div className="flex items-center justify-center gap-2 pb-0.5">
+              <BrandLogo size={28} showText={false} />
+              <span className="text-xs font-bold text-[#7A6862] dark:text-[#FAF6E9]/70">
+                {language === "gu" ? "શિક્ષક પ્રવેશ પોર્ટલ" : "Teacher Portal Login"}
+              </span>
+            </div>
             <form onSubmit={handleLoginSubmit} className="space-y-3.5">
               <div>
                 <label className="block text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] mb-1">
@@ -490,6 +496,12 @@ function LoginCardContent() {
         {/* ============================================================== */}
         {authMode === "register" && (
           <div className="space-y-4">
+            <div className="flex items-center justify-center gap-2 pb-0.5">
+              <BrandLogo size={28} showText={false} />
+              <span className="text-xs font-bold text-[#7A6862] dark:text-[#FAF6E9]/70">
+                {language === "gu" ? "નવી શિક્ષક નોંધણી પોર્ટલ" : "New Teacher Registration"}
+              </span>
+            </div>
             <form onSubmit={handleRegisterSubmit} className="space-y-3.5">
               <div>
                 <label className="block text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] mb-1">
@@ -836,7 +848,8 @@ export default function LoginPage() {
       </main>
 
       {/* Footer */}
-      <footer className="relative z-20 py-4 text-center text-xs text-[#7A6862] dark:text-[#FAF6E9]/60 border-t border-[#49352F]/10 dark:border-[#F2CAB3]/15">
+      <footer className="relative z-20 py-4 text-center text-xs text-[#7A6862] dark:text-[#FAF6E9]/60 border-t border-[#49352F]/10 dark:border-[#F2CAB3]/15 flex flex-col sm:flex-row items-center justify-center gap-2">
+        <BrandLogo size={22} showText={false} />
         <p>© 2026 StudySaathi AI • SFIC Gujarat Hackathon PS-60. Offline-First PWA.</p>
       </footer>
     </div>

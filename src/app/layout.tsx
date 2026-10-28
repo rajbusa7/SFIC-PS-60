@@ -4,12 +4,18 @@ import { LanguageProvider } from "@/context/LanguageContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { FilterProvider } from "@/context/FilterContext";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { SettingsProvider } from "@/context/SettingsContext";
 
 export const metadata: Metadata = {
   applicationName: "StudySaathi AI",
   title: "StudySaathi AI | Smart Learning Gap Tracking & Remedial Action System",
   description:
     "Smart tracking and Remedial action system for student learning gaps in primary schools. SFIC Gujarat Hackathon.",
+  icons: {
+    icon: "/images/shikshasetu-logo.png",
+    shortcut: "/images/shikshasetu-logo.png",
+    apple: "/images/shikshasetu-logo.png",
+  },
   openGraph: {
     title: "StudySaathi AI | Smart Learning Gap Tracking & Remedial Action System",
     description: "Every Child Can Learn. AI Helps Us Find the Way. Smart tracking and remedial action system for primary schools.",
@@ -59,7 +65,9 @@ export default function RootLayout({
         <ThemeProvider>
           <LanguageProvider>
             <AuthProvider>
-              <FilterProvider>{children}</FilterProvider>
+              <SettingsProvider>
+                <FilterProvider>{children}</FilterProvider>
+              </SettingsProvider>
             </AuthProvider>
           </LanguageProvider>
         </ThemeProvider>

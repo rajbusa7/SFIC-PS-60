@@ -72,9 +72,12 @@ export function broadcastDataUpdate(
   }
 }
 
-/**
- * React Hook for components to subscribe to data mutations
- */
+export function subscribeDataUpdates(
+  entity: DataEntity,
+  callback: (payload?: DataUpdatePayload) => void
+): () => void {
+  return subscribeToDataUpdates((payload) => callback(payload), [entity]);
+}
 export function subscribeToDataUpdates(
   callback: (payload: DataUpdatePayload) => void,
   filterEntities?: DataEntity[]

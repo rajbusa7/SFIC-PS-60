@@ -11,6 +11,7 @@ import { StatTile } from "@/components/ui/StatTile";
 import { BridgeProgress } from "@/components/ui/BridgeProgress";
 import type { SkillNode } from "@/components/3d/StudentSkillTree3D";
 import { useLanguage } from "@/context/LanguageContext";
+import { useSettings } from "@/context/SettingsContext";
 import { SpotlightTour } from "@/components/tutorial/SpotlightTour";
 import { ContextualHelp } from "@/components/shared/ContextualHelp";
 import { subscribeToDataUpdates } from "@/lib/events";
@@ -82,6 +83,7 @@ export default function StudentDetailPage({
 }) {
   const { id } = use(params);
   const { t, language, formatSubject, formatPriority, formatStatus } = useLanguage();
+  const { aiAssistantName } = useSettings();
 
   const [student, setStudent] = useState<any>(null);
   const [results, setResults] = useState<any[]>([]);
@@ -607,7 +609,7 @@ export default function StudentDetailPage({
                       <div className="flex items-center gap-1.5">
                         <span className="text-[10px] uppercase font-bold text-[#7A6862] flex items-center gap-1">
                           <BrainCircuit className="w-3.5 h-3.5 text-[#B26A1B]" />
-                          {language === "gu" ? "એલ્ગોરિધમિક સમજૂતી:" : "Algorithmic Explanation:"}
+                          {language === "gu" ? `${aiAssistantName || "StudySaathi"} સમજૂતી:` : `${aiAssistantName || "StudySaathi"} Diagnosis:`}
                         </span>
                         <ContextualHelp termKey="gapDetection" />
                       </div>

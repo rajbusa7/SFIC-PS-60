@@ -123,8 +123,10 @@ export async function ensurePostgresSchema(): Promise<void> {
             developing_threshold INTEGER DEFAULT 60,
             preferred_language VARCHAR(8) DEFAULT 'en',
             enable_ai_assist BOOLEAN DEFAULT TRUE,
+            ai_assistant_name VARCHAR(128) DEFAULT 'Study Buddy',
             updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
+        ALTER TABLE school_settings ADD COLUMN IF NOT EXISTS ai_assistant_name VARCHAR(128) DEFAULT 'Study Buddy';
 
         CREATE TABLE IF NOT EXISTS classrooms (
             id VARCHAR(64) PRIMARY KEY,
@@ -294,8 +296,8 @@ export async function ensurePostgresSchema(): Promise<void> {
           [SEED_SCHOOL.id, SEED_SCHOOL.name, SEED_SCHOOL.code, SEED_SCHOOL.preferredLanguage]
         );
         await client.query(
-          `INSERT INTO school_settings (id, school_id, mastery_threshold, developing_threshold, preferred_language, enable_ai_assist)
-           VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING`,
+          `INSERT INTO school_settings (id, school_id, mastery_threshold, developing_threshold, preferred_language, enable_ai_assist, ai_assistant_name)
+           VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT DO NOTHING`,
           [
             SEED_SETTINGS.id,
             SEED_SETTINGS.schoolId,
@@ -303,6 +305,7 @@ export async function ensurePostgresSchema(): Promise<void> {
             SEED_SETTINGS.developingThreshold,
             SEED_SETTINGS.preferredLanguage,
             SEED_SETTINGS.enableAiAssist,
+            SEED_SETTINGS.aiAssistantName || "Study Buddy",
           ]
         );
 
@@ -1158,7 +1161,8 @@ export const postgresSettingsDb = {
         mastery_threshold AS "masteryThreshold",
         developing_threshold AS "developingThreshold",
         preferred_language AS "preferredLanguage",
-        enable_ai_assist AS "enableAiAssist"
+        enable_ai_assist AS "enableAiAssist",
+        ai_assistant_name AS "aiAssistantName"
       FROM school_settings
       LIMIT 1
     `;
@@ -1172,6 +1176,7 @@ export const postgresSettingsDb = {
       developingThreshold: Number(r.developingThreshold || 60),
       preferredLanguage: r.preferredLanguage || "en",
       enableAiAssist: Boolean(r.enableAiAssist),
+      aiAssistantName: (r.aiAssistantName && r.aiAssistantName.trim()) || "Study Buddy",
     };
   },
 
@@ -1196,10 +1201,15 @@ export const postgresSettingsDb = {
       sets.push(`enable_ai_assist = $${idx++}`);
       params.push(updates.enableAiAssist);
     }
+    if (updates.aiAssistantName !== undefined) {
+      const sanitizedName = String(updates.aiAssistantName).trim() || "Study Buddy";
+      sets.push(`ai_assistant_name = $${idx++}`);
+      params.push(sanitizedName);
+    }
 
     if (sets.length === 0) return;
     sets.push("updated_at = NOW()");
-    await queryPostgres(`UPDATE school_settings SET ${sets.join(", ")}`);
+    await queryPostgres(`UPDATE school_settings SET ${sets.join(", ")}`, params);
   },
 };
 

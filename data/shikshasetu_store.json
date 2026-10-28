@@ -1057,10 +1057,10 @@
       "senderTeacherName": "Head Teacher",
       "status": "sent",
       "requiresAcknowledgment": true,
-      "id": "not-1793185694319",
-      "createdAt": "2026-10-28T11:08:14.319Z",
-      "updatedAt": "2026-10-28T11:08:14.337Z",
-      "sentAt": "2026-10-28T11:08:14.336Z"
+      "id": "not-1793213412163",
+      "createdAt": "2026-10-28T18:50:12.163Z",
+      "updatedAt": "2026-10-28T18:50:12.180Z",
+      "sentAt": "2026-10-28T18:50:12.179Z"
     },
     {
       "id": "not-01",
@@ -1179,24 +1179,24 @@
       "updatedAt": "2026-10-20T11:05:00Z"
     },
     {
-      "noticeId": "not-1793185694319",
+      "noticeId": "not-1793213412163",
       "language": "gu",
       "translatedTitle": "Annual Sports Day Registration",
       "translatedContent": "All students must submit their event preferences for the Annual રમતગમત દિવસ before Nov 5.",
       "provider": "offline_fallback",
       "isApprovedByTeacher": false,
-      "id": "tr-1793185694323-gu",
-      "updatedAt": "2026-10-28T11:08:14.323Z"
+      "id": "tr-1793213412166-gu",
+      "updatedAt": "2026-10-28T18:50:12.166Z"
     },
     {
-      "noticeId": "not-1793185694319",
+      "noticeId": "not-1793213412163",
       "language": "hi",
       "translatedTitle": "Annual Sports Day Registration",
       "translatedContent": "All students must submit their event preferences for the Annual Sports Day before Nov 5.",
       "provider": "offline_fallback",
       "isApprovedByTeacher": false,
-      "id": "tr-1793185694327-hi",
-      "updatedAt": "2026-10-28T11:08:14.327Z"
+      "id": "tr-1793213412170-hi",
+      "updatedAt": "2026-10-28T18:50:12.170Z"
     }
   ],
   "deliveries": [
@@ -1286,8 +1286,8 @@
       "parentFeedback": "આરવ સોમવારથી ૩:૧૫ વાગ્યે રોકાશે, આભાર."
     },
     {
-      "id": "del-1793185694330-std-yash",
-      "noticeId": "not-1793185694319",
+      "id": "del-1793213412174-std-yash",
+      "noticeId": "not-1793213412163",
       "parentId": "par-gen-std-yash",
       "parentName": "Parent of Yash Trivedi",
       "studentId": "std-yash",
@@ -1297,15 +1297,15 @@
       "language": "gu",
       "channel": "whatsapp",
       "status": "acknowledged",
-      "sentAt": "2026-10-28T11:08:14.330Z",
-      "deliveredAt": "2026-10-28T11:08:14.330Z",
-      "readAt": "2026-10-28T11:08:14.342Z",
-      "acknowledgedAt": "2026-10-28T11:08:14.342Z",
+      "sentAt": "2026-10-28T18:50:12.173Z",
+      "deliveredAt": "2026-10-28T18:50:12.173Z",
+      "readAt": "2026-10-28T18:50:12.185Z",
+      "acknowledgedAt": "2026-10-28T18:50:12.185Z",
       "parentFeedback": "Received and confirmed."
     },
     {
-      "id": "del-1793185694330-std-tanvi",
-      "noticeId": "not-1793185694319",
+      "id": "del-1793213412174-std-tanvi",
+      "noticeId": "not-1793213412163",
       "parentId": "par-gen-std-tanvi",
       "parentName": "Parent of Tanvi Dave",
       "studentId": "std-tanvi",
@@ -1315,12 +1315,12 @@
       "language": "gu",
       "channel": "whatsapp",
       "status": "delivered",
-      "sentAt": "2026-10-28T11:08:14.330Z",
-      "deliveredAt": "2026-10-28T11:08:14.330Z"
+      "sentAt": "2026-10-28T18:50:12.173Z",
+      "deliveredAt": "2026-10-28T18:50:12.173Z"
     },
     {
-      "id": "del-1793185694331-std-rohan",
-      "noticeId": "not-1793185694319",
+      "id": "del-1793213412174-std-rohan",
+      "noticeId": "not-1793213412163",
       "parentId": "par-gen-std-rohan",
       "parentName": "Parent of Rohan Prajapati",
       "studentId": "std-rohan",
@@ -1330,12 +1330,12 @@
       "language": "gu",
       "channel": "whatsapp",
       "status": "delivered",
-      "sentAt": "2026-10-28T11:08:14.330Z",
-      "deliveredAt": "2026-10-28T11:08:14.330Z"
+      "sentAt": "2026-10-28T18:50:12.173Z",
+      "deliveredAt": "2026-10-28T18:50:12.173Z"
     },
     {
-      "id": "del-1793185694331-std-kavya",
-      "noticeId": "not-1793185694319",
+      "id": "del-1793213412175-std-kavya",
+      "noticeId": "not-1793213412163",
       "parentId": "par-gen-std-kavya",
       "parentName": "Parent of Kavya Rathod",
       "studentId": "std-kavya",
@@ -1345,13 +1345,13 @@
       "language": "gu",
       "channel": "whatsapp",
       "status": "delivered",
-      "sentAt": "2026-10-28T11:08:14.330Z",
-      "deliveredAt": "2026-10-28T11:08:14.330Z"
+      "sentAt": "2026-10-28T18:50:12.173Z",
+      "deliveredAt": "2026-10-28T18:50:12.173Z"
     }
   ],
   "aiMetrics": [
     {
-      "id": "metric-1793185694325-zp30",
+      "id": "metric-1793213412168-l98k",
       "task": "translation",
       "provider": "offline_fallback",
       "model": "deterministic_pedagogical_rule_engine",
@@ -1360,10 +1360,10 @@
       "latencyMs": 1,
       "success": true,
       "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T11:08:14.325Z"
+      "timestamp": "2026-10-28T18:50:12.168Z"
     },
     {
-      "id": "metric-1793185694321-nihp",
+      "id": "metric-1793213412164-4c34",
       "task": "translation",
       "provider": "offline_fallback",
       "model": "deterministic_pedagogical_rule_engine",
@@ -1372,10 +1372,10 @@
       "latencyMs": 1,
       "success": true,
       "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T11:08:14.321Z"
+      "timestamp": "2026-10-28T18:50:12.164Z"
     },
     {
-      "id": "metric-1793185694317-rlv1",
+      "id": "metric-1793213412160-hm2e",
       "task": "simplification",
       "provider": "offline_fallback",
       "model": "deterministic_pedagogical_rule_engine",
@@ -1384,10 +1384,10 @@
       "latencyMs": 1,
       "success": true,
       "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T11:08:14.317Z"
+      "timestamp": "2026-10-28T18:50:12.160Z"
     },
     {
-      "id": "metric-1793185694313-h3yr",
+      "id": "metric-1793213412157-8hdg",
       "task": "assistant",
       "provider": "offline_fallback",
       "model": "deterministic_pedagogical_rule_engine",
@@ -1396,10 +1396,10 @@
       "latencyMs": 1,
       "success": true,
       "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T11:08:14.313Z"
+      "timestamp": "2026-10-28T18:50:12.157Z"
     },
     {
-      "id": "metric-1793185694309-wo05",
+      "id": "metric-1793213412154-1g3n",
       "task": "assistant",
       "provider": "offline_fallback",
       "model": "deterministic_pedagogical_rule_engine",
@@ -1408,10 +1408,10 @@
       "latencyMs": 1,
       "success": true,
       "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T11:08:14.309Z"
+      "timestamp": "2026-10-28T18:50:12.154Z"
     },
     {
-      "id": "metric-1793185694305-1lyd",
+      "id": "metric-1793213412150-0huy",
       "task": "text_to_speech",
       "provider": "offline_fallback",
       "model": "deterministic_local_synthesizer",
@@ -1420,10 +1420,10 @@
       "latencyMs": 0,
       "success": true,
       "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T11:08:14.305Z"
+      "timestamp": "2026-10-28T18:50:12.150Z"
     },
     {
-      "id": "metric-1793185694301-7fm8",
+      "id": "metric-1793213412146-47m3",
       "task": "translation",
       "provider": "offline_fallback",
       "model": "deterministic_pedagogical_rule_engine",
@@ -1432,10 +1432,10 @@
       "latencyMs": 1,
       "success": true,
       "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T11:08:14.301Z"
+      "timestamp": "2026-10-28T18:50:12.146Z"
     },
     {
-      "id": "metric-1793185694299-sz8h",
+      "id": "metric-1793213412144-3ly5",
       "task": "translation",
       "provider": "offline_fallback",
       "model": "deterministic_pedagogical_rule_engine",
@@ -1444,10 +1444,10 @@
       "latencyMs": 1,
       "success": true,
       "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T11:08:14.299Z"
+      "timestamp": "2026-10-28T18:50:12.144Z"
     },
     {
-      "id": "metric-1793185694296-jwih",
+      "id": "metric-1793213412142-lzem",
       "task": "translation",
       "provider": "offline_fallback",
       "model": "deterministic_pedagogical_rule_engine",
@@ -1456,10 +1456,10 @@
       "latencyMs": 1,
       "success": true,
       "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T11:08:14.296Z"
+      "timestamp": "2026-10-28T18:50:12.142Z"
     },
     {
-      "id": "metric-1793185694291-9n6v",
+      "id": "metric-1793213412138-cg8h",
       "task": "simplification",
       "provider": "offline_fallback",
       "model": "deterministic_pedagogical_rule_engine",
@@ -1468,10 +1468,10 @@
       "latencyMs": 1,
       "success": true,
       "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T11:08:14.291Z"
+      "timestamp": "2026-10-28T18:50:12.138Z"
     },
     {
-      "id": "metric-1793185694288-7j5n",
+      "id": "metric-1793213412135-dw6t",
       "task": "simplification",
       "provider": "offline_fallback",
       "model": "deterministic_pedagogical_rule_engine",
@@ -1480,10 +1480,10 @@
       "latencyMs": 1,
       "success": true,
       "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T11:08:14.288Z"
+      "timestamp": "2026-10-28T18:50:12.135Z"
     },
     {
-      "id": "metric-1793185694286-xgn5",
+      "id": "metric-1793213412133-qpv9",
       "task": "simplification",
       "provider": "offline_fallback",
       "model": "deterministic_pedagogical_rule_engine",
@@ -1492,10 +1492,10 @@
       "latencyMs": 1,
       "success": true,
       "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T11:08:14.286Z"
+      "timestamp": "2026-10-28T18:50:12.133Z"
     },
     {
-      "id": "metric-1793185694280-fizi",
+      "id": "metric-1793213412128-jypb",
       "task": "simplification",
       "provider": "offline_fallback",
       "model": "deterministic_pedagogical_rule_engine",
@@ -1504,7 +1504,7 @@
       "latencyMs": 1,
       "success": true,
       "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T11:08:14.280Z"
+      "timestamp": "2026-10-28T18:50:12.128Z"
     }
   ],
   "aiConfigs": [
@@ -1553,6 +1553,68 @@
       "primaryModel": "gemini-3.5-flash-lite",
       "fallbackModel": "deterministic_pedagogical_rule_engine",
       "enabled": true
+    }
+  ],
+  "users": [
+    {
+      "id": "usr-teacher-01",
+      "name": "Pooja Sharma",
+      "email": "teacher@studysaathi.edu.in",
+      "role": "teacher",
+      "schoolId": "sch-gn-01",
+      "provider": "local",
+      "passwordHash": "afae7baea11c9a4fe0ab05d8f94036e8:497440fe3391736b01bd060b451e089afe389d3f6978216ab92040e7ae1396d26487a6e3d54e5426fc419d59d402e20199b97d595c3c88caeab18d84f8a31599",
+      "status": "active",
+      "createdAt": "2026-01-01T00:00:00Z",
+      "updatedAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "usr-admin-01",
+      "name": "Principal R. K. Trivedi",
+      "email": "principal@studysaathi.edu.in",
+      "role": "admin",
+      "schoolId": "sch-gn-01",
+      "provider": "local",
+      "passwordHash": "67c44a8a5d4645fe1070e9b9bb2eb456:585d4f409bc84392f25fa91104fadf3ccd1029a7d77192dc316e2939ca5b5d3e3ae78a728994cc90cafc157d2979ae40b17618c6a83491a20a60a1b7e9d1da59",
+      "status": "active",
+      "createdAt": "2026-01-01T00:00:00Z",
+      "updatedAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "par-001",
+      "name": "Dineshbhai Patel",
+      "email": "dinesh.patel@example.com",
+      "role": "parent",
+      "schoolId": "sch-gn-01",
+      "provider": "local",
+      "status": "active",
+      "createdAt": "2026-01-01T00:00:00Z",
+      "updatedAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "usr-1793213411680-yk7q",
+      "name": "Bhavik Dave",
+      "email": "teacher.1793213411678@studysaathi.edu.in",
+      "role": "teacher",
+      "schoolId": "sch-gn-01",
+      "googleId": "google-sub-1793213411678",
+      "avatarUrl": "https://lh3.googleusercontent.com/test",
+      "provider": "google",
+      "status": "active",
+      "createdAt": "2026-10-28T18:50:11.679Z",
+      "updatedAt": "2026-10-28T18:50:11.679Z"
+    },
+    {
+      "id": "usr-1793213411694-fftx",
+      "name": "Meera Trivedi",
+      "email": "teacher.reg.1793213411690@studysaathi.edu.in",
+      "role": "teacher",
+      "schoolId": "sch-gn-01",
+      "provider": "local",
+      "passwordHash": "622a515b4e4b8dd3c95fa702563349b3:c465939334b7c434a5da9f0b458fa2f4a5db0cde6e0608a21a26a9c412512623c0c73ca64f5c81cb2f64d6680ec6912fdc08e5a1b85a421336165dac857d4c52",
+      "status": "active",
+      "createdAt": "2026-10-28T18:50:11.694Z",
+      "updatedAt": "2026-10-28T18:50:11.694Z"
     }
   ],
   "feedback": []

@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
     return {
       beforeFiles: [
         {
-          source: "/",
+          source: "/landing-3d",
           destination: "/landing-pages/inner-green-3d.html",
         },
       ],

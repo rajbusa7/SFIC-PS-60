@@ -1,5 +1,5 @@
 /**
- * ShikshaSetu AI - Universal Data Synchronization & Broadcast System
+ * StudySaathi AI - Universal Data Synchronization & Broadcast System
  * 
  * Provides cross-component and cross-tab realtime synchronization for Next.js.
  * When any mutation occurs (student added, assessment scored, gap resolved,
@@ -33,7 +33,7 @@ if (typeof window !== "undefined" && "BroadcastChannel" in window) {
   try {
     broadcastChannel = new BroadcastChannel(CHANNEL_NAME);
   } catch (e) {
-    console.warn("[ShikshaSetu Events] BroadcastChannel not supported in current environment", e);
+    console.warn("[StudySaathi Events] BroadcastChannel not supported in current environment", e);
   }
 }
 
@@ -68,7 +68,7 @@ export function broadcastDataUpdate(
       broadcastChannel.postMessage(payload);
     }
   } catch (err) {
-    console.warn("[ShikshaSetu Events] Error posting to BroadcastChannel:", err);
+    console.warn("[StudySaathi Events] Error posting to BroadcastChannel:", err);
   }
 }
 

@@ -431,7 +431,7 @@ export function GlobalSearch({ onSearchChange, className = "" }: GlobalSearchPro
               </span>
             </div>
             <span className="text-[10px] font-medium text-[#B26A1B]">
-              {language === "gu" ? "શિક્ષાસેતુ ગ્લોબલ સર્ચ" : "ShikshaSetu Global Search"}
+              {language === "gu" ? "StudySaathi ગ્લોબલ સર્ચ" : "StudySaathi Global Search"}
             </span>
           </div>
         </div>

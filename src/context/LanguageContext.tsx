@@ -34,7 +34,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("shikshasetu_lang") as Language;
+      const saved = (localStorage.getItem("studysaathi_lang") || localStorage.getItem("shikshasetu_lang")) as Language;
       if (saved === "en" || saved === "gu") {
         setLanguageState(saved);
         if (typeof document !== "undefined") {
@@ -50,6 +50,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     setLanguageState(lang);
     if (typeof window !== "undefined") {
       try {
+        localStorage.setItem("studysaathi_lang", lang);
         localStorage.setItem("shikshasetu_lang", lang);
         document.documentElement.lang = lang;
       } catch {

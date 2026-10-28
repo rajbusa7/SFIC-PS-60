@@ -44,6 +44,15 @@ export default function SettingsPage() {
   const handleResetTutorial = () => {
     if (typeof window !== "undefined") {
       const keys = [
+        "studysaathi_tour_completed_dashboard",
+        "studysaathi_tour_completed_students",
+        "studysaathi_tour_completed_studentDetail",
+        "studysaathi_tour_completed_learningGaps",
+        "studysaathi_tour_completed_remedialPlans",
+        "studysaathi_tour_completed_reports",
+        "studysaathi_checklist_completed",
+        "studysaathi_checklist_steps",
+        "studysaathi_checklist_dismissed",
         "shikshasetu_tour_completed_dashboard",
         "shikshasetu_tour_completed_students",
         "shikshasetu_tour_completed_studentDetail",

@@ -1,7 +1,7 @@
-# ShikshaSetu AI - Frontend Application
+# StudySaathi AI - Frontend Application
 
 ## Overview
-The frontend of ShikshaSetu AI is built with Next.js 16 (App Router), React 19, Tailwind CSS, Three.js / React Three Fiber (for the cinematic 3D ShikshaBot humanoid), Lucide icons, and Recharts.
+The frontend of StudySaathi AI is built with Next.js 16 (App Router), React 19, Tailwind CSS, Three.js / React Three Fiber (for the cinematic 3D companion humanoid), Lucide icons, and Recharts.
 
 ## Architecture
 - **Centralized API Client**: Communicates with the backend REST API via `src/services/apiClient.ts`.

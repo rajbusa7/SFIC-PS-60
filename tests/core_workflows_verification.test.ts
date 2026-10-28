@@ -18,7 +18,7 @@ function mockRequest(url: string, method = "GET", body?: any): Request {
   });
 }
 
-describe("ShikshaSetu AI - Core Workflows & Multi-Module Persistence Suite", () => {
+describe("StudySaathi AI - Core Workflows & Multi-Module Persistence Suite", () => {
   let testStudentId: string = "";
   const testConceptId = "c-frac-01";
   let createdAssessmentId: string = "";

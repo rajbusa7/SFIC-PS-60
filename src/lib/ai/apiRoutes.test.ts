@@ -14,7 +14,7 @@ function createMockRequest(body: any): Request {
   });
 }
 
-describe("ShikshaSetu AI API Routes Functional Tests", () => {
+describe("StudySaathi AI API Routes Functional Tests", () => {
   it("POST /api/ai/tutor returns structured explanation, classroom example, and 3 practice questions", async () => {
     const req = createMockRequest({
       query: "My Class 4 students are struggling with division. How can I teach equal sharing?",

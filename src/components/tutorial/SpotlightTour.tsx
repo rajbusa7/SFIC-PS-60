@@ -366,8 +366,8 @@ export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps
             <Lightbulb className="w-4 h-4 text-amber-300 shrink-0 mt-0.5" aria-hidden="true" />
             <span>
               {language === "gu"
-                ? "શિક્ષાબોટ ટિપ: તમે ઉપરના ટૂલબારમાંથી અથવા 'Esc' દબાવીને આ ટૂર ગમે ત્યારે ફરી જોઈ શકો છો."
-                : "ShikshaBot tip: You can replay this guided walkthrough anytime from the top bar or press 'Esc' to exit."}
+                ? "સાથીબોટ ટિપ: તમે ઉપરના ટૂલબારમાંથી અથવા 'Esc' દબાવીને આ ટૂર ગમે ત્યારે ફરી જોઈ શકો છો."
+                : "SaathiBot tip: You can replay this guided walkthrough anytime from the top bar or press 'Esc' to exit."}
             </span>
           </div>
         </div>

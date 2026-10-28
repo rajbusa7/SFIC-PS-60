@@ -18,7 +18,7 @@ interface AuthContextType {
 const DEMO_TEACHER: User = {
   id: "usr-teacher-01",
   name: "Pooja Sharma",
-  email: "teacher@shikshasetu.edu.in",
+  email: "teacher@studysaathi.edu.in",
   role: "teacher",
   schoolId: "sch-gn-01",
 };
@@ -26,7 +26,7 @@ const DEMO_TEACHER: User = {
 const DEMO_ADMIN: User = {
   id: "usr-admin-01",
   name: "Principal R. K. Trivedi",
-  email: "principal@shikshasetu.edu.in",
+  email: "principal@studysaathi.edu.in",
   role: "admin",
   schoolId: "sch-gn-01",
 };

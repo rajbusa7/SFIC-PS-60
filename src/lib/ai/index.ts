@@ -1,5 +1,5 @@
 /**
- * ShikshaSetu AI - Centralized AI Integration System
+ * StudySaathi AI - Centralized AI Integration System
  * Single-source-of-truth for all providers, adapters, routers, security, and services.
  */
 

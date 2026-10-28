@@ -35,7 +35,7 @@ export default function LoginPage() {
   const { login, loginAsDemoTeacher, loginAsDemoAdmin } = useAuth();
   const { t, language } = useLanguage();
 
-  const [email, setEmail] = useState("teacher@shikshasetu.edu.in");
+  const [email, setEmail] = useState("teacher@studysaathi.edu.in");
   const [password, setPassword] = useState("DemoPass2026!");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -152,7 +152,7 @@ export default function LoginPage() {
             <div className="rounded-3xl border border-[#49352F]/15 bg-white/95 backdrop-blur-2xl p-6 sm:p-8 shadow-[0_16px_44px_rgba(73,53,47,0.08)] space-y-6 text-[#49352F]">
               <div className="text-center space-y-1">
                 <h2 className="font-heading text-2xl font-black text-[#49352F] tracking-tight">
-                  {language === "gu" ? "શિક્ષાસેતુમાં પ્રવેશ કરો" : "Sign In to ShikshaSetu AI"}
+                  {language === "gu" ? "StudySaathi માં પ્રવેશ કરો" : "Sign In to StudySaathi AI"}
                 </h2>
                 <p className="text-xs text-[#7A6862]">
                   {language === "gu"
@@ -225,7 +225,7 @@ export default function LoginPage() {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="teacher@shikshasetu.edu.in"
+                      placeholder="teacher@studysaathi.edu.in"
                       className="w-full rounded-xl border border-[#49352F]/15 bg-[#FAF6E9] py-2.5 pl-10 pr-3 text-xs text-[#49352F] placeholder-[#7A6862] focus:border-[#F2CAB3] focus:bg-white outline-hidden"
                     />
                   </div>
@@ -285,7 +285,7 @@ export default function LoginPage() {
 
       {/* Footer */}
       <footer className="relative z-20 py-4 text-center text-xs text-[#7A6862] border-t border-[#49352F]/10">
-        <p>© 2026 ShikshaSetu AI • SFIC Gujarat Hackathon PS-60. Offline-First PWA.</p>
+        <p>© 2026 StudySaathi AI • SFIC Gujarat Hackathon PS-60. Offline-First PWA.</p>
       </footer>
     </div>
   );

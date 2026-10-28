@@ -64,7 +64,7 @@ export function NoticeAssistantChat({
     {
       id: "msg-welcome",
       sender: "ai",
-      text: `Namaste! I am the ShikshaSetu AI School Notice Assistant. I can answer questions about school announcements, exam dates, schedules, and fee reminders for ${studentName} (Grade ${studentGrade}). Every answer is strictly grounded in official school records.`,
+      text: `Namaste! I am the StudySaathi AI School Notice Assistant. I can answer questions about school announcements, exam dates, schedules, and fee reminders for ${studentName} (Grade ${studentGrade}). Every answer is strictly grounded in official school records.`,
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     },
   ]);
@@ -210,7 +210,7 @@ export function NoticeAssistantChat({
             >
               <div className="flex items-center justify-between gap-3 mb-1.5">
                 <span className="font-bold text-[11px] opacity-80">
-                  {m.sender === "user" ? "You" : "ShikshaSetu AI Assistant"}
+                  {m.sender === "user" ? "You" : "StudySaathi AI Assistant"}
                 </span>
                 <span className="text-[10px] opacity-60">{m.timestamp}</span>
               </div>

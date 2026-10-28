@@ -410,7 +410,7 @@ export function AdminAiProviderSettings() {
           Task Routing &amp; Automatic Fallback Engine
         </h3>
         <p className="text-xs text-[#49352F]/70 mb-4">
-          Route each AI pipeline to your preferred primary service. If the primary service experiences rate limits or outages, ShikshaSetu seamlessly executes the configured fallback without crashing the user interface.
+          Route each AI pipeline to your preferred primary service. If the primary service experiences rate limits or outages, StudySaathi seamlessly executes the configured fallback without crashing the user interface.
         </p>
 
         <div className="divide-y divide-[#49352F]/10 border border-[#49352F]/10 rounded-xl overflow-hidden">

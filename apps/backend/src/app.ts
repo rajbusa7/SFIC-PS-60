@@ -20,7 +20,7 @@ export function createApp(): Express {
   // Root Welcome / Health Redirect
   app.get("/", (req: Request, res: Response) => {
     res.status(200).json({
-      name: "ShikshaSetu AI Backend API",
+      name: "StudySaathi AI Backend API",
       version: "1.0.0",
       status: "running",
       documentation: "/docs/API.md",

@@ -1,5 +1,5 @@
 /**
- * Core mathematical and trend calculations for ShikshaSetu AI.
+ * Core mathematical and trend calculations for StudySaathi AI.
  * Follows exact specifications:
  * - Safe numeric handling (no NaN/infinite values)
  * - True percentage points delta: (Latest % - Previous %)

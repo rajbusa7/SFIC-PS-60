@@ -154,7 +154,7 @@ export default function TutorialPage() {
               </div>
 
               <h1 className="font-heading text-2xl sm:text-4xl font-extrabold tracking-tight text-[#49352F] leading-tight">
-                {t.tutorial?.heroTitle || (language === "gu" ? "૫ મિનિટમાં શિક્ષાસેતુ AI શીખો" : "Learn ShikshaSetu AI in 5 Minutes")}
+                {t.tutorial?.heroTitle || (language === "gu" ? "૫ મિનિટમાં StudySaathi AI શીખો" : "Learn StudySaathi AI in 5 Minutes")}
               </h1>
 
               <p className="text-xs sm:text-sm text-[#7A6862] leading-relaxed font-normal">
@@ -238,8 +238,8 @@ export default function TutorialPage() {
                 </div>
                 <p className="text-[10px] text-[#49352F] leading-tight">
                   {language === "gu"
-                    ? "શિક્ષાબોટ: કોઈ જટિલ સેટઅપ નથી. ૨ મિનિટમાં પરિણામ જુઓ!"
-                    : "ShikshaBot: Zero configuration needed. See student gains in 2 minutes!"}
+                    ? "સાથીબોટ: કોઈ જટિલ સેટઅપ નથી. ૨ મિનિટમાં પરિણામ જુઓ!"
+                    : "SaathiBot: Zero configuration needed. See student gains in 2 minutes!"}
                 </p>
               </div>
             </div>
@@ -550,8 +550,8 @@ export default function TutorialPage() {
                   </div>
                   <p className="text-xs text-[#7A6862] mt-1">
                     {language === "gu"
-                      ? "કોઈ વાસ્તવિક ડેટા બદલાતો નથી. શિક્ષાબોટના માર્ગદર્શન સાથે દરેક પગલું જાતે અનુભવો."
-                      : "Click through each step below with ShikshaBot hints. Safe demo mode with no real database modifications."}
+                      ? "કોઈ વાસ્તવિક ડેટા બદલાતો નથી. સાથીબોટના માર્ગદર્શન સાથે દરેક પગલું જાતે અનુભવો."
+                      : "Click through each step below with SaathiBot hints. Safe demo mode with no real database modifications."}
                   </p>
                 </div>
 
@@ -627,7 +627,7 @@ export default function TutorialPage() {
                     <div className="flex items-center justify-between">
                       <div className="text-xs text-[#49352F] font-medium flex items-center gap-1.5">
                         <Bot className="w-4 h-4 text-[#B26A1B]" />
-                        <span>ShikshaBot: Click next to see why Aarav made this mistake.</span>
+                        <span>SaathiBot: Click next to see why Aarav made this mistake.</span>
                       </div>
                       <Button
                         variant="saffron"
@@ -657,7 +657,7 @@ export default function TutorialPage() {
                     <div className="flex items-center justify-between">
                       <div className="text-xs text-[#49352F] font-medium flex items-center gap-1.5">
                         <Bot className="w-4 h-4 text-[#B26A1B]" />
-                        <span>ShikshaBot: Now generate the 5-step concrete manipulative plan!</span>
+                        <span>SaathiBot: Now generate the 5-step concrete manipulative plan!</span>
                       </div>
                       <Button
                         variant="saffron"
@@ -698,7 +698,7 @@ export default function TutorialPage() {
                     <div className="flex items-center justify-between">
                       <div className="text-xs text-[#49352F] font-medium flex items-center gap-1.5">
                         <Bot className="w-4 h-4 text-[#B26A1B]" />
-                        <span>ShikshaBot: Teacher finishes classroom activities and inputs the re-test!</span>
+                        <span>SaathiBot: Teacher finishes classroom activities and inputs the re-test!</span>
                       </div>
                       <Button
                         variant="mint"
@@ -975,7 +975,7 @@ export default function TutorialPage() {
               <div className="border-b-2 border-[#49352F] pb-3 flex items-start justify-between">
                 <div>
                   <h2 className="font-heading text-lg font-black uppercase text-[#49352F]">
-                    ShikshaSetu AI • શિક્ષાસેતુ AI
+                    StudySaathi AI
                   </h2>
                   <p className="text-xs font-bold text-[#7A6862]">
                     Teacher Quick-Start Guide (Gujarat Primary Schools • PS-60)

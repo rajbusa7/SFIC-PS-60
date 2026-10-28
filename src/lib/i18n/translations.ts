@@ -3,7 +3,7 @@ export type Language = "en" | "gu";
 export const translations = {
   en: {
     app: {
-      name: "ShikshaSetu AI",
+      name: "StudySaathi AI",
       tagline: "Every Gap Identified. Every Child Supported.",
       subtitle: "Smart tracking & remedial action system for primary schools",
       demoBadge: "Gujarat Hackathon Demo Mode",
@@ -132,7 +132,7 @@ export const translations = {
       aiWorkspaceTab: "AI Workspace",
       backToOverview: "← Back to Classroom Overview",
       openFullscreen: "Open in Fullscreen Mode →",
-      newTeacherTitle: "New Teacher? Learn How to Handle ShikshaSetu AI",
+      newTeacherTitle: "New Teacher? Learn How to Handle StudySaathi AI",
       newTeacherSubtitle: "Designed for Gujarat primary teachers: spot gaps early (<60%), deploy 5-step concrete manipulatives, and verify student mastery.",
       interactiveTourBadge: "Interactive Tour",
       startInteractiveTour: "Start Interactive Tour",
@@ -461,7 +461,7 @@ export const translations = {
       themePreferenceLabel: "Interface Theme Mode",
     },
     login: {
-      pageTitle: "Sign In to ShikshaSetu AI",
+      pageTitle: "Sign In to StudySaathi AI",
       pageSubtitle: "Select a demo role to experience the smart tracking & remedial action system.",
       quickDemoRoles: "Quick Demo Role Sign-In:",
       teacherRoleName: "Pooja Sharma",
@@ -542,9 +542,9 @@ export const translations = {
     landing: {
       heroHeadline: "Every Learning Gap Is an Opportunity.",
       heroSubtitle: "Helping teachers discover learning gaps, deliver personalized support, and empower every child to learn with confidence.",
-      exploreBtn: "Explore ShikshaSetu AI",
+      exploreBtn: "Explore StudySaathi AI",
       howItWorksBtn: "Discover How It Works",
-      shikshaBotGreeting: "Hi! I'm ShikshaBot. Let's make learning better for everyone!",
+      shikshaBotGreeting: "Hi! I'm SaathiBot. Let's make learning better for everyone!",
       challengeHeading: "Every Child Learns Differently.",
       challengeSub: "Students struggle with different concepts, and teachers need clear insights to provide targeted support.",
       solutionHeading: "Meet Your Smarter Learning Companion.",
@@ -563,7 +563,7 @@ export const translations = {
     tutorial: {
       pageTitle: "Help & Tutorial Center",
       badge: "Gujarat Primary Teacher Guide",
-      heroTitle: "Learn ShikshaSetu AI in 5 Minutes",
+      heroTitle: "Learn StudySaathi AI in 5 Minutes",
       heroSubtitle: "Visual, short, and bilingual guide for Gujarat primary teachers to spot foundational gaps early, take 5-step remedial action, and verify student mastery.",
       replayTour: "Replay Guided Tour",
       quickStartPrint: "Download / Print Quick-Start Guide",
@@ -576,12 +576,12 @@ export const translations = {
       activeTabGlossary: "Bilingual Glossary",
       activeTabTips: "Rural Classroom Tips",
       tour: {
-        welcomeBadge: "Welcome to ShikshaSetu",
+        welcomeBadge: "Welcome to StudySaathi",
         finishBadge: "Ready to Explore",
         tryAaravCta: "Try Demo Student: Aarav Patel",
         dashboard: {
           step1: {
-            title: "Welcome to ShikshaSetu AI",
+            title: "Welcome to StudySaathi AI",
             desc: "Your offline-first companion designed for Gujarat primary teachers to spot foundational gaps early and deliver structured support.",
           },
           step2: {
@@ -605,7 +605,7 @@ export const translations = {
             desc: "Toggle between English and Gujarati anytime. Works 100% offline without reloading or losing your work.",
           },
           step7: {
-            title: "ShikshaBot Pedagogical Assistant",
+            title: "SaathiBot Pedagogical Assistant",
             desc: "Tap here anytime to ask pedagogical questions, get lesson recommendations, or trigger guided page walkthroughs.",
           },
           step8: {
@@ -708,7 +708,7 @@ export const translations = {
   },
   gu: {
     app: {
-      name: "શિક્ષાસેતુ AI",
+      name: "StudySaathi AI",
       tagline: "દરેક ત્રુટિની ઓળખ. દરેક બાળકને સહાય.",
       subtitle: "પ્રાથમિક શાળાઓ માટે સ્માર્ટ ટ્રેકિંગ અને ઉપચારાત્મક કાર્ય પદ્ધતિ",
       demoBadge: "ગુજરાત હેકાથોન ડેમો મોડ",
@@ -837,7 +837,7 @@ export const translations = {
       aiWorkspaceTab: "AI વર્કસ્પેસ",
       backToOverview: "← વર્ગ વિહંગાવલોકન પર પાછા જાઓ",
       openFullscreen: "પૂર્ણ સ્ક્રીન મોડમાં ખોલો →",
-      newTeacherTitle: "નવા શિક્ષક છો? શિક્ષાસેતુ AI કેવી રીતે વાપરવું તે જાણો",
+      newTeacherTitle: "નવા શિક્ષક છો? StudySaathi AI કેવી રીતે વાપરવું તે જાણો",
       newTeacherSubtitle: "ગુજરાત પ્રાથમિક શિક્ષકો માટે: ત્રુટિઓ વહેલી શોધો (<૬૦%), ૫-પગલાંના મૂર્ત સાધનો વાપરો અને નિપુણતા ચકાસો.",
       interactiveTourBadge: "માર્ગદર્શિત ટૂર",
       startInteractiveTour: "ટૂર શરૂ કરો (૧ મિનિટ)",
@@ -1166,7 +1166,7 @@ export const translations = {
       themePreferenceLabel: "ઇન્ટરફેસ થીમ મોડ",
     },
     login: {
-      pageTitle: "શિક્ષાસેતુ AI માં પ્રવેશ કરો",
+      pageTitle: "StudySaathi AI માં પ્રવેશ કરો",
       pageSubtitle: "સ્માર્ટ ટ્રેકિંગ અને ઉપચાર પદ્ધતિ જોવા માટે ડેમો ભૂમિકા પસંદ કરો.",
       quickDemoRoles: "ઝડપી ડેમો ભૂમિકા પસંદગી:",
       teacherRoleName: "પૂજા શર્મા",
@@ -1247,9 +1247,9 @@ export const translations = {
     landing: {
       heroHeadline: "દરેક શિક્ષણ ત્રુટિ એક નવી તક છે.",
       heroSubtitle: "શિક્ષકોને શિક્ષણ ત્રુટિઓ શોધવામાં, વ્યક્તિગત સહાય આપવામાં અને દરેક બાળકને આત્મવિશ્વાસ સાથે શીખવવામાં મદદ કરે છે.",
-      exploreBtn: "શિક્ષાસેતુ AI જુઓ",
+      exploreBtn: "StudySaathi AI જુઓ",
       howItWorksBtn: "આ કેવી રીતે કાર્ય કરે છે?",
-      shikshaBotGreeting: "નમસ્તે! હું શિક્ષાબોટ છું. ચાલો સાથે મળીને શિક્ષણને વધુ બહેતર બનાવીએ!",
+      shikshaBotGreeting: "નમસ્તે! હું સાથીબોટ છું. ચાલો સાથે મળીને શિક્ષણને વધુ બહેતર બનાવીએ!",
       challengeHeading: "દરેક બાળકની શીખવાની ગતિ અલગ હોય છે.",
       challengeSub: "વિદ્યાર્થીઓ અલગ અલગ સંકલ્પનાઓમાં મુશ્કેલી અનુભવે છે અને શિક્ષકોને લક્ષિત સહાય માટે સ્પષ્ટ વિશ્લેષણ જોઈએ.",
       solutionHeading: "તમારો સ્માર્ટ શિક્ષણ સાથી.",
@@ -1268,7 +1268,7 @@ export const translations = {
     tutorial: {
       pageTitle: "સહાય અને માર્ગદર્શિકા કેન્દ્ર",
       badge: "ગુજરાત પ્રાથમિક શિક્ષક માર્ગદર્શિકા",
-      heroTitle: "૫ મિનિટમાં શિક્ષાસેતુ AI શીખો",
+      heroTitle: "૫ મિનિટમાં StudySaathi AI શીખો",
       heroSubtitle: "શિક્ષણ ત્રુટિઓ શોધવા, ૫-પગલાંની ઉપચાર યોજના અમલમાં મૂકવા અને પરિણામ સુધારવા માટેની સરળ, દ્રશ્ય અને દ્વિભાષી માર્ગદર્શિકા.",
       replayTour: "માર્ગદર્શિત ટૂર ફરી જુઓ",
       quickStartPrint: "ઝડપી શરૂઆત માર્ગદર્શિકા પ્રિન્ટ કરો",
@@ -1281,12 +1281,12 @@ export const translations = {
       activeTabGlossary: "દ્વિભાષી શબ્દકોશ",
       activeTabTips: "ગ્રામીણ વર્ગખંડ ટિપ્સ",
       tour: {
-        welcomeBadge: "શિક્ષાસેતુમાં સ્વાગત છે",
+        welcomeBadge: "StudySaathi માં સ્વાગત છે",
         finishBadge: "ઉપયોગ માટે તૈયાર",
         tryAaravCta: "ડેમો વિદ્યાર્થી જુઓ: આરવ પટેલ",
         dashboard: {
           step1: {
-            title: "શિક્ષાસેતુ AI માં આપનું સ્વાગત છે",
+            title: "StudySaathi AI માં આપનું સ્વાગત છે",
             desc: "ગુજરાતના પ્રાથમિક શિક્ષકો માટે ઑફલાઇન ચાલતું સરળ સાધન, જે પાયાની શિક્ષણ ત્રુટિઓ સમયસર ઓળખવામાં મદદ કરે છે.",
           },
           step2: {
@@ -1310,7 +1310,7 @@ export const translations = {
             desc: "અંગ્રેજી અને ગુજરાતી વચ્ચે ગમે ત્યારે ફેરબદલ કરો. ઇન્ટરનેટ વગર પણ કામ ચાલુ રહે છે.",
           },
           step7: {
-            title: "શિક્ષાબોટ સહાયક",
+            title: "સાથીબોટ સહાયક",
             desc: "શિક્ષણશાસ્ત્ર સંબંધી પ્રશ્નો પૂછવા અથવા પૃષ્ઠની માર્ગદર્શિકા શરૂ કરવા અહીં ક્લિક કરો.",
           },
           step8: {

@@ -6,7 +6,7 @@ import type { Server } from "http";
 let server: Server;
 let baseUrl: string;
 
-describe("ShikshaSetu AI Standalone Express Backend Tests", () => {
+describe("StudySaathi AI Standalone Express Backend Tests", () => {
   before(() => {
     return new Promise<void>((resolve) => {
       server = app.listen(0, () => {
@@ -38,7 +38,7 @@ describe("ShikshaSetu AI Standalone Express Backend Tests", () => {
     const res = await fetch(`${baseUrl}/api/v1/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: "teacher@shikshasetu.edu.in" }),
+      body: JSON.stringify({ email: "teacher@studysaathi.edu.in" }),
     });
     assert.equal(res.status, 200);
     const data = await res.json();

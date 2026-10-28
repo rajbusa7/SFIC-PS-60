@@ -8,7 +8,7 @@ import {
 import { calculatePercentage } from "../engine/calculations";
 import { detectLearningGap } from "../engine/gapDetection";
 
-describe("ShikshaSetu AI Provider & Security Directives", () => {
+describe("StudySaathi AI Provider & Security Directives", () => {
   it("sanitizes prompt to strip PII emails and phone numbers", () => {
     const raw = "Student aarav.patel@gmail.com and parent phone 9876543210 need help with division.";
     const sanitized = sanitizePrompt(raw);

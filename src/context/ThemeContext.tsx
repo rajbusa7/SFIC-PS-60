@@ -29,7 +29,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<ThemeMode>(() => {
     if (typeof window === "undefined") return "system";
     try {
-      const saved = localStorage.getItem("shikshasetu_theme") as ThemeMode | null;
+      const saved = (localStorage.getItem("studysaathi_theme") || localStorage.getItem("shikshasetu_theme")) as ThemeMode | null;
       if (saved === "light" || saved === "dark" || saved === "system") {
         return saved;
       }
@@ -42,7 +42,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>(() => {
     if (typeof window === "undefined") return "light";
     try {
-      const saved = localStorage.getItem("shikshasetu_theme") as ThemeMode | null;
+      const saved = (localStorage.getItem("studysaathi_theme") || localStorage.getItem("shikshasetu_theme")) as ThemeMode | null;
       if (saved === "dark") return "dark";
       if (saved === "light") return "light";
       if (window.matchMedia("(prefers-color-scheme: dark)").matches) return "dark";
@@ -89,7 +89,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let savedMode: ThemeMode = "system";
     try {
-      const saved = localStorage.getItem("shikshasetu_theme") as ThemeMode | null;
+      const saved = (localStorage.getItem("studysaathi_theme") || localStorage.getItem("shikshasetu_theme")) as ThemeMode | null;
       if (saved === "light" || saved === "dark" || saved === "system") {
         savedMode = saved;
       }
@@ -115,6 +115,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const setTheme = (mode: ThemeMode) => {
     setThemeState(mode);
     try {
+      localStorage.setItem("studysaathi_theme", mode);
       localStorage.setItem("shikshasetu_theme", mode);
     } catch {
       // storage unavailable

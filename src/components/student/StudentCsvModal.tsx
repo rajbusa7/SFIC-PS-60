@@ -42,7 +42,7 @@ MPS-3A-06,Pranav Dave,3,A,Hands-on visual learner`;
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", "shikshasetu_students_sample.csv");
+    link.setAttribute("download", "studysaathi_students_sample.csv");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

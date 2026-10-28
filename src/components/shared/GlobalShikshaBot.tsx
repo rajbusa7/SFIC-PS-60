@@ -382,7 +382,7 @@ export function GlobalShikshaBot() {
           data-tour="shikshabot-trigger"
           onClick={() => setIsOpen(true)}
           className="group relative flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-tr from-[#FAF6E9] via-[#F2DCB5] to-[#F2CAB3] p-0.5 shadow-[0_4px_20px_rgba(73,53,47,0.15)] hover:shadow-[0_6px_28px_rgba(73,53,47,0.22)] border border-[#49352F]/20 transition-all duration-300 transform hover:scale-105 cursor-pointer"
-          aria-label="Open ShikshaBot AI Assistant"
+          aria-label="Open StudySaathi AI Assistant"
         >
           {/* Inner orb reflection */}
           <div className="w-full h-full rounded-full bg-white flex items-center justify-center relative overflow-hidden border border-[#49352F]/10">
@@ -399,7 +399,7 @@ export function GlobalShikshaBot() {
 
           {/* Hover tooltip label */}
           <span className="absolute right-full mr-3 px-3 py-1.5 rounded-xl bg-[#49352F] text-white text-xs font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-xl">
-            {language === "gu" ? "શિક્ષાસેતુ AI સહાયક" : "ShikshaSetu AI Assistant"}
+            {language === "gu" ? "StudySaathi AI સહાયક" : "StudySaathi AI Assistant"}
           </span>
         </button>
       )}
@@ -415,7 +415,7 @@ export function GlobalShikshaBot() {
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
-                  <h4 className="text-xs font-bold text-[#49352F]">ShikshaSetu AI</h4>
+                  <h4 className="text-xs font-bold text-[#49352F]">StudySaathi AI</h4>
                   <span className="px-1.5 py-0.2 rounded-full bg-[#2E7D5E]/15 text-[#2E7D5E] border border-[#2E7D5E]/20 text-[9px] font-extrabold uppercase">
                     ChatGPT Powered
                   </span>

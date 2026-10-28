@@ -87,7 +87,7 @@ export async function POST(request: Request) {
     const isGujarati = language === "gu";
 
     // 2. AI PEDAGOGICAL DIAGNOSIS PROMPT (Evidence-based only, strictly no medical claims)
-    const systemInstruction = `You are ShikshaSetu AI Pedagogical Diagnostic Specialist for Gujarat primary schools.
+    const systemInstruction = `You are StudySaathi AI Pedagogical Diagnostic Specialist for Gujarat primary schools.
 Analyze student assessment results based STRICTLY ON THE PROVIDED EMPIRICAL EVIDENCE.
 RULES:
 1. NEVER diagnose clinical, medical, or psychological conditions (e.g., ADHD, Dyscalculia, cognitive impairment).

@@ -1,4 +1,4 @@
-# ShikshaSetu AI (શિક્ષાસેતુ AI)
+# StudySaathi AI (StudySaathi AI)
 
 > **"Every Gap Identified. Every Child Supported."**  
 > *Smart Tracking and Remedial Action System for Student Learning Gaps in Primary Schools.*  
@@ -9,7 +9,7 @@
 
 ## 1. Executive Summary & Product Vision
 
-**ShikshaSetu AI** is a modern, responsive, accessible web application designed to empower primary-school teachers, headmasters, and parents across Gujarat in identifying individual student learning gaps, diagnosing underlying conceptual bottlenecks, executing targeted 5-step concrete remedial plans, and measuring empirical growth over time.
+**StudySaathi AI** is a modern, responsive, accessible web application designed to empower primary-school teachers, headmasters, and parents across Gujarat in identifying individual student learning gaps, diagnosing underlying conceptual bottlenecks, executing targeted 5-step concrete remedial plans, and measuring empirical growth over time.
 
 ### Core Workflow:
 ```

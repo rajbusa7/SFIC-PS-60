@@ -91,7 +91,7 @@ export default function ReportsPage() {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `shikshasetu_learning_gaps_report.csv`);
+    link.setAttribute("download", `studysaathi_learning_gaps_report.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -389,8 +389,8 @@ export default function ReportsPage() {
                 </h3>
                 <p className="text-xs text-[#7A6862] mt-1 leading-relaxed">
                   {language === "gu"
-                    ? "મોડેલ પ્રાથમિક શાળા ખાતે, અમે દરેક બાળકની વ્યક્તિગત શીખવાની શૈલીને સમજવા અને કોઈ મૂળભૂત સંકલ્પનાઓ છૂટી ન જાય તે સુનિશ્ચિત કરવા શિક્ષાસેતુ AI નો ઉપયોગ કરીએ છીએ. આ સારાંશ તમારા બાળકની શક્તિઓ અને ઘેર તેમને સહાય કરવાના સરળ, આનંદપ્રદ ઉપાયો દર્શાવે છે."
-                    : "At Model Primary School, we use ShikshaSetu AI to understand each child's individual learning style and ensure no fundamental concepts are missed. This summary highlights what your child does well and simple, fun ways you can support them at home."}
+                    ? "મોડેલ પ્રાથમિક શાળા ખાતે, અમે દરેક બાળકની વ્યક્તિગત શીખવાની શૈલીને સમજવા અને કોઈ મૂળભૂત સંકલ્પનાઓ છૂટી ન જાય તે સુનિશ્ચિત કરવા StudySaathi AI નો ઉપયોગ કરીએ છીએ. આ સારાંશ તમારા બાળકની શક્તિઓ અને ઘેર તેમને સહાય કરવાના સરળ, આનંદપ્રદ ઉપાયો દર્શાવે છે."
+                    : "At Model Primary School, we use StudySaathi AI to understand each child's individual learning style and ensure no fundamental concepts are missed. This summary highlights what your child does well and simple, fun ways you can support them at home."}
                 </p>
               </div>
 

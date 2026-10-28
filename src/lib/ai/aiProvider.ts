@@ -1,5 +1,5 @@
 /**
- * ShikshaSetu AI - Server-Side AI Provider Facade
+ * StudySaathi AI - Server-Side AI Provider Facade
  * Delegates to centralized AI router in src/lib/ai/router.ts.
  */
 import { aiRouter } from "./router";

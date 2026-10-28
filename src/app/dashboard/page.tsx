@@ -314,8 +314,8 @@ export default function DashboardPage() {
                   <div className="flex items-center gap-2">
                     <h2 className="font-heading text-sm sm:text-base font-bold text-[#49352F]">
                       {language === "gu"
-                        ? "નવા શિક્ષક છો? શિક્ષાસેતુ AI કેવી રીતે વાપરવું તે જાણો"
-                        : "New Teacher? Learn How to Handle ShikshaSetu AI"}
+                        ? "નવા શિક્ષક છો? StudySaathi AI કેવી રીતે વાપરવું તે જાણો"
+                        : "New Teacher? Learn How to Handle StudySaathi AI"}
                     </h2>
                     <Badge variant="saffron" size="sm">
                       {language === "gu" ? "માર્ગદર્શિત ટૂર" : "Interactive Tour"}

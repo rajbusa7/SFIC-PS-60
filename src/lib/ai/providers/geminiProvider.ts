@@ -261,7 +261,7 @@ Output JSON ONLY:
       )
       .join("\n\n---\n\n");
 
-    const systemInstruction = `You are ShikshaSetu AI School Notice Assistant for parents and teachers.
+    const systemInstruction = `You are StudySaathi AI School Notice Assistant for parents and teachers.
 Answer questions based ONLY on the provided verified school notices.
 RULES:
 1. FACTUAL GROUNDING: Rely exclusively on the notices provided. Never invent dates, fees, dress codes, or school policies.

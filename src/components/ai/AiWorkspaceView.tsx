@@ -388,8 +388,8 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
       role: "assistant",
       content:
         language === "gu"
-          ? "નમસ્તે! હું શિક્ષાસેતુ પ્રાથમિક શિક્ષક સહાયક છું. હું આપને પાયાની સંકલ્પનાઓ શીખવવામાં, ઉપચારાત્મક પ્રવૃત્તિઓ ગોઠવવામાં અને વર્ગખંડના શિક્ષણ ત્રુટિ ડેટાનું વિશ્લેષણ કરવામાં મદદ કરી શકું છું. આપ શું પૂછવા માંગો છો?"
-          : "Hello! I am your ShikshaSetu Primary Teacher AI Assistant. I can help you with foundational FLN concepts, manipulative-based remedial plans, worksheet ideas, or summarizing your classroom's latest assessment gaps. How can I support your teaching today?",
+          ? "નમસ્તે! હું StudySaathi પ્રાથમિક શિક્ષક સહાયક છું. હું આપને પાયાની સંકલ્પનાઓ શીખવવામાં, ઉપચારાત્મક પ્રવૃત્તિઓ ગોઠવવામાં અને વર્ગખંડના શિક્ષણ ત્રુટિ ડેટાનું વિશ્લેષણ કરવામાં મદદ કરી શકું છું. આપ શું પૂછવા માંગો છો?"
+          : "Hello! I am your StudySaathi Primary Teacher AI Assistant. I can help you with foundational FLN concepts, manipulative-based remedial plans, worksheet ideas, or summarizing your classroom's latest assessment gaps. How can I support your teaching today?",
     },
   ]);
   const [assistantLoading, setAssistantLoading] = useState(false);
@@ -458,11 +458,11 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                 <Sparkles className="w-5 h-5 animate-pulse" />
               </span>
               <span className="text-xs font-mono font-bold uppercase tracking-[0.2em] text-[#B26A1B]">
-                ShikshaSetu AI Intelligence Hub
+                StudySaathi AI Intelligence Hub
               </span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight mt-2 text-[#49352F]">
-              {language === "gu" ? "શિક્ષાસેતુ ઇન્ટરેક્ટિવ AI વર્કસ્પેસ" : "Functional AI Workspace"}
+              {language === "gu" ? "StudySaathi ઇન્ટરેક્ટિવ AI વર્કસ્પેસ" : "Functional AI Workspace"}
             </h2>
             <p className="text-xs sm:text-sm text-[#7A6862] mt-1 max-w-2xl leading-relaxed">
               {language === "gu"
@@ -1676,7 +1676,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                 </div>
                 <div>
                   <h3 className="font-bold text-sm text-slate-900">
-                    ShikshaSetu Teacher AI Assistant
+                    StudySaathi Teacher AI Assistant
                   </h3>
                   <p className="text-[11px] text-slate-500">
                     Pedagogical coaching, foundational lesson ideas, & authorized classroom telemetry

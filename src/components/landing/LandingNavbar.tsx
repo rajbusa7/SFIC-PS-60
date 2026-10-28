@@ -431,7 +431,7 @@ export function LandingNavbar() {
                     <span>{language === "gu" ? "નવા શિક્ષક માર્ગદર્શિકા" : "Teacher Quick Start Guide"}</span>
                   </p>
                   <p className="text-[10px] text-slate-300 mt-0.5">
-                    {language === "gu" ? "વેબસાઇટ કેવી રીતે વાપરવી તે 3 મિનિટમાં જાણો" : "Learn how to use ShikshaSetu in 3 mins"}
+                    {language === "gu" ? "વેબસાઇટ કેવી રીતે વાપરવી તે 3 મિનિટમાં જાણો" : "Learn how to use StudySaathi in 3 mins"}
                   </p>
                 </div>
                 <Link

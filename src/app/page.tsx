@@ -51,8 +51,8 @@ export default function HomePage() {
 
   const botSpeeches = [
     {
-      en: "Hi! I'm ShikshaBot. Let's build the glowing bridge from learning gaps to mastery!",
-      gu: "નમસ્તે! હું શિક્ષાબોટ છું. ચાલો અધ્યયન ત્રુટિઓને દૂર કરીને સફળતાનો સેતુ બનાવીએ!",
+      en: "Hi! I'm SaathiBot. Let's build the glowing bridge from learning gaps to mastery!",
+      gu: "નમસ્તે! હું સાથીબોટ છું. ચાલો અધ્યયન ત્રુટિઓને દૂર કરીને સફળતાનો સાથી બનાવીએ!",
     },
     {
       en: "Aarav Patel went from 35% to 85% mastery using our 5-step concrete bean-counting remedial pathway!",
@@ -167,10 +167,10 @@ export default function HomePage() {
               : "Smart tracking and actionable 5-step remedial system for student learning gaps in primary schools. The glowing bridge carrying every child from foundational hurdle to complete mastery."}
           </p>
 
-          {/* ShikshaBot Interactive Speech Bubble Companion */}
+          {/* SaathiBot Interactive Speech Bubble Companion */}
           <div
             onClick={() => setSpeechIndex((prev) => (prev + 1) % botSpeeches.length)}
-            title="Click to hear another insight from ShikshaBot"
+            title="Click to hear another insight from SaathiBot"
             className="inline-flex items-center gap-3 p-3.5 pr-5 rounded-2xl bg-[#1c194a]/90 border border-amber-500/35 backdrop-blur-xl shadow-[0_0_25px_rgba(255,138,61,0.25)] hover:border-amber-400 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer select-none group"
           >
             <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-400 via-orange-400 to-teal-400 flex items-center justify-center text-slate-950 font-black text-xs shadow-md shadow-amber-500/40 shrink-0 group-hover:scale-105 transition-transform">
@@ -194,7 +194,7 @@ export default function HomePage() {
                 size="lg"
                 className="rounded-full shadow-[0_0_30px_rgba(255,138,61,0.45)] text-sm font-black active:scale-95 transition-all"
               >
-                <span>{language === "gu" ? "શિક્ષાસેતુ ડેશબોર્ડ ખોલો" : "Explore ShikshaSetu Dashboard"}</span>
+                <span>{language === "gu" ? "StudySaathi ડેશબોર્ડ ખોલો" : "Explore StudySaathi Dashboard"}</span>
                 <ArrowRight className="w-4 h-4 ml-1.5" />
               </Button>
             </Link>
@@ -513,7 +513,7 @@ export default function HomePage() {
               </h3>
               <p className="text-sm text-slate-300 leading-relaxed">
                 {language === "gu"
-                  ? "ગણિતમાં ૨-અંકના ભાગાકારમાં મુશ્કેલી અનુભવતો આરવ પટેલ, શિક્ષાસેતુના ૫-પગલાંના મણકા અને સંખ્યા રેખા ઉપચાર પછી પુનઃ મૂલ્યાંકનમાં ૮૫% સાથે ઉત્તીર્ણ થયો."
+                  ? "ગણિતમાં ૨-અંકના ભાગાકારમાં મુશ્કેલી અનુભવતો આરવ પટેલ, StudySaathi ના ૫-પગલાંના મણકા અને સંખ્યા રેખા ઉપચાર પછી પુનઃ મૂલ્યાંકનમાં ૮૫% સાથે ઉત્તીર્ણ થયો."
                   : "Diagnosed with foundational division hurdles, Aarav followed a concrete 5-step pathway using physical bean counters and peer modeling. Reassessment confirmed genuine mastery with a verified +50 percentage-point gain."}
               </p>
             </div>
@@ -967,11 +967,11 @@ export default function HomePage() {
             <div className="lg:col-span-2 space-y-4">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-amber-500 to-indigo-600 flex items-center justify-center text-slate-950 font-black text-base shadow-[0_0_15px_rgba(255,138,61,0.4)]">
-                  શ
+                  સ
                 </div>
                 <div className="flex flex-col">
                   <span className="font-heading font-extrabold text-base text-white">
-                    ShikshaSetu AI
+                    StudySaathi AI
                   </span>
                   <span className="text-[10px] text-amber-400 uppercase tracking-wider font-semibold">
                     {language === "gu" ? "અધ્યયન ત્રુટિ સેતુ પ્રણાલી" : "The Learning Gap Bridge"}
@@ -1054,7 +1054,7 @@ export default function HomePage() {
           </div>
 
           <div className="pt-8 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
-            <p>© 2026 ShikshaSetu AI • SFIC Gujarat Hackathon PS-60. All rights reserved.</p>
+            <p>© 2026 StudySaathi AI • SFIC Gujarat Hackathon PS-60. All rights reserved.</p>
             <div className="flex items-center gap-4">
               <span>English / ગુજરાતી Support</span>
               <span>100% Offline Ready</span>

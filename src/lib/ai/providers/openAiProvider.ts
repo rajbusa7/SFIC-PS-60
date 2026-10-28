@@ -280,7 +280,7 @@ Output valid JSON ONLY:
       )
       .join("\n\n---\n\n");
 
-    const systemInstruction = `You are ShikshaSetu AI School Notice Assistant.
+    const systemInstruction = `You are StudySaathi AI School Notice Assistant.
 Answer parent/teacher questions using ONLY the provided verified notices.
 If information is not present, state clearly that it is unavailable in recent notices.
 Output valid JSON ONLY:

@@ -66,7 +66,7 @@ export function DashboardPreview() {
             <div className="w-3 h-3 rounded-full bg-[#B26A1B]/80 shadow-xs" />
             <div className="w-3 h-3 rounded-full bg-[#2E7D5E]/80 shadow-xs" />
             <span className="ml-2 text-xs font-mono font-semibold text-[#7A6862] hidden sm:inline">
-              shikshasetu.edu.in/dashboard
+              studysaathi.edu.in/dashboard
             </span>
           </div>
 

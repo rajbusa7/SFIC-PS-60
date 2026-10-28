@@ -6,7 +6,7 @@ import { FilterProvider } from "@/context/FilterContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 
 export const metadata: Metadata = {
-  title: "ShikshaSetu AI | Smart Learning Gap Tracking & Remedial Action System",
+  title: "StudySaathi AI | Smart Learning Gap Tracking & Remedial Action System",
   description:
     "Smart tracking and Remedial action system for student learning gaps in primary schools. SFIC Gujarat Hackathon.",
 };

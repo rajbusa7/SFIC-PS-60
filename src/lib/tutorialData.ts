@@ -257,12 +257,12 @@ export const TUTORIAL_FAQS: FAQItem[] = [
   },
   {
     id: "faq-offline",
-    questionEn: "Does ShikshaSetu AI work without internet?",
-    questionGu: "શું શિક્ષાસેતુ AI ઇન્ટરનેટ વગર કાર્ય કરે છે?",
+    questionEn: "Does StudySaathi AI work without internet?",
+    questionGu: "શું StudySaathi AI ઇન્ટરનેટ વગર કાર્ય કરે છે?",
     answerEn:
-      "Yes! ShikshaSetu AI is engineered as a 100% offline-first Progressive Web App (PWA). All gap rules, 5-step remedial plans, and ShikshaBot pedagogical guidance run locally in your browser with zero paid API dependencies.",
+      "Yes! StudySaathi AI is engineered as a 100% offline-first Progressive Web App (PWA). All gap rules, 5-step remedial plans, and SaathiBot pedagogical guidance run locally in your browser with zero paid API dependencies.",
     answerGu:
-      "હા! શિક્ષાસેતુ AI સંપૂર્ણપણે 100% ઑફલાઇન PWA તરીકે ડિઝાઇન કરેલ છે. તમામ ત્રુટિ નિયમો, ૫-પગલાંની ઉપચારાત્મક યોજનાઓ અને શિક્ષાબોટ ઇન્ટરનેટ કે પેઇડ API વગર તમારા ઉપકરણમાં ચાલે છે.",
+      "હા! StudySaathi AI સંપૂર્ણપણે 100% ઑફલાઇન PWA તરીકે ડિઝાઇન કરેલ છે. તમામ ત્રુટિ નિયમો, ૫-પગલાંની ઉપચારાત્મક યોજનાઓ અને સાથીબોટ ઇન્ટરનેટ કે પેઇડ API વગર તમારા ઉપકરણમાં ચાલે છે.",
     category: "offline",
     keywords: ["offline", "internet", "pwa", "wifi", "network", "ઑફલાઇન", "નેટ", "ઇન્ટરનેટ"],
   },

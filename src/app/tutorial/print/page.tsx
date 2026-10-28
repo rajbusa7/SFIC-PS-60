@@ -83,7 +83,7 @@ export default function TutorialPrintPage() {
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xl font-black tracking-tight text-[#49352F] font-heading">
-                શિક્ષાસેતુ AI • ShikshaSetu AI
+                StudySaathi AI
               </span>
               <span className="px-2 py-0.5 rounded-sm bg-[#FAF6E9] text-[#B26A1B] font-mono text-[10px] font-bold border border-[#B26A1B]/20">
                 SFIC PS-60
@@ -266,7 +266,7 @@ export default function TutorialPrintPage() {
             </div>
           </div>
           <div className="text-right text-[10px] text-slate-400 font-mono">
-            <div>ShikshaSetu AI • Gujarat SFIC PS-60</div>
+            <div>StudySaathi AI • Gujarat SFIC PS-60</div>
             <div>Printable Reference Sheet • Keep at Teacher Desk</div>
           </div>
         </div>

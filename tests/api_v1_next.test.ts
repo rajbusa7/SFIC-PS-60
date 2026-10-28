@@ -34,7 +34,7 @@ describe("Next.js /api/v1 REST Endpoints Functional Tests", () => {
 
   it("POST /api/v1/auth/login validates email and authenticates user", async () => {
     const req = createMockRequest("http://localhost:3000/api/v1/auth/login", "POST", {
-      email: "teacher@shikshasetu.edu.in",
+      email: "teacher@studysaathi.edu.in",
     });
     const res = await authLoginHandler(req);
     assert.equal(res.status, 200);

@@ -16,13 +16,13 @@ export function BrandLogo({
   const isDarkExplicit = variant === "dark";
   const isLightExplicit = variant === "light";
 
-  const titleShikshaClass = isDarkExplicit
+  const titleStudyClass = isDarkExplicit
     ? "text-white"
     : isLightExplicit
     ? "text-[#49352F]"
     : "text-[#49352F] dark:text-white";
 
-  const titleSetuClass = isDarkExplicit
+  const titleSaathiClass = isDarkExplicit
     ? "text-[#FF8A3D]"
     : isLightExplicit
     ? "text-[#B26A1B]"
@@ -65,12 +65,12 @@ export function BrandLogo({
           <line x1="33" y1="26" x2="33" y2="36" stroke="#2E7D5E" strokeWidth="1.5" strokeDasharray="2 2" />
         </svg>
 
-        {/* Center Gujarati "શ" Character */}
+        {/* Center Gujarati "સ" Character */}
         <span
           className="relative font-gujarati font-black text-[#49352F]"
           style={{ fontSize: `${Math.round(size * 0.48)}px` }}
         >
-          શ
+          સ
         </span>
 
         {/* Inner sage accent dot */}
@@ -80,8 +80,8 @@ export function BrandLogo({
       {showText && (
         <div className="flex flex-col">
           <div className="flex items-center gap-1.5">
-            <span className={`font-heading font-extrabold text-base tracking-tight leading-none ${titleShikshaClass}`}>
-              Shiksha<span className={titleSetuClass}>Setu</span>
+            <span className={`font-heading font-extrabold text-base tracking-tight leading-none ${titleStudyClass}`}>
+              Study<span className={titleSaathiClass}>Saathi</span>
             </span>
             <span className={`border text-[10px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider ${badgeClass}`}>
               AI

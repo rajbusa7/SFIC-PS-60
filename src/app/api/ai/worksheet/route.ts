@@ -58,7 +58,7 @@ export async function POST(request: Request) {
     const count = Math.min(10, Math.max(3, Number(questionCount) || 5));
     const isGujarati = language === "gu";
 
-    const systemInstruction = `You are ShikshaSetu AI Primary Worksheet Creator for Gujarat Government Schools (Grades 1 to 5).
+    const systemInstruction = `You are StudySaathi AI Primary Worksheet Creator for Gujarat Government Schools (Grades 1 to 5).
 Generate a pedagogically sound classroom worksheet suitable for Gujarat primary schools.
 Key requirements:
 1. Provide appropriate difficulty for Class ${grade} primary students.

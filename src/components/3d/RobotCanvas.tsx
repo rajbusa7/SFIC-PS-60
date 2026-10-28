@@ -51,7 +51,7 @@ export function RobotCanvas({
           <div className="w-16 h-16 rounded-full bg-[#F2CAB3] text-[#49352F] flex items-center justify-center mx-auto border border-[#49352F]/15">
             <Bot className="w-8 h-8 text-[#49352F]" aria-hidden="true" />
           </div>
-          <h4 className="text-[#49352F] font-bold text-sm">ShikshaBot Ready</h4>
+          <h4 className="text-[#49352F] font-bold text-sm">SaathiBot Ready</h4>
           <p className="text-xs text-[#7A6862]">
             Hardware acceleration is disabled on this device. Experience continues in high-performance mode.
           </p>

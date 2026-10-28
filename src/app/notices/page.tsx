@@ -9,6 +9,7 @@ import { NoticeAssistantChat } from "@/components/notices/NoticeAssistantChat";
 import { AudioPlayer } from "@/components/audio/AudioPlayer";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
+import { broadcastDataUpdate, subscribeToDataUpdates } from "@/lib/events";
 import {
   MessageSquare,
   Sparkles,
@@ -88,9 +89,14 @@ export default function NoticesPage() {
 
   useEffect(() => {
     fetchNotices();
+    const unsubscribe = subscribeToDataUpdates(() => {
+      fetchNotices();
+    }, ["notices", "all"]);
+    return () => unsubscribe();
   }, [selectedCategory, selectedGrade]);
 
   const handleNoticeCreated = (newNotice: SchoolNotice) => {
+    broadcastDataUpdate("notices", "create", newNotice.id);
     setNotices((prev) => [newNotice, ...prev]);
     setSelectedNotice(newNotice);
     loadNoticeDetails(newNotice.id);

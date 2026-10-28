@@ -1,5 +1,16 @@
 import { Pool, type PoolClient, type QueryResult, type QueryResultRow } from "pg";
-import type { Student, Classroom } from "../types";
+import type {
+  Student,
+  Classroom,
+  Assessment,
+  AssessmentResult,
+  LearningGap,
+  RemedialPlan,
+  LearningActivity,
+  ActivityAttempt,
+  SchoolSettings,
+  School,
+} from "../types";
 import {
   SEED_SCHOOL,
   SEED_SETTINGS,
@@ -7,6 +18,11 @@ import {
   SEED_SUBJECTS,
   SEED_CONCEPTS,
   SEED_STUDENTS,
+  SEED_ASSESSMENTS,
+  SEED_RESULTS,
+  SEED_LEARNING_GAPS,
+  SEED_REMEDIAL_PLANS,
+  SEED_ACTIVITIES,
 } from "./seedData";
 
 // Resolve PostgreSQL connection string from standard environment variables
@@ -600,3 +616,522 @@ function mapStudentRow(row: any): Student {
     createdAt: row.createdAt ? new Date(row.createdAt).toISOString() : new Date().toISOString(),
   };
 }
+
+/**
+ * PostgreSQL Assessment & Result Operations
+ */
+export const postgresAssessmentDb = {
+  async getAssessments(classroomId?: string): Promise<Assessment[]> {
+    let sql = `
+      SELECT 
+        id,
+        classroom_id AS "classroomId",
+        subject_id AS "subjectId",
+        subject_code AS "subjectCode",
+        title,
+        assessment_date AS "assessmentDate",
+        status,
+        max_marks AS "maxMarks",
+        concept_ids AS "conceptIds",
+        created_at AS "createdAt"
+      FROM assessments
+    `;
+    const params: any[] = [];
+    if (classroomId && classroomId !== "all") {
+      sql += " WHERE classroom_id = $1";
+      params.push(classroomId);
+    }
+    sql += " ORDER BY assessment_date DESC";
+    const res = await queryPostgres(sql, params);
+    return res.rows.map((r) => ({
+      ...r,
+      maxMarks: Number(r.maxMarks),
+      conceptIds: Array.isArray(r.conceptIds) ? r.conceptIds : JSON.parse(r.conceptIds || "[]"),
+      assessmentDate: new Date(r.assessmentDate).toISOString().split("T")[0],
+      createdAt: new Date(r.createdAt).toISOString(),
+    }));
+  },
+
+  async createAssessment(
+    data: Omit<Assessment, "id" | "createdAt">,
+    initialResults?: Omit<AssessmentResult, "id" | "assessmentId">[]
+  ): Promise<Assessment> {
+    const id = `asm-${Date.now()}`;
+    const pool = getPostgresPool();
+    if (!pool) throw new Error("PostgreSQL pool not available");
+
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      await client.query(
+        `INSERT INTO assessments (
+          id, classroom_id, subject_id, subject_code, title,
+          assessment_date, status, max_marks, concept_ids, created_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())`,
+        [
+          id,
+          data.classroomId,
+          data.subjectId,
+          data.subjectCode,
+          data.title,
+          data.assessmentDate,
+          data.status || "published",
+          data.maxMarks,
+          JSON.stringify(data.conceptIds || []),
+        ]
+      );
+
+      if (initialResults && initialResults.length > 0) {
+        for (const res of initialResults) {
+          const resId = `res-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+          const pct = Math.round((Number(res.marksObtained) / Math.max(1, Number(res.maximumMarks))) * 100);
+          await client.query(
+            `INSERT INTO assessment_results (
+              id, assessment_id, student_id, concept_id,
+              marks_obtained, maximum_marks, percentage, notes, recorded_at
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+            [
+              resId,
+              id,
+              res.studentId,
+              res.conceptId,
+              res.marksObtained,
+              res.maximumMarks,
+              pct,
+              res.notes || "",
+              res.recordedAt || new Date().toISOString(),
+            ]
+          );
+        }
+      }
+
+      await client.query("COMMIT");
+      return {
+        ...data,
+        id,
+        createdAt: new Date().toISOString(),
+      };
+    } catch (err) {
+      await client.query("ROLLBACK");
+      throw err;
+    } finally {
+      client.release();
+    }
+  },
+
+  async getResults(studentId?: string, conceptId?: string): Promise<AssessmentResult[]> {
+    const conditions: string[] = [];
+    const params: any[] = [];
+    let idx = 1;
+
+    if (studentId) {
+      conditions.push(`student_id = $${idx++}`);
+      params.push(studentId);
+    }
+    if (conceptId) {
+      conditions.push(`concept_id = $${idx++}`);
+      params.push(conceptId);
+    }
+
+    const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+    const sql = `
+      SELECT 
+        id,
+        assessment_id AS "assessmentId",
+        student_id AS "studentId",
+        concept_id AS "conceptId",
+        marks_obtained AS "marksObtained",
+        maximum_marks AS "maximumMarks",
+        percentage,
+        notes,
+        recorded_at AS "recordedAt"
+      FROM assessment_results
+      ${where}
+      ORDER BY recorded_at ASC
+    `;
+    const res = await queryPostgres(sql, params);
+    return res.rows.map((r) => ({
+      ...r,
+      marksObtained: Number(r.marksObtained),
+      maximumMarks: Number(r.maximumMarks),
+      percentage: Number(r.percentage),
+      recordedAt: new Date(r.recordedAt).toISOString(),
+    }));
+  },
+
+  async recordResults(results: Omit<AssessmentResult, "id">[]): Promise<AssessmentResult[]> {
+    const pool = getPostgresPool();
+    if (!pool) throw new Error("PostgreSQL pool not available");
+
+    const client = await pool.connect();
+    const created: AssessmentResult[] = [];
+    try {
+      await client.query("BEGIN");
+      for (const r of results) {
+        const id = `res-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+        const pct = Math.round((Number(r.marksObtained) / Math.max(1, Number(r.maximumMarks))) * 100);
+        await client.query(
+          `INSERT INTO assessment_results (
+            id, assessment_id, student_id, concept_id,
+            marks_obtained, maximum_marks, percentage, notes, recorded_at
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+          [
+            id,
+            r.assessmentId,
+            r.studentId,
+            r.conceptId,
+            r.marksObtained,
+            r.maximumMarks,
+            pct,
+            r.notes || "",
+            r.recordedAt || new Date().toISOString(),
+          ]
+        );
+        created.push({
+          ...r,
+          id,
+          percentage: pct,
+          recordedAt: r.recordedAt || new Date().toISOString(),
+        });
+      }
+      await client.query("COMMIT");
+      return created;
+    } catch (err) {
+      await client.query("ROLLBACK");
+      throw err;
+    } finally {
+      client.release();
+    }
+  },
+};
+
+/**
+ * PostgreSQL Learning Gaps Operations
+ */
+export const postgresLearningGapDb = {
+  async getLearningGaps(studentId?: string): Promise<LearningGap[]> {
+    let sql = `
+      SELECT 
+        g.id,
+        g.student_id AS "studentId",
+        s.display_name AS "studentName",
+        g.concept_id AS "conceptId",
+        c.name AS "conceptName",
+        c.subject_code AS "subjectCode",
+        s.grade,
+        g.priority,
+        g.mastery_status AS "masteryStatus",
+        g.reason,
+        g.status,
+        g.attempts_count AS "attemptsCount",
+        g.latest_percentage AS "latestPercentage",
+        g.previous_percentage AS "previousPercentage",
+        g.delta_percentage_points AS "deltaPercentagePoints",
+        g.remedial_plan_id AS "remedialPlanId",
+        g.updated_at AS "updatedAt"
+      FROM learning_gaps g
+      JOIN students s ON g.student_id = s.id
+      JOIN concepts c ON g.concept_id = c.id
+    `;
+    const params: any[] = [];
+    if (studentId) {
+      sql += " WHERE g.student_id = $1";
+      params.push(studentId);
+    }
+    sql += " ORDER BY g.updated_at DESC";
+    const res = await queryPostgres(sql, params);
+    return res.rows.map((r) => ({
+      ...r,
+      grade: Number(r.grade),
+      attemptsCount: Number(r.attemptsCount || 1),
+      latestPercentage: Number(r.latestPercentage),
+      previousPercentage: r.previousPercentage !== null ? Number(r.previousPercentage) : undefined,
+      deltaPercentagePoints: r.deltaPercentagePoints !== null ? Number(r.deltaPercentagePoints) : undefined,
+      updatedAt: new Date(r.updatedAt).toISOString(),
+    }));
+  },
+
+  async upsertLearningGap(gap: LearningGap): Promise<void> {
+    const sql = `
+      INSERT INTO learning_gaps (
+        id, student_id, concept_id, priority, mastery_status, reason,
+        status, attempts_count, latest_percentage, previous_percentage,
+        delta_percentage_points, remedial_plan_id, updated_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW())
+      ON CONFLICT (student_id, concept_id) DO UPDATE SET
+        priority = EXCLUDED.priority,
+        mastery_status = EXCLUDED.mastery_status,
+        reason = EXCLUDED.reason,
+        status = EXCLUDED.status,
+        attempts_count = EXCLUDED.attempts_count,
+        latest_percentage = EXCLUDED.latest_percentage,
+        previous_percentage = EXCLUDED.previous_percentage,
+        delta_percentage_points = EXCLUDED.delta_percentage_points,
+        remedial_plan_id = COALESCE(EXCLUDED.remedial_plan_id, learning_gaps.remedial_plan_id),
+        updated_at = NOW()
+    `;
+    await queryPostgres(sql, [
+      gap.id,
+      gap.studentId,
+      gap.conceptId,
+      gap.priority,
+      gap.masteryStatus,
+      gap.reason,
+      gap.status,
+      gap.attemptsCount,
+      gap.latestPercentage,
+      gap.previousPercentage ?? null,
+      gap.deltaPercentagePoints ?? null,
+      gap.remedialPlanId ?? null,
+    ]);
+  },
+};
+
+/**
+ * PostgreSQL Remedial Plans Operations
+ */
+export const postgresRemedialPlanDb = {
+  async getRemedialPlans(studentId?: string, status?: string): Promise<RemedialPlan[]> {
+    const conditions: string[] = [];
+    const params: any[] = [];
+    let idx = 1;
+
+    if (studentId) {
+      conditions.push(`p.student_id = $${idx++}`);
+      params.push(studentId);
+    }
+    if (status) {
+      conditions.push(`p.status = $${idx++}`);
+      params.push(status);
+    }
+
+    const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+    const sql = `
+      SELECT 
+        p.id,
+        p.student_id AS "studentId",
+        s.display_name AS "studentName",
+        p.concept_id AS "conceptId",
+        c.name AS "conceptName",
+        c.subject_code AS "subjectCode",
+        p.learning_objective AS "learningObjective",
+        p.recommendation_reason AS "recommendationReason",
+        p.status,
+        p.estimated_minutes AS "estimatedMinutes",
+        p.difficulty,
+        p.required_materials AS "requiredMaterials",
+        p.steps,
+        p.practice_questions_summary AS "practiceQuestionsSummary",
+        p.reassessment_criteria AS "reassessmentCriteria",
+        p.teacher_instructions AS "teacherInstructions",
+        p.teacher_notes AS "teacherNotes",
+        p.created_at AS "createdAt",
+        p.review_date AS "reviewDate"
+      FROM remedial_plans p
+      JOIN students s ON p.student_id = s.id
+      JOIN concepts c ON p.concept_id = c.id
+      ${where}
+      ORDER BY p.created_at DESC
+    `;
+    const res = await queryPostgres(sql, params);
+    return res.rows.map((r) => ({
+      ...r,
+      estimatedMinutes: Number(r.estimatedMinutes || 25),
+      requiredMaterials: Array.isArray(r.requiredMaterials)
+        ? r.requiredMaterials
+        : JSON.parse(r.requiredMaterials || "[]"),
+      steps: Array.isArray(r.steps) ? r.steps : JSON.parse(r.steps || "[]"),
+      createdAt: new Date(r.createdAt).toISOString(),
+    }));
+  },
+
+  async upsertRemedialPlan(plan: RemedialPlan): Promise<void> {
+    const sql = `
+      INSERT INTO remedial_plans (
+        id, student_id, concept_id, learning_objective, recommendation_reason,
+        status, estimated_minutes, difficulty, required_materials, steps,
+        practice_questions_summary, reassessment_criteria, teacher_instructions,
+        teacher_notes, created_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, NOW())
+      ON CONFLICT (id) DO UPDATE SET
+        learning_objective = EXCLUDED.learning_objective,
+        recommendation_reason = EXCLUDED.recommendation_reason,
+        status = EXCLUDED.status,
+        estimated_minutes = EXCLUDED.estimated_minutes,
+        difficulty = EXCLUDED.difficulty,
+        required_materials = EXCLUDED.required_materials,
+        steps = EXCLUDED.steps,
+        teacher_notes = EXCLUDED.teacher_notes,
+        review_date = NOW()
+    `;
+    await queryPostgres(sql, [
+      plan.id,
+      plan.studentId,
+      plan.conceptId,
+      plan.learningObjective,
+      plan.recommendationReason,
+      plan.status,
+      plan.estimatedMinutes || 25,
+      plan.difficulty || "Beginner",
+      JSON.stringify(plan.requiredMaterials || []),
+      JSON.stringify(plan.steps || []),
+      plan.practiceQuestionsSummary || "",
+      plan.reassessmentCriteria || "",
+      plan.teacherInstructions || "",
+      plan.teacherNotes || "",
+    ]);
+  },
+
+  async updateRemedialPlan(id: string, updates: Partial<RemedialPlan>): Promise<boolean> {
+    const sets: string[] = [];
+    const params: any[] = [id];
+    let idx = 2;
+
+    if (updates.status !== undefined) {
+      sets.push(`status = $${idx++}`);
+      params.push(updates.status);
+    }
+    if (updates.teacherNotes !== undefined) {
+      sets.push(`teacher_notes = $${idx++}`);
+      params.push(updates.teacherNotes);
+    }
+    if (updates.steps !== undefined) {
+      sets.push(`steps = $${idx++}`);
+      params.push(JSON.stringify(updates.steps));
+    }
+    if (updates.learningObjective !== undefined) {
+      sets.push(`learning_objective = $${idx++}`);
+      params.push(updates.learningObjective);
+    }
+
+    sets.push("review_date = NOW()");
+    const sql = `UPDATE remedial_plans SET ${sets.join(", ")} WHERE id = $1`;
+    const res = await queryPostgres(sql, params);
+    return (res.rowCount || 0) > 0;
+  },
+};
+
+/**
+ * PostgreSQL Activities & Attempts Operations
+ */
+export const postgresActivityDb = {
+  async getActivities(conceptId?: string, subjectCode?: string): Promise<LearningActivity[]> {
+    const conditions: string[] = [];
+    const params: any[] = [];
+    let idx = 1;
+
+    if (conceptId) {
+      conditions.push(`a.concept_id = $${idx++}`);
+      params.push(conceptId);
+    }
+    if (subjectCode) {
+      conditions.push(`a.subject_code = $${idx++}`);
+      params.push(subjectCode);
+    }
+
+    const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+    const sql = `
+      SELECT 
+        a.id,
+        a.concept_id AS "conceptId",
+        c.name AS "conceptName",
+        a.subject_code AS "subjectCode",
+        a.grade,
+        a.title,
+        a.title_gujarati AS "titleGujarati",
+        a.activity_type AS "activityType",
+        a.difficulty,
+        a.estimated_minutes AS "estimatedMinutes",
+        a.questions,
+        a.created_at AS "createdAt"
+      FROM learning_activities a
+      JOIN concepts c ON a.concept_id = c.id
+      ${where}
+      ORDER BY a.grade ASC
+    `;
+    const res = await queryPostgres(sql, params);
+    return res.rows.map((r) => ({
+      ...r,
+      grade: Number(r.grade),
+      estimatedMinutes: Number(r.estimatedMinutes || 10),
+      questions: Array.isArray(r.questions) ? r.questions : JSON.parse(r.questions || "[]"),
+      createdAt: new Date(r.createdAt).toISOString(),
+    }));
+  },
+
+  async recordAttempt(attempt: ActivityAttempt): Promise<void> {
+    const sql = `
+      INSERT INTO activity_attempts (
+        id, student_id, activity_id, score, maximum_score,
+        percentage, answers, incorrect_questions, completed_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
+    `;
+    await queryPostgres(sql, [
+      attempt.id,
+      attempt.studentId,
+      attempt.activityId,
+      attempt.score,
+      attempt.maximumScore,
+      attempt.percentage,
+      JSON.stringify(attempt.answers || {}),
+      JSON.stringify(attempt.incorrectQuestions || []),
+    ]);
+  },
+};
+
+/**
+ * PostgreSQL Settings Operations
+ */
+export const postgresSettingsDb = {
+  async getSettings(): Promise<SchoolSettings | null> {
+    const sql = `
+      SELECT 
+        id,
+        school_id AS "schoolId",
+        mastery_threshold AS "masteryThreshold",
+        developing_threshold AS "developingThreshold",
+        preferred_language AS "preferredLanguage",
+        enable_ai_assist AS "enableAiAssist"
+      FROM school_settings
+      LIMIT 1
+    `;
+    const res = await queryPostgres(sql);
+    if (res.rows.length === 0) return null;
+    const r = res.rows[0];
+    return {
+      id: r.id,
+      schoolId: r.schoolId,
+      masteryThreshold: Number(r.masteryThreshold || 80),
+      developingThreshold: Number(r.developingThreshold || 60),
+      preferredLanguage: r.preferredLanguage || "en",
+      enableAiAssist: Boolean(r.enableAiAssist),
+    };
+  },
+
+  async updateSettings(updates: Partial<SchoolSettings>): Promise<void> {
+    const sets: string[] = [];
+    const params: any[] = [];
+    let idx = 1;
+
+    if (updates.masteryThreshold !== undefined) {
+      sets.push(`mastery_threshold = $${idx++}`);
+      params.push(updates.masteryThreshold);
+    }
+    if (updates.developingThreshold !== undefined) {
+      sets.push(`developing_threshold = $${idx++}`);
+      params.push(updates.developingThreshold);
+    }
+    if (updates.preferredLanguage !== undefined) {
+      sets.push(`preferred_language = $${idx++}`);
+      params.push(updates.preferredLanguage);
+    }
+    if (updates.enableAiAssist !== undefined) {
+      sets.push(`enable_ai_assist = $${idx++}`);
+      params.push(updates.enableAiAssist);
+    }
+
+    if (sets.length === 0) return;
+    sets.push("updated_at = NOW()");
+    await queryPostgres(`UPDATE school_settings SET ${sets.join(", ")}`);
+  },
+};

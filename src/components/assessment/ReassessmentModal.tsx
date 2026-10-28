@@ -4,6 +4,7 @@ import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { BridgeProgress } from "../ui/BridgeProgress";
 import { calculatePercentage, calculatePercentagePointDelta } from "@/lib/engine/calculations";
+import { broadcastDataUpdate } from "@/lib/events";
 import { useLanguage } from "@/context/LanguageContext";
 import { TrendingUp, CheckCircle, AlertCircle, Sparkles } from "lucide-react";
 
@@ -103,6 +104,9 @@ export function ReassessmentModal({
 
       const data = await res.json();
       if (data.success) {
+        broadcastDataUpdate("gaps", "reassess");
+        broadcastDataUpdate("results", "create");
+        broadcastDataUpdate("students", "update", studentId);
         if (onSuccess) onSuccess();
         onClose();
       } else {

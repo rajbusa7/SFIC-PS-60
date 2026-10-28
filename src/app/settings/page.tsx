@@ -6,6 +6,7 @@ import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/Ca
 import { Badge } from "@/components/ui/Badge";
 import { useLanguage } from "@/context/LanguageContext";
 import { useTheme } from "@/context/ThemeContext";
+import { broadcastDataUpdate } from "@/lib/events";
 import {
   Settings,
   ShieldCheck,
@@ -102,6 +103,8 @@ export default function SettingsPage() {
 
       const data = await res.json();
       if (data.success) {
+        broadcastDataUpdate("settings", "update");
+        broadcastDataUpdate("gaps", "update");
         setSaveSuccess(true);
         setLanguage(preferredLang);
         setTimeout(() => setSaveSuccess(false), 3000);

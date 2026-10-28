@@ -6,6 +6,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { useLanguage } from "@/context/LanguageContext";
+import { subscribeToDataUpdates } from "@/lib/events";
 import {
   FileSpreadsheet,
   PlusCircle,
@@ -42,6 +43,10 @@ export default function AssessmentsPage() {
 
   useEffect(() => {
     fetchAssessments();
+    const unsubscribe = subscribeToDataUpdates(() => {
+      fetchAssessments();
+    }, ["assessments", "all"]);
+    return () => unsubscribe();
   }, []);
 
   const filteredAssessments = assessments.filter((a) => {

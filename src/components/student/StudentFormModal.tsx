@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Dialog } from "../ui/Dialog";
 import { AlertCircle } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { broadcastDataUpdate } from "@/lib/events";
 import type { Student } from "@/lib/types";
 
 interface StudentFormModalProps {
@@ -100,11 +101,7 @@ export function StudentFormModal({
 
       const data = await res.json();
       if (data.success) {
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(
-            new CustomEvent("shikshasetu_student_updated", { detail: data.student })
-          );
-        }
+        broadcastDataUpdate("students", student ? "update" : "create", data.student?.id);
         onSuccess();
         onClose();
       } else {

@@ -13,6 +13,7 @@ import type { SkillNode } from "@/components/3d/StudentSkillTree3D";
 import { useLanguage } from "@/context/LanguageContext";
 import { SpotlightTour } from "@/components/tutorial/SpotlightTour";
 import { ContextualHelp } from "@/components/shared/ContextualHelp";
+import { subscribeToDataUpdates } from "@/lib/events";
 import {
   Users,
   AlertTriangle,
@@ -129,6 +130,10 @@ export default function StudentDetailPage({
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("shikshasetu_step_student_opened"));
     }
+    const unsubscribe = subscribeToDataUpdates(() => {
+      fetchStudentData();
+    });
+    return () => unsubscribe();
   }, [id]);
 
   if (loading && !student) {

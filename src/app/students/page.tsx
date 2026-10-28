@@ -12,6 +12,7 @@ import { useFilter } from "@/context/FilterContext";
 import { StudentFormModal } from "@/components/student/StudentFormModal";
 import { StudentCsvModal } from "@/components/student/StudentCsvModal";
 import { SpotlightTour } from "@/components/tutorial/SpotlightTour";
+import { broadcastDataUpdate, subscribeToDataUpdates } from "@/lib/events";
 import {
   Users,
   Search,
@@ -81,16 +82,13 @@ export default function StudentsPage() {
   useEffect(() => {
     fetchStudents();
 
-    const handleUpdate = () => {
+    const unsubscribe = subscribeToDataUpdates(() => {
       fetchStudents();
-    };
+    }, ["students", "gaps", "all"]);
 
-    if (typeof window !== "undefined") {
-      window.addEventListener("shikshasetu_student_updated", handleUpdate);
-      return () => {
-        window.removeEventListener("shikshasetu_student_updated", handleUpdate);
-      };
-    }
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const activeGrade = gradeNumber ? String(gradeNumber) : "all";
@@ -152,6 +150,7 @@ export default function StudentsPage() {
       const res = await fetch(`/api/students/${deleteTarget.id}`, { method: "DELETE" });
       const data = await res.json();
       if (data.success) {
+        broadcastDataUpdate("students", "delete", deleteTarget.id);
         showToast(
           language === "gu"
             ? `${deleteTarget.name} ને સફળતાપૂર્વક દૂર કરવામાં આવ્યા.`

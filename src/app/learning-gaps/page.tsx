@@ -12,6 +12,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { ReassessmentModal } from "@/components/assessment/ReassessmentModal";
 import { SpotlightTour } from "@/components/tutorial/SpotlightTour";
 import { ContextualHelp } from "@/components/shared/ContextualHelp";
+import { broadcastDataUpdate, subscribeToDataUpdates } from "@/lib/events";
 import {
   AlertTriangle,
   ClipboardList,
@@ -62,6 +63,10 @@ export default function LearningGapsPage() {
 
   useEffect(() => {
     fetchGaps();
+    const unsubscribe = subscribeToDataUpdates(() => {
+      fetchGaps();
+    }, ["gaps", "results", "assessments", "plans", "all"]);
+    return () => unsubscribe();
   }, []);
 
   const handleGeneratePlan = async (gapId: string) => {
@@ -74,6 +79,8 @@ export default function LearningGapsPage() {
       });
       const data = await res.json();
       if (data.success) {
+        broadcastDataUpdate("plans", "create", data.plan?.id);
+        broadcastDataUpdate("gaps", "update", gapId);
         fetchGaps();
       }
     } catch (e) {

@@ -22,7 +22,15 @@ import {
 import { detectLearningGap } from "../engine/gapDetection";
 import { generateRemedialPlan } from "../engine/remedialEngine";
 import { calculatePercentage } from "../engine/calculations";
-import { isPostgresConfigured, postgresStudentDb } from "./postgres";
+import {
+  isPostgresConfigured,
+  postgresStudentDb,
+  postgresAssessmentDb,
+  postgresLearningGapDb,
+  postgresRemedialPlanDb,
+  postgresActivityDb,
+  postgresSettingsDb,
+} from "./postgres";
 import type {
   School,
   SchoolSettings,
@@ -132,18 +140,26 @@ function loadStore(): DataStore {
 
   for (const candidate of candidates) {
     if (fs.existsSync(/*turbopackIgnore: true*/ candidate)) {
-      try {
-        const stat = fs.statSync(/*turbopackIgnore: true*/ candidate);
-        if (memoryStore && lastLoadedPath === candidate && lastLoadedMtime === stat.mtimeMs) {
+      for (let attempt = 0; attempt < 4; attempt++) {
+        try {
+          const stat = fs.statSync(/*turbopackIgnore: true*/ candidate);
+          if (memoryStore && lastLoadedPath === candidate && lastLoadedMtime === stat.mtimeMs) {
+            return memoryStore;
+          }
+          const content = fs.readFileSync(/*turbopackIgnore: true*/ candidate, "utf-8");
+          memoryStore = JSON.parse(content) as DataStore;
+          lastLoadedMtime = stat.mtimeMs;
+          lastLoadedPath = candidate;
           return memoryStore;
+        } catch (e: any) {
+          if ((e.code === "EBUSY" || e.code === "EPERM") && attempt < 3) {
+            const start = Date.now();
+            while (Date.now() - start < 20 * (attempt + 1)) {}
+            continue;
+          }
+          console.warn(`Could not read store from ${candidate}:`, e);
+          break;
         }
-        const content = fs.readFileSync(/*turbopackIgnore: true*/ candidate, "utf-8");
-        memoryStore = JSON.parse(content) as DataStore;
-        lastLoadedMtime = stat.mtimeMs;
-        lastLoadedPath = candidate;
-        return memoryStore;
-      } catch (e) {
-        console.warn(`Could not read store from ${candidate}:`, e);
       }
     }
   }
@@ -162,37 +178,44 @@ function saveStore(store: DataStore) {
   const targetFile = getWritableStorePath();
   const tempFile = `${targetFile}.tmp.${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 
-  try {
-    fs.writeFileSync(tempFile, json, "utf-8");
+  for (let attempt = 0; attempt < 4; attempt++) {
     try {
-      fs.copyFileSync(tempFile, targetFile);
+      fs.writeFileSync(tempFile, json, "utf-8");
       try {
-        fs.unlinkSync(tempFile);
-      } catch {}
-    } catch {
-      fs.writeFileSync(targetFile, json, "utf-8");
+        fs.renameSync(tempFile, targetFile);
+      } catch {
+        fs.copyFileSync(tempFile, targetFile);
+        try {
+          fs.unlinkSync(tempFile);
+        } catch {}
+      }
       try {
-        if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
-      } catch {}
-    }
-    try {
-      const stat = fs.statSync(targetFile);
-      lastLoadedMtime = stat.mtimeMs;
-      lastLoadedPath = targetFile;
-    } catch {}
-  } catch (primaryErr) {
-    // If writing to target failed (e.g. EROFS on read-only system), attempt writing to os.tmpdir directly
-    try {
-      const fallbackFile = path.join(os.tmpdir(), "shikshasetu_store.json");
-      fs.writeFileSync(fallbackFile, json, "utf-8");
-      try {
-        const stat = fs.statSync(fallbackFile);
+        const stat = fs.statSync(targetFile);
         lastLoadedMtime = stat.mtimeMs;
-        lastLoadedPath = fallbackFile;
+        lastLoadedPath = targetFile;
       } catch {}
-    } catch {
-      // Memory store is already updated in memoryStore; do not crash serverless execution
-      console.warn("Storage notice: Persistent disk write skipped, store held in active memory.");
+      return;
+    } catch (primaryErr: any) {
+      if ((primaryErr.code === "EBUSY" || primaryErr.code === "EPERM") && attempt < 3) {
+        const start = Date.now();
+        while (Date.now() - start < 25 * (attempt + 1)) {}
+        continue;
+      }
+
+      // If writing to target failed (e.g. EROFS on read-only system), attempt writing to os.tmpdir directly
+      try {
+        const fallbackFile = path.join(os.tmpdir(), "shikshasetu_store.json");
+        fs.writeFileSync(fallbackFile, json, "utf-8");
+        try {
+          const stat = fs.statSync(fallbackFile);
+          lastLoadedMtime = stat.mtimeMs;
+          lastLoadedPath = fallbackFile;
+        } catch {}
+      } catch {
+        // Memory store is already updated in memoryStore; do not crash serverless execution
+        console.warn("Storage notice: Persistent disk write skipped, store held in active memory.");
+      }
+      return;
     }
   }
 }
@@ -210,6 +233,11 @@ export const db = {
     const store = loadStore();
     store.settings = { ...store.settings, ...updates };
     saveStore(store);
+    if (isPostgresConfigured()) {
+      postgresSettingsDb.updateSettings(updates).catch((e) =>
+        console.error("[PostgreSQL updateSettings sync error]:", e)
+      );
+    }
     return store.settings;
   },
 
@@ -427,6 +455,12 @@ export const db = {
 
     saveStore(store);
 
+    if (isPostgresConfigured()) {
+      postgresAssessmentDb.createAssessment(assessmentData, initialResults).catch((e) =>
+        console.error("[PostgreSQL createAssessment sync error]:", e)
+      );
+    }
+
     // Recalculate learning gaps for affected students
     if (initialResults) {
       const studentIds = Array.from(new Set(initialResults.map((r) => r.studentId)));
@@ -465,6 +499,12 @@ export const db = {
     }
 
     saveStore(store);
+
+    if (isPostgresConfigured()) {
+      postgresAssessmentDb.recordResults(resultsData).catch((e) =>
+        console.error("[PostgreSQL recordResults sync error]:", e)
+      );
+    }
 
     // Automatically recalculate gaps for all updated students
     for (const sId of studentIds) {
@@ -562,6 +602,16 @@ export const db = {
     }
 
     saveStore(store);
+
+    if (isPostgresConfigured()) {
+      const studentGaps = store.learningGaps.filter((g) => g.studentId === studentId);
+      for (const gap of studentGaps) {
+        postgresLearningGapDb.upsertLearningGap(gap).catch((e) =>
+          console.error("[PostgreSQL upsertLearningGap sync error]:", e)
+        );
+      }
+    }
+
     return store.learningGaps.filter((g) => g.studentId === studentId);
   },
 
@@ -627,6 +677,13 @@ export const db = {
     gap.updatedAt = new Date().toISOString();
 
     saveStore(store);
+
+    if (isPostgresConfigured()) {
+      postgresRemedialPlanDb.upsertRemedialPlan(plan).catch((e) =>
+        console.error("[PostgreSQL upsertRemedialPlan sync error]:", e)
+      );
+    }
+
     return plan;
   },
 
@@ -652,6 +709,13 @@ export const db = {
     }
 
     saveStore(store);
+
+    if (isPostgresConfigured()) {
+      postgresRemedialPlanDb.upsertRemedialPlan(plan).catch((e) =>
+        console.error("[PostgreSQL saveCustomRemedialPlan sync error]:", e)
+      );
+    }
+
     return plan;
   },
 
@@ -662,6 +726,13 @@ export const db = {
 
     store.remedialPlans[index] = { ...store.remedialPlans[index], ...updates };
     saveStore(store);
+
+    if (isPostgresConfigured()) {
+      postgresRemedialPlanDb.updateRemedialPlan(id, updates).catch((e) =>
+        console.error("[PostgreSQL updateRemedialPlan sync error]:", e)
+      );
+    }
+
     return store.remedialPlans[index];
   },
 
@@ -701,6 +772,13 @@ export const db = {
     }
 
     saveStore(store);
+
+    if (isPostgresConfigured()) {
+      postgresActivityDb.recordAttempt(attempt).catch((e) =>
+        console.error("[PostgreSQL recordAttempt sync error]:", e)
+      );
+    }
+
     return attempt;
   },
 

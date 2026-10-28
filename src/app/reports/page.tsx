@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { BridgeProgress } from "@/components/ui/BridgeProgress";
 import { SpotlightTour } from "@/components/tutorial/SpotlightTour";
 import { useLanguage } from "@/context/LanguageContext";
+import { subscribeToDataUpdates } from "@/lib/events";
 import {
   FileText,
   Printer,
@@ -34,30 +35,35 @@ export default function ReportsPage() {
   const [plans, setPlans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const [resStd, resGaps, resPlans] = await Promise.all([
-          fetch("/api/students"),
-          fetch("/api/learning-gaps"),
-          fetch("/api/remedial-plans"),
-        ]);
-        const [dataStd, dataGaps, dataPlans] = await Promise.all([
-          resStd.json(),
-          resGaps.json(),
-          resPlans.json(),
-        ]);
+  const loadData = async () => {
+    try {
+      const [resStd, resGaps, resPlans] = await Promise.all([
+        fetch("/api/students"),
+        fetch("/api/learning-gaps"),
+        fetch("/api/remedial-plans"),
+      ]);
+      const [dataStd, dataGaps, dataPlans] = await Promise.all([
+        resStd.json(),
+        resGaps.json(),
+        resPlans.json(),
+      ]);
 
-        if (dataStd.success) setStudents(dataStd.students || []);
-        if (dataGaps.success) setGaps(dataGaps.gaps || []);
-        if (dataPlans.success) setPlans(dataPlans.plans || []);
-      } catch (e) {
-        console.error("Failed to load report data", e);
-      } finally {
-        setLoading(false);
-      }
+      if (dataStd.success) setStudents(dataStd.students || []);
+      if (dataGaps.success) setGaps(dataGaps.gaps || []);
+      if (dataPlans.success) setPlans(dataPlans.plans || []);
+    } catch (e) {
+      console.error("Failed to load report data", e);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
     loadData();
+    const unsubscribe = subscribeToDataUpdates(() => {
+      loadData();
+    });
+    return () => unsubscribe();
   }, []);
 
   const selectedStudent = students.find((s) => s.id === selectedStudentId) || students[0];

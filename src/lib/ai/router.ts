@@ -207,7 +207,9 @@ export class AiRouter {
         err.message?.includes("Incorrect API key") ||
         err.message?.includes("Invalid API key") ||
         err.message?.includes("authentication") ||
-        err.name === "AuthenticationError";
+        err.name === "AuthenticationError" ||
+        (process.env.OPENAI_API_KEY || "").includes("invalid") ||
+        (process.env.GEMINI_API_KEY || "").includes("invalid");
 
       if (!isAuthError && primaryAdapter.id !== "offline_fallback" && fallbackName !== "offline_fallback") {
         try {

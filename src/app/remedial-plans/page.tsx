@@ -10,6 +10,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { ActivityPlayerModal } from "@/components/activities/ActivityPlayerModal";
 import { SpotlightTour } from "@/components/tutorial/SpotlightTour";
 import { ContextualHelp } from "@/components/shared/ContextualHelp";
+import { broadcastDataUpdate, subscribeToDataUpdates } from "@/lib/events";
 import {
   ClipboardList,
   CheckCircle,
@@ -146,6 +147,10 @@ export default function RemedialPlansPage() {
 
   useEffect(() => {
     fetchPlans();
+    const unsubscribe = subscribeToDataUpdates(() => {
+      fetchPlans();
+    }, ["plans", "gaps", "all"]);
+    return () => unsubscribe();
   }, []);
 
   const toggleStepCompleted = async (planId: string, stepNumber: number) => {
@@ -164,6 +169,7 @@ export default function RemedialPlansPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: planId, completedSteps: updated, status: newStatus }),
       });
+      broadcastDataUpdate("plans", "update", planId);
     } catch (e) {
       console.error("Failed to persist step progress", e);
     }
@@ -178,6 +184,7 @@ export default function RemedialPlansPage() {
       });
       const data = await res.json();
       if (data.success) {
+        broadcastDataUpdate("plans", "update", planId);
         fetchPlans();
       }
     } catch (e) {

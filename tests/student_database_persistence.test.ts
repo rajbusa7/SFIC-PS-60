@@ -54,6 +54,7 @@ describe("Student Database Persistent Storage & CRUD Verification Suite", () => 
   });
 
   it("3. CREATE: Adds a new student and persists to database", async () => {
+    const countBefore = (await db.getStudentsAsync()).length;
     const createReq = mockRequest("http://localhost:3000/api/students", "POST", {
       studentCode: uniqueCode,
       displayName: "Pooja Vaghela",
@@ -78,7 +79,7 @@ describe("Student Database Persistent Storage & CRUD Verification Suite", () => 
 
     // Verify student count increased in database
     const currentStudents = await db.getStudentsAsync();
-    assert.equal(currentStudents.length, initialStudentCount + 1);
+    assert.equal(currentStudents.length, countBefore + 1);
   });
 
   it("4. CONFLICT / DUPLICATE: Rejects duplicate student enrollment code with 409", async () => {

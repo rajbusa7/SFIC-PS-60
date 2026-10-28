@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Dialog } from "../ui/Dialog";
 import { Download, Upload, CheckCircle2, AlertCircle, FileSpreadsheet } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { broadcastDataUpdate } from "@/lib/events";
 
 interface ParsedStudentRow {
   studentCode: string;
@@ -154,6 +155,7 @@ MPS-3A-06,Pranav Dave,3,A,Hands-on visual learner`;
           }),
         });
       }
+      broadcastDataUpdate("students", "create");
       onSuccess();
       onClose();
     } catch {

@@ -16,6 +16,7 @@ import { useFilter } from "@/context/FilterContext";
 import { SpotlightTour, triggerPageTour } from "@/components/tutorial/SpotlightTour";
 import { ChecklistWidget } from "@/components/tutorial/ChecklistWidget";
 import { ContextualHelp } from "@/components/shared/ContextualHelp";
+import { subscribeToDataUpdates } from "@/lib/events";
 import {
   Users,
   AlertTriangle,
@@ -137,16 +138,13 @@ export default function DashboardPage() {
   useEffect(() => {
     fetchDashboardData();
 
-    const handleUpdate = () => {
+    const unsubscribe = subscribeToDataUpdates(() => {
       fetchDashboardData();
-    };
+    });
 
-    if (typeof window !== "undefined") {
-      window.addEventListener("shikshasetu_student_updated", handleUpdate);
-      return () => {
-        window.removeEventListener("shikshasetu_student_updated", handleUpdate);
-      };
-    }
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const handleCelebrate = () => {
@@ -197,7 +195,7 @@ export default function DashboardPage() {
         ? studentResult.percentage
         : gap
         ? gap.latestPercentage
-        : 75; // Standard baseline mastery if not evaluated
+        : 50; // Neutral baseline if not yet assessed
 
       heatmapData.push({
         studentName: student.displayName,
@@ -213,14 +211,9 @@ export default function DashboardPage() {
       ? progressData.subjectAverages.map((sub: any) => ({
           subject: formatSubject(sub.code || sub.subjectName),
           score: Math.round(sub.averageScore || 0),
-          baseline: Math.max(30, Math.round((sub.averageScore || 0) * 0.75)),
+          baseline: Math.max(0, Math.round((sub.averageScore || 0) * 0.75)),
         }))
-      : [
-          { subject: formatSubject("MATH"), score: 68, baseline: 52 },
-          { subject: formatSubject("ENG"), score: 74, baseline: 58 },
-          { subject: formatSubject("GUJ"), score: 78, baseline: 60 },
-          { subject: formatSubject("EVS"), score: 80, baseline: 65 },
-        ];
+      : [];
 
   return (
     <AppLayout>

@@ -135,8 +135,8 @@ export async function generateAiContent<T = any>(
   } catch (err: any) {
     console.error(`${chosenProvider} API call failed:`, err.message);
 
-    // If fallback generator provided, return fallback on error if in testing or offline
-    if (fallbackGenerator && (process.env.NODE_ENV === "test" || !openAiKey)) {
+    // If fallback generator provided and no external keys configured, execute fallback
+    if (fallbackGenerator && !openAiKey && !geminiKey && !anthropicKey) {
       const fb = fallbackGenerator();
       return {
         success: true,

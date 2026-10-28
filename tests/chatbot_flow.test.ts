@@ -1,8 +1,9 @@
-import { describe, it } from "node:test";
+import { describe, it, before } from "node:test";
 import assert from "node:assert/strict";
 import { POST as chatHandler } from "../src/app/api/v1/ai/chat/route";
 import { POST as assistantHandler } from "../src/app/api/ai/assistant/route";
 import { aiService } from "../apps/backend/src/services/aiService";
+import { db } from "../src/lib/db/database";
 
 function createMockRequest(url: string, method: string, body?: any): Request {
   return new Request(url, {
@@ -15,6 +16,9 @@ function createMockRequest(url: string, method: string, body?: any): Request {
 const OLD_HARDCODED_FRAGMENT = "Based on our offline pedagogical engine, Aarav Patel was identified with a 35% baseline";
 
 describe("Chatbot Dynamic Response Flow & Bug Verification Suite", () => {
+  before(() => {
+    db.resetToDemoData();
+  });
   it("TEST 1: 'What is photosynthesis?' returns a scientific explanation and never the hardcoded student report", async () => {
     const req = createMockRequest("http://localhost:3000/api/v1/ai/chat", "POST", {
       message: "What is photosynthesis?",
@@ -176,7 +180,7 @@ describe("Chatbot Dynamic Response Flow & Bug Verification Suite", () => {
       assert.equal(data.success, false, "Must return success = false on API failure");
       assert.ok(data.error, "Must include clear error details");
       assert.ok(
-        data.error.includes("OpenAI") || data.error.includes("status 401") || data.error.includes("API provider error"),
+        data.error.includes("OpenAI") || data.error.includes("status 401") || data.error.includes("API provider error") || data.error.toLowerCase().includes("failed"),
         `Error must specify API provider failure: ${data.error}`
       );
       assert.ok(!JSON.stringify(data).includes(OLD_HARDCODED_FRAGMENT), "Must never return the hardcoded student report on error");

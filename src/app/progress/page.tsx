@@ -6,6 +6,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { useLanguage } from "@/context/LanguageContext";
+import { subscribeToDataUpdates } from "@/lib/events";
 import {
   TrendingUp,
   Award,
@@ -52,6 +53,10 @@ export default function ProgressTrackingPage() {
 
   useEffect(() => {
     fetchProgress();
+    const unsubscribe = subscribeToDataUpdates(() => {
+      fetchProgress();
+    });
+    return () => unsubscribe();
   }, []);
 
   const items = progressData?.progressItems || [];

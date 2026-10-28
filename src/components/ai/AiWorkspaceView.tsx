@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
+import { broadcastDataUpdate } from "@/lib/events";
 import {
   Sparkles,
   GraduationCap,
@@ -306,6 +307,8 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
       });
       const data = await res.json();
       if (data.success) {
+        broadcastDataUpdate("plans", "create", data.plan?.id);
+        broadcastDataUpdate("gaps", "update");
         setRemSaveStatus("saved");
         setTimeout(() => setRemSaveStatus(null), 4000);
       } else {

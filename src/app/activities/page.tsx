@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { useLanguage } from "@/context/LanguageContext";
 import { ActivityPlayerModal } from "@/components/activities/ActivityPlayerModal";
+import { subscribeToDataUpdates } from "@/lib/events";
 import {
   Gamepad2,
   Printer,
@@ -47,6 +48,10 @@ export default function ActivitiesPage() {
 
   useEffect(() => {
     fetchActivities();
+    const unsubscribe = subscribeToDataUpdates(() => {
+      fetchActivities();
+    }, ["activities", "all"]);
+    return () => unsubscribe();
   }, []);
 
   const handlePrintWorksheet = (act: any) => {

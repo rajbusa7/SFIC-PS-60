@@ -8,6 +8,7 @@ import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/Ca
 import { Badge } from "@/components/ui/Badge";
 import { useLanguage } from "@/context/LanguageContext";
 import { calculatePercentage } from "@/lib/engine/calculations";
+import { broadcastDataUpdate } from "@/lib/events";
 import {
   FileSpreadsheet,
   ArrowLeft,
@@ -142,6 +143,9 @@ export default function NewAssessmentPage() {
 
       const data = await res.json();
       if (data.success) {
+        broadcastDataUpdate("assessments", "create", data.assessment?.id);
+        broadcastDataUpdate("gaps", "update");
+        broadcastDataUpdate("results", "create");
         router.push("/assessments");
       } else {
         setError(data.error || (language === "gu" ? "મૂલ્યાંકન નોંધવામાં નિષ્ફળતા" : "Failed to record assessment"));

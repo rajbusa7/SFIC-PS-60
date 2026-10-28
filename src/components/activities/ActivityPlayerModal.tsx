@@ -3,6 +3,7 @@ import { Dialog } from "../ui/Dialog";
 import { Badge } from "../ui/Badge";
 import { CheckCircle2, XCircle, ArrowRight, Sparkles, HelpCircle, Trophy, Lightbulb } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { broadcastDataUpdate } from "@/lib/events";
 import type { LearningActivity, ActivityQuestion } from "@/lib/types";
 
 interface ActivityPlayerModalProps {
@@ -74,6 +75,8 @@ export function ActivityPlayerModal({
       });
       const data = await res.json();
       if (data.success) {
+        broadcastDataUpdate("activities", "update", activity.id);
+        broadcastDataUpdate("students", "update", studentId);
         setAttemptResult(data);
         setIsSubmitted(true);
         if (onCompleted) onCompleted(data);

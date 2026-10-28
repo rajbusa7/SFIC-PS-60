@@ -50,5 +50,4 @@ export interface SchoolSettings {
   developingThreshold: number; // default: 60%
   preferredLanguage: "en" | "gu";
   enableAiAssist: boolean;
-  aiAssistantName?: string; // default: "Study Buddy"
 }

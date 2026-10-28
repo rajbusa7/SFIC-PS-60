@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
-import { useSettings } from "@/context/SettingsContext";
 import { useAuth } from "@/context/AuthContext";
 import { broadcastDataUpdate } from "@/lib/events";
 import {
@@ -42,7 +41,6 @@ interface AiWorkspaceViewProps {
 export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWorkspaceViewProps) {
   const searchParams = useSearchParams();
   const { language, setLanguage } = useLanguage();
-  const { aiAssistantName } = useSettings();
   const { user, role } = useAuth();
 
   const queryTab = (searchParams?.get("tab") as AiTab) || defaultTab;
@@ -590,7 +588,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
             }`}
           >
             <Bot className="w-4 h-4 text-[#2E7D5E]" />
-            <span>{language === "gu" ? `૫. ${aiAssistantName || "શિક્ષક સહાયક"}` : `5. ${aiAssistantName || "Teacher Assistant"}`}</span>
+            <span>{language === "gu" ? "૫. શિક્ષક સહાયક" : "5. Teacher Assistant"}</span>
           </button>
         </div>
       </div>
@@ -1708,7 +1706,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                           : "bg-cyan-600 text-white shadow-xs"
                       }`}
                     >
-                      {isUser ? user?.name?.charAt(0) || "T" : (aiAssistantName || "AI").slice(0, 2).trim()}
+                      {isUser ? user?.name?.charAt(0) || "T" : "AI"}
                     </div>
 
                     <div

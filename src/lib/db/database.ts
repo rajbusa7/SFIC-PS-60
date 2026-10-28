@@ -234,26 +234,15 @@ export const db = {
   },
 
   getSettings(): SchoolSettings {
-    const s = loadStore().settings;
-    if (!s.aiAssistantName) {
-      s.aiAssistantName = "Study Buddy";
-    }
-    return s;
+    return loadStore().settings;
   },
 
   updateSettings(updates: Partial<SchoolSettings>): SchoolSettings {
     const store = loadStore();
-    const cleanUpdates = { ...updates };
-    if (cleanUpdates.aiAssistantName !== undefined) {
-      cleanUpdates.aiAssistantName = cleanUpdates.aiAssistantName.trim() || "Study Buddy";
-    }
-    store.settings = { ...store.settings, ...cleanUpdates };
-    if (!store.settings.aiAssistantName) {
-      store.settings.aiAssistantName = "Study Buddy";
-    }
+    store.settings = { ...store.settings, ...updates };
     saveStore(store);
     if (isPostgresConfigured()) {
-      postgresSettingsDb.updateSettings(cleanUpdates).catch((e) =>
+      postgresSettingsDb.updateSettings(updates).catch((e) =>
         console.error("[PostgreSQL updateSettings sync error]:", e)
       );
     }

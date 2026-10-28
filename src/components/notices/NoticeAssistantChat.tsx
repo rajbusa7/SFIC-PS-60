@@ -18,7 +18,6 @@ import {
 import { AudioRecorder } from "../audio/AudioRecorder";
 import { AudioPlayer } from "../audio/AudioPlayer";
 import type { SupportedLanguage } from "@/lib/types";
-import { useSettings } from "@/context/SettingsContext";
 
 interface Message {
   id: string;

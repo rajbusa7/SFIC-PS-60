@@ -2,7 +2,6 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { useLanguage } from "@/context/LanguageContext";
-import { useSettings } from "@/context/SettingsContext";
 import { usePathname } from "next/navigation";
 import { triggerPageTour } from "@/components/tutorial/SpotlightTour";
 import { TUTORIAL_FAQS } from "@/config/tutorialData";
@@ -204,7 +203,6 @@ function FormattedContent({ text }: { text: string }) {
 export function GlobalShikshaBot() {
   const pathname = usePathname();
   const { language } = useLanguage();
-  const { aiAssistantName } = useSettings();
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -233,7 +231,7 @@ export function GlobalShikshaBot() {
         text:
           language === "gu"
             ? "નમસ્તે! હું ChatGPT જેવો જ જનરલ-પર્પઝ AI સહાયક છું. આપ મને પ્રોગ્રામિંગ, વિજ્ઞાન, ગણિત, શિક્ષણ, આઈડિયા કે કોઈપણ વિષય પર પ્રશ્ન પૂછી શકો છો. હું કેવી રીતે મદદ કરી શકું?"
-            : `Hello! I am your ${aiAssistantName || "Study Buddy"}. How can I help your classroom today?`,
+            : "Hello! I am your general-purpose AI assistant. You can ask me anything about programming, science, mathematics, education, creative writing, translation, or school queries. How can I help you today?",
         time: "Just now",
       },
     ]);
@@ -401,7 +399,7 @@ export function GlobalShikshaBot() {
 
           {/* Hover tooltip label */}
           <span className="absolute right-full mr-3 px-3 py-1.5 rounded-xl bg-[#49352F] text-white text-xs font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-xl">
-            {language === "gu" ? `${aiAssistantName || "StudySaathi AI"} સહાયક` : `${aiAssistantName || "StudySaathi AI"} Assistant`}
+            {language === "gu" ? "StudySaathi AI સહાયક" : "StudySaathi AI Assistant"}
           </span>
         </button>
       )}
@@ -417,7 +415,7 @@ export function GlobalShikshaBot() {
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
-                  <h4 className="text-xs font-bold text-[#49352F]">{aiAssistantName || "StudySaathi AI"}</h4>
+                  <h4 className="text-xs font-bold text-[#49352F]">StudySaathi AI</h4>
                   <span className="px-1.5 py-0.2 rounded-full bg-[#2E7D5E]/15 text-[#2E7D5E] border border-[#2E7D5E]/20 text-[9px] font-extrabold uppercase">
                     ChatGPT Powered
                   </span>

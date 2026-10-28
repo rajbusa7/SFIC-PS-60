@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
-import { useSettings } from "@/context/SettingsContext";
 import { BrandLogo } from "../shared/BrandLogo";
 import {
   LayoutDashboard,
@@ -29,7 +28,6 @@ export function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { t, language } = useLanguage();
-  const { aiAssistantName } = useSettings();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -38,7 +36,7 @@ export function AppSidebar() {
     { href: "/dashboard", label: t.nav.dashboard, icon: LayoutDashboard },
     {
       href: "/ai",
-      label: aiAssistantName ? `${aiAssistantName} Hub` : (t.nav.aiWorkspace || "AI Workspace"),
+      label: t.nav.aiWorkspace || "AI Workspace",
       icon: Sparkles,
       badge: t.sidebar?.badge5in1 || "AI 5-in-1",
       badgeColor: "bg-[#F2CAB3] text-[#49352F] border border-[#49352F]/15 font-bold",

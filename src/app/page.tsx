@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { LandingNavbar } from "@/components/landing/LandingNavbar";
-import { BrandLogo } from "@/components/shared/BrandLogo";
 import { BridgeCanvas3D } from "@/components/3d/BridgeCanvas3D";
 import { Tilt3DCard } from "@/components/3d/Tilt3DCard";
 import { DashboardPreview } from "@/components/landing/DashboardPreview";
@@ -967,7 +966,17 @@ export default function HomePage() {
             {/* Col 1 & 2: Brand Information */}
             <div className="lg:col-span-2 space-y-4">
               <div className="flex items-center gap-3">
-                <BrandLogo size={38} variant="dark" />
+                <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-amber-500 to-indigo-600 flex items-center justify-center text-slate-950 font-black text-base shadow-[0_0_15px_rgba(255,138,61,0.4)]">
+                  સ
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-heading font-extrabold text-base text-white">
+                    StudySaathi AI
+                  </span>
+                  <span className="text-[10px] text-amber-400 uppercase tracking-wider font-semibold">
+                    {language === "gu" ? "અધ્યયન ત્રુટિ સેતુ પ્રણાલી" : "The Learning Gap Bridge"}
+                  </span>
+                </div>
               </div>
               <p className="text-xs text-slate-400 leading-relaxed max-w-sm">
                 {language === "gu"

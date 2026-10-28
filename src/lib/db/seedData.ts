@@ -32,7 +32,6 @@ export const SEED_SETTINGS: SchoolSettings = {
   developingThreshold: 60,
   preferredLanguage: "en",
   enableAiAssist: true,
-  aiAssistantName: "Study Buddy",
 };
 
 export const SEED_CLASSROOMS: Classroom[] = [

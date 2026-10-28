@@ -6,7 +6,7 @@
     "dev": "next dev",
     "dev:frontend": "next dev",
     "dev:backend": "tsx apps/backend/src/server.ts",
-    "build": "next build --webpack",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",

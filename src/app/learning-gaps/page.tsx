@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/Button";
 import { BridgeProgress } from "@/components/ui/BridgeProgress";
 import { StatTile } from "@/components/ui/StatTile";
 import { useLanguage } from "@/context/LanguageContext";
-import { useSettings } from "@/context/SettingsContext";
 import { ReassessmentModal } from "@/components/assessment/ReassessmentModal";
 import { SpotlightTour } from "@/components/tutorial/SpotlightTour";
 import { ContextualHelp } from "@/components/shared/ContextualHelp";

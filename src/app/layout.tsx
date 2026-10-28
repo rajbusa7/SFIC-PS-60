@@ -6,9 +6,15 @@ import { FilterProvider } from "@/context/FilterContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 
 export const metadata: Metadata = {
+  applicationName: "StudySaathi AI",
   title: "StudySaathi AI | Smart Learning Gap Tracking & Remedial Action System",
   description:
     "Smart tracking and Remedial action system for student learning gaps in primary schools. SFIC Gujarat Hackathon.",
+  openGraph: {
+    title: "StudySaathi AI | Smart Learning Gap Tracking & Remedial Action System",
+    description: "Every Child Can Learn. AI Helps Us Find the Way. Smart tracking and remedial action system for primary schools.",
+    siteName: "StudySaathi AI",
+  },
 };
 
 export default function RootLayout({
@@ -30,7 +36,7 @@ export default function RootLayout({
             __html: `
               (function() {
                 try {
-                  var stored = localStorage.getItem('shikshasetu_theme');
+                  var stored = localStorage.getItem('studysaathi_theme') || localStorage.getItem('shikshasetu_theme');
                   var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
                   var isDark = stored === 'dark' || ((!stored || stored === 'system') && prefersDark);
                   var root = document.documentElement;

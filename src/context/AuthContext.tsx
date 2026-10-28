@@ -55,15 +55,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(DEMO_TEACHER);
   const [isDemoMode, setIsDemoMode] = useState<boolean>(true);
 
+  const saveUserStorage = (u: User | null) => {
+    if (u) {
+      const serialized = JSON.stringify(u);
+      localStorage.setItem("studysaathi_user", serialized);
+      localStorage.setItem("shikshasetu_user", serialized);
+    } else {
+      localStorage.removeItem("studysaathi_user");
+      localStorage.removeItem("shikshasetu_user");
+    }
+  };
+
   useEffect(() => {
     try {
-      const savedUser = localStorage.getItem("shikshasetu_user");
+      const savedUser = localStorage.getItem("studysaathi_user") || localStorage.getItem("shikshasetu_user");
       if (savedUser) {
         setUser(JSON.parse(savedUser));
       } else {
         // Default to demo teacher for seamless evaluation
         setUser(DEMO_TEACHER);
-        localStorage.setItem("shikshasetu_user", JSON.stringify(DEMO_TEACHER));
+        saveUserStorage(DEMO_TEACHER);
       }
     } catch {
       setUser(DEMO_TEACHER);
@@ -79,37 +90,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       schoolId: "sch-gn-01",
     };
     setUser(newUser);
-    localStorage.setItem("shikshasetu_user", JSON.stringify(newUser));
+    saveUserStorage(newUser);
     return true;
   };
 
   const loginAsDemoTeacher = () => {
     setUser(DEMO_TEACHER);
     setIsDemoMode(true);
-    localStorage.setItem("shikshasetu_user", JSON.stringify(DEMO_TEACHER));
+    saveUserStorage(DEMO_TEACHER);
   };
 
   const loginAsDemoAdmin = () => {
     setUser(DEMO_ADMIN);
     setIsDemoMode(true);
-    localStorage.setItem("shikshasetu_user", JSON.stringify(DEMO_ADMIN));
+    saveUserStorage(DEMO_ADMIN);
   };
 
   const loginAsDemoParent = () => {
     setUser(DEMO_PARENT);
     setIsDemoMode(true);
-    localStorage.setItem("shikshasetu_user", JSON.stringify(DEMO_PARENT));
+    saveUserStorage(DEMO_PARENT);
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem("shikshasetu_user");
+    saveUserStorage(null);
   };
 
   const switchRole = (newRole: UserRole) => {
     const targetUser = newRole === "admin" ? DEMO_ADMIN : newRole === "parent" ? DEMO_PARENT : DEMO_TEACHER;
     setUser(targetUser);
-    localStorage.setItem("shikshasetu_user", JSON.stringify(targetUser));
+    saveUserStorage(targetUser);
   };
 
   return (

@@ -15,7 +15,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, errors: validation.errors }, { status: 400 });
     }
 
-    const user = await authService.login(validation.data!.email, validation.data!.role);
+    const user = await authService.login(
+      validation.data!.email,
+      validation.data!.password,
+      validation.data!.role
+    );
 
     // Sign session token and set HTTP-only cookie
     const token = await signSession({
@@ -24,14 +28,34 @@ export async function POST(request: Request) {
       email: user.email,
       role: user.role,
       schoolId: user.schoolId,
-      provider: "local",
+      provider: user.provider || "local",
     });
 
-    const response = NextResponse.json({ success: true, user });
+    const sanitizedUser = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      schoolId: user.schoolId,
+      avatarUrl: user.avatarUrl,
+      provider: user.provider || "local",
+      status: user.status || "active",
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+
+    const response = NextResponse.json({ success: true, user: sanitizedUser });
     response.cookies.set(SESSION_COOKIE_NAME, token, getSessionCookieOptions());
 
     return response;
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message || "Login failed" }, { status: 500 });
+    const isClientError =
+      error.message?.includes("No account found") ||
+      error.message?.includes("Invalid password") ||
+      error.message?.includes("disabled");
+    return NextResponse.json(
+      { success: false, error: error.message || "Login failed" },
+      { status: isClientError ? 401 : 500 }
+    );
   }
 }

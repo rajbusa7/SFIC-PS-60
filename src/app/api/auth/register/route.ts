@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db/database";
+import { hashPassword } from "@/lib/auth/password";
 import {
   SESSION_COOKIE_NAME,
   signSession,
@@ -45,12 +46,16 @@ export async function POST(request: Request) {
       );
     }
 
+    const passwordHash = hashPassword(password);
+
     const newUser = await db.createUserAsync({
       name: name.trim(),
       email: normalizedEmail,
       role: "teacher",
       schoolId: schoolId || "sch-gn-01",
       provider: "local",
+      passwordHash,
+      status: "active",
     });
 
     const sessionToken = await signSession({
@@ -62,17 +67,23 @@ export async function POST(request: Request) {
       provider: "local",
     });
 
+    const sanitizedUser = {
+      id: newUser.id,
+      name: newUser.name,
+      email: newUser.email,
+      role: newUser.role,
+      schoolId: newUser.schoolId,
+      avatarUrl: newUser.avatarUrl,
+      provider: newUser.provider || "local",
+      status: newUser.status || "active",
+      createdAt: newUser.createdAt,
+      updatedAt: newUser.updatedAt,
+    };
+
     const response = NextResponse.json({
       success: true,
       message: "Teacher account created successfully.",
-      user: {
-        id: newUser.id,
-        name: newUser.name,
-        email: newUser.email,
-        role: newUser.role,
-        schoolId: newUser.schoolId,
-        provider: "local",
-      },
+      user: sanitizedUser,
     });
 
     response.cookies.set(

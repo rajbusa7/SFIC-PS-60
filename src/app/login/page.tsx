@@ -149,13 +149,13 @@ function LoginCardContent() {
     setLoginLoading(true);
     setLoginError(null);
     try {
-      await login(email, "teacher");
+      await login(email, password, "teacher");
       router.push("/dashboard");
-    } catch {
+    } catch (err: any) {
       setLoginError(
         language === "gu"
           ? "ખોટો ઈમેલ અથવા પાસવર્ડ. કૃપા કરીને પુનઃ પ્રયાસ કરો."
-          : "Invalid email or password. Please try again."
+          : (err?.message || "Invalid email or password. Please try again.")
       );
     } finally {
       setLoginLoading(false);
@@ -221,7 +221,7 @@ function LoginCardContent() {
         setShowSetupModal(true);
         setGoogleLoading(false);
       }
-    } catch {
+    } catch (err: any) {
       setShowSetupModal(true);
       setGoogleLoading(false);
     }

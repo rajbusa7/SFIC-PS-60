@@ -1,4 +1,5 @@
 export type UserRole = "teacher" | "admin" | "parent";
+export type UserStatus = "active" | "pending" | "disabled";
 
 export interface User {
   id: string;
@@ -10,6 +11,7 @@ export interface User {
   avatarUrl?: string;
   provider?: "local" | "google";
   passwordHash?: string;
+  status?: "active" | "pending" | "disabled";
   createdAt?: string;
   updatedAt?: string;
 }

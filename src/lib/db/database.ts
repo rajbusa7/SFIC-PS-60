@@ -1102,12 +1102,45 @@ export const db = {
       googleId: userData.googleId,
       avatarUrl: userData.avatarUrl,
       provider: userData.provider || "local",
+      passwordHash: userData.passwordHash,
+      status: userData.status || "active",
       createdAt: now,
       updatedAt: now,
     };
     usersList.push(newUser);
     saveStore(store);
     return newUser;
+  },
+
+  updateUser(id: string, updates: Partial<User>): User | null {
+    const store = loadStore();
+    const usersList = store.users || JSON.parse(JSON.stringify(SEED_USERS));
+    store.users = usersList;
+    const index = usersList.findIndex((u: User) => u.id === id);
+    if (index === -1) return null;
+
+    const existing = usersList[index];
+    const updated: User = {
+      ...existing,
+      ...updates,
+      id: existing.id,
+      email: existing.email,
+      updatedAt: new Date().toISOString(),
+    };
+    usersList[index] = updated;
+    saveStore(store);
+    return updated;
+  },
+
+  deleteUser(id: string): boolean {
+    const store = loadStore();
+    const usersList = store.users || JSON.parse(JSON.stringify(SEED_USERS));
+    const index = usersList.findIndex((u: User) => u.id === id);
+    if (index === -1) return false;
+    usersList.splice(index, 1);
+    store.users = usersList;
+    saveStore(store);
+    return true;
   },
 
   upsertUser(userData: Partial<User> & { email: string }): User {
@@ -1131,6 +1164,8 @@ export const db = {
         id: existing.id,
         role: existing.role || userData.role || "teacher",
         schoolId: existing.schoolId || userData.schoolId || "sch-gn-01",
+        passwordHash: userData.passwordHash || existing.passwordHash,
+        status: userData.status || existing.status || "active",
         updatedAt: now,
       };
       usersList[existingIndex] = updated;
@@ -1146,6 +1181,8 @@ export const db = {
         googleId: userData.googleId,
         avatarUrl: userData.avatarUrl,
         provider: userData.provider || "google",
+        passwordHash: userData.passwordHash,
+        status: userData.status || "active",
         createdAt: now,
         updatedAt: now,
       };
@@ -1163,8 +1200,10 @@ export const db = {
   },
 
   async getUserByIdAsync(id: string): Promise<User | null> {
-    const users = await this.getUsersAsync();
-    return users.find((u) => u.id === id) || null;
+    if (isPostgresConfigured()) {
+      return postgresUserDb.getUserById(id);
+    }
+    return this.getUserById(id);
   },
 
   async getUserByEmailAsync(email: string): Promise<User | null> {
@@ -1183,9 +1222,23 @@ export const db = {
 
   async createUserAsync(userData: Partial<User> & { email: string; name: string }): Promise<User> {
     if (isPostgresConfigured()) {
-      return postgresUserDb.upsertUser(userData);
+      return postgresUserDb.createUser(userData);
     }
     return this.createUser(userData);
+  },
+
+  async updateUserAsync(id: string, updates: Partial<User>): Promise<User | null> {
+    if (isPostgresConfigured()) {
+      return postgresUserDb.updateUser(id, updates);
+    }
+    return this.updateUser(id, updates);
+  },
+
+  async deleteUserAsync(id: string): Promise<boolean> {
+    if (isPostgresConfigured()) {
+      return postgresUserDb.deleteUser(id);
+    }
+    return this.deleteUser(id);
   },
 
   async upsertUserAsync(userData: Partial<User> & { email: string }): Promise<User> {

@@ -8,7 +8,7 @@ interface AuthContextType {
   role: UserRole;
   isDemoMode: boolean;
   isLoading: boolean;
-  login: (email: string, role?: UserRole) => Promise<boolean>;
+  login: (email: string, password?: string, role?: UserRole) => Promise<boolean>;
   registerTeacher: (name: string, email: string, password?: string, schoolId?: string) => Promise<{ success: boolean; error?: string }>;
   loginAsDemoTeacher: () => Promise<void>;
   loginAsDemoAdmin: () => Promise<void>;
@@ -45,10 +45,10 @@ const DEMO_PARENT: User = {
 };
 
 const AuthContext = createContext<AuthContextType>({
-  user: DEMO_TEACHER,
+  user: null,
   role: "teacher",
-  isDemoMode: true,
-  isLoading: false,
+  isDemoMode: false,
+  isLoading: true,
   login: async () => true,
   registerTeacher: async () => ({ success: true }),
   loginAsDemoTeacher: async () => {},
@@ -59,8 +59,8 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(DEMO_TEACHER);
-  const [isDemoMode, setIsDemoMode] = useState<boolean>(true);
+  const [user, setUser] = useState<User | null>(null);
+  const [isDemoMode, setIsDemoMode] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const saveUserStorage = useCallback((u: User | null) => {
@@ -90,7 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const data = await res.json();
           if (data.authenticated && data.user && isMounted) {
             setUser(data.user);
-            setIsDemoMode(Boolean(data.isDemo));
+            setIsDemoMode(false);
             saveUserStorage(data.user);
             setIsLoading(false);
             return;
@@ -109,15 +109,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (saved) {
             const parsed = JSON.parse(saved);
             setUser(parsed);
-            setIsDemoMode(parsed.provider !== "google");
+            setIsDemoMode(false);
           } else {
-            // Default demo fallback for seamless evaluation
-            setUser(DEMO_TEACHER);
-            setIsDemoMode(true);
-            saveUserStorage(DEMO_TEACHER);
+            setUser(null);
           }
         } catch {
-          setUser(DEMO_TEACHER);
+          setUser(null);
         }
       }
 
@@ -131,36 +128,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [saveUserStorage]);
 
-  const establishServerSession = async (email: string, role: UserRole) => {
-    try {
-      await fetch("/api/v1/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, role }),
-      });
-    } catch (e) {
-      console.warn("[AuthContext] Unable to set server session cookie:", e);
-    }
-  };
+  const login = async (
+    email: string,
+    password?: string,
+    role: UserRole = "teacher"
+  ): Promise<boolean> => {
+    const res = await fetch("/api/v1/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password, role }),
+    });
 
-  const login = async (email: string, role: UserRole = "teacher"): Promise<boolean> => {
-    const newUser: User = {
-      id: `usr-${Date.now()}`,
-      name:
-        role === "admin"
-          ? "Principal Administrator"
-          : role === "parent"
-          ? "Guardian/Parent"
-          : "Class Teacher",
-      email,
-      role,
-      schoolId: "sch-gn-01",
-      provider: "local",
-    };
-    setUser(newUser);
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || "Login failed");
+    }
+
+    const realUser: User = data.user;
+    setUser(realUser);
     setIsDemoMode(false);
-    saveUserStorage(newUser);
-    await establishServerSession(email, role);
+    saveUserStorage(realUser);
     return true;
   };
 
@@ -191,24 +178,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const loginAsDemoTeacher = async () => {
-    setUser(DEMO_TEACHER);
-    setIsDemoMode(true);
-    saveUserStorage(DEMO_TEACHER);
-    await establishServerSession(DEMO_TEACHER.email, "teacher");
+    try {
+      await login("teacher@studysaathi.edu.in", "teacher123", "teacher");
+    } catch {
+      setUser(DEMO_TEACHER);
+      saveUserStorage(DEMO_TEACHER);
+    }
   };
 
   const loginAsDemoAdmin = async () => {
-    setUser(DEMO_ADMIN);
-    setIsDemoMode(true);
-    saveUserStorage(DEMO_ADMIN);
-    await establishServerSession(DEMO_ADMIN.email, "admin");
+    try {
+      await login("principal@studysaathi.edu.in", "admin123", "admin");
+    } catch {
+      setUser(DEMO_ADMIN);
+      saveUserStorage(DEMO_ADMIN);
+    }
   };
 
   const loginAsDemoParent = async () => {
-    setUser(DEMO_PARENT);
-    setIsDemoMode(true);
-    saveUserStorage(DEMO_PARENT);
-    await establishServerSession(DEMO_PARENT.email, "parent");
+    try {
+      await login("dinesh.patel@example.com", undefined, "parent");
+    } catch {
+      setUser(DEMO_PARENT);
+      saveUserStorage(DEMO_PARENT);
+    }
   };
 
   const logout = async () => {
@@ -217,23 +210,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         method: "POST",
         headers: { Accept: "application/json" },
       });
-    } catch {}
-
+    } catch (e) {
+      console.warn("[AuthContext] Logout request failed:", e);
+    }
     setUser(null);
     setIsDemoMode(false);
     saveUserStorage(null);
   };
 
   const switchRole = (newRole: UserRole) => {
-    const targetUser =
-      newRole === "admin"
-        ? DEMO_ADMIN
-        : newRole === "parent"
-        ? DEMO_PARENT
-        : DEMO_TEACHER;
-    setUser(targetUser);
-    saveUserStorage(targetUser);
-    establishServerSession(targetUser.email, newRole);
+    if (!user) return;
+    const updated = { ...user, role: newRole };
+    setUser(updated);
+    saveUserStorage(updated);
   };
 
   return (
@@ -257,6 +246,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function useAuth() {
-  return useContext(AuthContext);
+export function useAuth(): AuthContextType {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
 }

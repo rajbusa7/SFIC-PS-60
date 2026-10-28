@@ -24,6 +24,7 @@ import {
   SEED_LEARNING_GAPS,
   SEED_REMEDIAL_PLANS,
   SEED_ACTIVITIES,
+  SEED_USERS,
 } from "./seedData";
 
 // Resolve PostgreSQL connection string from standard environment variables
@@ -264,6 +265,25 @@ export async function ensurePostgresSchema(): Promise<void> {
         CREATE INDEX IF NOT EXISTS idx_assessment_results_composite ON assessment_results(student_id, concept_id, recorded_at);
         CREATE INDEX IF NOT EXISTS idx_learning_gaps_student ON learning_gaps(student_id);
         CREATE INDEX IF NOT EXISTS idx_remedial_plans_student ON remedial_plans(student_id);
+
+        -- Users & Permanent Teacher Accounts
+        CREATE TABLE IF NOT EXISTS users (
+            id VARCHAR(64) PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            email VARCHAR(255) UNIQUE NOT NULL,
+            role VARCHAR(32) DEFAULT 'teacher',
+            school_id VARCHAR(64) REFERENCES schools(id) ON DELETE SET NULL,
+            google_id VARCHAR(255) UNIQUE,
+            avatar_url TEXT,
+            provider VARCHAR(32) DEFAULT 'local',
+            password_hash TEXT,
+            status VARCHAR(32) DEFAULT 'active',
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_users_email ON users(LOWER(email));
+        CREATE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id);
       `);
 
       // Seed baseline School if empty
@@ -334,6 +354,29 @@ export async function ensurePostgresSchema(): Promise<void> {
               std.section,
               std.enrollmentStatus,
               std.notes || "",
+            ]
+          );
+        }
+      }
+
+      // Seed baseline Users if empty
+      const userCheck = await client.query("SELECT COUNT(*) FROM users");
+      if (parseInt(userCheck.rows[0].count, 10) === 0) {
+        for (const usr of SEED_USERS) {
+          await client.query(
+            `INSERT INTO users (id, name, email, role, school_id, google_id, avatar_url, provider, password_hash, status, created_at, updated_at)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW()) ON CONFLICT (id) DO NOTHING`,
+            [
+              usr.id,
+              usr.name,
+              usr.email,
+              usr.role,
+              usr.schoolId,
+              usr.googleId || null,
+              usr.avatarUrl || null,
+              usr.provider || "local",
+              usr.passwordHash || null,
+              usr.status || "active",
             ]
           );
         }
@@ -701,6 +744,29 @@ export const postgresAssessmentDb = {
               pct,
               res.notes || "",
               res.recordedAt || new Date().toISOString(),
+            ]
+          );
+        }
+      }
+
+      // Seed baseline Users if empty
+      const userCheck = await client.query("SELECT COUNT(*) FROM users");
+      if (parseInt(userCheck.rows[0].count, 10) === 0) {
+        for (const usr of SEED_USERS) {
+          await client.query(
+            `INSERT INTO users (id, name, email, role, school_id, google_id, avatar_url, provider, password_hash, status, created_at, updated_at)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW()) ON CONFLICT (id) DO NOTHING`,
+            [
+              usr.id,
+              usr.name,
+              usr.email,
+              usr.role,
+              usr.schoolId,
+              usr.googleId || null,
+              usr.avatarUrl || null,
+              usr.provider || "local",
+              usr.passwordHash || null,
+              usr.status || "active",
             ]
           );
         }
@@ -1141,15 +1207,32 @@ export const postgresUserDb = {
   async getAllUsers(): Promise<User[]> {
     const pool = getPostgresPool()!;
     const { rows } = await pool.query(
-      "SELECT id, name, email, role, school_id as \"schoolId\", google_id as \"googleId\", avatar_url as \"avatarUrl\", provider, created_at as \"createdAt\", updated_at as \"updatedAt\" FROM users ORDER BY created_at ASC"
+      `SELECT id, name, email, role, school_id as "schoolId", google_id as "googleId", 
+              avatar_url as "avatarUrl", provider, status, created_at as "createdAt", updated_at as "updatedAt" 
+       FROM users ORDER BY created_at ASC`
     );
     return rows;
+  },
+
+  async getUserById(id: string): Promise<User | null> {
+    const pool = getPostgresPool()!;
+    const { rows } = await pool.query(
+      `SELECT id, name, email, role, school_id as "schoolId", google_id as "googleId", 
+              avatar_url as "avatarUrl", provider, status, password_hash as "passwordHash",
+              created_at as "createdAt", updated_at as "updatedAt" 
+       FROM users WHERE id = $1 LIMIT 1`,
+      [id]
+    );
+    return rows[0] || null;
   },
 
   async getUserByEmail(email: string): Promise<User | null> {
     const pool = getPostgresPool()!;
     const { rows } = await pool.query(
-      "SELECT id, name, email, role, school_id as \"schoolId\", google_id as \"googleId\", avatar_url as \"avatarUrl\", provider, created_at as \"createdAt\", updated_at as \"updatedAt\" FROM users WHERE LOWER(email) = LOWER($1) LIMIT 1",
+      `SELECT id, name, email, role, school_id as "schoolId", google_id as "googleId", 
+              avatar_url as "avatarUrl", provider, status, password_hash as "passwordHash",
+              created_at as "createdAt", updated_at as "updatedAt" 
+       FROM users WHERE LOWER(email) = LOWER($1) LIMIT 1`,
       [email.trim()]
     );
     return rows[0] || null;
@@ -1158,10 +1241,41 @@ export const postgresUserDb = {
   async getUserByGoogleId(googleId: string): Promise<User | null> {
     const pool = getPostgresPool()!;
     const { rows } = await pool.query(
-      "SELECT id, name, email, role, school_id as \"schoolId\", google_id as \"googleId\", avatar_url as \"avatarUrl\", provider, created_at as \"createdAt\", updated_at as \"updatedAt\" FROM users WHERE google_id = $1 LIMIT 1",
+      `SELECT id, name, email, role, school_id as "schoolId", google_id as "googleId", 
+              avatar_url as "avatarUrl", provider, status, password_hash as "passwordHash",
+              created_at as "createdAt", updated_at as "updatedAt" 
+       FROM users WHERE google_id = $1 LIMIT 1`,
       [googleId]
     );
     return rows[0] || null;
+  },
+
+  async createUser(userData: Partial<User> & { email: string; name: string }): Promise<User> {
+    const pool = getPostgresPool()!;
+    const existing = await this.getUserByEmail(userData.email);
+    if (existing) {
+      throw new Error("A user with this email address already exists.");
+    }
+
+    const id = userData.id || `usr-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    const { rows } = await pool.query(
+      `INSERT INTO users (id, name, email, role, school_id, google_id, avatar_url, provider, password_hash, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+       RETURNING id, name, email, role, school_id as "schoolId", google_id as "googleId", avatar_url as "avatarUrl", provider, status, created_at as "createdAt", updated_at as "updatedAt"`,
+      [
+        id,
+        userData.name || "Educator",
+        userData.email.trim().toLowerCase(),
+        userData.role || "teacher",
+        userData.schoolId || "sch-gn-01",
+        userData.googleId || null,
+        userData.avatarUrl || null,
+        userData.provider || "local",
+        userData.passwordHash || null,
+        userData.status || "active",
+      ]
+    );
+    return rows[0];
   },
 
   async upsertUser(userData: Partial<User> & { email: string }): Promise<User> {
@@ -1179,9 +1293,11 @@ export const postgresUserDb = {
           provider = COALESCE($4, provider),
           school_id = COALESCE($5, school_id),
           role = COALESCE($6, role),
+          password_hash = COALESCE($7, password_hash),
+          status = COALESCE($8, status),
           updated_at = CURRENT_TIMESTAMP
-        WHERE id = $7
-        RETURNING id, name, email, role, school_id as "schoolId", google_id as "googleId", avatar_url as "avatarUrl", provider, created_at as "createdAt", updated_at as "updatedAt"`,
+        WHERE id = $9
+        RETURNING id, name, email, role, school_id as "schoolId", google_id as "googleId", avatar_url as "avatarUrl", provider, status, created_at as "createdAt", updated_at as "updatedAt"`,
         [
           userData.name || null,
           userData.googleId || null,
@@ -1189,28 +1305,52 @@ export const postgresUserDb = {
           userData.provider || null,
           userData.schoolId || null,
           userData.role || null,
+          userData.passwordHash || null,
+          userData.status || null,
           existing.id,
         ]
       );
       return rows[0];
     } else {
-      const id = userData.id || `usr-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
-      const { rows } = await pool.query(
-        `INSERT INTO users (id, name, email, role, school_id, google_id, avatar_url, provider)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        RETURNING id, name, email, role, school_id as "schoolId", google_id as "googleId", avatar_url as "avatarUrl", provider, created_at as "createdAt", updated_at as "updatedAt"`,
-        [
-          id,
-          userData.name || "Educator",
-          userData.email.trim().toLowerCase(),
-          userData.role || "teacher",
-          userData.schoolId || "sch-gn-01",
-          userData.googleId || null,
-          userData.avatarUrl || null,
-          userData.provider || "google",
-        ]
-      );
-      return rows[0];
+      return this.createUser({
+        ...userData,
+        name: userData.name || "Educator",
+      });
     }
+  },
+
+  async updateUser(id: string, updates: Partial<User>): Promise<User | null> {
+    const pool = getPostgresPool()!;
+    const existing = await this.getUserById(id);
+    if (!existing) return null;
+
+    const { rows } = await pool.query(
+      `UPDATE users SET
+        name = COALESCE($1, name),
+        role = COALESCE($2, role),
+        school_id = COALESCE($3, school_id),
+        avatar_url = COALESCE($4, avatar_url),
+        status = COALESCE($5, status),
+        password_hash = COALESCE($6, password_hash),
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = $7
+      RETURNING id, name, email, role, school_id as "schoolId", google_id as "googleId", avatar_url as "avatarUrl", provider, status, created_at as "createdAt", updated_at as "updatedAt"`,
+      [
+        updates.name || null,
+        updates.role || null,
+        updates.schoolId || null,
+        updates.avatarUrl || null,
+        updates.status || null,
+        updates.passwordHash || null,
+        id,
+      ]
+    );
+    return rows[0] || null;
+  },
+
+  async deleteUser(id: string): Promise<boolean> {
+    const pool = getPostgresPool()!;
+    const res = await pool.query(`DELETE FROM users WHERE id = $1`, [id]);
+    return (res.rowCount ?? 0) > 0;
   },
 };

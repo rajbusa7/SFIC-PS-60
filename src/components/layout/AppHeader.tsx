@@ -371,16 +371,25 @@ export function AppHeader({
             aria-label={t.header?.switchRole || "Account Center and Role Switcher"}
             className="flex h-9 items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/20 bg-white dark:bg-[#26201C] hover:bg-[#FAF6E9] dark:hover:bg-[#1E1916] transition-colors cursor-pointer shadow-xs whitespace-nowrap shrink-0"
           >
-            <div className="w-6 h-6 rounded-full bg-[#F2CAB3] dark:bg-[#F2CAB3]/30 border border-[#49352F]/15 dark:border-[#F2CAB3]/30 text-[#49352F] dark:text-[#F4F1E1] flex items-center justify-center text-xs font-bold shrink-0">
-              {role === "admin" ? "A" : role === "parent" ? "P" : "T"}
-            </div>
+            {user?.avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={user.avatarUrl}
+                alt={user.name || "User Avatar"}
+                className="w-6 h-6 rounded-full object-cover border border-[#49352F]/15 dark:border-[#F2CAB3]/30 shrink-0"
+              />
+            ) : (
+              <div className="w-6 h-6 rounded-full bg-[#F2CAB3] dark:bg-[#F2CAB3]/30 border border-[#49352F]/15 dark:border-[#F2CAB3]/30 text-[#49352F] dark:text-[#F4F1E1] flex items-center justify-center text-xs font-bold shrink-0">
+                {role === "admin" ? "A" : role === "parent" ? "P" : user?.name ? user.name.charAt(0).toUpperCase() : "T"}
+              </div>
+            )}
             <div className="text-left hidden sm:block shrink-0">
               <div className="text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] leading-tight truncate max-w-[85px] md:max-w-[120px] 2xl:max-w-none">
-                {role === "admin"
+                {user?.name || (role === "admin"
                   ? (t.header?.principalName || "Principal R.K. Trivedi")
                   : role === "parent"
                   ? (t.header?.parentName || "Dineshbhai Patel")
-                  : (t.header?.teacherName || user?.name || "Pooja Sharma")}
+                  : (t.header?.teacherName || "Pooja Sharma"))}
               </div>
               <div className="text-[10px] text-[#B26A1B] dark:text-[#F2CAB3] font-medium capitalize truncate max-w-[85px] md:max-w-[120px] 2xl:max-w-none">
                 {role === "admin" ? t.app.adminRole : role === "parent" ? (t.app?.parentRole || "Guardian / Parent") : t.app.teacherRole}
@@ -457,10 +466,10 @@ export function AppHeader({
               <div className="border-t border-[#49352F]/10 dark:border-[#F2CAB3]/15 my-1 pt-1">
                 <button
                   type="button"
-                  onClick={() => {
-                    logout();
+                  onClick={async () => {
+                    await logout();
                     setShowRoleMenu(false);
-                    router.push("/");
+                    router.push("/login");
                   }}
                   className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-[#C54738] hover:bg-[#C54738]/10 rounded-xl text-left transition-colors cursor-pointer"
                 >

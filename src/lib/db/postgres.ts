@@ -10,6 +10,7 @@ import type {
   ActivityAttempt,
   SchoolSettings,
   School,
+  User,
 } from "../types";
 import {
   SEED_SCHOOL,
@@ -1133,5 +1134,83 @@ export const postgresSettingsDb = {
     if (sets.length === 0) return;
     sets.push("updated_at = NOW()");
     await queryPostgres(`UPDATE school_settings SET ${sets.join(", ")}`);
+  },
+};
+
+export const postgresUserDb = {
+  async getAllUsers(): Promise<User[]> {
+    const pool = getPostgresPool()!;
+    const { rows } = await pool.query(
+      "SELECT id, name, email, role, school_id as \"schoolId\", google_id as \"googleId\", avatar_url as \"avatarUrl\", provider, created_at as \"createdAt\", updated_at as \"updatedAt\" FROM users ORDER BY created_at ASC"
+    );
+    return rows;
+  },
+
+  async getUserByEmail(email: string): Promise<User | null> {
+    const pool = getPostgresPool()!;
+    const { rows } = await pool.query(
+      "SELECT id, name, email, role, school_id as \"schoolId\", google_id as \"googleId\", avatar_url as \"avatarUrl\", provider, created_at as \"createdAt\", updated_at as \"updatedAt\" FROM users WHERE LOWER(email) = LOWER($1) LIMIT 1",
+      [email.trim()]
+    );
+    return rows[0] || null;
+  },
+
+  async getUserByGoogleId(googleId: string): Promise<User | null> {
+    const pool = getPostgresPool()!;
+    const { rows } = await pool.query(
+      "SELECT id, name, email, role, school_id as \"schoolId\", google_id as \"googleId\", avatar_url as \"avatarUrl\", provider, created_at as \"createdAt\", updated_at as \"updatedAt\" FROM users WHERE google_id = $1 LIMIT 1",
+      [googleId]
+    );
+    return rows[0] || null;
+  },
+
+  async upsertUser(userData: Partial<User> & { email: string }): Promise<User> {
+    const pool = getPostgresPool()!;
+    const existing = userData.googleId
+      ? await this.getUserByGoogleId(userData.googleId)
+      : await this.getUserByEmail(userData.email);
+
+    if (existing) {
+      const { rows } = await pool.query(
+        `UPDATE users SET 
+          name = COALESCE($1, name),
+          google_id = COALESCE($2, google_id),
+          avatar_url = COALESCE($3, avatar_url),
+          provider = COALESCE($4, provider),
+          school_id = COALESCE($5, school_id),
+          role = COALESCE($6, role),
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = $7
+        RETURNING id, name, email, role, school_id as "schoolId", google_id as "googleId", avatar_url as "avatarUrl", provider, created_at as "createdAt", updated_at as "updatedAt"`,
+        [
+          userData.name || null,
+          userData.googleId || null,
+          userData.avatarUrl || null,
+          userData.provider || null,
+          userData.schoolId || null,
+          userData.role || null,
+          existing.id,
+        ]
+      );
+      return rows[0];
+    } else {
+      const id = userData.id || `usr-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+      const { rows } = await pool.query(
+        `INSERT INTO users (id, name, email, role, school_id, google_id, avatar_url, provider)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        RETURNING id, name, email, role, school_id as "schoolId", google_id as "googleId", avatar_url as "avatarUrl", provider, created_at as "createdAt", updated_at as "updatedAt"`,
+        [
+          id,
+          userData.name || "Educator",
+          userData.email.trim().toLowerCase(),
+          userData.role || "teacher",
+          userData.schoolId || "sch-gn-01",
+          userData.googleId || null,
+          userData.avatarUrl || null,
+          userData.provider || "google",
+        ]
+      );
+      return rows[0];
+    }
   },
 };

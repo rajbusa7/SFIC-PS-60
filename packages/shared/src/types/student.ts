@@ -6,6 +6,12 @@ export interface User {
   email: string;
   role: UserRole;
   schoolId: string;
+  googleId?: string;
+  avatarUrl?: string;
+  provider?: "local" | "google";
+  passwordHash?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface School {

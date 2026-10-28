@@ -18,6 +18,7 @@ import {
   SEED_NOTICE_TRANSLATIONS,
   SEED_NOTICE_DELIVERIES,
   SEED_AI_CONFIGS,
+  SEED_USERS,
 } from "./seedData";
 import { detectLearningGap } from "../engine/gapDetection";
 import { generateRemedialPlan } from "../engine/remedialEngine";
@@ -30,6 +31,7 @@ import {
   postgresRemedialPlanDb,
   postgresActivityDb,
   postgresSettingsDb,
+  postgresUserDb,
 } from "./postgres";
 import type {
   School,
@@ -50,6 +52,7 @@ import type {
   ParentProfile,
   AiProviderConfig,
   AiUsageMetric,
+  User,
 } from "../types";
 
 interface DataStore {
@@ -71,6 +74,7 @@ interface DataStore {
   deliveries: NoticeDelivery[];
   aiMetrics: AiUsageMetric[];
   aiConfigs: AiProviderConfig[];
+  users?: User[];
   feedback?: { id: string; email: string; message?: string; submittedAt: string }[];
 }
 
@@ -99,6 +103,7 @@ function getInitialStore(): DataStore {
     deliveries: JSON.parse(JSON.stringify(SEED_NOTICE_DELIVERIES)),
     aiMetrics: [],
     aiConfigs: JSON.parse(JSON.stringify(SEED_AI_CONFIGS)),
+    users: JSON.parse(JSON.stringify(SEED_USERS)),
     feedback: [],
   };
 }
@@ -148,6 +153,9 @@ function loadStore(): DataStore {
           }
           const content = fs.readFileSync(/*turbopackIgnore: true*/ candidate, "utf-8");
           memoryStore = JSON.parse(content) as DataStore;
+          if (!memoryStore.users) {
+            memoryStore.users = JSON.parse(JSON.stringify(SEED_USERS));
+          }
           lastLoadedMtime = stat.mtimeMs;
           lastLoadedPath = candidate;
           return memoryStore;
@@ -1050,6 +1058,141 @@ export const db = {
     store.feedback.unshift(item);
     saveStore(store);
     return item;
+  },
+
+
+  getUsers(): User[] {
+    const store = loadStore();
+    return store.users || [];
+  },
+
+  getUserById(id: string): User | null {
+    const store = loadStore();
+    return (store.users || []).find((u) => u.id === id) || null;
+  },
+
+  getUserByEmail(email: string): User | null {
+    const store = loadStore();
+    const normalized = email.trim().toLowerCase();
+    return (store.users || []).find((u) => u.email.toLowerCase() === normalized) || null;
+  },
+
+  getUserByGoogleId(googleId: string): User | null {
+    const store = loadStore();
+    return (store.users || []).find((u) => u.googleId === googleId) || null;
+  },
+
+  createUser(userData: Partial<User> & { email: string; name: string }): User {
+    const store = loadStore();
+    const usersList = store.users || JSON.parse(JSON.stringify(SEED_USERS));
+    store.users = usersList;
+    const normalizedEmail = userData.email.trim().toLowerCase();
+    const existing = usersList.find((u: User) => u.email.toLowerCase() === normalizedEmail);
+    if (existing) {
+      throw new Error("A user with this email address already exists.");
+    }
+
+    const now = new Date().toISOString();
+    const newUser: User = {
+      id: userData.id || `usr-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      name: userData.name,
+      email: userData.email.trim().toLowerCase(),
+      role: userData.role || "teacher",
+      schoolId: userData.schoolId || "sch-gn-01",
+      googleId: userData.googleId,
+      avatarUrl: userData.avatarUrl,
+      provider: userData.provider || "local",
+      createdAt: now,
+      updatedAt: now,
+    };
+    usersList.push(newUser);
+    saveStore(store);
+    return newUser;
+  },
+
+  upsertUser(userData: Partial<User> & { email: string }): User {
+    const store = loadStore();
+    const usersList = store.users || JSON.parse(JSON.stringify(SEED_USERS));
+    store.users = usersList;
+    const normalizedEmail = userData.email.trim().toLowerCase();
+    const existingIndex = usersList.findIndex(
+      (u: User) =>
+        (userData.googleId && u.googleId === userData.googleId) ||
+        u.email.toLowerCase() === normalizedEmail
+    );
+
+    const now = new Date().toISOString();
+
+    if (existingIndex >= 0) {
+      const existing = usersList[existingIndex];
+      const updated: User = {
+        ...existing,
+        ...userData,
+        id: existing.id,
+        role: existing.role || userData.role || "teacher",
+        schoolId: existing.schoolId || userData.schoolId || "sch-gn-01",
+        updatedAt: now,
+      };
+      usersList[existingIndex] = updated;
+      saveStore(store);
+      return updated;
+    } else {
+      const newUser: User = {
+        id: userData.id || `usr-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        name: userData.name || "Educator",
+        email: userData.email.trim().toLowerCase(),
+        role: userData.role || "teacher",
+        schoolId: userData.schoolId || "sch-gn-01",
+        googleId: userData.googleId,
+        avatarUrl: userData.avatarUrl,
+        provider: userData.provider || "google",
+        createdAt: now,
+        updatedAt: now,
+      };
+      usersList.push(newUser);
+      saveStore(store);
+      return newUser;
+    }
+  },
+
+  async getUsersAsync(): Promise<User[]> {
+    if (isPostgresConfigured()) {
+      return postgresUserDb.getAllUsers();
+    }
+    return this.getUsers();
+  },
+
+  async getUserByIdAsync(id: string): Promise<User | null> {
+    const users = await this.getUsersAsync();
+    return users.find((u) => u.id === id) || null;
+  },
+
+  async getUserByEmailAsync(email: string): Promise<User | null> {
+    if (isPostgresConfigured()) {
+      return postgresUserDb.getUserByEmail(email);
+    }
+    return this.getUserByEmail(email);
+  },
+
+  async getUserByGoogleIdAsync(googleId: string): Promise<User | null> {
+    if (isPostgresConfigured()) {
+      return postgresUserDb.getUserByGoogleId(googleId);
+    }
+    return this.getUserByGoogleId(googleId);
+  },
+
+  async createUserAsync(userData: Partial<User> & { email: string; name: string }): Promise<User> {
+    if (isPostgresConfigured()) {
+      return postgresUserDb.upsertUser(userData);
+    }
+    return this.createUser(userData);
+  },
+
+  async upsertUserAsync(userData: Partial<User> & { email: string }): Promise<User> {
+    if (isPostgresConfigured()) {
+      return postgresUserDb.upsertUser(userData);
+    }
+    return this.upsertUser(userData);
   },
 
   resetToDemoData(): void {

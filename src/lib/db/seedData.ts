@@ -1,5 +1,6 @@
 import type {
   School,
+  User,
   Classroom,
   Student,
   Subject,
@@ -1253,3 +1254,36 @@ export const SEED_AI_CONFIGS: AiProviderConfig[] = [
   },
 ];
 
+
+export const SEED_USERS: User[] = [
+  {
+    id: "usr-teacher-01",
+    name: "Pooja Sharma",
+    email: "teacher@studysaathi.edu.in",
+    role: "teacher",
+    schoolId: "sch-gn-01",
+    provider: "local",
+    createdAt: "2026-01-01T00:00:00Z",
+    updatedAt: "2026-01-01T00:00:00Z",
+  },
+  {
+    id: "usr-admin-01",
+    name: "Principal R. K. Trivedi",
+    email: "principal@studysaathi.edu.in",
+    role: "admin",
+    schoolId: "sch-gn-01",
+    provider: "local",
+    createdAt: "2026-01-01T00:00:00Z",
+    updatedAt: "2026-01-01T00:00:00Z",
+  },
+  {
+    id: "par-001",
+    name: "Dineshbhai Patel",
+    email: "dinesh.patel@example.com",
+    role: "parent",
+    schoolId: "sch-gn-01",
+    provider: "local",
+    createdAt: "2026-01-01T00:00:00Z",
+    updatedAt: "2026-01-01T00:00:00Z",
+  },
+];

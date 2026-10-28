@@ -6,7 +6,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { Sun, Moon, Monitor, Check } from "lucide-react";
 
 interface ThemeToggleProps {
-  variant?: "button" | "dropdown" | "segmented";
+  variant?: "button" | "dropdown" | "segmented" | "glass";
   className?: string;
   showLabel?: boolean;
 }
@@ -134,6 +134,11 @@ export function ThemeToggle({
 
   // Default Quick 1-Click Toggle Button
   const isDark = mounted && resolvedTheme === "dark";
+  const isGlass = variant === "glass";
+
+  const buttonClasses = isGlass
+    ? `relative inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-slate-900/60 backdrop-blur-md text-amber-300 hover:text-white hover:bg-white/10 hover:border-amber-500/40 transition-all shadow-inner group cursor-pointer ${className}`
+    : `relative inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/20 bg-white dark:bg-[#26201C] text-[#49352F] dark:text-[#F4F1E1] hover:bg-[#FAF6E9] dark:hover:bg-[#1E1916] transition-all shadow-2xs group cursor-pointer ${className}`;
 
   return (
     <button
@@ -149,7 +154,7 @@ export function ThemeToggle({
           ? t.theme?.switchToLight || "Active: Dark Mode (Click for Light Mode)"
           : t.theme?.switchToDark || "Active: Light Mode (Click for Dark Mode)"
       }
-      className={`relative inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/20 bg-white dark:bg-[#26201C] text-[#49352F] dark:text-[#F4F1E1] hover:bg-[#FAF6E9] dark:hover:bg-[#1E1916] transition-all shadow-2xs group cursor-pointer ${className}`}
+      className={buttonClasses}
     >
       {/* Icon with smooth rotation animation */}
       <span className="relative flex items-center justify-center w-4 h-4">

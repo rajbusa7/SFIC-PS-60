@@ -213,33 +213,91 @@
   }
   .dock{ position:relative; }
 
-  /* ── hero copy (z 4) ─────────────────────────────────────────────────── */
-  .headline{
+  /* ── hero copy & flow block (z 4) — strictly non-overlapping document flow ── */
+  .hero-content-block{
     position:absolute; z-index:4;
-    left:calc(46 * var(--u)); top:calc(146 * var(--u));
-    font-size:calc(50 * var(--u)); line-height:calc(54 * var(--u));
-    font-weight:300; letter-spacing:calc(-0.4 * var(--u));
-    color:var(--ink);
+    left:calc(46 * var(--u));
+    top:calc(110 * var(--u));
+    width:calc(740 * var(--u));
     max-width:calc(760 * var(--u));
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    justify-content:flex-start;
+  }
+
+  /* 1. Hero Brand Badge */
+  .hero-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:calc(8 * var(--u));
+    padding:calc(5 * var(--u)) calc(14 * var(--u));
+    border-radius:calc(16 * var(--u));
+    background:var(--color-peach);
+    border:1px solid rgba(73,53,47,0.18);
+    font-size:clamp(11px, calc(13 * var(--u)), 14px);
+    font-weight:800;
+    color:var(--ink);
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    margin-bottom:clamp(14px, calc(18 * var(--u)), 22px);
+    box-shadow:0 calc(2 * var(--u)) calc(8 * var(--u)) rgba(73,53,47,0.06);
+    user-select:none;
+  }
+
+  /* 2. Hero Headline */
+  .headline{
+    position:relative;
+    margin:0; padding:0;
+    font-size:clamp(32px, calc(48 * var(--u)), 56px);
+    line-height:1.12;
+    font-weight:300;
+    letter-spacing:calc(-0.4 * var(--u));
+    color:var(--ink);
+    width:100%;
+    max-width:100%;
   }
   .headline span{ display:block; padding-bottom:.04em; }
   .headline span i{ display:inline-block; font-style:normal; }
 
+  /* 3. Description (Lede) — strictly below heading with 20-28px spacing */
   .lede{
-    position:absolute; z-index:4;
-    left:calc(46 * var(--u)); top:calc(272 * var(--u));
-    width:calc(600 * var(--u));
+    position:relative;
+    left:auto; top:auto;
+    margin:clamp(20px, calc(24 * var(--u)), 28px) 0 0 0;
+    padding:0;
+    width:100%;
     max-width:calc(620 * var(--u));
-    font-size:calc(15.5 * var(--u)); line-height:calc(24 * var(--u));
-    font-weight:300; color:var(--ink-soft);
+    font-size:clamp(14.5px, calc(16 * var(--u)), 17.5px);
+    line-height:1.62;
+    font-weight:300;
+    color:var(--ink-soft);
   }
 
-  /* ── liquid-metal controls ────────────────────────────────────────── */
-  .pill-clip{
-    position:absolute; z-index:4;
-    left:calc(195 * var(--u)); top:calc(420 * var(--u));
-    width:calc(410 * var(--u)); height:calc(270 * var(--u));
+  /* 4. Action Buttons Container */
+  .hero-actions{
+    position:relative;
+    display:flex;
+    align-items:center;
+    gap:calc(16 * var(--u));
+    flex-wrap:nowrap;
+    margin-top:clamp(24px, calc(30 * var(--u)), 36px);
+    width:100%;
+  }
+
+  /* Explore button layout slot */
+  .hero-explore-slot{
+    position:relative;
+    width:calc(234 * var(--u));
+    height:calc(60 * var(--u));
+    flex-shrink:0;
+  }
+  .hero-explore-slot .pill-clip{
+    position:absolute;
+    left:50%; top:50%;
     margin:calc(-135 * var(--u)) 0 0 calc(-205 * var(--u));
+    width:calc(410 * var(--u));
+    height:calc(270 * var(--u));
     clip-path:inset(calc(72 * var(--u)) calc(60 * var(--u))
                     calc(26 * var(--u)) calc(60 * var(--u)) round calc(62 * var(--u)));
   }
@@ -336,9 +394,11 @@
 
   /* ── play button (z 4) ─────────────────────────────────────────────── */
   .play-wrap{
-    position:absolute; z-index:4; pointer-events:none;
-    left:calc(545 * var(--u)); top:calc(335 * var(--u));
-    width:calc(170 * var(--u)); height:calc(170 * var(--u));
+    position:relative; z-index:4; pointer-events:none;
+    left:auto; top:auto;
+    width:calc(88 * var(--u)); height:calc(88 * var(--u));
+    display:inline-flex; align-items:center; justify-content:center;
+    flex-shrink:0;
   }
   .play-wrap > *{ pointer-events:auto; }
   .play-clip{
@@ -350,7 +410,7 @@
   }
   .play-glass{ position:absolute; inset:0; display:grid; place-items:center; }
   .play-ring{
-    position:absolute; inset:0; pointer-events:none;
+    position:absolute; inset:calc(-4 * var(--u)); pointer-events:none;
     border:1px solid rgba(73,53,47,.16); border-radius:50%;
   }
   .play-ring::after{
@@ -639,16 +699,55 @@
     .dock-item .glyph{ width:max(19px, calc(20 * var(--u))); height:max(19px, calc(20 * var(--u))); }
     .dock-mark svg{ width:52%; height:52%; }
     .knob-float{ left:calc(644 * var(--u)); top:calc(1218 * var(--u)); transform-origin:calc(-264 * var(--u)) calc(-43 * var(--u)); }
-    .headline{ left:calc(34 * var(--u)); top:calc(100 * var(--u)); font-size:calc(46 * var(--u)); line-height:calc(50 * var(--u)); max-width:calc(692 * var(--u)); }
-    .lede{ left:calc(34 * var(--u)); top:calc(220 * var(--u)); width:calc(692 * var(--u)); max-width:calc(692 * var(--u)); font-size:calc(16.5 * var(--u)); line-height:calc(24 * var(--u)); }
-    .pill-clip{
-      left:calc(34 * var(--u)); top:calc(440 * var(--u));
+    .hero-content-block{
+      position:relative;
+      left:auto; top:auto;
+      padding:clamp(70px, calc(96 * var(--u)), 110px) calc(34 * var(--u)) calc(20 * var(--u));
+      width:100%;
+      max-width:100%;
+    }
+    .hero-badge{
+      font-size:clamp(11px, calc(12 * var(--u)), 13px);
+      padding:calc(4 * var(--u)) calc(12 * var(--u));
+      margin-bottom:clamp(14px, calc(16 * var(--u)), 20px);
+    }
+    .headline{
+      font-size:clamp(28px, calc(42 * var(--u)), 46px);
+      line-height:1.14;
+      max-width:100%;
+    }
+    .lede{
+      margin-top:clamp(20px, calc(24 * var(--u)), 28px);
+      width:100%;
+      max-width:calc(692 * var(--u));
+      font-size:clamp(14px, calc(16 * var(--u)), 17px);
+      line-height:1.62;
+    }
+    .hero-actions{
+      flex-direction:row;
+      flex-wrap:wrap;
+      align-items:center;
+      gap:calc(14 * var(--u));
+      margin-top:clamp(22px, calc(26 * var(--u)), 32px);
+    }
+    .hero-explore-slot{
+      width:calc(250 * var(--u));
+      height:calc(64 * var(--u));
+    }
+    .hero-explore-slot .pill-clip{
+      left:50%; top:50%;
       width:calc(506 * var(--u)); height:calc(334 * var(--u));
-      margin:calc(-167 * var(--u)) 0 0 calc(-79 * var(--u));
+      margin:calc(-167 * var(--u)) 0 0 calc(-253 * var(--u));
       clip-path:inset(calc(93 * var(--u)) calc(74 * var(--u)) calc(1 * var(--u)) calc(74 * var(--u)) round calc(76 * var(--u)));
     }
-    .liquid-stage--explore{ --h:calc(74.4152 * var(--u)); }
+    .liquid-stage--explore{ --h:calc(66 * var(--u)); }
     .play-wrap{ display:none; }
+    .hero-secondary-btn{
+      left:auto; top:auto;
+      height:max(44px, calc(48 * var(--u)));
+      padding:0 max(16px, calc(20 * var(--u)));
+      font-size:max(13.5px, calc(15 * var(--u)));
+    }
 
     .stat{ gap:calc(11 * var(--u)); }
     .stat .mark{ width:calc(36 * var(--u)); height:calc(36 * var(--u)); }
@@ -690,13 +789,6 @@
     .scroll{ left:calc(702 * var(--u)); top:calc(470 * var(--u)); }
     .ghost{ font-size:calc(184 * var(--u)); letter-spacing:calc(14 * var(--u)); bottom:calc(660 * var(--u)); left:calc(-10 * var(--u)); }
 
-    /* Hero secondary button */
-    .hero-secondary-btn{
-      left:calc(34 * var(--u)); top:calc(476 * var(--u));
-      height:max(42px, calc(46 * var(--u)));
-      padding:0 max(16px, calc(20 * var(--u)));
-      font-size:max(13px, calc(15 * var(--u)));
-    }
     .stat--a{ top:calc(550 * var(--u)) !important; }
     .stat--b{ top:calc(550 * var(--u)) !important; }
     .card-meta-pill{ font-size:calc(13 * var(--u)); padding:calc(3 * var(--u)) calc(8 * var(--u)); }
@@ -704,12 +796,31 @@
     .card-demo-badge{ font-size:calc(10.5 * var(--u)); }
   }
 
+  @media (max-width:540px){
+    .hero-actions{
+      flex-direction:column;
+      align-items:flex-start;
+      gap:14px;
+    }
+    .hero-explore-slot{
+      width:250px;
+      max-width:100%;
+      height:58px;
+    }
+    .hero-secondary-btn{
+      width:auto;
+      min-width:200px;
+      justify-content:center;
+      height:44px;
+    }
+  }
+
   /* ── Hero Secondary Button & Card Meta (Desktop) ───────────────────────── */
   .hero-secondary-btn{
-    position:absolute; z-index:4;
-    left:calc(365 * var(--u)); top:calc(398 * var(--u));
+    position:relative; z-index:4;
+    left:auto; top:auto;
     display:inline-flex; align-items:center; gap:calc(8 * var(--u));
-    height:calc(44 * var(--u));
+    height:calc(46 * var(--u));
     padding:0 calc(20 * var(--u));
     border-radius:999px;
     background:var(--color-surface-white);
@@ -718,6 +829,8 @@
     box-shadow:0 calc(6 * var(--u)) calc(18 * var(--u)) rgba(73,53,47,.08);
     font-size:calc(14 * var(--u)); font-weight:500;
     text-decoration:none; cursor:pointer;
+    white-space:nowrap;
+    flex-shrink:0;
     transition:background .25s var(--ease), border-color .25s var(--ease), transform .25s var(--ease), box-shadow .25s var(--ease);
   }
   .hero-secondary-btn:hover{
@@ -1215,53 +1328,68 @@
       </button>
     </span>
 
-    <h1 class="headline" style="--pd:18; --pr:1.2">
-      <span style="display:inline-flex; align-items:center; gap:calc(8 * var(--u)); padding:calc(4 * var(--u)) calc(12 * var(--u)); border-radius:calc(16 * var(--u)); background:var(--color-peach); border:1px solid rgba(73,53,47,0.18); font-size:calc(13 * var(--u)); font-weight:800; color:var(--ink); letter-spacing:0.04em; text-transform:uppercase; margin-bottom:calc(12 * var(--u));"><i style="--d:180ms">✨ StudySaathi AI Platform</i></span>
-      <span><i style="--d:260ms">Every Child Can Learn.</i></span>
-      <span><i style="--d:360ms">AI Helps Us Find the Way.</i></span>
-    </h1>
+    <div class="hero-content-block" style="--pd:18; --pr:1.2">
+      <!-- 1. Hero Brand Badge -->
+      <div class="hero-badge fade" style="--d:180ms">
+        <span>✨ StudySaathi AI Platform</span>
+      </div>
 
-    <p class="lede mask" style="--d:480ms; --pd:14; --pr:1">Identify learning gaps early, understand each student's needs, and create personalized remedial learning plans with AI. Helping teachers turn learning challenges into meaningful progress.</p>
+      <!-- 2. Hero Headline (natural document flow, wraps cleanly) -->
+      <h1 class="headline">
+        <span><i style="--d:260ms">Every Child Can Learn.</i></span>
+        <span><i style="--d:360ms">AI Helps Us Find the Way.</i></span>
+      </h1>
 
-    <div class="pill-clip">
-      <div class="pill mask" style="--d:600ms; --pd:15; --pr:1.4">
-        <div class="liquid-stage liquid-stage--explore" data-liquid-metal="explore">
-          <div class="liquid-plate plate" aria-hidden="true"></div>
-          <canvas class="liquid-fx" aria-hidden="true"></canvas>
-          <button class="liquid-button liquid-button--explore btn" type="button" onclick="document.getElementById('challenge')?.scrollIntoView({ behavior: 'smooth' });">
-            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:calc(18 * var(--u)); height:calc(18 * var(--u));">
-              <path d="M12 5v14M19 12l-7 7-7-7"/>
-            </svg>
-            <span class="lbl">Explore the Platform</span>
-          </button>
+      <!-- 3. Hero Description (strictly below headline, 20-28px vertical spacing) -->
+      <p class="lede mask" style="--d:480ms">Identify learning gaps early, understand each student's needs, and create personalized remedial learning plans with AI. Helping teachers turn learning challenges into meaningful progress.</p>
+
+      <!-- 4. Hero Action Buttons (strictly below description, flex row) -->
+      <div class="hero-actions fade" style="--d:600ms">
+        <!-- Explore Button Slot -->
+        <div class="hero-explore-slot">
+          <div class="pill-clip">
+            <div class="pill" style="--pd:15; --pr:1.4">
+              <div class="liquid-stage liquid-stage--explore" data-liquid-metal="explore">
+                <div class="liquid-plate plate" aria-hidden="true"></div>
+                <canvas class="liquid-fx" aria-hidden="true"></canvas>
+                <button class="liquid-button liquid-button--explore btn" type="button" onclick="document.getElementById('challenge')?.scrollIntoView({ behavior: 'smooth' });">
+                  <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:calc(18 * var(--u)); height:calc(18 * var(--u));">
+                    <path d="M12 5v14M19 12l-7 7-7-7"/>
+                  </svg>
+                  <span class="lbl">Explore the Platform</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
+
+        <!-- Secondary Teacher Login Button -->
+        <a href="/login" class="hero-secondary-btn" aria-label="Teacher Login">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:calc(16 * var(--u)); height:calc(16 * var(--u));" aria-hidden="true">
+            <path d="M13 3h3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-3M8 14l4-4-4-4M12 10H3"/>
+          </svg>
+          <span>Teacher Login</span>
+        </a>
+
+        <!-- Circular Play Button -->
+        <span class="play-wrap">
+          <span class="play-clip">
+            <span class="play-glass mask-circle" style="--d:900ms">
+              <span class="liquid-stage liquid-stage--play" data-liquid-metal="play">
+                <span class="liquid-plate plate" aria-hidden="true"></span>
+                <canvas class="liquid-fx" aria-hidden="true"></canvas>
+                <button class="liquid-button liquid-button--play btn" type="button" aria-label="Interactive Tutorial" onclick="window.location.href='/tutorial'">
+                  <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M8 5.2v13.6L19 12z" fill="currentColor"/>
+                  </svg>
+                </button>
+              </span>
+            </span>
+          </span>
+          <span class="play-ring mask-circle" style="--d:840ms" aria-hidden="true"></span>
+        </span>
       </div>
     </div>
-
-    <!-- Secondary Teacher Login Button -->
-    <a href="/login" class="hero-secondary-btn mask" style="--d:680ms;" aria-label="Teacher Login">
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:calc(16 * var(--u)); height:calc(16 * var(--u));" aria-hidden="true">
-        <path d="M13 3h3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-3M8 14l4-4-4-4M12 10H3"/>
-      </svg>
-      <span>Teacher Login</span>
-    </a>
-
-    <span class="play-wrap" style="--pd:20">
-      <span class="play-clip">
-        <span class="play-glass mask-circle" style="--d:900ms">
-          <span class="liquid-stage liquid-stage--play" data-liquid-metal="play">
-            <span class="liquid-plate plate" aria-hidden="true"></span>
-            <canvas class="liquid-fx" aria-hidden="true"></canvas>
-            <button class="liquid-button liquid-button--play btn" type="button" aria-label="Interactive Tutorial" onclick="window.location.href='/tutorial'">
-              <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M8 5.2v13.6L19 12z" fill="currentColor"/>
-              </svg>
-            </button>
-          </span>
-        </span>
-      </span>
-      <span class="play-ring mask-circle" style="--d:840ms" aria-hidden="true"></span>
-    </span>
 
     <dl class="stat stat--a mask" style="--d:700ms; --pd:12">
       <span class="mark" aria-hidden="true">
@@ -2560,7 +2688,7 @@ window.__seek   = v => { clock = v; drawn = null; };
      they are the furthest plane, their travel would be a few pixels, and
      promoting two near-full-stage boxes to composited layers cost more
      frames than the effect was worth. */
-  var PARALLAX = '.dock,.headline,.lede,.pill,.play-wrap,' +
+  var PARALLAX = '.dock,.hero-content-block,' +
                  '.stat--a,.stat--b,.card--about,.knob-float,.card--stove,.scroll';
 
   var pointer = { x: 0, y: 0 }, smooth = { x: 0, y: 0 };

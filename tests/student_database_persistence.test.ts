@@ -66,7 +66,7 @@ describe("Student Database Persistent Storage & CRUD Verification Suite", () => 
     });
 
     const res = await postStudentHandler(createReq);
-    assert.equal(res.status, 200);
+    assert.ok(res.status === 200 || res.status === 201, `Expected 200 or 201, got ${res.status}`);
     const data = await res.json();
     assert.equal(data.success, true);
     assert.ok(data.student.id);

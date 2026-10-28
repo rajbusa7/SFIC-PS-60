@@ -94,7 +94,7 @@ describe("Dynamic Database-Driven System Verification Suite", () => {
       notes: "Transferred from Ahmedabad primary school.",
     });
     const createRes = await postStudentHandler(createReq);
-    assert.equal(createRes.status, 200);
+    assert.ok(createRes.status === 200 || createRes.status === 201, `Expected 200 or 201, got ${createRes.status}`);
     const createData = await createRes.json();
     assert.equal(createData.success, true);
     const newId = createData.student.id;

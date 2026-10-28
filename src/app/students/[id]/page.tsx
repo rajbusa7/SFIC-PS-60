@@ -32,6 +32,8 @@ import {
   Layers,
   BrainCircuit,
   Eye,
+  Building,
+  Clock,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -240,21 +242,23 @@ export default function StudentDetailPage({
   if (skillNodes.length === 0) {
     skillNodes = [
       {
-        id: "node-place-val",
-        name: "Place Value 100s",
-        subject: "Math",
-        score: avgScore || 80,
-        status: (avgScore || 80) >= 80 ? "mastered" : "developing",
-        position: [-1.8, -0.6, 0],
-        connectedTo: ["node-add-sub"],
+        id: "node-init-eval",
+        name: language === "gu" ? "પ્રારંભિક નિદાન (બાકી)" : "Diagnostic Assessment (Pending)",
+        subject: "Curriculum",
+        score: 0,
+        status: "locked",
+        baselineScore: 0,
+        position: [-1.2, 0, 0],
+        connectedTo: ["node-progression"],
       },
       {
-        id: "node-add-sub",
-        name: "Multi-digit Addition",
-        subject: "Math",
-        score: avgScore ? Math.min(100, avgScore + 5) : 85,
-        status: "mastered",
-        position: [-1.2, 0.4, 0.4],
+        id: "node-progression",
+        name: language === "gu" ? "અભ્યાસક્રમ પ્રગતિ" : "Curriculum Progression",
+        subject: "Curriculum",
+        score: 0,
+        status: "locked",
+        baselineScore: 0,
+        position: [1.2, 0, 0],
       },
     ];
   }
@@ -307,6 +311,10 @@ export default function StudentDetailPage({
                   ? `રોલ નં: ${student.studentCode} • નોંધણી ૨૦૨૬`
                   : `Roll: ${student.studentCode} • Enrolled 2026`}
               </p>
+              <div className="flex items-center gap-1.5 text-xs text-[#7A6862]">
+                <Building className="w-3.5 h-3.5 text-[#B26A1B] shrink-0" />
+                <span>Model Primary School, Gandhinagar (GUJ-GNR-042)</span>
+              </div>
               {student.notes && (
                 <p className="text-xs text-[#7A6862] max-w-xl italic mt-1">
                   &quot;{student.notes}&quot;
@@ -363,16 +371,20 @@ export default function StudentDetailPage({
         <div data-tour="student-scores" className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <StatTile
             label={language === "gu" ? "સરેરાશ પરિણામ" : "Average Performance"}
-            value={avgScore}
-            suffix="%"
+            value={results.length > 0 ? avgScore : (language === "gu" ? "બાકી" : "Pending")}
+            suffix={results.length > 0 ? "%" : ""}
             icon={TrendingUp}
             variant="indigo"
             description={
-              language === "gu"
-                ? `${results.length} મૂલ્યાંકનોમાં`
-                : `Across ${results.length} assessments`
+              results.length > 0
+                ? (language === "gu"
+                    ? `${results.length} મૂલ્યાંકનોમાં`
+                    : `Across ${results.length} assessments`)
+                : (language === "gu"
+                    ? "હજુ મૂલ્યાંકન થયેલ નથી"
+                    : "Assessment Pending")
             }
-            sparklineData={[50, 58, 65, 74, avgScore]}
+            sparklineData={results.length > 0 ? [50, 58, 65, 74, avgScore] : []}
           />
 
           <StatTile
@@ -381,7 +393,11 @@ export default function StudentDetailPage({
             icon={AlertTriangle}
             variant={activeGaps.length > 0 ? "coral" : "mint"}
             description={
-              activeGaps.length === 0
+              results.length === 0
+                ? language === "gu"
+                  ? "પ્રારંભિક નિદાન બાકી છે"
+                  : "Diagnostic Pending"
+                : activeGaps.length === 0
                 ? language === "gu"
                   ? "બધી સંકલ્પનાઓ સિદ્ધ!"
                   : "All concepts mastered!"
@@ -485,10 +501,25 @@ export default function StudentDetailPage({
         {activeTab === "gaps" && (
           <div className="space-y-4">
             {gaps.length === 0 ? (
-              <Card variant="glass" className="p-8 text-center text-[#7A6862] bg-white border-[#49352F]/12">
-                {language === "gu"
-                  ? "આ વિદ્યાર્થી માટે કોઈ શીખવાની ખામી નોંધાયેલ નથી."
-                  : "No learning gaps recorded for this student."}
+              <Card variant="glass" className="p-8 text-center text-[#7A6862] bg-white border-[#49352F]/12 space-y-2">
+                <p className="font-semibold text-sm text-[#49352F]">
+                  {results.length === 0
+                    ? language === "gu"
+                      ? "પ્રારંભિક મૂલ્યાંકન બાકી છે"
+                      : "Diagnostic Assessment Pending"
+                    : language === "gu"
+                    ? "કોઈ શીખવાની ખામી નથી"
+                    : "No Learning Gaps Detected"}
+                </p>
+                <p className="text-xs text-[#7A6862] max-w-md mx-auto">
+                  {results.length === 0
+                    ? language === "gu"
+                      ? "આ વિદ્યાર્થી માટે હજુ સુધી કોઈ મૂલ્યાંકન પરિણામ નોંધાયેલ નથી. મૂલ્યાંકન લીધા પછી જ લર્નિંગ ગેપ્સ ઓળખવામાં આવશે."
+                      : "No assessment results have been recorded for this student yet. Learning gaps will be identified once classroom assessments are completed."
+                    : language === "gu"
+                    ? "આ વિદ્યાર્થી તમામ મૂલ્યાંકિત સંકલ્પનાઓમાં પ્રભુત્વ અથવા વિકાસશીલ સ્થિતિ દર્શાવે છે."
+                    : "This student is on track across all evaluated concepts."}
+                </p>
               </Card>
             ) : (
               gaps.map((gap) => (
@@ -599,35 +630,51 @@ export default function StudentDetailPage({
               <p className="text-xs text-[#7A6862] mb-4">
                 {language === "gu" ? "મૂળ આધાર વિરુદ્ધ પુનઃમૂલ્યાંકન %" : "Baseline vs Reassessment %"}
               </p>
-              <div className="h-[250px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={conceptScoresData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#49352F" opacity={0.1} />
-                    <XAxis dataKey="name" tick={{ fill: "#7A6862", fontSize: 11 }} />
-                    <YAxis tick={{ fill: "#7A6862", fontSize: 11 }} domain={[0, 100]} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "#FAF6E9",
-                        border: "1px solid rgba(73,53,47,0.15)",
-                        borderRadius: "12px",
-                        color: "#49352F",
-                      }}
-                    />
-                    <Bar
-                      dataKey="latest"
-                      fill="#2E7D5E"
-                      name={language === "gu" ? "તાજેતરનો સ્કોર %" : "Latest Score %"}
-                      radius={[4, 4, 0, 0]}
-                    />
-                    <Bar
-                      dataKey="previous"
-                      fill="#F2CAB3"
-                      name={language === "gu" ? "મૂળ આધાર %" : "Baseline %"}
-                      radius={[4, 4, 0, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+              {conceptScoresData.length === 0 ? (
+                <div className="h-[250px] w-full flex flex-col items-center justify-center text-center p-4 rounded-xl bg-[#FAF6E9]/40 border border-dashed border-[#49352F]/15">
+                  <Clock className="w-6 h-6 text-[#B26A1B] mb-2" />
+                  <p className="text-xs font-semibold text-[#49352F]">
+                    {language === "gu"
+                      ? "હજુ સુધી કોઈ મૂલ્યાંકન સ્કોર ઉપલબ્ધ નથી."
+                      : "No concept scores recorded yet."}
+                  </p>
+                  <p className="text-[11px] text-[#7A6862] mt-1 max-w-xs">
+                    {language === "gu"
+                      ? "વિદ્યાર્થીનું પ્રથમ મૂલ્યાંકન નોંધાયા પછી અહીં તુલનાત્મક આલેખ આપોઆપ દેખાશે."
+                      : "Mastery comparison charts will display once student diagnostic evaluations are recorded."}
+                  </p>
+                </div>
+              ) : (
+                <div className="h-[250px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={conceptScoresData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#49352F" opacity={0.1} />
+                      <XAxis dataKey="name" tick={{ fill: "#7A6862", fontSize: 11 }} />
+                      <YAxis tick={{ fill: "#7A6862", fontSize: 11 }} domain={[0, 100]} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "#FAF6E9",
+                          border: "1px solid rgba(73,53,47,0.15)",
+                          borderRadius: "12px",
+                          color: "#49352F",
+                        }}
+                      />
+                      <Bar
+                        dataKey="latest"
+                        fill="#2E7D5E"
+                        name={language === "gu" ? "તાજેતરનો સ્કોર %" : "Latest Score %"}
+                        radius={[4, 4, 0, 0]}
+                      />
+                      <Bar
+                        dataKey="previous"
+                        fill="#F2CAB3"
+                        name={language === "gu" ? "મૂળ આધાર %" : "Baseline %"}
+                        radius={[4, 4, 0, 0]}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
             </Card>
 
             <Card variant="glass" className="p-5 flex flex-col justify-between bg-white border-[#49352F]/12 text-[#49352F] shadow-xs">
@@ -691,55 +738,75 @@ export default function StudentDetailPage({
                 </tr>
               </thead>
               <tbody>
-                {results.map((res) => {
-                  const isMastered = res.percentage >= 80;
-                  const isGap = res.percentage < 60;
-                  return (
-                    <tr key={res.id} className="border-b border-[#49352F]/8 hover:bg-[#FAF6E9]/60">
-                      <td className="p-3 text-[#7A6862]">
-                        {new Date(res.recordedAt || Date.now()).toLocaleDateString()}
-                      </td>
-                      <td className="p-3 font-bold text-[#49352F]">
-                        {res.assessmentTitle || (language === "gu" ? "નિદાનાત્મક મૂલ્યાંકન" : "Diagnostic Assessment")}
-                      </td>
-                      <td className="p-3 text-[#7A6862]">
-                        {res.marksObtained} / {res.maximumMarks}
-                      </td>
-                      <td className="p-3">
-                        <span
-                          className={`font-black ${
-                            isMastered
-                              ? "text-[#2E7D5E]"
-                              : isGap
-                              ? "text-[#C54738]"
-                              : "text-[#B26A1B]"
-                          }`}
-                        >
-                          {res.percentage}%
+                {results.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="p-8 text-center text-[#7A6862]">
+                      <div className="flex flex-col items-center justify-center space-y-1">
+                        <Clock className="w-5 h-5 text-[#B26A1B] mb-1" />
+                        <span className="font-semibold text-xs text-[#49352F]">
+                          {language === "gu"
+                            ? "આ વિદ્યાર્થી માટે કોઈ મૂલ્યાંકન પરિણામ નોંધાયેલ નથી."
+                            : "No assessment results recorded yet."}
                         </span>
-                      </td>
-                      <td className="p-3">
-                        <Badge
-                          variant={isMastered ? "mastered" : isGap ? "needsSupport" : "developing"}
-                          size="sm"
-                          dot
-                        >
-                          {isMastered
-                            ? language === "gu"
-                              ? "સિદ્ધ"
-                              : "Mastered"
-                            : isGap
-                            ? language === "gu"
-                              ? "સહાય જરૂરી"
-                              : "Needs Support"
-                            : language === "gu"
-                            ? "પ્રગતિ હેઠળ"
-                            : "Developing"}
-                        </Badge>
-                      </td>
-                    </tr>
-                  );
-                })}
+                        <span className="text-[11px] text-[#7A6862]">
+                          {language === "gu"
+                            ? "પ્રારંભિક મૂલ્યાંકન બાકી છે (Assessment Pending)."
+                            : "Initial assessment is pending."}
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  results.map((res) => {
+                    const isMastered = res.percentage >= 80;
+                    const isGap = res.percentage < 60;
+                    return (
+                      <tr key={res.id} className="border-b border-[#49352F]/8 hover:bg-[#FAF6E9]/60">
+                        <td className="p-3 text-[#7A6862]">
+                          {new Date(res.recordedAt || Date.now()).toLocaleDateString()}
+                        </td>
+                        <td className="p-3 font-bold text-[#49352F]">
+                          {res.assessmentTitle || (language === "gu" ? "નિદાનાત્મક મૂલ્યાંકન" : "Diagnostic Assessment")}
+                        </td>
+                        <td className="p-3 text-[#7A6862]">
+                          {res.marksObtained} / {res.maximumMarks}
+                        </td>
+                        <td className="p-3">
+                          <span
+                            className={`font-black ${
+                              isMastered
+                                ? "text-[#2E7D5E]"
+                                : isGap
+                                ? "text-[#C54738]"
+                                : "text-[#B26A1B]"
+                            }`}
+                          >
+                            {res.percentage}%
+                          </span>
+                        </td>
+                        <td className="p-3">
+                          <Badge
+                            variant={isMastered ? "mastered" : isGap ? "needsSupport" : "developing"}
+                            size="sm"
+                            dot
+                          >
+                            {isMastered
+                              ? language === "gu"
+                                ? "સિદ્ધ"
+                                : "Mastered"
+                              : isGap
+                              ? language === "gu"
+                                ? "સહાય જરૂરી"
+                                : "Needs Support"
+                              : language === "gu"
+                              ? "પ્રગતિ હેઠળ"
+                              : "Developing"}
+                          </Badge>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </Card>

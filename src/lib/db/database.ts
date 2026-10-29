@@ -74,6 +74,7 @@ interface DataStore {
   parents: ParentProfile[];
   parentLinkingCodes?: ParentLinkingCode[];
   parentMessages?: ParentMessage[];
+  parentActivityCompletions?: any[];
   notices: SchoolNotice[];
   translations: NoticeTranslation[];
   deliveries: NoticeDelivery[];
@@ -1362,6 +1363,76 @@ export const db = {
     }
     const store = loadStore();
     return (store.parentMessages || []).filter((m) => m.parentId === parentId);
+  },
+
+  async recordParentActivityCompletionAsync(
+    parentId: string,
+    studentId: string,
+    activityId: string,
+    conceptId?: string,
+    completed = true
+  ): Promise<{ success: boolean; completion: any }> {
+    const store = loadStore();
+    if (!store.parentActivityCompletions) {
+      store.parentActivityCompletions = [];
+    }
+
+    const id = `cmp-${parentId}-${studentId}-${activityId}`;
+    const existingIndex = store.parentActivityCompletions.findIndex(
+      (c) => c.id === id || (c.studentId === studentId && c.activityId === activityId)
+    );
+
+    let completionObj: any;
+    if (existingIndex >= 0) {
+      store.parentActivityCompletions[existingIndex].completed = completed;
+      store.parentActivityCompletions[existingIndex].completedAt = new Date().toISOString();
+      completionObj = store.parentActivityCompletions[existingIndex];
+    } else {
+      completionObj = {
+        id,
+        parentId,
+        studentId,
+        activityId,
+        conceptId: conceptId || "",
+        completed,
+        completedAt: new Date().toISOString(),
+      };
+      store.parentActivityCompletions.push(completionObj);
+    }
+
+    saveStore(store);
+
+    if (isPostgresConfigured()) {
+      try {
+        const pgCompletion = await postgresParentDb.recordActivityCompletion(
+          parentId,
+          studentId,
+          activityId,
+          conceptId || "",
+          completed
+        );
+        if (pgCompletion) return { success: true, completion: pgCompletion };
+      } catch (e) {
+        console.error("Postgres error in recordParentActivityCompletionAsync:", e);
+      }
+    }
+
+    return { success: true, completion: completionObj };
+  },
+
+  async getParentActivityCompletionsAsync(studentId: string): Promise<any[]> {
+    if (isPostgresConfigured()) {
+      try {
+        const pgCompletions = await postgresParentDb.getActivityCompletions(studentId);
+        if (pgCompletions && pgCompletions.length > 0) return pgCompletions;
+      } catch (e) {
+        console.error("Postgres error in getParentActivityCompletionsAsync:", e);
+      }
+    }
+    const store = loadStore();
+    return (store.parentActivityCompletions || []).filter(
+      (c) => c.studentId === studentId && c.completed === true
+    );
   },
 
   getParentsByStudentId(studentId: string): ParentProfile[] {

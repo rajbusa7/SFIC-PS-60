@@ -37,6 +37,11 @@ import {
   Building,
   KeyRound,
   X,
+  Check,
+  CheckSquare,
+  Square,
+  Home,
+  FileText,
 } from "lucide-react";
 
 function ParentDashboardContent() {
@@ -56,6 +61,11 @@ function ParentDashboardContent() {
   const [loading, setLoading] = useState<boolean>(true);
   const [detailLoading, setDetailLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Real-time synchronization state
+  const [lastUpdatedTime, setLastUpdatedTime] = useState<Date | null>(null);
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [activityLoading, setActivityLoading] = useState<Record<string, boolean>>({});
 
   // Link child modal state
   const [linkModalOpen, setLinkModalOpen] = useState(false);
@@ -93,7 +103,6 @@ function ParentDashboardContent() {
       setLinkedStudents(students);
 
       if (students.length > 0) {
-        // Default to first student if not selected
         setSelectedStudentId((prev) => prev || students[0].id);
       }
     } catch (err: any) {
@@ -103,10 +112,12 @@ function ParentDashboardContent() {
     }
   };
 
-  // 2. Fetch selected student details (scores, gaps, remedial plans, notices)
-  const fetchStudentDetail = async (studentId: string) => {
+  // 2. Fetch selected student details (scores, gaps, remedial plans, notices, home activities)
+  const fetchStudentDetail = async (studentId: string, silent = false) => {
     try {
-      setDetailLoading(true);
+      if (!silent) setDetailLoading(true);
+      else setIsSyncing(true);
+
       const res = await fetch(`/api/parent/students/${studentId}`);
       const data = await res.json();
 
@@ -115,10 +126,12 @@ function ParentDashboardContent() {
       }
 
       setStudentDetail(data);
+      setLastUpdatedTime(new Date());
     } catch (err: any) {
       console.error("Error loading student detail:", err);
     } finally {
-      setDetailLoading(false);
+      if (!silent) setDetailLoading(false);
+      else setIsSyncing(false);
     }
   };
 
@@ -142,6 +155,30 @@ function ParentDashboardContent() {
     if (selectedStudentId) {
       fetchStudentDetail(selectedStudentId);
     }
+  }, [selectedStudentId]);
+
+  // 4. Real-time background synchronization (every 20s) and focus revalidation
+  useEffect(() => {
+    if (!selectedStudentId) return;
+
+    let intervalId: NodeJS.Timeout | null = null;
+
+    const performSync = () => {
+      if (document.visibilityState === "visible" && selectedStudentId) {
+        fetchStudentDetail(selectedStudentId, true);
+      }
+    };
+
+    window.addEventListener("focus", performSync);
+    document.addEventListener("visibilitychange", performSync);
+
+    intervalId = setInterval(performSync, 20000);
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+      window.removeEventListener("focus", performSync);
+      document.removeEventListener("visibilitychange", performSync);
+    };
   }, [selectedStudentId]);
 
   // Handle Logout
@@ -197,6 +234,72 @@ function ParentDashboardContent() {
     }
   };
 
+  // Handle Home Activity Completion Toggle
+  const handleToggleActivity = async (activityId: string, conceptId?: string, currentCompleted = false) => {
+    if (!selectedStudentId) return;
+
+    const newCompleted = !currentCompleted;
+
+    // Optimistic UI update
+    setStudentDetail((prev: any) => {
+      if (!prev || !prev.homeActivities) return prev;
+      return {
+        ...prev,
+        homeActivities: prev.homeActivities.map((act: any) => {
+          if (act.id === activityId) {
+            return {
+              ...act,
+              completed: newCompleted,
+              completedAt: newCompleted ? new Date().toISOString() : null,
+            };
+          }
+          return act;
+        }),
+      };
+    });
+
+    setActivityLoading((prev) => ({ ...prev, [activityId]: true }));
+
+    try {
+      const res = await fetch("/api/parent/activities/complete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studentId: selectedStudentId,
+          activityId,
+          conceptId,
+          completed: newCompleted,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        // Rollback optimistic update
+        setStudentDetail((prev: any) => {
+          if (!prev || !prev.homeActivities) return prev;
+          return {
+            ...prev,
+            homeActivities: prev.homeActivities.map((act: any) => {
+              if (act.id === activityId) {
+                return {
+                  ...act,
+                  completed: currentCompleted,
+                };
+              }
+              return act;
+            }),
+          };
+        });
+        alert(data.error || "Failed to update activity completion.");
+      } else {
+        setLastUpdatedTime(new Date());
+      }
+    } catch (e: any) {
+      console.error("Activity completion error:", e);
+    } finally {
+      setActivityLoading((prev) => ({ ...prev, [activityId]: false }));
+    }
+  };
+
   // Handle Sending Message to Teacher
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -243,21 +346,23 @@ function ParentDashboardContent() {
   // Active student object
   const activeStudent = studentDetail?.student || linkedStudents.find((s) => s.id === selectedStudentId);
 
-  // Calculate overview metrics
+  // Calculate overview metrics from real database data
   const results = studentDetail?.results || [];
   const learningGaps = studentDetail?.learningGaps || [];
   const remedialPlans = studentDetail?.remedialPlans || [];
+  const homeActivities = studentDetail?.homeActivities || [];
   const notices = studentDetail?.notices || [];
 
   const averageScore = results.length > 0
     ? Math.round(results.reduce((acc: number, r: any) => acc + (r.percentage || 0), 0) / results.length)
     : 0;
 
-  const activeGapsCount = learningGaps.filter((g: any) => g.status === "active").length;
+  const activeGapsCount = learningGaps.filter((g: any) => g.status === "Active" || g.status === "active").length;
   const completedRemedialSteps = remedialPlans.reduce(
-    (acc: number, p: any) => acc + (p.completedSteps || (p.steps?.filter((s: any) => s.completed)?.length || 0)),
+    (acc: number, p: any) => acc + (Array.isArray(p.completedSteps) ? p.completedSteps.length : (p.completedSteps || 0)),
     0
   );
+  const completedHomeActivitiesCount = homeActivities.filter((a: any) => a.completed).length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#FAF6E9] via-[#F4F1E1] to-[#F2CAB3]/30 text-[#49352F]">
@@ -271,13 +376,13 @@ function ParentDashboardContent() {
             <div className="h-5 w-px bg-[#49352F]/20 hidden sm:block" />
             <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#B26A1B]/10 border border-[#B26A1B]/25 text-[#B26A1B] text-xs font-bold">
               <Users className="w-3.5 h-3.5" />
-              <span>{language === "gu" ? "વાલી પોર્ટલ" : "Parent Portal"}</span>
+              <span>{language === "gu" ? "વાલી સેતુ" : "Parent Bridge"}</span>
             </div>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
-            <LanguageSelector variant="glass" />
-            <ThemeToggle variant="glass" />
+            <LanguageSelector variant="default" />
+            <ThemeToggle variant="button" />
             <button
               onClick={handleLogout}
               className="px-3 py-1.5 rounded-xl border border-[#49352F]/15 hover:bg-rose-50 text-rose-700 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
@@ -293,56 +398,71 @@ function ParentDashboardContent() {
       <section className="bg-white/60 border-b border-[#49352F]/10 px-4 sm:px-8 py-4">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl font-black text-[#49352F] tracking-tight flex items-center gap-2">
-              <span>{language === "gu" ? "નમસ્તે, " : "Welcome, "}</span>
-              <span className="text-[#B26A1B]">{parentData?.user?.name || "Respected Parent"}</span>
-              <span className="text-lg">👋</span>
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-black text-[#49352F] tracking-tight">
+                <span>{language === "gu" ? "નમસ્તે, " : "Welcome, "}</span>
+                <span className="text-[#B26A1B]">{parentData?.user?.name || "Respected Parent"}</span>
+              </h1>
+              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#B26A1B]/15 text-[#B26A1B]">
+                <ShieldCheck className="w-3.5 h-3.5" />
+              </span>
+            </div>
             <p className="text-xs text-[#7A6862] mt-0.5">
               {language === "gu"
-                ? "શિક્ષણ સેતુ વાલી પોર્ટલ &bull; તમારા બાળકની વાસ્તવિક શૈક્ષણિક પ્રગતિ અને ઉપચારાત્મક સહાય"
-                : "Real-time pedagogical progress, conceptual gap diagnostics, and teacher-guided remediation"}
+                ? "વાલી સેતુ પોર્ટલ • તમારા બાળકની વાસ્તવિક શૈક્ષણિક પ્રગતિ અને ઘરે સહાય"
+                : "Understand your child's learning progress and discover how you can help at home."}
             </p>
           </div>
 
-          {/* Child Switcher Pills */}
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-bold text-[#7A6862] mr-1 hidden sm:inline">
-              {language === "gu" ? "બાળક પસંદ કરો:" : "Select Child:"}
-            </span>
-            {linkedStudents.map((child: any) => {
-              const isSelected = child.id === selectedStudentId;
-              return (
-                <button
-                  key={child.id}
-                  onClick={() => setSelectedStudentId(child.id)}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
-                    isSelected
-                      ? "bg-[#261B16] text-[#FAF6E9] shadow-sm"
-                      : "bg-white border border-[#49352F]/15 text-[#49352F] hover:bg-[#FAF6E9]"
-                  }`}
-                >
-                  <GraduationCap className={`w-3.5 h-3.5 ${isSelected ? "text-[#F2CAB3]" : "text-[#B26A1B]"}`} />
-                  <span>{child.displayName}</span>
-                  <span className="text-[10px] opacity-75">
-                    ({child.grade ? `Class ${child.grade}-${child.section}` : "Student"})
-                  </span>
-                </button>
-              );
-            })}
+          {/* Real-time Live Sync Indicator & Child Switcher */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-800 border border-emerald-500/20">
+              <span className={`w-2 h-2 rounded-full bg-emerald-500 ${isSyncing ? "animate-ping" : "animate-pulse"}`} />
+              <span>{language === "gu" ? "લાઇવ સિંક" : "Live Sync"}</span>
+            </div>
+            {lastUpdatedTime && (
+              <span className="text-[11px] text-[#7A6862] hidden sm:inline">
+                {language === "gu" ? "છેલ્લું અપડેટ: " : "Updated: "}
+                {lastUpdatedTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+              </span>
+            )}
 
-            {/* "+ Link Another Child" Button */}
-            <button
-              onClick={() => {
-                setLinkError(null);
-                setLinkSuccess(null);
-                setLinkModalOpen(true);
-              }}
-              className="px-3 py-1.5 rounded-xl text-xs font-bold border border-dashed border-[#B26A1B]/50 hover:border-[#B26A1B] bg-[#FAF6E9] hover:bg-[#F2CAB3]/30 text-[#B26A1B] transition-all flex items-center gap-1.5 cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>{language === "gu" ? "+ નવું બાળક જોડો" : "+ Link Another Child"}</span>
-            </button>
+            {/* Child Switcher Pills */}
+            <div className="flex flex-wrap items-center gap-2 ml-1">
+              {linkedStudents.map((child: any) => {
+                const isSelected = child.id === selectedStudentId;
+                return (
+                  <button
+                    key={child.id}
+                    onClick={() => setSelectedStudentId(child.id)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                      isSelected
+                        ? "bg-[#261B16] text-[#FAF6E9] shadow-sm"
+                        : "bg-white border border-[#49352F]/15 text-[#49352F] hover:bg-[#FAF6E9]"
+                    }`}
+                  >
+                    <GraduationCap className={`w-3.5 h-3.5 ${isSelected ? "text-[#F2CAB3]" : "text-[#B26A1B]"}`} />
+                    <span>{child.displayName}</span>
+                    <span className="text-[10px] opacity-75">
+                      ({child.grade ? `Class ${child.grade}-${child.section}` : "Student"})
+                    </span>
+                  </button>
+                );
+              })}
+
+              {/* Link Another Child Button */}
+              <button
+                onClick={() => {
+                  setLinkError(null);
+                  setLinkSuccess(null);
+                  setLinkModalOpen(true);
+                }}
+                className="px-3 py-1.5 rounded-xl text-xs font-bold border border-dashed border-[#B26A1B]/50 hover:border-[#B26A1B] bg-[#FAF6E9] hover:bg-[#F2CAB3]/30 text-[#B26A1B] transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>{language === "gu" ? "+ નવું બાળક જોડો" : "+ Link Child"}</span>
+              </button>
+            </div>
           </div>
         </div>
       </section>
@@ -354,6 +474,7 @@ function ParentDashboardContent() {
             { id: "overview", labelEn: "Overview", labelGu: "વિહંગાવલોકન", icon: BookOpen },
             { id: "progress", labelEn: "Academic Progress", labelGu: "શૈક્ષણિક પ્રગતિ", icon: TrendingUp },
             { id: "learning-gaps", labelEn: "Learning Gaps & Remedial", labelGu: "શિક્ષણ ત્રુટિ અને ઉપચાર", icon: BrainCircuit },
+            { id: "home-activities", labelEn: "Help at Home", labelGu: "ઘરે બાળકને મદદ", icon: Home, count: homeActivities.length },
             { id: "children", labelEn: "Child Profiles", labelGu: "બાળકની પ્રોફાઇલ", icon: Users },
             { id: "communication", labelEn: "Teacher Notes", labelGu: "શિક્ષક સાથે વાતચીત", icon: MessageSquare },
             { id: "notices", labelEn: "School Notices", labelGu: "શાળા સૂચનાઓ", icon: Bell },
@@ -372,6 +493,11 @@ function ParentDashboardContent() {
               >
                 <Icon className={`w-3.5 h-3.5 ${isActive ? "text-[#49352F]" : "text-[#7A6862]"}`} />
                 <span>{language === "gu" ? tab.labelGu : tab.labelEn}</span>
+                {tab.count !== undefined && tab.count > 0 && (
+                  <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#B26A1B]/15 text-[#B26A1B]">
+                    {tab.count}
+                  </span>
+                )}
               </button>
             );
           })}
@@ -438,18 +564,20 @@ function ParentDashboardContent() {
                       <div>
                         <div className="flex items-center gap-2">
                           <h2 className="text-xl font-black text-[#49352F]">{activeStudent?.displayName}</h2>
-                          <Badge variant={averageScore >= 80 ? "mastered" : averageScore >= 60 ? "developing" : "needsSupport"} size="sm">
-                            {averageScore >= 80 ? "Mastery (≥80%)" : averageScore >= 60 ? "Developing (60-79%)" : "Support Needed (<60%)"}
-                          </Badge>
+                          {results.length > 0 && (
+                            <Badge variant={averageScore >= 80 ? "mastered" : averageScore >= 60 ? "developing" : "needsSupport"} size="sm">
+                              {averageScore >= 80 ? "Mastery (≥80%)" : averageScore >= 60 ? "Developing (60-79%)" : "Support Needed (<60%)"}
+                            </Badge>
+                          )}
                         </div>
                         <p className="text-xs text-[#7A6862] flex flex-wrap items-center gap-2 mt-0.5">
                           <span>Class {activeStudent?.grade}-{activeStudent?.section}</span>
                           <span>&bull;</span>
-                          <span>Roll #{activeStudent?.rollNumber || "01"}</span>
+                          <span>Code: {activeStudent?.studentCode}</span>
                           <span>&bull;</span>
                           <span className="flex items-center gap-1">
                             <Building className="w-3 h-3 text-[#7A6862]" />
-                            {studentDetail?.school?.name || "Model Primary School, Gandhinagar"}
+                            {studentDetail?.school?.name || "Model Primary School"}
                           </span>
                         </p>
                       </div>
@@ -459,16 +587,17 @@ function ParentDashboardContent() {
                       <Button
                         variant="outline"
                         size="sm"
+                        disabled={detailLoading}
                         onClick={() => fetchStudentDetail(selectedStudentId!)}
                         className="rounded-xl text-xs border-[#49352F]/20 text-[#49352F]"
                       >
-                        <RefreshCw className="w-3.5 h-3.5 mr-1" />
+                        <RefreshCw className={`w-3.5 h-3.5 mr-1 ${detailLoading ? "animate-spin" : ""}`} />
                         <span>{language === "gu" ? "રીફ્રેશ" : "Refresh"}</span>
                       </Button>
                     </div>
                   </div>
 
-                  {/* 4 Quick Stat Counters */}
+                  {/* 4 Quick Stat Counters from Real Database */}
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-3 border-t border-[#49352F]/10">
                     <div className="p-3.5 rounded-2xl bg-white border border-[#49352F]/10 text-center shadow-xs">
                       <span className="text-[11px] font-semibold text-[#7A6862] block">
@@ -480,20 +609,22 @@ function ParentDashboardContent() {
 
                     <div className="p-3.5 rounded-2xl bg-white border border-[#49352F]/10 text-center shadow-xs">
                       <span className="text-[11px] font-semibold text-[#7A6862] block">
-                        {language === "gu" ? "સક્રિય શિક્ષણ ખામીઓ" : "Active Learning Gaps"}
+                        {language === "gu" ? "સક્રિય શિક્ષણ ત્રુટિ" : "Active Learning Gaps"}
                       </span>
                       <span className={`text-2xl font-black ${activeGapsCount > 0 ? "text-[#C54738]" : "text-[#2E7D5E]"}`}>
                         {activeGapsCount}
                       </span>
-                      <span className="text-[10px] text-[#7A6862] block mt-0.5">Under 60% threshold</span>
+                      <span className="text-[10px] text-[#7A6862] block mt-0.5">&lt;60% threshold</span>
                     </div>
 
                     <div className="p-3.5 rounded-2xl bg-white border border-[#49352F]/10 text-center shadow-xs">
                       <span className="text-[11px] font-semibold text-[#7A6862] block">
-                        {language === "gu" ? "ઉપચારાત્મક પ્રગતિ" : "Remedial Steps Closed"}
+                        {language === "gu" ? "ઘર પ્રવૃત્તિ પૂર્ણ" : "Home Activities Done"}
                       </span>
-                      <span className="text-2xl font-black text-[#2E7D5E]">{completedRemedialSteps}</span>
-                      <span className="text-[10px] text-[#7A6862] block mt-0.5">5-Step Manipulatives</span>
+                      <span className="text-2xl font-black text-[#2E7D5E]">
+                        {completedHomeActivitiesCount} / {homeActivities.length}
+                      </span>
+                      <span className="text-[10px] text-[#7A6862] block mt-0.5">Household Materials</span>
                     </div>
 
                     <div className="p-3.5 rounded-2xl bg-white border border-[#49352F]/10 text-center shadow-xs">
@@ -505,6 +636,102 @@ function ParentDashboardContent() {
                     </div>
                   </div>
                 </div>
+
+                {/* Home Learning Activities Priority Section */}
+                {homeActivities.length > 0 && (
+                  <div className="p-5 sm:p-6 rounded-3xl bg-white border border-[#49352F]/15 shadow-sm space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-heading text-base font-extrabold text-[#49352F] flex items-center gap-2">
+                          <Home className="w-4 h-4 text-[#B26A1B]" />
+                          <span>{language === "gu" ? "ઘરે બાળકને કેવી રીતે મદદ કરવી? (આજની પ્રવૃત્તિઓ)" : "How to Help at Home (Practical Activities)"}</span>
+                        </h3>
+                        <p className="text-xs text-[#7A6862]">
+                          {language === "gu"
+                            ? "શિક્ષણ ત્રુટિઓને ધ્યાનમાં રાખીને ઘરમાં રહેલી ચીજવસ્તુઓથી બાળકને સરળતાથી શીખવો"
+                            : "Concrete activities using household materials tailored to your child's recorded learning gaps"}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setActiveTab("home-activities")}
+                        className="text-xs font-bold text-[#B26A1B] hover:underline flex items-center gap-1"
+                      >
+                        <span>{language === "gu" ? "બધી જુઓ →" : "View All Activities →"}</span>
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {homeActivities.slice(0, 2).map((act: any) => (
+                        <div
+                          key={act.id}
+                          className={`p-4 rounded-2xl border transition-all ${
+                            act.completed
+                              ? "bg-emerald-50/60 border-emerald-500/30"
+                              : "bg-[#FAF6E9]/70 border-[#49352F]/15"
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-[#B26A1B] block">
+                                {act.conceptName}
+                              </span>
+                              <h4 className="text-sm font-bold text-[#49352F]">
+                                {language === "gu" ? act.titleGujarati || act.title : act.title}
+                              </h4>
+                            </div>
+                            <span className="text-[11px] font-semibold text-[#7A6862] flex items-center gap-1 shrink-0">
+                              <Clock className="w-3 h-3" />
+                              {act.estimatedMinutes} {language === "gu" ? "મિનિટ" : "mins"}
+                            </span>
+                          </div>
+
+                          <div className="mt-2.5 p-2.5 rounded-xl bg-white border border-[#49352F]/10 text-xs text-[#49352F]">
+                            <span className="font-bold text-[#B26A1B] block text-[11px] mb-1">
+                              {language === "gu" ? "જરૂરી વસ્તુઓ:" : "Household Materials Needed:"}
+                            </span>
+                            <span className="text-[#7A6862]">
+                              {Array.isArray(language === "gu" ? act.materialsGu : act.materialsEn)
+                                ? (language === "gu" ? act.materialsGu : act.materialsEn).join(", ")
+                                : act.materialsEn || "Household counters"}
+                            </span>
+                          </div>
+
+                          <div className="mt-3 pt-3 border-t border-[#49352F]/10 flex items-center justify-between">
+                            <span className="text-[11px] text-[#7A6862]">
+                              {act.completed ? (
+                                <span className="text-emerald-700 font-bold flex items-center gap-1">
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                  {language === "gu" ? "પૂર્ણ થઈ ગયું છે" : "Completed"}
+                                </span>
+                              ) : (
+                                language === "gu" ? "બાકી છે" : "Pending practice"
+                              )}
+                            </span>
+                            <Button
+                              size="sm"
+                              variant={act.completed ? "outline" : "saffron"}
+                              disabled={activityLoading[act.id]}
+                              onClick={() => handleToggleActivity(act.id, act.conceptId, act.completed)}
+                              className="rounded-xl text-xs font-bold"
+                            >
+                              {act.completed ? (
+                                <span className="flex items-center gap-1">
+                                  <Check className="w-3.5 h-3.5" />
+                                  {language === "gu" ? "પૂર્ણ ચિહ્નિત" : "Done"}
+                                </span>
+                              ) : (
+                                <span className="flex items-center gap-1">
+                                  <Square className="w-3.5 h-3.5" />
+                                  {language === "gu" ? "પ્રવૃત્તિ પૂર્ણ થઈ" : "Mark Done"}
+                                </span>
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Two Column Grid: Recent Assessments & Learning Gaps */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -534,7 +761,7 @@ function ParentDashboardContent() {
                           >
                             <div className="space-y-0.5">
                               <span className="text-xs font-bold text-[#49352F] block">
-                                {r.assessmentName || "Formative Unit Evaluation"}
+                                {r.assessmentName || "Formative Evaluation"}
                               </span>
                               <span className="text-[11px] text-[#7A6862]">
                                 {r.recordedAt ? new Date(r.recordedAt).toLocaleDateString() : "Recent"} &bull; Marks: {r.marksObtained}/{r.maximumMarks}
@@ -596,7 +823,7 @@ function ParentDashboardContent() {
                               </Badge>
                             </div>
                             <p className="text-xs text-[#7A6862] leading-relaxed">
-                              {gap.reason || "Student scored below developing threshold on equal sharing with remainders."}
+                              {gap.reason || "Student scored below developing threshold on this concept."}
                             </p>
                             <div className="pt-1 flex items-center justify-between text-[11px] text-[#7A6862]">
                               <span>Latest Score: {gap.latestPercentage || gap.scoreRecorded || 35}%</span>
@@ -624,8 +851,8 @@ function ParentDashboardContent() {
                     </h4>
                     <p className="text-xs text-[#7A6862]">
                       {language === "gu"
-                        ? "તમારા બાળકના વર્ગ શિક્ષક પૂજા શર્મા સાથે સીધી વાતચીત કરવા માટે સંદેશ મોકલો."
-                        : "Send an inquiry or request an in-person meeting regarding your child's progress."}
+                        ? "તમારા બાળકના વર્ગ શિક્ષક સાથે સીધી વાતચીત કરવા માટે સંદેશ મોકલો."
+                        : "Send an inquiry or request consultation regarding your child's progress."}
                     </p>
                   </div>
                   <button
@@ -654,34 +881,32 @@ function ParentDashboardContent() {
                     </p>
                   </div>
 
-                  {/* Subject Proficiency Cards */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {(studentDetail?.subjectBreakdown && studentDetail.subjectBreakdown.length > 0
-                      ? studentDetail.subjectBreakdown
-                      : [
-                          { subject: "Mathematics", averagePercentage: 42, assessmentsCount: 4 },
-                          { subject: "Gujarati", averagePercentage: 74, assessmentsCount: 3 },
-                          { subject: "English", averagePercentage: 68, assessmentsCount: 3 },
-                          { subject: "Environmental Studies", averagePercentage: 81, assessmentsCount: 2 },
-                        ]
-                    ).map((sub: any, idx: number) => (
-                      <div key={idx} className="p-4 rounded-2xl bg-[#FAF6E9]/70 border border-[#49352F]/10 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-[#49352F]">{sub.subject}</span>
-                          <span className="text-[10px] text-[#7A6862]">{sub.assessmentsCount} Tests</span>
+                  {/* Subject Proficiency Cards from Real Results */}
+                  {studentDetail?.subjectBreakdown && studentDetail.subjectBreakdown.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      {studentDetail.subjectBreakdown.map((sub: any, idx: number) => (
+                        <div key={idx} className="p-4 rounded-2xl bg-[#FAF6E9]/70 border border-[#49352F]/10 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-[#49352F]">{sub.subject}</span>
+                            <span className="text-[10px] text-[#7A6862]">{sub.assessmentsCount} Tests</span>
+                          </div>
+                          <div className="text-2xl font-black text-[#B26A1B]">{sub.averagePercentage}%</div>
+                          <div className="w-full h-2 rounded-full bg-white border border-[#49352F]/15 overflow-hidden">
+                            <div
+                              className={`h-full rounded-full ${
+                                sub.averagePercentage >= 80 ? "bg-[#2E7D5E]" : sub.averagePercentage >= 60 ? "bg-[#B26A1B]" : "bg-[#C54738]"
+                              }`}
+                              style={{ width: `${Math.min(100, sub.averagePercentage)}%` }}
+                            />
+                          </div>
                         </div>
-                        <div className="text-2xl font-black text-[#B26A1B]">{sub.averagePercentage}%</div>
-                        <div className="w-full h-2 rounded-full bg-white border border-[#49352F]/15 overflow-hidden">
-                          <div
-                            className={`h-full rounded-full ${
-                              sub.averagePercentage >= 80 ? "bg-[#2E7D5E]" : sub.averagePercentage >= 60 ? "bg-[#B26A1B]" : "bg-[#C54738]"
-                            }`}
-                            style={{ width: `${Math.min(100, sub.averagePercentage)}%` }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-6 text-center text-xs text-[#7A6862] bg-[#FAF6E9]/40 rounded-2xl border border-[#49352F]/10">
+                      No assessment results recorded yet to calculate subject averages.
+                    </div>
+                  )}
 
                   {/* Complete Assessment History Table */}
                   <div className="pt-4">
@@ -703,8 +928,8 @@ function ParentDashboardContent() {
                         <tbody className="divide-y divide-[#49352F]/10">
                           {results.length === 0 ? (
                             <tr>
-                              <td colSpan={6} className="py-4 text-center text-[#7A6862]">
-                                No assessment records found.
+                              <td colSpan={6} className="py-6 text-center text-[#7A6862]">
+                                No assessment records found in database.
                               </td>
                             </tr>
                           ) : (
@@ -796,8 +1021,7 @@ function ParentDashboardContent() {
                                 <span>{language === "gu" ? "શા માટે ફ્લેગ થયું (શિક્ષણશાસ્ત્રીય કારણ):" : "Why Flagged (Pedagogical Root Cause):"}</span>
                               </span>
                               <p className="text-xs text-[#49352F] leading-relaxed">
-                                {gap.reason ||
-                                  "Student understands basic division as equal sharing, but stumbles when remainder values are introduced without physical counters."}
+                                {gap.reason || "Recent assessment score indicates that student requires structured foundational reinforcement."}
                               </p>
                             </div>
 
@@ -810,7 +1034,7 @@ function ParentDashboardContent() {
                                 </span>
                                 <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
                                   {matchingPlan.steps.map((st: any, sIdx: number) => {
-                                    const isDone = st.completed || sIdx === 0;
+                                    const isDone = Boolean(st.completed);
                                     return (
                                       <div
                                         key={sIdx}
@@ -844,7 +1068,133 @@ function ParentDashboardContent() {
               </div>
             )}
 
-            {/* TAB 4: MY CHILDREN */}
+            {/* TAB 4: HELP AT HOME (PRACTICAL HOME ACTIVITIES) */}
+            {activeTab === "home-activities" && (
+              <div className="space-y-6">
+                <div className="p-5 rounded-3xl bg-white border border-[#49352F]/15 shadow-sm space-y-4">
+                  <div>
+                    <h2 className="font-heading text-lg font-black text-[#49352F] flex items-center gap-2">
+                      <Home className="w-5 h-5 text-[#B26A1B]" />
+                      <span>{language === "gu" ? "ઘરે બાળકને કેવી રીતે મદદ કરવી? (પ્રાયોગિક પ્રવૃત્તિઓ)" : "Help My Child at Home (Practical Activities)"}</span>
+                    </h2>
+                    <p className="text-xs text-[#7A6862]">
+                      {language === "gu"
+                        ? "બાળક કયા વિષયમાં પાછળ છે તે માટે ઘરમાં મળતી રોજિંદી વસ્તુઓથી સરળતાથી કરાવી શકાય તેવી પ્રવૃત્તિઓ"
+                        : "Recommended home activities linked directly to your child's recorded learning gaps using household items"}
+                    </p>
+                  </div>
+
+                  {homeActivities.length === 0 ? (
+                    <div className="p-8 text-center space-y-2">
+                      <CheckCircle2 className="w-10 h-10 text-[#2E7D5E] mx-auto" />
+                      <h4 className="text-sm font-bold text-[#2E7D5E]">
+                        {language === "gu" ? "કોઈ વધારાની ઘર પ્રવૃત્તિ જરૂરી નથી" : "No Home Activities Required"}
+                      </h4>
+                      <p className="text-xs text-[#7A6862]">
+                        {activeStudent?.displayName} has mastered the currently assessed concepts.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {homeActivities.map((act: any) => (
+                        <div
+                          key={act.id}
+                          className={`p-5 rounded-3xl border transition-all space-y-4 ${
+                            act.completed
+                              ? "bg-emerald-50/50 border-emerald-500/30"
+                              : "bg-[#FAF6E9]/70 border-[#49352F]/15"
+                          }`}
+                        >
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#49352F]/10 pb-3">
+                            <div>
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-[#B26A1B] block">
+                                {act.conceptName} &bull; {act.subjectCode}
+                              </span>
+                              <h3 className="text-base font-black text-[#49352F]">
+                                {language === "gu" ? act.titleGujarati || act.title : act.title}
+                              </h3>
+                              <p className="text-xs text-[#7A6862] mt-0.5">
+                                {language === "gu" ? act.whyNeededGu : act.whyNeededEn}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-3 shrink-0">
+                              <span className="text-xs font-semibold text-[#7A6862] flex items-center gap-1">
+                                <Clock className="w-3.5 h-3.5 text-[#B26A1B]" />
+                                {act.estimatedMinutes} {language === "gu" ? "મિનિટ" : "mins"}
+                              </span>
+                              <Button
+                                size="sm"
+                                variant={act.completed ? "outline" : "saffron"}
+                                disabled={activityLoading[act.id]}
+                                onClick={() => handleToggleActivity(act.id, act.conceptId, act.completed)}
+                                className="rounded-xl text-xs font-bold shadow-xs cursor-pointer"
+                              >
+                                {act.completed ? (
+                                  <span className="flex items-center gap-1.5 text-emerald-800">
+                                    <Check className="w-3.5 h-3.5" />
+                                    {language === "gu" ? "પ્રવૃત્તિ પૂર્ણ થયેલ છે" : "Completed"}
+                                  </span>
+                                ) : (
+                                  <span className="flex items-center gap-1.5">
+                                    <Square className="w-3.5 h-3.5" />
+                                    {language === "gu" ? "પ્રવૃત્તિ પૂર્ણ થઈ" : "Mark as Completed"}
+                                  </span>
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* Household Materials */}
+                          <div className="p-3.5 rounded-2xl bg-white border border-[#49352F]/10 space-y-1">
+                            <span className="text-xs font-bold text-[#B26A1B] block">
+                              {language === "gu" ? "ઘરની જરૂરી સામગ્રી:" : "Household Materials:"}
+                            </span>
+                            <span className="text-xs text-[#49352F]">
+                              {Array.isArray(language === "gu" ? act.materialsGu : act.materialsEn)
+                                ? (language === "gu" ? act.materialsGu : act.materialsEn).join(", ")
+                                : act.materialsEn || "Household objects"}
+                            </span>
+                          </div>
+
+                          {/* Step-by-Step Instructions */}
+                          {act.steps && act.steps.length > 0 && (
+                            <div className="space-y-2">
+                              <span className="text-xs font-extrabold text-[#49352F] block">
+                                {language === "gu" ? "કેવી રીતે કરાવવું (સરળ પગલાં):" : "Step-by-Step Instructions:"}
+                              </span>
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                                {act.steps.map((st: any, idx: number) => (
+                                  <div
+                                    key={idx}
+                                    className="p-3 rounded-2xl bg-white border border-[#49352F]/10 space-y-1 text-xs"
+                                  >
+                                    <span className="text-[10px] font-bold text-[#B26A1B] uppercase tracking-wider block">
+                                      Step {st.stepNumber || idx + 1}
+                                    </span>
+                                    <p className="text-[#49352F] leading-snug">
+                                      {language === "gu" ? st.instructionGu || st.instructionEn : st.instructionEn}
+                                    </p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {act.completedAt && (
+                            <p className="text-[11px] text-emerald-700 italic">
+                              {language === "gu" ? "પૂર્ણ કર્યાની તારીખ: " : "Completed on: "}
+                              {new Date(act.completedAt).toLocaleString()}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* TAB 5: MY CHILDREN */}
             {activeTab === "children" && (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
@@ -891,7 +1241,7 @@ function ParentDashboardContent() {
                             <div>
                               <h3 className="font-heading text-base font-extrabold text-[#49352F]">{ch.displayName}</h3>
                               <p className="text-xs text-[#7A6862]">
-                                Class {ch.grade}-{ch.section} &bull; Roll #{ch.rollNumber || "01"}
+                                Class {ch.grade}-{ch.section} &bull; Code: {ch.studentCode}
                               </p>
                             </div>
                           </div>
@@ -904,7 +1254,7 @@ function ParentDashboardContent() {
                         <div className="mt-4 pt-3 border-t border-[#49352F]/10 flex items-center justify-between text-xs">
                           <span className="text-[#7A6862] flex items-center gap-1">
                             <Building className="w-3.5 h-3.5" />
-                            Model Primary School, Gandhinagar
+                            {studentDetail?.school?.name || "Model Primary School"}
                           </span>
                           <button
                             onClick={() => {
@@ -923,7 +1273,7 @@ function ParentDashboardContent() {
               </div>
             )}
 
-            {/* TAB 5: TEACHER COMMUNICATION */}
+            {/* TAB 6: TEACHER COMMUNICATION */}
             {activeTab === "communication" && (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -936,7 +1286,7 @@ function ParentDashboardContent() {
                       </h2>
                       <p className="text-xs text-[#7A6862]">
                         {language === "gu"
-                          ? `${activeStudent?.displayName} ના વર્ગ શિક્ષક પૂજા શર્માને સંદેશ મોકલો. અંગત ફોન નંબર જાહેર કર્યા વગર સુરક્ષિત સંચાર.`
+                          ? `${activeStudent?.displayName} ના વર્ગ શિક્ષકને સંદેશ મોકલો. અંગત ફોન નંબર જાહેર કર્યા વગર સુરક્ષિત સંચાર.`
                           : `Direct pedagogical communication with ${activeStudent?.displayName}'s teacher without exchanging private phone numbers.`}
                       </p>
                     </div>
@@ -1009,10 +1359,6 @@ function ParentDashboardContent() {
                       <p className="text-xs text-[#7A6862] leading-relaxed">
                         Class teachers are available for parent meetings every weekday from <strong>3:15 PM – 4:00 PM</strong> at the primary school staff room.
                       </p>
-                      <div className="p-3 rounded-2xl bg-[#FAF6E9] border border-[#49352F]/10 text-xs text-[#7A6862]">
-                        <span className="font-bold text-[#49352F] block">Assigned Teacher:</span>
-                        <span>Pooja Sharma (Class 4-A In-Charge)</span>
-                      </div>
                     </div>
 
                     <div className="p-5 rounded-3xl bg-white border border-[#49352F]/15 shadow-sm space-y-3">
@@ -1045,7 +1391,7 @@ function ParentDashboardContent() {
               </div>
             )}
 
-            {/* TAB 6: SCHOOL NOTICES */}
+            {/* TAB 7: SCHOOL NOTICES */}
             {activeTab === "notices" && (
               <div className="space-y-6">
                 <div>
@@ -1061,52 +1407,58 @@ function ParentDashboardContent() {
                 </div>
 
                 <div className="space-y-4">
-                  {notices.map((n: any) => (
-                    <div
-                      key={n.id}
-                      className="p-5 rounded-3xl bg-white border border-[#49352F]/15 shadow-sm space-y-3"
-                    >
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#49352F]/10 pb-3">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-black uppercase tracking-wider text-[#B26A1B]">
-                              {n.category || "Announcement"}
-                            </span>
-                            {n.urgency === "urgent" && <Badge variant="needsSupport" size="sm">Urgent</Badge>}
-                          </div>
-                          <h3 className="text-base font-extrabold text-[#49352F]">{n.title}</h3>
-                        </div>
-                        <span className="text-xs text-[#7A6862] flex items-center gap-1">
-                          <Calendar className="w-3.5 h-3.5" />
-                          {n.createdAt ? new Date(n.createdAt).toLocaleDateString() : "Recent"}
-                        </span>
-                      </div>
-
-                      <p className="text-xs text-[#49352F] leading-relaxed">
-                        {n.simplifiedContent || n.originalContent}
-                      </p>
-
-                      <div className="pt-2 flex flex-wrap items-center justify-between gap-2 border-t border-[#49352F]/10 text-xs">
-                        <span className="text-[#7A6862]">
-                          Issued by: <strong>{n.senderTeacherName || "Head Teacher"}</strong>
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const utterance = new SpeechSynthesisUtterance(n.simplifiedContent || n.originalContent);
-                              utterance.lang = "gu-IN";
-                              window.speechSynthesis?.speak(utterance);
-                            }}
-                            className="px-3 py-1 rounded-xl bg-[#FAF6E9] border border-[#49352F]/15 text-[#B26A1B] font-bold text-xs flex items-center gap-1.5 hover:bg-[#F2CAB3]/30 transition-all cursor-pointer"
-                          >
-                            <Volume2 className="w-3.5 h-3.5" />
-                            <span>{language === "gu" ? "ઓડિયો સાંભળો" : "Listen (Gujarati Audio)"}</span>
-                          </button>
-                        </div>
-                      </div>
+                  {notices.length === 0 ? (
+                    <div className="p-8 text-center bg-white rounded-3xl border border-[#49352F]/15 text-xs text-[#7A6862]">
+                      No notices currently posted for this grade.
                     </div>
-                  ))}
+                  ) : (
+                    notices.map((n: any) => (
+                      <div
+                        key={n.id}
+                        className="p-5 rounded-3xl bg-white border border-[#49352F]/15 shadow-sm space-y-3"
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#49352F]/10 pb-3">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-black uppercase tracking-wider text-[#B26A1B]">
+                                {n.category || "Announcement"}
+                              </span>
+                              {n.urgency === "urgent" && <Badge variant="needsSupport" size="sm">Urgent</Badge>}
+                            </div>
+                            <h3 className="text-base font-extrabold text-[#49352F]">{n.title}</h3>
+                          </div>
+                          <span className="text-xs text-[#7A6862] flex items-center gap-1">
+                            <Calendar className="w-3.5 h-3.5" />
+                            {n.createdAt ? new Date(n.createdAt).toLocaleDateString() : "Recent"}
+                          </span>
+                        </div>
+
+                        <p className="text-xs text-[#49352F] leading-relaxed">
+                          {n.simplifiedContent || n.originalContent}
+                        </p>
+
+                        <div className="pt-2 flex flex-wrap items-center justify-between gap-2 border-t border-[#49352F]/10 text-xs">
+                          <span className="text-[#7A6862]">
+                            Issued by: <strong>{n.senderTeacherName || "Class Teacher"}</strong>
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const utterance = new SpeechSynthesisUtterance(n.simplifiedContent || n.originalContent);
+                                utterance.lang = "gu-IN";
+                                window.speechSynthesis?.speak(utterance);
+                              }}
+                              className="px-3 py-1.5 rounded-xl border border-[#49352F]/15 hover:bg-[#FAF6E9] text-xs font-bold text-[#49352F] flex items-center gap-1.5 transition-all cursor-pointer"
+                            >
+                              <Volume2 className="w-3.5 h-3.5 text-[#B26A1B]" />
+                              <span>{language === "gu" ? "ગુજરાતીમાં સાંભળો" : "Listen in Gujarati"}</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             )}
@@ -1114,30 +1466,30 @@ function ParentDashboardContent() {
         )}
       </main>
 
-      {/* 5. MODAL: LINK ANOTHER CHILD */}
+      {/* LINK CHILD MODAL */}
       {linkModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-          <div className="w-full max-w-md rounded-3xl bg-white border border-[#49352F]/15 p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-[#49352F]/10 pb-3">
-              <h3 className="font-heading text-base font-black text-[#49352F] flex items-center gap-2">
+        <div className="fixed inset-0 z-50 bg-[#49352F]/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white rounded-3xl p-6 shadow-xl border border-[#49352F]/15 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-black text-[#49352F] flex items-center gap-2">
                 <KeyRound className="w-4 h-4 text-[#B26A1B]" />
                 <span>{language === "gu" ? "બીજું બાળક જોડો" : "Link Another Child"}</span>
               </h3>
               <button
                 onClick={() => setLinkModalOpen(false)}
-                className="text-[#7A6862] hover:text-[#49352F] p-1 rounded-lg"
+                className="p-1 rounded-lg text-[#7A6862] hover:bg-neutral-100"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <p className="text-xs text-[#7A6862] leading-relaxed">
+            <p className="text-xs text-[#7A6862]">
               {language === "gu"
-                ? "તમારા બીજા બાળકના વર્ગ શિક્ષક પાસેથી ૬-અક્ષરનો વેરિફિકેશન કોડ મેળવીને અહીં દાખલ કરો."
-                : "Enter the secure linking code generated by your other child's class teacher (e.g. PAR-5219)."}
+                ? "તમારા બાળકના શિક્ષક પાસેથી ૬-અક્ષરનો વેરિફિકેશન કોડ (દા.ત. PAR-4892) મેળવો."
+                : "Enter the 6-character linking code provided by your child's primary school teacher."}
             </p>
 
-            <form onSubmit={handleRedeemCode} className="space-y-4">
+            <form onSubmit={handleRedeemCode} className="space-y-3">
               <input
                 type="text"
                 required
@@ -1146,11 +1498,9 @@ function ParentDashboardContent() {
                 placeholder="PAR-XXXX"
                 className="w-full text-center px-4 py-3 rounded-2xl border-2 border-[#B26A1B] font-mono text-base font-bold text-[#B26A1B] uppercase tracking-widest placeholder:font-sans placeholder:normal-case placeholder:text-xs"
               />
-
               {linkError && <p className="text-xs text-rose-600 font-semibold">{linkError}</p>}
               {linkSuccess && <p className="text-xs text-emerald-600 font-semibold">{linkSuccess}</p>}
-
-              <div className="flex items-center justify-end gap-2 pt-2">
+              <div className="flex justify-end gap-2 pt-2">
                 <Button
                   type="button"
                   variant="outline"
@@ -1164,35 +1514,23 @@ function ParentDashboardContent() {
                   disabled={linkLoading}
                   className="rounded-xl text-xs font-bold bg-[#B26A1B] text-white hover:bg-[#8F4E10]"
                 >
-                  {linkLoading ? "Verifying..." : "Verify & Connect"}
+                  {linkLoading ? "Verifying..." : "Verify & Link"}
                 </Button>
               </div>
             </form>
           </div>
         </div>
       )}
-
-      {/* Footer */}
-      <footer className="py-6 text-center text-xs text-[#7A6862] border-t border-[#49352F]/10">
-        <p>
-          StudySaathi AI &bull; {language === "gu" ? "વાલી-શિક્ષક સહભાગિતા સેતુ" : "Parent-Teacher Engagement Bridge"}{" "}
-          &bull; Primary Education Department, Gujarat
-        </p>
-      </footer>
     </div>
   );
 }
-
 
 export default function ParentDashboardPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#FAF6E9] flex items-center justify-center">
-          <div className="p-6 rounded-2xl bg-white shadow-md text-center space-y-3">
-            <div className="w-8 h-8 border-4 border-[#B26A1B] border-t-transparent rounded-full animate-spin mx-auto" />
-            <p className="text-xs font-bold text-[#49352F]">Loading Parent Portal...</p>
-          </div>
+        <div className="min-h-screen bg-[#FAF6E9] flex items-center justify-center p-8">
+          <Sparkles className="w-8 h-8 animate-spin text-[#B26A1B]" />
         </div>
       }
     >

@@ -288,6 +288,68 @@ export async function ensurePostgresSchema(): Promise<void> {
 
         CREATE INDEX IF NOT EXISTS idx_users_email ON users(LOWER(email));
         CREATE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id);
+
+        -- Parent Portal Tables
+        CREATE TABLE IF NOT EXISTS parent_profiles (
+            id VARCHAR(64) PRIMARY KEY,
+            user_id VARCHAR(64) REFERENCES users(id) ON DELETE CASCADE,
+            name VARCHAR(255) NOT NULL,
+            email VARCHAR(255),
+            phone VARCHAR(32),
+            preferred_language VARCHAR(8) DEFAULT 'gu',
+            relationship VARCHAR(32) DEFAULT 'guardian',
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS parent_students (
+            parent_id VARCHAR(64) REFERENCES parent_profiles(id) ON DELETE CASCADE,
+            student_id VARCHAR(64) REFERENCES students(id) ON DELETE CASCADE,
+            relationship VARCHAR(32) DEFAULT 'guardian',
+            linked_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (parent_id, student_id)
+        );
+
+        CREATE TABLE IF NOT EXISTS parent_linking_codes (
+            id VARCHAR(64) PRIMARY KEY,
+            student_id VARCHAR(64) REFERENCES students(id) ON DELETE CASCADE,
+            code VARCHAR(32) UNIQUE NOT NULL,
+            expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+            status VARCHAR(16) DEFAULT 'active',
+            created_by_user_id VARCHAR(64) REFERENCES users(id) ON DELETE SET NULL,
+            used_by_user_id VARCHAR(64) REFERENCES users(id) ON DELETE SET NULL,
+            used_at TIMESTAMP WITH TIME ZONE,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS parent_messages (
+            id VARCHAR(64) PRIMARY KEY,
+            parent_id VARCHAR(64) REFERENCES parent_profiles(id) ON DELETE CASCADE,
+            student_id VARCHAR(64) REFERENCES students(id) ON DELETE CASCADE,
+            subject VARCHAR(255) NOT NULL,
+            message TEXT NOT NULL,
+            status VARCHAR(16) DEFAULT 'sent',
+            reply TEXT,
+            replied_at TIMESTAMP WITH TIME ZONE,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS parent_activity_completions (
+            id VARCHAR(128) PRIMARY KEY,
+            parent_id VARCHAR(64) REFERENCES parent_profiles(id) ON DELETE CASCADE,
+            student_id VARCHAR(64) REFERENCES students(id) ON DELETE CASCADE,
+            activity_id VARCHAR(128) NOT NULL,
+            concept_id VARCHAR(64),
+            completed BOOLEAN DEFAULT TRUE,
+            completed_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_parent_profiles_user ON parent_profiles(user_id);
+        CREATE INDEX IF NOT EXISTS idx_parent_students_student ON parent_students(student_id);
+        CREATE INDEX IF NOT EXISTS idx_parent_linking_codes_code ON parent_linking_codes(code);
+        CREATE INDEX IF NOT EXISTS idx_parent_messages_student ON parent_messages(student_id);
+        CREATE INDEX IF NOT EXISTS idx_parent_activity_student ON parent_activity_completions(student_id);
+        CREATE INDEX IF NOT EXISTS idx_parent_activity_parent ON parent_activity_completions(parent_id);
       `);
 
       // Seed baseline School if empty
@@ -1596,4 +1658,37 @@ export const postgresParentDb = {
     );
     return rows;
   },
+
+  async recordActivityCompletion(
+    parentId: string,
+    studentId: string,
+    activityId: string,
+    conceptId: string,
+    completed: boolean
+  ): Promise<any> {
+    const pool = getPostgresPool()!;
+    const id = `cmp-${parentId}-${studentId}-${activityId}`;
+    const { rows } = await pool.query(
+      `INSERT INTO parent_activity_completions (id, parent_id, student_id, activity_id, concept_id, completed, completed_at)
+       VALUES ($1, $2, $3, $4, $5, $6, NOW())
+       ON CONFLICT (id) DO UPDATE SET completed = $6, completed_at = NOW()
+       RETURNING id, parent_id as "parentId", student_id as "studentId", activity_id as "activityId", concept_id as "conceptId", completed, completed_at as "completedAt"`,
+      [id, parentId, studentId, activityId, conceptId || "", completed]
+    );
+    return rows[0];
+  },
+
+  async getActivityCompletions(studentId: string): Promise<any[]> {
+    const pool = getPostgresPool()!;
+    const { rows } = await pool.query(
+      `SELECT id, parent_id as "parentId", student_id as "studentId", activity_id as "activityId", concept_id as "conceptId", completed, completed_at as "completedAt"
+       FROM parent_activity_completions
+       WHERE student_id = $1 AND completed = TRUE
+       ORDER BY completed_at DESC`,
+      [studentId]
+    );
+    return rows;
+  },
 };
+
+export const getPgPool = getPostgresPool;

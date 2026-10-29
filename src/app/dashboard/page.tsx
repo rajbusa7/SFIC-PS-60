@@ -217,7 +217,7 @@ export default function DashboardPage() {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
+      <div className="space-y-6 min-w-0 w-full">
         {/* Header & Filter Controls */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -371,7 +371,7 @@ export default function DashboardPage() {
             </div>
 
             {/* 1. KPI Stat Tiles Row with Sparklines */}
-            <div data-tour="kpi-tiles" className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div data-tour="kpi-tiles" className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 min-w-0">
               <StatTile
                 label={t.dashboard.totalEnrolled || "Total Enrolled"}
                 value={totalStudents}
@@ -486,9 +486,9 @@ export default function DashboardPage() {
             </Card>
 
             {/* 3. Main Grid: 3D Class Mastery Heatmap & Curriculum Proficiency */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-w-0">
               {/* 3D Class Mastery Heatmap (2 cols on lg) */}
-              <div className="lg:col-span-2 space-y-3">
+              <div className="lg:col-span-2 space-y-3 min-w-0">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <h3 className="font-heading text-base font-bold text-[#49352F]">
@@ -514,7 +514,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Curriculum Proficiency Chart */}
-              <div data-tour="curriculum-chart" className="flex flex-col">
+              <div data-tour="curriculum-chart" className="flex flex-col min-w-0">
                 <Card variant="glass" className="p-5 flex flex-col justify-between h-full">
                   <div>
                     <h3 className="font-heading text-base font-bold text-[#49352F]">
@@ -599,7 +599,7 @@ export default function DashboardPage() {
                 </Link>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 min-w-0">
                 {[
                   {
                     id: "std-pooja",

@@ -50,6 +50,73 @@ export function AppHeader({
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [urgentGaps, setUrgentGaps] = useState<any[]>([]);
 
+  // Viewport-safe coordinates for floating menus
+  const [roleMenuCoords, setRoleMenuCoords] = useState<{
+    top: number;
+    right: number;
+    maxWidth: number;
+  } | null>(null);
+
+  const [notificationsCoords, setNotificationsCoords] = useState<{
+    top: number;
+    right: number;
+    maxWidth: number;
+  } | null>(null);
+
+  // Position calculation for Role / Account Menu to guarantee viewport safety
+  useEffect(() => {
+    if (!showRoleMenu) return;
+    const updatePosition = () => {
+      if (!roleMenuRef.current) return;
+      const rect = roleMenuRef.current.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      const margin = 12; // Minimum distance from screen edge
+      const maxW = Math.min(340, viewportWidth - margin * 2);
+      const rightDistance = Math.max(margin, viewportWidth - rect.right);
+
+      setRoleMenuCoords({
+        top: rect.bottom + 8,
+        right: rightDistance,
+        maxWidth: maxW,
+      });
+    };
+
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [showRoleMenu]);
+
+  // Position calculation for Notifications Dropdown
+  useEffect(() => {
+    if (!notificationsOpen) return;
+    const updatePosition = () => {
+      if (!notificationsRef.current) return;
+      const rect = notificationsRef.current.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      const margin = 12;
+      const maxW = Math.min(340, viewportWidth - margin * 2);
+      const rightDistance = Math.max(margin, viewportWidth - rect.right);
+
+      setNotificationsCoords({
+        top: rect.bottom + 8,
+        right: rightDistance,
+        maxWidth: maxW,
+      });
+    };
+
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [notificationsOpen]);
+
   const getPageTourKey = (path: string): string => {
     if (path === "/dashboard" || path === "/") return "dashboard";
     if (path.startsWith("/students/") && path !== "/students") return "studentDetail";
@@ -111,10 +178,18 @@ export function AppHeader({
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Node;
-      if (roleMenuRef.current && !roleMenuRef.current.contains(target)) {
+      if (
+        roleMenuRef.current &&
+        !roleMenuRef.current.contains(target) &&
+        !document.getElementById("account-dropdown")?.contains(target)
+      ) {
         setShowRoleMenu(false);
       }
-      if (notificationsRef.current && !notificationsRef.current.contains(target)) {
+      if (
+        notificationsRef.current &&
+        !notificationsRef.current.contains(target) &&
+        !document.getElementById("notifications-dropdown")?.contains(target)
+      ) {
         setNotificationsOpen(false);
       }
     };
@@ -175,11 +250,11 @@ export function AppHeader({
       )}
 
       {/* 1. Left section: School info & Class selector */}
-      <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0 min-w-0 pl-11 lg:pl-0">
-        <div className="hidden md:flex items-center gap-1.5 text-[#49352F] dark:text-[#F4F1E1] shrink-0">
+      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 min-w-0 pl-11 lg:pl-0">
+        <div className="hidden lg:flex items-center gap-1.5 text-[#49352F] dark:text-[#F4F1E1] shrink-0">
           <Building className="h-4 w-4 text-[#B26A1B] dark:text-[#F2CAB3] shrink-0" />
           <span
-            className="font-semibold text-xs lg:text-sm tracking-tight text-[#49352F] dark:text-[#F4F1E1] truncate max-w-[110px] lg:max-w-[140px] 2xl:max-w-none"
+            className="font-semibold text-xs xl:text-sm tracking-tight text-[#49352F] dark:text-[#F4F1E1] truncate max-w-[100px] xl:max-w-[130px] 2xl:max-w-none"
             title={`${t.app.demoSchoolName} (GUJ-GNR-042)`}
           >
             {t.app.demoSchoolName}
@@ -190,13 +265,13 @@ export function AppHeader({
         </div>
 
         {/* Current Class Selector */}
-        <div className="flex h-9 items-center gap-1 bg-white dark:bg-[#26201C] border border-[#49352F]/15 dark:border-[#F2CAB3]/20 rounded-xl px-2 shadow-xs shrink-0 max-w-[105px] sm:max-w-[140px] xl:max-w-none">
+        <div className="flex h-9 items-center gap-1 bg-white dark:bg-[#26201C] border border-[#49352F]/15 dark:border-[#F2CAB3]/20 rounded-xl px-2 shadow-xs shrink-0 max-w-[95px] sm:max-w-[130px] xl:max-w-none">
           <GraduationCap className="h-3.5 w-3.5 text-[#7A6862] dark:text-[#FAF6E9]/70 shrink-0" />
           <select
             value={currentClass}
             aria-label={t.header?.searchAriaLabel || "Filter by class"}
             onChange={(e) => handleClassChange(e.target.value)}
-            className="bg-transparent text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] outline-hidden cursor-pointer max-w-[75px] sm:max-w-[105px] xl:max-w-none truncate"
+            className="bg-transparent text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] outline-hidden cursor-pointer max-w-[65px] sm:max-w-[95px] xl:max-w-none truncate"
           >
             <option value="all">{t.header?.allClasses || t.dashboard.allClasses}</option>
             <option value="cls-3a">{t.header?.class3A || "Class 3 - Section A"}</option>
@@ -206,18 +281,18 @@ export function AppHeader({
         </div>
       </div>
 
-      {/* 2. Center Search - Prominent, Large, and Accessible */}
-      <div className="hidden xl:flex items-center flex-1 min-w-0 max-w-xs 2xl:max-w-md mx-2">
+      {/* 2. Center Search - Prominent, Responsive and Accessible */}
+      <div className="hidden xl:flex items-center flex-1 min-w-0 max-w-[180px] 2xl:max-w-md mx-2">
         <div className="relative w-full min-w-0">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#7A6862] dark:text-[#FAF6E9]/60 pointer-events-none" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#7A6862] dark:text-[#FAF6E9]/60 pointer-events-none" />
           <input
             ref={searchInputRef}
             type="text"
-            placeholder={t.header?.searchPlaceholder || "Search students, learning gaps, concepts..."}
+            placeholder={t.header?.searchPlaceholder || "Search students, gaps..."}
             value={ctxSearch}
             onChange={(e) => handleSearchChange(e.target.value)}
             onKeyDown={handleSearchKeyDown}
-            className="w-full h-9 rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/20 bg-white dark:bg-[#26201C] py-1.5 pl-9 pr-14 text-xs sm:text-sm text-[#49352F] dark:text-[#F4F1E1] placeholder-[#7A6862] dark:placeholder-[#FAF6E9]/50 focus:bg-white dark:focus:bg-[#26201C] focus:border-[#F2CAB3] focus:ring-2 focus:ring-[#F2CAB3]/30 outline-hidden transition-all shadow-xs"
+            className="w-full h-9 rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/20 bg-white dark:bg-[#26201C] py-1.5 pl-8 pr-12 text-xs text-[#49352F] dark:text-[#F4F1E1] placeholder-[#7A6862] dark:placeholder-[#FAF6E9]/50 focus:bg-white dark:focus:bg-[#26201C] focus:border-[#F2CAB3] focus:ring-2 focus:ring-[#F2CAB3]/30 outline-hidden transition-all shadow-xs"
           />
           {ctxSearch ? (
             <button
@@ -236,8 +311,8 @@ export function AppHeader({
         </div>
       </div>
 
-      {/* 3. Right section: Demo tag, Language, Theme Toggle, Notifications, User Role */}
-      <div className="flex items-center gap-1 sm:gap-1.5 2xl:gap-2 shrink-0 ml-auto">
+      {/* 3. Right section: Controls, Language, Theme Toggle, Notifications, User Role */}
+      <div className="flex items-center gap-1 sm:gap-1.5 2xl:gap-2 shrink-0 ml-auto min-w-0">
         {/* Mobile / Tablet Search Toggle Button */}
         <button
           type="button"
@@ -253,19 +328,13 @@ export function AppHeader({
         <Link
           href="/ai"
           aria-label={t.header?.aiHub || "AI Hub Workspace"}
-          className="inline-flex h-9 items-center gap-1.5 bg-[#F2CAB3] dark:bg-[#F2CAB3]/25 hover:bg-white dark:hover:bg-[#26201C] text-[#49352F] dark:text-[#F4F1E1] border border-[#49352F]/15 dark:border-[#F2CAB3]/30 px-2.5 rounded-xl text-xs font-bold shadow-xs transition-all whitespace-nowrap shrink-0"
+          className="hidden sm:inline-flex h-9 items-center gap-1.5 bg-[#F2CAB3] dark:bg-[#F2CAB3]/25 hover:bg-white dark:hover:bg-[#26201C] text-[#49352F] dark:text-[#F4F1E1] border border-[#49352F]/15 dark:border-[#F2CAB3]/30 px-2 sm:px-2.5 rounded-xl text-xs font-bold shadow-xs transition-all whitespace-nowrap shrink-0"
         >
           <Sparkles className="w-3.5 h-3.5 text-[#B26A1B] dark:text-[#F2CAB3] shrink-0" aria-hidden="true" />
-          <span className="hidden sm:inline">{t.header?.aiHub || "AI Hub"}</span>
+          <span className="hidden md:inline">{t.header?.aiHub || "AI Hub"}</span>
         </Link>
 
-        {/* Hackathon Demo Tag */}
-        <div className="hidden 2xl:inline-flex h-9 items-center gap-1 bg-[#F2DCB5]/60 dark:bg-[#26201C] border border-[#49352F]/15 dark:border-[#F2CAB3]/20 text-[#49352F] dark:text-[#F4F1E1] px-2.5 rounded-xl text-[11px] font-semibold whitespace-nowrap shrink-0">
-          <Sparkles className="w-3 h-3 text-[#B26A1B] dark:text-[#F2CAB3] shrink-0" aria-hidden="true" />
-          <span>{t.header?.sficDemo || "SFIC Demo"}</span>
-        </div>
-
-        {/* Replay Tour Button */}
+        {/* Replay Tour Button (Only on 2xl, left sidebar provides it permanently on desktop) */}
         <button
           type="button"
           onClick={() => {
@@ -275,23 +344,23 @@ export function AppHeader({
             }
             triggerPageTour(pageKey);
           }}
-          className="hidden xl:inline-flex h-9 items-center gap-1.5 px-2.5 rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/20 bg-white dark:bg-[#26201C] hover:bg-[#F2CAB3] dark:hover:bg-[#F2CAB3]/20 text-[#49352F] dark:text-[#F4F1E1] text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-95 whitespace-nowrap shrink-0"
+          className="hidden 2xl:inline-flex h-9 items-center gap-1.5 px-2.5 rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/20 bg-white dark:bg-[#26201C] hover:bg-[#F2CAB3] dark:hover:bg-[#F2CAB3]/20 text-[#49352F] dark:text-[#F4F1E1] text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-95 whitespace-nowrap shrink-0"
           aria-label={t.tutorial?.replayTour || "Start Page Guided Tour"}
           title={t.tutorial?.replayTour || "Start Page Guided Tour"}
         >
           <RotateCcw className="w-3.5 h-3.5 text-[#B26A1B] dark:text-[#F2CAB3] shrink-0" aria-hidden="true" />
-          <span className="hidden 2xl:inline whitespace-nowrap">{t.tutorial?.replayTour || "Replay Tour"}</span>
+          <span className="whitespace-nowrap">{t.tutorial?.replayTour || "Replay Tour"}</span>
         </button>
 
-        {/* Tutorial & Help Center Link */}
+        {/* Tutorial & Help Center Link (Only on 2xl, left sidebar provides it permanently on desktop) */}
         <Link
           href="/tutorial"
           aria-label={t.tutorial?.pageTitle || "Help & Tutorial Center"}
-          className="hidden xl:inline-flex h-9 items-center gap-1.5 px-2.5 rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/20 bg-white dark:bg-[#26201C] hover:bg-[#F2CAB3] dark:hover:bg-[#F2CAB3]/20 text-[#49352F] dark:text-[#F4F1E1] text-xs font-bold transition-all shadow-xs whitespace-nowrap shrink-0"
+          className="hidden 2xl:inline-flex h-9 items-center gap-1.5 px-2.5 rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/20 bg-white dark:bg-[#26201C] hover:bg-[#F2CAB3] dark:hover:bg-[#F2CAB3]/20 text-[#49352F] dark:text-[#F4F1E1] text-xs font-bold transition-all shadow-xs whitespace-nowrap shrink-0"
           title={t.tutorial?.pageTitle || "Help & Tutorial Center"}
         >
           <HelpCircle className="w-3.5 h-3.5 text-[#B26A1B] dark:text-[#F2CAB3] shrink-0" aria-hidden="true" />
-          <span className="hidden 2xl:inline whitespace-nowrap">{t.nav?.tutorial || "Tutorial & Help"}</span>
+          <span className="whitespace-nowrap">{t.nav?.tutorial || "Tutorial & Help"}</span>
         </Link>
 
         {/* Language Selector */}
@@ -320,7 +389,19 @@ export function AppHeader({
           </button>
 
           {notificationsOpen && (
-            <div className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-1.5rem)] rounded-2xl bg-white dark:bg-[#26201C] p-3 shadow-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/20 z-50">
+            <div
+              id="notifications-dropdown"
+              style={{
+                position: "fixed",
+                top: notificationsCoords ? `${notificationsCoords.top}px` : "4.25rem",
+                right: notificationsCoords ? `${notificationsCoords.right}px` : "1rem",
+                maxWidth: notificationsCoords ? `${notificationsCoords.maxWidth}px` : "calc(100vw - 24px)",
+                width: "min(340px, calc(100vw - 24px))",
+                boxSizing: "border-box",
+                zIndex: 9999,
+              }}
+              className="rounded-2xl bg-white dark:bg-[#26201C] p-3 shadow-2xl border border-[#49352F]/15 dark:border-[#F2CAB3]/20 animate-in fade-in-50 zoom-in-95 duration-100"
+            >
               <div className="flex items-center justify-between pb-2 border-b border-[#49352F]/10 dark:border-[#F2CAB3]/15">
                 <span className="font-semibold text-xs text-[#49352F] dark:text-[#F4F1E1]">
                   {t.header?.gapAlerts || "Learning Gap Alerts"}
@@ -359,7 +440,7 @@ export function AppHeader({
         </div>
 
         {/* Visual Divider Separating Controls from Account Center */}
-        <div className="h-6 w-px bg-[#49352F]/15 dark:bg-[#F2CAB3]/20 mx-1 sm:mx-1.5 shrink-0" aria-hidden="true" />
+        <div className="h-5 w-px bg-[#49352F]/15 dark:bg-[#F2CAB3]/20 mx-0.5 sm:mx-1 shrink-0" aria-hidden="true" />
 
         {/* User Profile & Role Switcher (Account Center) */}
         <div ref={roleMenuRef} className="relative shrink-0">
@@ -383,15 +464,15 @@ export function AppHeader({
                 {role === "admin" ? "A" : role === "parent" ? "P" : user?.name ? user.name.charAt(0).toUpperCase() : "T"}
               </div>
             )}
-            <div className="text-left hidden sm:block shrink-0">
-              <div className="text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] leading-tight truncate max-w-[85px] md:max-w-[120px] 2xl:max-w-none">
+            <div className="text-left hidden md:block shrink-0">
+              <div className="text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] leading-tight truncate max-w-[80px] xl:max-w-[110px] 2xl:max-w-none">
                 {user?.name || (role === "admin"
                   ? (t.header?.principalName || "Principal R.K. Trivedi")
                   : role === "parent"
                   ? (t.header?.parentName || "Dineshbhai Patel")
                   : (t.header?.teacherName || "Pooja Sharma"))}
               </div>
-              <div className="text-[10px] text-[#B26A1B] dark:text-[#F2CAB3] font-medium capitalize truncate max-w-[85px] md:max-w-[120px] 2xl:max-w-none">
+              <div className="text-[10px] text-[#B26A1B] dark:text-[#F2CAB3] font-medium capitalize truncate max-w-[80px] xl:max-w-[110px] 2xl:max-w-none">
                 {role === "admin" ? t.app.adminRole : role === "parent" ? (t.app?.parentRole || "Guardian / Parent") : t.app.teacherRole}
               </div>
             </div>
@@ -399,71 +480,108 @@ export function AppHeader({
           </button>
 
           {showRoleMenu && (
-            <div className="absolute right-0 mt-2 w-60 max-w-[calc(100vw-1.5rem)] rounded-2xl bg-white dark:bg-[#26201C] p-2 shadow-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/20 z-50">
-              <div className="px-3 py-2 border-b border-[#49352F]/10 dark:border-[#F2CAB3]/15 mb-1">
-                <p className="text-[11px] font-semibold text-[#7A6862] dark:text-[#FAF6E9]/60 uppercase tracking-wider">
+            <div
+              id="account-dropdown"
+              style={{
+                position: "fixed",
+                top: roleMenuCoords ? `${roleMenuCoords.top}px` : "4.25rem",
+                right: roleMenuCoords ? `${roleMenuCoords.right}px` : "1rem",
+                maxWidth: roleMenuCoords ? `${roleMenuCoords.maxWidth}px` : "calc(100vw - 24px)",
+                width: "min(340px, calc(100vw - 24px))",
+                boxSizing: "border-box",
+                zIndex: 9999,
+              }}
+              className="rounded-2xl bg-white dark:bg-[#26201C] p-2 shadow-2xl border border-[#49352F]/15 dark:border-[#F2CAB3]/20 animate-in fade-in-50 zoom-in-95 duration-100"
+            >
+              {/* Profile summary header inside dropdown */}
+              <div className="px-3 py-2.5 border-b border-[#49352F]/10 dark:border-[#F2CAB3]/15 mb-1.5 flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-[#F2CAB3] dark:bg-[#F2CAB3]/30 border border-[#49352F]/15 dark:border-[#F2CAB3]/30 text-[#49352F] dark:text-[#F4F1E1] flex items-center justify-center text-xs font-bold shrink-0">
+                  {role === "admin" ? "A" : role === "parent" ? "P" : user?.name ? user.name.charAt(0).toUpperCase() : "T"}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold text-[#49352F] dark:text-[#F4F1E1] truncate">
+                    {user?.name || (role === "admin"
+                      ? (t.header?.principalName || "Principal R.K. Trivedi")
+                      : role === "parent"
+                      ? (t.header?.parentName || "Dineshbhai Patel")
+                      : (t.header?.teacherName || "Pooja Sharma"))}
+                  </p>
+                  <p className="text-[11px] text-[#B26A1B] dark:text-[#F2CAB3] font-medium capitalize truncate">
+                    {role === "admin" ? t.app.adminRole : role === "parent" ? (t.app?.parentRole || "Guardian / Parent") : t.app.teacherRole}
+                  </p>
+                </div>
+              </div>
+
+              <div className="px-3 py-1 mb-1">
+                <p className="text-[10px] font-bold text-[#7A6862] dark:text-[#FAF6E9]/60 uppercase tracking-wider">
                   {t.header?.switchRole || "Switch Active Role"}
                 </p>
-                <p className="text-xs text-[#7A6862] dark:text-[#FAF6E9]/70 mt-0.5">
+                <p className="text-[11px] text-[#7A6862] dark:text-[#FAF6E9]/70 mt-0.5 leading-snug">
                   {t.header?.explorePermissions || "Explore with different permissions"}
                 </p>
               </div>
+
+              {/* Role: Teacher */}
               <button
                 type="button"
                 onClick={() => {
                   switchRole("teacher");
                   setShowRoleMenu(false);
                 }}
-                className={`w-full flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-xl text-left transition-colors cursor-pointer ${
+                className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-xl text-left transition-colors cursor-pointer min-w-0 ${
                   role === "teacher"
-                    ? "bg-[#F2CAB3]/40 dark:bg-[#F2CAB3]/25 text-[#49352F] dark:text-[#F4F1E1] font-semibold"
+                    ? "bg-[#F2CAB3]/40 dark:bg-[#F2CAB3]/25 text-[#49352F] dark:text-[#F4F1E1] font-semibold ring-1 ring-[#B26A1B]/20"
                     : "text-[#49352F] dark:text-[#F4F1E1] hover:bg-[#FAF6E9] dark:hover:bg-[#1E1916]"
                 }`}
               >
-                <UserCheck className="w-4 h-4 text-[#2E7D5E]" />
-                <div>
-                  <div className="font-semibold text-[#49352F] dark:text-[#F4F1E1]">{t.header?.teacherName || "Pooja Sharma"}</div>
-                  <div className="text-[10px] text-[#7A6862] dark:text-[#FAF6E9]/70">{t.header?.teacherTitle || "Class Teacher (Class 4-A)"}</div>
+                <UserCheck className="w-4 h-4 text-[#2E7D5E] shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <div className="font-semibold text-[#49352F] dark:text-[#F4F1E1] truncate">{t.header?.teacherName || "Pooja Sharma"}</div>
+                  <div className="text-[10px] text-[#7A6862] dark:text-[#FAF6E9]/70 truncate">{t.header?.teacherTitle || "Class Teacher (Class 4-A)"}</div>
                 </div>
               </button>
+
+              {/* Role: Admin */}
               <button
                 type="button"
                 onClick={() => {
                   switchRole("admin");
                   setShowRoleMenu(false);
                 }}
-                className={`w-full flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-xl text-left transition-colors mt-1 cursor-pointer ${
+                className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-xl text-left transition-colors mt-1 cursor-pointer min-w-0 ${
                   role === "admin"
-                    ? "bg-[#F2CAB3]/40 dark:bg-[#F2CAB3]/25 text-[#49352F] dark:text-[#F4F1E1] font-semibold"
+                    ? "bg-[#F2CAB3]/40 dark:bg-[#F2CAB3]/25 text-[#49352F] dark:text-[#F4F1E1] font-semibold ring-1 ring-[#B26A1B]/20"
                     : "text-[#49352F] dark:text-[#F4F1E1] hover:bg-[#FAF6E9] dark:hover:bg-[#1E1916]"
                 }`}
               >
-                <ShieldAlert className="w-4 h-4 text-[#B26A1B] dark:text-[#F2CAB3]" />
-                <div>
-                  <div className="font-semibold text-[#49352F] dark:text-[#F4F1E1]">{t.header?.principalName || "Principal R.K. Trivedi"}</div>
-                  <div className="text-[10px] text-[#7A6862] dark:text-[#FAF6E9]/70">{t.header?.principalTitle || "School Administrator"}</div>
+                <ShieldAlert className="w-4 h-4 text-[#B26A1B] dark:text-[#F2CAB3] shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <div className="font-semibold text-[#49352F] dark:text-[#F4F1E1] truncate">{t.header?.principalName || "Principal R.K. Trivedi"}</div>
+                  <div className="text-[10px] text-[#7A6862] dark:text-[#FAF6E9]/70 truncate">{t.header?.principalTitle || "School Administrator"}</div>
                 </div>
               </button>
+
+              {/* Role: Parent */}
               <button
                 type="button"
                 onClick={() => {
                   switchRole("parent");
                   setShowRoleMenu(false);
                 }}
-                className={`w-full flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-xl text-left transition-colors mt-1 cursor-pointer ${
+                className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-xl text-left transition-colors mt-1 cursor-pointer min-w-0 ${
                   role === "parent"
-                    ? "bg-[#F2CAB3]/40 dark:bg-[#F2CAB3]/25 text-[#49352F] dark:text-[#F4F1E1] font-semibold"
+                    ? "bg-[#F2CAB3]/40 dark:bg-[#F2CAB3]/25 text-[#49352F] dark:text-[#F4F1E1] font-semibold ring-1 ring-[#B26A1B]/20"
                     : "text-[#49352F] dark:text-[#F4F1E1] hover:bg-[#FAF6E9] dark:hover:bg-[#1E1916]"
                 }`}
               >
-                <Users className="w-4 h-4 text-[#49352F] dark:text-[#F4F1E1]" />
-                <div>
-                  <div className="font-semibold text-[#49352F] dark:text-[#F4F1E1]">{t.header?.parentName || "Dineshbhai Patel"}</div>
-                  <div className="text-[10px] text-[#7A6862] dark:text-[#FAF6E9]/70">{t.header?.parentTitle || "Parent (Aarav Patel, Class 4-A)"}</div>
+                <Users className="w-4 h-4 text-[#49352F] dark:text-[#F4F1E1] shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <div className="font-semibold text-[#49352F] dark:text-[#F4F1E1] truncate">{t.header?.parentName || "Dineshbhai Patel"}</div>
+                  <div className="text-[10px] text-[#7A6862] dark:text-[#FAF6E9]/70 truncate">{t.header?.parentTitle || "Parent (Aarav Patel, Class 4-A)"}</div>
                 </div>
               </button>
 
-              <div className="border-t border-[#49352F]/10 dark:border-[#F2CAB3]/15 my-1 pt-1">
+              <div className="border-t border-[#49352F]/10 dark:border-[#F2CAB3]/15 my-1.5 pt-1">
                 <button
                   type="button"
                   onClick={async () => {
@@ -473,7 +591,7 @@ export function AppHeader({
                   }}
                   className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-[#C54738] hover:bg-[#C54738]/10 rounded-xl text-left transition-colors cursor-pointer"
                 >
-                  <LogOut className="w-4 h-4 text-[#C54738]" />
+                  <LogOut className="w-4 h-4 text-[#C54738] shrink-0" />
                   <span>{t.header?.signOut || t.nav?.logout || "Sign Out"}</span>
                 </button>
               </div>

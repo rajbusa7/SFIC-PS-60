@@ -59,6 +59,11 @@ export class AuthService {
       if (admin) return admin;
       return DEMO_ADMIN;
     }
+    if (authHeader?.includes("parent")) {
+      const parent = await db.getUserByEmailAsync(DEMO_PARENT.email);
+      if (parent) return parent;
+      return DEMO_PARENT;
+    }
     const defaultUser = await db.getUserByEmailAsync(DEMO_TEACHER.email);
     return defaultUser || DEMO_TEACHER;
   }

@@ -424,6 +424,34 @@
         "c-guj-conj-01"
       ],
       "createdAt": "2026-10-10T10:00:00Z"
+    },
+    {
+      "classroomId": "cls-4a",
+      "subjectId": "sub-math",
+      "subjectCode": "MATH",
+      "title": "Class 4: Fractions Evaluation Check",
+      "assessmentDate": "2026-10-28",
+      "status": "published",
+      "maxMarks": 20,
+      "conceptIds": [
+        "c-frac-01"
+      ],
+      "id": "asm-1793285254241",
+      "createdAt": "2026-10-29T14:47:34.241Z"
+    },
+    {
+      "classroomId": "cls-4a",
+      "subjectId": "sub-math",
+      "subjectCode": "MATH",
+      "title": "Class 4: Fractions Evaluation Check",
+      "assessmentDate": "2026-10-28",
+      "status": "published",
+      "maxMarks": 20,
+      "conceptIds": [
+        "c-frac-01"
+      ],
+      "id": "asm-1793285347880",
+      "createdAt": "2026-10-29T14:49:07.880Z"
     }
   ],
   "results": [
@@ -591,13 +619,13 @@
       "grade": 4,
       "priority": "High",
       "masteryStatus": "Needs Support",
-      "reason": "Recent assessment performance (35%) is below the configured support threshold (60%), and previous result (40%) also showed persistent difficulty.",
+      "reason": "Assessment performance (35%) is below the configured support threshold (60%), and the previous result (40%) also showed persistent difficulty.",
       "status": "Active",
       "attemptsCount": 2,
       "latestPercentage": 35,
       "previousPercentage": 40,
       "deltaPercentagePoints": -5,
-      "updatedAt": "2026-09-24T12:00:00Z",
+      "updatedAt": "2026-10-29T14:49:07.937Z",
       "remedialPlanId": "plan-aarav-div-01"
     },
     {
@@ -608,13 +636,13 @@
       "conceptName": "Subject-Verb Agreement",
       "subjectCode": "ENG",
       "grade": 4,
-      "priority": "High",
+      "priority": "Medium",
       "masteryStatus": "Needs Support",
-      "reason": "Score (45%) indicates confusion between singular and plural verbs.",
+      "reason": "Score (45%) is below the operational mastery threshold (60%).",
       "status": "Active",
       "attemptsCount": 1,
       "latestPercentage": 45,
-      "updatedAt": "2026-10-02T12:00:00Z"
+      "updatedAt": "2026-10-29T14:49:07.942Z"
     },
     {
       "id": "gap-diya-place",
@@ -624,13 +652,13 @@
       "conceptName": "Place Value & 3-Digit Addition",
       "subjectCode": "MATH",
       "grade": 3,
-      "priority": "High",
+      "priority": "Medium",
       "masteryStatus": "Needs Support",
-      "reason": "Score (50%) indicates difficulty with column regrouping.",
+      "reason": "Score (50%) is below the operational mastery threshold (60%).",
       "status": "Active",
       "attemptsCount": 1,
       "latestPercentage": 50,
-      "updatedAt": "2026-09-15T12:00:00Z"
+      "updatedAt": "2026-10-29T14:49:07.946Z"
     },
     {
       "id": "gap-meera-mult",
@@ -642,11 +670,11 @@
       "grade": 4,
       "priority": "Medium",
       "masteryStatus": "Developing",
-      "reason": "Student scored 70% (Developing); core concepts grasped but recall speed needs practice.",
+      "reason": "Student has grasped core basics (70%), but has not yet met the mastery threshold of 80%.",
       "status": "Under Intervention",
       "attemptsCount": 1,
       "latestPercentage": 70,
-      "updatedAt": "2026-09-10T12:00:00Z"
+      "updatedAt": "2026-10-29T14:49:07.939Z"
     },
     {
       "id": "gap-kabir-place",
@@ -658,11 +686,75 @@
       "grade": 3,
       "priority": "Medium",
       "masteryStatus": "Developing",
-      "reason": "Scored 65% (Developing); needs practice with carrying over into hundreds place.",
+      "reason": "Student has grasped core basics (65%), but has not yet met the mastery threshold of 80%.",
       "status": "Active",
       "attemptsCount": 1,
       "latestPercentage": 65,
-      "updatedAt": "2026-09-15T12:00:00Z"
+      "updatedAt": "2026-10-29T14:49:07.947Z"
+    },
+    {
+      "id": "gap-std-aarav-c-mult-01",
+      "studentId": "std-aarav",
+      "studentName": "Aarav Patel",
+      "conceptId": "c-mult-01",
+      "conceptName": "Multiplication Tables (2 to 9)",
+      "subjectCode": "MATH",
+      "grade": 4,
+      "priority": "Medium",
+      "masteryStatus": "Developing",
+      "reason": "Student has grasped core basics (65%), but has not yet met the mastery threshold of 80%.",
+      "status": "Active",
+      "attemptsCount": 1,
+      "latestPercentage": 65,
+      "updatedAt": "2026-10-29T14:49:07.937Z"
+    },
+    {
+      "id": "gap-std-aarav-c-eng-comp-01",
+      "studentId": "std-aarav",
+      "studentName": "Aarav Patel",
+      "conceptId": "c-eng-comp-01",
+      "conceptName": "Short Passage Reading Comprehension",
+      "subjectCode": "ENG",
+      "grade": 4,
+      "priority": "Medium",
+      "masteryStatus": "Developing",
+      "reason": "Student has grasped core basics (75%), but has not yet met the mastery threshold of 80%.",
+      "status": "Active",
+      "attemptsCount": 1,
+      "latestPercentage": 75,
+      "updatedAt": "2026-10-29T14:49:07.937Z"
+    },
+    {
+      "id": "gap-std-aarav-c-evs-water-01",
+      "studentId": "std-aarav",
+      "studentName": "Aarav Patel",
+      "conceptId": "c-evs-water-01",
+      "conceptName": "Water Cycle & Conservation",
+      "subjectCode": "EVS",
+      "grade": 4,
+      "priority": "Low",
+      "masteryStatus": "Mastered",
+      "reason": "Student achieved 80% on the single recorded assessment. Note: This is an initial single observation.",
+      "status": "Resolved",
+      "attemptsCount": 1,
+      "latestPercentage": 80,
+      "updatedAt": "2026-10-29T14:49:07.937Z"
+    },
+    {
+      "id": "gap-std-meera-c-div-01",
+      "studentId": "std-meera",
+      "studentName": "Meera Shah",
+      "conceptId": "c-div-01",
+      "conceptName": "Division Basics & Equal Sharing",
+      "subjectCode": "MATH",
+      "grade": 4,
+      "priority": "Medium",
+      "masteryStatus": "Developing",
+      "reason": "Student has grasped core basics (75%), but has not yet met the mastery threshold of 80%.",
+      "status": "Active",
+      "attemptsCount": 1,
+      "latestPercentage": 75,
+      "updatedAt": "2026-10-29T14:49:07.939Z"
     }
   ],
   "remedialPlans": [
@@ -1097,6 +1189,32 @@
       "userId": "usr-1793284002044-i5zn",
       "name": "Rameshbhai Patel",
       "email": "parent.test.1793284002034@example.com",
+      "phone": "9876543299",
+      "preferredLanguage": "gu",
+      "relationship": "guardian",
+      "studentIds": [
+        "std-aarav",
+        "std-diya"
+      ]
+    },
+    {
+      "id": "par-1793284454322-mefm",
+      "userId": "usr-1793284454320-iil2",
+      "name": "Rameshbhai Patel",
+      "email": "parent.test.1793284454309@example.com",
+      "phone": "9876543299",
+      "preferredLanguage": "gu",
+      "relationship": "guardian",
+      "studentIds": [
+        "std-aarav",
+        "std-diya"
+      ]
+    },
+    {
+      "id": "par-1793285356940-513h",
+      "userId": "usr-1793285356937-h36q",
+      "name": "Rameshbhai Patel",
+      "email": "parent.test.1793285356926@example.com",
       "phone": "9876543299",
       "preferredLanguage": "gu",
       "relationship": "guardian",
@@ -1740,6 +1858,30 @@
       "status": "active",
       "createdAt": "2026-10-29T14:26:42.043Z",
       "updatedAt": "2026-10-29T14:26:42.043Z"
+    },
+    {
+      "id": "usr-1793284454320-iil2",
+      "name": "Rameshbhai Patel",
+      "email": "parent.test.1793284454309@example.com",
+      "role": "parent",
+      "schoolId": "sch-gn-01",
+      "provider": "local",
+      "passwordHash": "4eab9d10e415622078b612dc7d443640:933149c56f2bfda4219754326683b7e4f695fc6ac0e8f12da954d65781b088e5dd1373bc3ceb73180b5ddc760206d8f9fb171f513f47e7ae328cb2a704cb268a",
+      "status": "active",
+      "createdAt": "2026-10-29T14:34:14.319Z",
+      "updatedAt": "2026-10-29T14:34:14.319Z"
+    },
+    {
+      "id": "usr-1793285356937-h36q",
+      "name": "Rameshbhai Patel",
+      "email": "parent.test.1793285356926@example.com",
+      "role": "parent",
+      "schoolId": "sch-gn-01",
+      "provider": "local",
+      "passwordHash": "52bfe307527c1666e0f21bce3a310998:e3f696fa16339948c5b67ffdc0e0470ad4fb794c90ffd92c2e11943bebd43abe23419e833c5d1bedfe01e36ea724535c7be28f9c6f79817e51a8a93a003d32b0",
+      "status": "active",
+      "createdAt": "2026-10-29T14:49:16.937Z",
+      "updatedAt": "2026-10-29T14:49:16.937Z"
     }
   ],
   "feedback": [],
@@ -1853,6 +1995,72 @@
       "createdAt": "2026-10-29T14:26:42.089Z",
       "usedByUserId": "usr-1793284002044-i5zn",
       "usedAt": "2026-10-29T14:26:42.091Z"
+    },
+    {
+      "id": "plc-1793284454364-pz7m",
+      "studentId": "std-aarav",
+      "code": "PAR-6112",
+      "expiresAt": "2026-11-05T14:34:14.364Z",
+      "status": "used",
+      "createdByUserId": "usr-teacher-01",
+      "createdAt": "2026-10-29T14:34:14.364Z",
+      "usedByUserId": "usr-1793284454320-iil2",
+      "usedAt": "2026-10-29T14:34:14.366Z"
+    },
+    {
+      "id": "plc-1793284454374-4geq",
+      "studentId": "std-diya",
+      "code": "PAR-1958",
+      "expiresAt": "2026-11-05T14:34:14.374Z",
+      "status": "used",
+      "createdByUserId": "usr-teacher-01",
+      "createdAt": "2026-10-29T14:34:14.374Z",
+      "usedByUserId": "usr-1793284454320-iil2",
+      "usedAt": "2026-10-29T14:34:14.376Z"
+    },
+    {
+      "id": "plc-1793285347992-nwkw",
+      "studentId": "std-aarav",
+      "code": "PAR-9432",
+      "expiresAt": "2026-11-05T14:49:07.992Z",
+      "status": "used",
+      "createdByUserId": "usr-teacher-01",
+      "createdAt": "2026-10-29T14:49:07.992Z",
+      "usedByUserId": "usr-1793285347948-pcl7",
+      "usedAt": "2026-10-29T14:49:07.994Z"
+    },
+    {
+      "id": "plc-1793285347999-jtpo",
+      "studentId": "std-diya",
+      "code": "PAR-6662",
+      "expiresAt": "2026-11-05T14:49:07.999Z",
+      "status": "used",
+      "createdByUserId": "usr-teacher-01",
+      "createdAt": "2026-10-29T14:49:07.999Z",
+      "usedByUserId": "usr-1793285347948-pcl7",
+      "usedAt": "2026-10-29T14:49:08.001Z"
+    },
+    {
+      "id": "plc-1793285356982-rw1v",
+      "studentId": "std-aarav",
+      "code": "PAR-5915",
+      "expiresAt": "2026-11-05T14:49:16.982Z",
+      "status": "used",
+      "createdByUserId": "usr-teacher-01",
+      "createdAt": "2026-10-29T14:49:16.982Z",
+      "usedByUserId": "usr-1793285356937-h36q",
+      "usedAt": "2026-10-29T14:49:16.985Z"
+    },
+    {
+      "id": "plc-1793285356992-1skp",
+      "studentId": "std-diya",
+      "code": "PAR-1027",
+      "expiresAt": "2026-11-05T14:49:16.992Z",
+      "status": "used",
+      "createdByUserId": "usr-teacher-01",
+      "createdAt": "2026-10-29T14:49:16.992Z",
+      "usedByUserId": "usr-1793285356937-h36q",
+      "usedAt": "2026-10-29T14:49:16.994Z"
     }
   ]
 }

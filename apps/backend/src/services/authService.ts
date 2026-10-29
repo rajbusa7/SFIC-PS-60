@@ -1,10 +1,10 @@
 import type { User, UserRole } from "../../../../packages/shared/src/types";
-import { DEMO_TEACHER, DEMO_ADMIN } from "../../../../packages/shared/src/constants";
+import { DEMO_TEACHER, DEMO_ADMIN, DEMO_PARENT } from "../../../../packages/shared/src/constants";
 import { db } from "../../../../src/lib/db/database";
 import { verifyPassword } from "../../../../src/lib/auth/password";
 
 export class AuthService {
-  async login(email: string, password?: string, role: UserRole = "teacher"): Promise<User> {
+  async login(email: string, password?: string, role?: UserRole): Promise<User> {
     const normalizedEmail = email.trim().toLowerCase();
 
     // 1. Look up user from persistent database
@@ -16,11 +16,22 @@ export class AuthService {
         user = await db.upsertUserAsync(DEMO_TEACHER);
       } else if (normalizedEmail === DEMO_ADMIN.email.toLowerCase()) {
         user = await db.upsertUserAsync(DEMO_ADMIN);
+      } else if (normalizedEmail === DEMO_PARENT.email.toLowerCase()) {
+        user = await db.upsertUserAsync(DEMO_PARENT);
       }
     }
 
     if (!user) {
       throw new Error("No account found with this email. Please create a new account first.");
+    }
+
+    // If role was explicitly specified, verify role compatibility
+    if (role && user.role !== role) {
+      if (role === "parent" && user.role !== "parent") {
+        throw new Error("This account is registered as a school staff account. Please use the Teacher Login portal.");
+      } else if (role !== "parent" && user.role === "parent") {
+        throw new Error("This account is registered as a Parent account. Please sign in via the Parent Portal.");
+      }
     }
 
     if (user.status === "disabled") {

@@ -9,7 +9,7 @@ export interface ValidationResult<T> {
   data?: T;
 }
 
-export function validateLogin(body: any): ValidationResult<{ email: string; password?: string; role?: "teacher" | "admin" }> {
+export function validateLogin(body: any): ValidationResult<{ email: string; password?: string; role?: "teacher" | "admin" | "parent" }> {
   const errors: ValidationError[] = [];
   if (!body || typeof body !== "object") {
     return { isValid: false, errors: [{ field: "body", message: "Request body must be a valid JSON object" }] };
@@ -17,8 +17,8 @@ export function validateLogin(body: any): ValidationResult<{ email: string; pass
   if (!body.email || typeof body.email !== "string" || !body.email.includes("@")) {
     errors.push({ field: "email", message: "A valid email address is required" });
   }
-  if (body.role && body.role !== "teacher" && body.role !== "admin") {
-    errors.push({ field: "role", message: "Role must be either 'teacher' or 'admin'" });
+  if (body.role && body.role !== "teacher" && body.role !== "admin" && body.role !== "parent") {
+    errors.push({ field: "role", message: "Role must be 'teacher', 'admin', or 'parent'" });
   }
   return {
     isValid: errors.length === 0,

@@ -15,3 +15,12 @@ export const DEMO_ADMIN: User = {
   role: "admin",
   schoolId: "sch-gn-01",
 };
+
+export const DEMO_PARENT: User = {
+  id: "par-001",
+  name: "Dineshbhai Patel",
+  email: "dinesh.patel@example.com",
+  role: "parent",
+  schoolId: "sch-gn-01",
+  provider: "local",
+};

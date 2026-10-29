@@ -12,6 +12,30 @@ export interface ParentProfile {
   relationship?: "mother" | "father" | "guardian";
 }
 
+export interface ParentLinkingCode {
+  id: string;
+  studentId: string;
+  code: string;
+  expiresAt: string;
+  status: "active" | "used" | "expired";
+  createdByUserId?: string;
+  usedByUserId?: string;
+  usedAt?: string;
+  createdAt: string;
+}
+
+export interface ParentMessage {
+  id: string;
+  parentId: string;
+  studentId: string;
+  subject: string;
+  message: string;
+  status: "sent" | "read" | "replied";
+  reply?: string;
+  repliedAt?: string;
+  createdAt: string;
+}
+
 export type NoticeCategory =
   | "announcement"
   | "ptm"

@@ -1,4 +1,4 @@
-export type UserRole = "teacher" | "admin";
+export type UserRole = "teacher" | "admin" | "parent";
 
 export interface User {
   id: string;
@@ -6,6 +6,7 @@ export interface User {
   email: string;
   role: UserRole;
   schoolId: string;
+  provider?: "local" | "google";
 }
 
 export interface School {

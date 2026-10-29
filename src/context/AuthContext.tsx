@@ -10,6 +10,7 @@ interface AuthContextType {
   login: (email: string, role?: UserRole) => boolean;
   loginAsDemoTeacher: () => void;
   loginAsDemoAdmin: () => void;
+  loginAsDemoParent: () => void;
   logout: () => void;
   switchRole: (role: UserRole) => void;
 }
@@ -30,6 +31,14 @@ const DEMO_ADMIN: User = {
   schoolId: "sch-gn-01",
 };
 
+const DEMO_PARENT: User = {
+  id: "par-001",
+  name: "Dineshbhai Patel",
+  email: "dinesh.patel@example.com",
+  role: "parent",
+  schoolId: "sch-gn-01",
+};
+
 const AuthContext = createContext<AuthContextType>({
   user: DEMO_TEACHER,
   role: "teacher",
@@ -37,6 +46,7 @@ const AuthContext = createContext<AuthContextType>({
   login: () => true,
   loginAsDemoTeacher: () => {},
   loginAsDemoAdmin: () => {},
+  loginAsDemoParent: () => {},
   logout: () => {},
   switchRole: () => {},
 });
@@ -63,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = (email: string, role: UserRole = "teacher") => {
     const newUser: User = {
       id: `usr-${Date.now()}`,
-      name: role === "admin" ? "Principal Administrator" : "Class Teacher",
+      name: role === "admin" ? "Principal Administrator" : role === "parent" ? "Dineshbhai Patel" : "Class Teacher",
       email,
       role,
       schoolId: "sch-gn-01",
@@ -85,13 +95,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("shikshasetu_user", JSON.stringify(DEMO_ADMIN));
   };
 
+  const loginAsDemoParent = () => {
+    setUser(DEMO_PARENT);
+    setIsDemoMode(true);
+    localStorage.setItem("shikshasetu_user", JSON.stringify(DEMO_PARENT));
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem("shikshasetu_user");
   };
 
   const switchRole = (newRole: UserRole) => {
-    const targetUser = newRole === "admin" ? DEMO_ADMIN : DEMO_TEACHER;
+    const targetUser = newRole === "admin" ? DEMO_ADMIN : newRole === "parent" ? DEMO_PARENT : DEMO_TEACHER;
     setUser(targetUser);
     localStorage.setItem("shikshasetu_user", JSON.stringify(targetUser));
   };
@@ -105,6 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         loginAsDemoTeacher,
         loginAsDemoAdmin,
+        loginAsDemoParent,
         logout,
         switchRole,
       }}

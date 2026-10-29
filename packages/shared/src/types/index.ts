@@ -6,3 +6,4 @@ export * from "./activity";
 export * from "./worksheet";
 export * from "./ai";
 export * from "./api";
+export * from "./notice";

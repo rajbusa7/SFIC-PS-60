@@ -27,7 +27,7 @@ import {
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, loginAsDemoTeacher, loginAsDemoAdmin } = useAuth();
+  const { login, loginAsDemoTeacher, loginAsDemoAdmin, loginAsDemoParent } = useAuth();
   const { t, language } = useLanguage();
 
   const [email, setEmail] = useState("teacher@shikshasetu.edu.in");
@@ -57,6 +57,11 @@ export default function LoginPage() {
 
   const handleAdminDemo = () => {
     loginAsDemoAdmin();
+    router.push("/dashboard");
+  };
+
+  const handleParentDemo = () => {
+    loginAsDemoParent();
     router.push("/dashboard");
   };
 
@@ -157,7 +162,7 @@ export default function LoginPage() {
                   Select a pre-configured role to immediately explore the live primary cohort:
                 </p>
 
-                <div className="grid grid-cols-2 gap-2.5 pt-1">
+                <div className="grid grid-cols-3 gap-2 pt-1">
                   <Button
                     type="button"
                     variant="saffron"
@@ -166,7 +171,7 @@ export default function LoginPage() {
                     className="rounded-xl text-xs font-black shadow-md shadow-amber-500/30"
                   >
                     <UserCheck className="w-3.5 h-3.5 mr-1" />
-                    <span>Teacher Role</span>
+                    <span>Teacher</span>
                   </Button>
 
                   <Button
@@ -177,7 +182,18 @@ export default function LoginPage() {
                     className="rounded-xl text-xs font-bold border-slate-700 hover:border-amber-500/50"
                   >
                     <ShieldCheck className="w-3.5 h-3.5 mr-1 text-amber-400" />
-                    <span>Admin Role</span>
+                    <span>Admin</span>
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleParentDemo}
+                    className="rounded-xl text-xs font-bold border-slate-700 hover:border-emerald-500/50 text-emerald-300"
+                  >
+                    <GraduationCap className="w-3.5 h-3.5 mr-1 text-emerald-400" />
+                    <span>Parent</span>
                   </Button>
                 </div>
               </div>

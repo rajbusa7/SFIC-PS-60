@@ -331,14 +331,14 @@ export function AppHeader({
             className="flex items-center gap-2 pl-2 pr-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer"
           >
             <div className="w-6 h-6 rounded-full bg-indigo-600 dark:bg-indigo-500 text-white flex items-center justify-center text-xs font-bold">
-              {role === "admin" ? "A" : "T"}
+              {role === "admin" ? "A" : role === "parent" ? "P" : "T"}
             </div>
             <div className="text-left hidden md:block">
               <div className="text-xs font-semibold text-slate-900 dark:text-white leading-tight">
                 {user?.name || "Teacher"}
               </div>
               <div className="text-[10px] text-indigo-600 dark:text-indigo-400 font-medium capitalize">
-                {role === "admin" ? t.app.adminRole : t.app.teacherRole}
+                {role === "admin" ? t.app.adminRole : role === "parent" ? "Parent" : t.app.teacherRole}
               </div>
             </div>
             <ChevronDown className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
@@ -384,6 +384,23 @@ export function AppHeader({
                 <div>
                   <div className="font-semibold text-slate-900 dark:text-slate-100">Principal R.K. Trivedi</div>
                   <div className="text-[10px] text-slate-500 dark:text-slate-400">School Administrator</div>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  switchRole("parent");
+                  setShowRoleMenu(false);
+                }}
+                className={`w-full flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-xl text-left transition-colors mt-1 cursor-pointer ${role === "parent"
+                    ? "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-semibold"
+                    : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                  }`}
+              >
+                <UserCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <div>
+                  <div className="font-semibold text-slate-900 dark:text-slate-100">Dineshbhai Patel</div>
+                  <div className="text-[10px] text-slate-500 dark:text-slate-400">Parent (Aarav Patel)</div>
                 </div>
               </button>
 

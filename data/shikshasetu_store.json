@@ -335,6 +335,17 @@
       "section": "A",
       "enrollmentStatus": "active",
       "createdAt": "2026-06-17T09:15:00Z"
+    },
+    {
+      "displayName": "Nirav Kumar",
+      "studentCode": "STU-TEST-1793298417551",
+      "classroomId": "cls-3a",
+      "grade": 3,
+      "section": "A",
+      "enrollmentStatus": "active",
+      "notes": "Newly enrolled student",
+      "id": "std-1793298417608-6phb",
+      "createdAt": "2026-10-29T18:26:57.608Z"
     }
   ],
   "assessments": [
@@ -578,6 +589,46 @@
       "maximumMarks": 20,
       "percentage": 65,
       "recordedAt": "2026-09-15T11:00:00Z"
+    },
+    {
+      "assessmentId": "asm-test-1793298417551",
+      "studentId": "std-aarav",
+      "conceptId": "c-mult-01",
+      "marksObtained": 9,
+      "maximumMarks": 20,
+      "percentage": 45,
+      "recordedAt": "2026-10-29T18:26:57.576Z",
+      "id": "res-1793298417577-uuau4"
+    },
+    {
+      "assessmentId": "asm-test-1793298417551",
+      "studentId": "std-aarav",
+      "conceptId": "c-mult-01",
+      "marksObtained": 15,
+      "maximumMarks": 20,
+      "percentage": 75,
+      "recordedAt": "2026-10-29T18:26:57.584Z",
+      "id": "res-1793298417584-j7j1k"
+    },
+    {
+      "assessmentId": "asm-gap-1793298417551",
+      "studentId": "std-aarav",
+      "conceptId": "c-div-01",
+      "marksObtained": 7,
+      "maximumMarks": 20,
+      "percentage": 35,
+      "recordedAt": "2026-10-29T18:26:57.589Z",
+      "id": "res-1793298417589-6okjt"
+    },
+    {
+      "assessmentId": "asm-nirav-1793298417551",
+      "studentId": "std-1793298417608-6phb",
+      "conceptId": "c-eng-vocab-01",
+      "marksObtained": 18,
+      "maximumMarks": 20,
+      "percentage": 90,
+      "recordedAt": "2026-10-29T18:26:57.614Z",
+      "id": "res-1793298417615-o4krg"
     }
   ],
   "learningGaps": [
@@ -591,14 +642,14 @@
       "grade": 4,
       "priority": "High",
       "masteryStatus": "Needs Support",
-      "reason": "Recent assessment performance (35%) is below the configured support threshold (60%), and previous result (40%) also showed persistent difficulty.",
-      "status": "Active",
-      "attemptsCount": 2,
+      "reason": "Assessment performance (35%) is below the configured support threshold (60%), and the previous result (35%) also showed persistent difficulty.",
+      "status": "Under Intervention",
+      "attemptsCount": 3,
       "latestPercentage": 35,
-      "previousPercentage": 40,
-      "deltaPercentagePoints": -5,
-      "updatedAt": "2026-09-24T12:00:00Z",
-      "remedialPlanId": "plan-aarav-div-01"
+      "previousPercentage": 35,
+      "deltaPercentagePoints": 0,
+      "updatedAt": "2026-10-29T18:26:57.595Z",
+      "remedialPlanId": "plan-std-aarav-c-div-01-1793298417595"
     },
     {
       "id": "gap-dev-verb",
@@ -663,11 +714,45 @@
       "attemptsCount": 1,
       "latestPercentage": 65,
       "updatedAt": "2026-09-15T12:00:00Z"
+    },
+    {
+      "id": "gap-std-aarav-c-mult-01",
+      "studentId": "std-aarav",
+      "studentName": "Aarav Patel",
+      "conceptId": "c-mult-01",
+      "conceptName": "Multiplication Tables (2 to 9)",
+      "subjectCode": "MATH",
+      "grade": 4,
+      "priority": "Medium",
+      "masteryStatus": "Developing",
+      "reason": "Student has grasped core basics (75%), but has not yet met the mastery threshold of 80%.",
+      "status": "Active",
+      "attemptsCount": 3,
+      "latestPercentage": 75,
+      "previousPercentage": 45,
+      "deltaPercentagePoints": 30,
+      "updatedAt": "2026-10-29T18:26:57.590Z"
+    },
+    {
+      "id": "gap-std-aarav-c-eng-comp-01",
+      "studentId": "std-aarav",
+      "studentName": "Aarav Patel",
+      "conceptId": "c-eng-comp-01",
+      "conceptName": "Short Passage Reading Comprehension",
+      "subjectCode": "ENG",
+      "grade": 4,
+      "priority": "Medium",
+      "masteryStatus": "Developing",
+      "reason": "Student has grasped core basics (75%), but has not yet met the mastery threshold of 80%.",
+      "status": "Active",
+      "attemptsCount": 1,
+      "latestPercentage": 75,
+      "updatedAt": "2026-10-29T18:26:57.590Z"
     }
   ],
   "remedialPlans": [
     {
-      "id": "plan-aarav-div-01",
+      "id": "plan-std-aarav-c-div-01-1793298417595",
       "studentId": "std-aarav",
       "studentName": "Aarav Patel",
       "studentClass": 4,
@@ -676,19 +761,12 @@
       "conceptName": "Division Basics & Equal Sharing",
       "subjectCode": "MATH",
       "learningObjective": "The student will correctly divide objects into equal groups, identify the quotient and remainder, and articulate division as the inverse of multiplication and repeated subtraction.",
-      "expectedSkill": "Demonstrate fluent ability to divide 2-digit numbers by 1-digit divisors using equal grouping diagrams with 80%+ accuracy without teacher assistance.",
-      "likelyMisconception": "Treating division as random subtraction or confusing divisor with dividend, and failing to distribute remainders into equal sets.",
-      "errorAnalysis": "Confuses divisor with dividend and treats division as arbitrary subtraction without creating equal sets.",
-      "gapEvidence": "Scored 35% on Class 4 Mathematics Periodic Assessment (Division of 2-digit numbers). Incorrect responses on sharing 12 into 3 equal parts.",
-      "isConfirmed": true,
-      "baselineScore": 35,
-      "masteryBenchmark": 80,
-      "recommendationReason": "Recent assessment performance (35%) is below the configured support threshold (60%), and previous result (40%) also showed persistent difficulty.",
-      "status": "Approved",
+      "recommendationReason": "Assessment performance (35%) is below the configured support threshold (60%), and the previous result (35%) also showed persistent difficulty.",
+      "status": "Suggested",
       "estimatedMinutes": 20,
       "difficulty": "Beginner",
       "requiredMaterials": [
-        "20 physical counting tokens, bottle caps, or pebbles",
+        "20 physical counting tokens, pebbles, or bottle caps",
         "Equal grouping circular mats or drawing sheet",
         "Multiplication table 1-10 reference card",
         "Targeted division practice worksheet"
@@ -697,7 +775,9 @@
         {
           "stepNumber": 1,
           "title": "STEP 1 — Concept Review: Multiplication Link & Equal Groups",
-          "description": "Review times tables for 2, 3, 4, and 5. Demonstrate that 4 × 3 = 12 means 12 ÷ 3 = 4.",
+          "description": "Review multiplication tables (2, 3, 4, 5) and clarify the inverse relationship: explain that if 3 × 4 = 12, then 12 ÷ 3 = 4 and 12 ÷ 4 = 3.",
+          "durationMinutes": 4,
+          "activityType": "discussion",
           "learningObjective": "Review prerequisite multiplication facts and understand division as inverse multiplication.",
           "teacherInstructions": "Ask: 'If 3 friends share 12 laddus equally, how many does each get?' Write 3 × ? = 12 alongside 12 ÷ 3 = 4 on the chalkboard.",
           "studentInstructions": "Recall multiplication tables 2, 3, 4, and 5. State aloud how many equal shares can be made.",
@@ -705,8 +785,6 @@
             "Multiplication 1-10 table reference card",
             "Slate or notebook"
           ],
-          "durationMinutes": 4,
-          "activityType": "discussion",
           "questionsOrExercises": [
             "What is 4 × 3?",
             "If 15 ÷ 3 = 5, what multiplication fact confirms this?"
@@ -717,7 +795,9 @@
         {
           "stepNumber": 2,
           "title": "STEP 2 — Concrete Demonstration: Physical Object Grouping",
-          "description": "Have Aarav physically distribute 12 counters into 3 equal cups or circles.",
+          "description": "Physically distribute 12 and 15 counting pebbles/bottle caps into 3 and 4 equal circular cups, observing fair sharing and leftovers.",
+          "durationMinutes": 5,
+          "activityType": "hands_on",
           "learningObjective": "Model fair sharing and equal grouping using hands-on physical manipulatives.",
           "teacherInstructions": "Place 12 pebbles on the desk. Direct student: 'Take 3 cups. Place 1 pebble in each cup at a time until all 12 are shared.' Note that each cup holds exactly 4 pebbles.",
           "studentInstructions": "Pick up the counters and place them one-by-one into the cups so each cup has the exact same count.",
@@ -725,8 +805,6 @@
             "15-20 counting tokens or bottle caps",
             "3-4 paper cups or drawn chalk circles"
           ],
-          "durationMinutes": 5,
-          "activityType": "hands_on",
           "questionsOrExercises": [
             "Share 12 tokens into 3 cups. How many in each cup?",
             "Share 14 tokens into 3 cups. How many in each cup, and how many are left over?"
@@ -737,7 +815,9 @@
         {
           "stepNumber": 3,
           "title": "STEP 3 — Guided Practice: Co-Solving Equal Sharing Problems",
-          "description": "Solve 3 basic division problems together on paper with step-by-step reasoning.",
+          "description": "Teacher and student together solve 3 division word scenarios on paper using drawn grouping circles and step-by-step reasoning.",
+          "durationMinutes": 4,
+          "activityType": "guided_practice",
           "learningObjective": "Transition from concrete physical objects to semi-concrete visual grouping sketches.",
           "teacherInstructions": "Guide the student through drawing circles for groups and tally marks for objects. Prompt: 'What is our total? How many groups must we draw?'",
           "studentInstructions": "Draw the circles on paper, share the tally marks equally, and write the division number sentence.",
@@ -745,8 +825,6 @@
             "Graph paper or notebook",
             "Colored pencils or crayons"
           ],
-          "durationMinutes": 4,
-          "activityType": "guided_practice",
           "questionsOrExercises": [
             "Share 16 pencils among 4 students (16 ÷ 4).",
             "Pack 18 mangoes into boxes of 6 (18 ÷ 6).",
@@ -758,7 +836,9 @@
         {
           "stepNumber": 4,
           "title": "STEP 4 — Independent Targeted Practice: Structured Exercises",
-          "description": "Aarav independently solves division problems using visual grouping diagrams.",
+          "description": "Student independently solves 5 graded division questions using drawn representations without teacher prompting.",
+          "durationMinutes": 5,
+          "activityType": "independent_practice",
           "learningObjective": "Apply division concepts independently to achieve computational and conceptual fluency.",
           "teacherInstructions": "Hand out practice sheet. Step back and observe without interrupting. Note any persistent error patterns or hesitations.",
           "studentInstructions": "Read each question carefully. Draw groups if helpful, calculate your answer, and check your work.",
@@ -766,8 +846,6 @@
             "Targeted 5-question practice worksheet",
             "Pencil and eraser"
           ],
-          "durationMinutes": 5,
-          "activityType": "independent_practice",
           "questionsOrExercises": [
             "Calculate 15 ÷ 3.",
             "Calculate 24 ÷ 4.",
@@ -781,7 +859,9 @@
         {
           "stepNumber": 5,
           "title": "STEP 5 — Reassessment: Formative Competency Check",
-          "description": "Quick 5-question parallel assessment to verify mastery retention.",
+          "description": "Administer a structured 5-question reassessment to certify independent mastery against the 80% benchmark target.",
+          "durationMinutes": 4,
+          "activityType": "reassessment",
           "learningObjective": "Evaluate independent mastery of division and measure percentage-point gain from baseline.",
           "teacherInstructions": "Administer the 5 parallel assessment questions. Record student score and verify if the student meets or exceeds the 80% mastery benchmark.",
           "studentInstructions": "Answer all 5 reassessment questions independently on your worksheet.",
@@ -789,8 +869,6 @@
             "5-question Formative Reassessment Sheet",
             "Teacher scoring rubric"
           ],
-          "durationMinutes": 4,
-          "activityType": "reassessment",
           "questionsOrExercises": [
             "Q1: 15 ÷ 3 = ?",
             "Q2: If 18 kites are shared equally by 6 children, how many does each get?",
@@ -802,10 +880,24 @@
           "completed": false
         }
       ],
-      "practiceQuestionsSummary": "5 targeted equal sharing and visual grouping questions.",
+      "practiceQuestionsSummary": "5 structured remedial steps with 5 targeted exit reassessment exercises.",
       "reassessmentCriteria": "Student must achieve at least 80% (4 out of 5 questions correct) on the independent reassessment without teacher hints.",
-      "teacherInstructions": "Use concrete objects first. Avoid abstract long division symbols until the concept of sharing is crystal clear. If student struggles, use alternative visual bar models.",
-      "teacherNotes": "Aarav enjoys hands-on token activities. Plan approved for daily zero-period session.",
+      "teacherInstructions": "Avoid rushing to long-division algorithms immediately. Reinforce equal grouping and real-world sharing (e.g. sharing 15 laddus among 5 friends). If the student struggles, use alternative visual bar models.",
+      "teacherNotes": "Phase 2: Reinforcing equal sharing with concrete household counters.",
+      "completedSteps": [
+        1
+      ],
+      "createdAt": "2026-10-29T18:26:57.595Z",
+      "reviewDate": "2026-11-05T18:26:57.595Z",
+      "baselineScore": 35,
+      "baselineEvidence": "Assessment performance (35%) is below the configured support threshold (60%), and the previous result (35%) also showed persistent difficulty.",
+      "knownMisconceptions": "Assessment performance (35%) is below the configured support threshold (60%), and the previous result (35%) also showed persistent difficulty.",
+      "conceptualErrors": [
+        "Treating division as random subtraction or confusing divisor with dividend, and failing to distribute remainders into equal sets."
+      ],
+      "confirmedOrInferred": "confirmed",
+      "expectedSkill": "Demonstrate fluent ability to divide 2-digit numbers by 1-digit divisors using equal grouping diagrams with 80%+ accuracy without teacher assistance.",
+      "masteryBenchmark": 80,
       "reassessmentQuestions": [
         {
           "questionNumber": 1,
@@ -878,10 +970,96 @@
           "skillTarget": "Partitioning into equal halves"
         }
       ],
-      "createdAt": "2026-09-25T08:30:00Z",
-      "startDate": "2026-09-26T09:00:00Z",
-      "targetDate": "2026-10-04T09:00:00Z",
-      "reviewDate": "2026-10-05T08:30:00Z"
+      "isFollowUp": false,
+      "worksheet": {
+        "worksheetTitle": "Division Basics & Equal Sharing - Targeted Remedial Practice Worksheet",
+        "schoolName": "Model Primary School, Gandhinagar",
+        "grade": 4,
+        "subject": "MATH",
+        "concept": "Division Basics & Equal Sharing",
+        "difficulty": "Beginner",
+        "language": "en",
+        "instructions": "Read each question carefully. Show your work in the space provided.",
+        "totalMarks": 10,
+        "estimatedMinutes": 15,
+        "personalizedStudentNote": "Personalized intervention worksheet for Aarav Patel",
+        "questions": [
+          {
+            "questionNumber": 1,
+            "questionText": "Divide 15 candies equally among 3 children. How many candies does each child receive?",
+            "questionType": "mcq",
+            "options": [
+              "3 candies",
+              "4 candies",
+              "5 candies",
+              "6 candies"
+            ],
+            "marks": 1,
+            "answerKey": "5 candies",
+            "stepExplanation": "15 ÷ 3 = 5 candies per child, because 3 × 5 = 15."
+          },
+          {
+            "questionNumber": 2,
+            "questionText": "A teacher has 18 kites and gives an equal number to 6 students. How many kites does each student get?",
+            "questionType": "mcq",
+            "options": [
+              "2 kites",
+              "3 kites",
+              "4 kites",
+              "5 kites"
+            ],
+            "marks": 1,
+            "answerKey": "3 kites",
+            "stepExplanation": "18 ÷ 6 = 3 kites, because 6 × 3 = 18."
+          },
+          {
+            "questionNumber": 3,
+            "questionText": "What is 24 ÷ 4?",
+            "questionType": "mcq",
+            "options": [
+              "4",
+              "5",
+              "6",
+              "8"
+            ],
+            "marks": 1,
+            "answerKey": "6",
+            "stepExplanation": "24 ÷ 4 = 6, since 4 × 6 = 24."
+          },
+          {
+            "questionNumber": 4,
+            "questionText": "Which multiplication equation proves that 20 ÷ 5 = 4?",
+            "questionType": "mcq",
+            "options": [
+              "5 + 4 = 9",
+              "5 × 4 = 20",
+              "20 - 5 = 15",
+              "20 × 4 = 80"
+            ],
+            "marks": 1,
+            "answerKey": "5 × 4 = 20",
+            "stepExplanation": "Multiplication is the inverse of division: 5 groups of 4 equals 20."
+          },
+          {
+            "questionNumber": 5,
+            "questionText": "If 16 marbles are placed into 2 equal bowls, how many marbles are in each bowl?",
+            "questionType": "mcq",
+            "options": [
+              "6 marbles",
+              "7 marbles",
+              "8 marbles",
+              "9 marbles"
+            ],
+            "marks": 1,
+            "answerKey": "8 marbles",
+            "stepExplanation": "16 ÷ 2 = 8 marbles in each bowl."
+          }
+        ]
+      },
+      "startDate": "2026-10-29",
+      "targetDate": "2026-11-08",
+      "teacherObservations": "Initial baseline teacher intervention notes.",
+      "updatedAt": "2026-10-29T18:26:57.596Z"
     },
     {
       "id": "plan-meera-mult-01",
@@ -1200,6 +1378,19 @@
         "std-dev"
       ],
       "relationship": "father"
+    },
+    {
+      "id": "par-1793298417562-5joj",
+      "userId": "usr-1793298417560-oe87",
+      "name": "Jitendrabhai Patel",
+      "email": "realtime.parent.1793298417551@example.com",
+      "phone": "9876543201",
+      "preferredLanguage": "gu",
+      "relationship": "guardian",
+      "studentIds": [
+        "std-aarav",
+        "std-1793298417608-6phb"
+      ]
     }
   ],
   "parentLinkingCodes": [
@@ -1218,6 +1409,28 @@
       "expiresAt": "2026-11-05T18:14:32.396Z",
       "status": "active",
       "createdAt": "2026-10-29T18:14:32.396Z"
+    },
+    {
+      "id": "plc-1793298417573-gyzv",
+      "studentId": "std-aarav",
+      "code": "PAR-1308",
+      "expiresAt": "2026-11-05T18:26:57.573Z",
+      "status": "used",
+      "createdByUserId": "usr-teacher-01",
+      "createdAt": "2026-10-29T18:26:57.573Z",
+      "usedByUserId": "usr-1793298417560-oe87",
+      "usedAt": "2026-10-29T18:26:57.574Z"
+    },
+    {
+      "id": "plc-1793298417610-a5mb",
+      "studentId": "std-1793298417608-6phb",
+      "code": "PAR-9913",
+      "expiresAt": "2026-11-05T18:26:57.610Z",
+      "status": "used",
+      "createdByUserId": "usr-teacher-01",
+      "createdAt": "2026-10-29T18:26:57.610Z",
+      "usedByUserId": "usr-1793298417560-oe87",
+      "usedAt": "2026-10-29T18:26:57.611Z"
     }
   ],
   "parentMessages": [],
@@ -1512,7 +1725,30 @@
       "status": "active",
       "createdAt": "2026-01-01T00:00:00Z",
       "updatedAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "usr-1793298417560-oe87",
+      "name": "Jitendrabhai Patel",
+      "email": "realtime.parent.1793298417551@example.com",
+      "role": "parent",
+      "schoolId": "sch-gn-01",
+      "provider": "local",
+      "passwordHash": "6954bf5e5582e4049d16eaa8590ac48d:e02e43d33eb2de4a0670a9e859c9e965c2ab3e3da68c86e664c86d9bf17d285ea386f81c60ad7ca601dd2187f7b12adf6ad37d416aef1abe99ce81112dbf32fe",
+      "status": "active",
+      "createdAt": "2026-10-29T18:26:57.560Z",
+      "updatedAt": "2026-10-29T18:26:57.560Z"
     }
   ],
-  "feedback": []
+  "feedback": [],
+  "parentActivityCompletions": [
+    {
+      "id": "cmp-par-1793298417562-5joj-std-aarav-act-div-01",
+      "parentId": "par-1793298417562-5joj",
+      "studentId": "std-aarav",
+      "activityId": "act-div-01",
+      "conceptId": "c-div-01",
+      "completed": true,
+      "completedAt": "2026-10-29T18:26:57.603Z"
+    }
+  ]
 }

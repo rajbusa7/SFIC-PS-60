@@ -21,33 +21,54 @@ export async function GET(request: Request) {
       );
     }
 
-    if (session.role !== "parent") {
+    if (session.role !== "parent" && session.role !== "teacher" && session.role !== "admin") {
       return NextResponse.json(
-        { success: false, error: "Forbidden: This area is reserved for parents and guardians." },
+        { success: false, error: "Forbidden: This area is reserved for parents, teachers, and administrators." },
         { status: 403 }
       );
     }
 
     // Retrieve user and parent profile
-    const user = await db.getUserByIdAsync(session.id);
-    let parentProfile = await db.getParentByUserIdAsync(session.id);
+    let parentProfile: any = null;
+    let linkedStudents: any[] = [];
 
-    // If parent profile does not exist yet for this parent user, create a default one
-    if (!parentProfile && user) {
-      parentProfile = await db.createParentProfileAsync({
-        userId: user.id,
-        name: user.name,
-        email: user.email,
+    if (session.role === "parent") {
+      const user = await db.getUserByIdAsync(session.id);
+      parentProfile = await db.getParentByUserIdAsync(session.id);
+
+      // If parent profile does not exist yet for this parent user, create a default one
+      if (!parentProfile && user) {
+        parentProfile = await db.createParentProfileAsync({
+          userId: user.id,
+          name: user.name,
+          email: user.email,
+          preferredLanguage: "gu",
+          relationship: "guardian",
+          studentIds: [],
+        });
+      }
+
+      // Retrieve linked students
+      linkedStudents = parentProfile?.id
+        ? await db.getLinkedStudentsForParentAsync(parentProfile.id)
+        : [];
+    } else {
+      // Teacher or Admin previewing / managing Parent Bridge in unified frame
+      parentProfile = (await db.getParentByIdAsync("par-001")) || {
+        id: "par-001",
+        userId: session.id,
+        name: "Dineshbhai Patel (Parent Preview)",
+        email: "dinesh.patel@example.com",
         preferredLanguage: "gu",
-        relationship: "guardian",
-        studentIds: [],
-      });
+        relationship: "father",
+        studentIds: ["std-aarav"],
+      };
+      linkedStudents = await db.getLinkedStudentsForParentAsync("par-001");
+      if (linkedStudents.length === 0) {
+        const students = await db.getStudents();
+        linkedStudents = students.slice(0, 3);
+      }
     }
-
-    // Retrieve linked students
-    const linkedStudents = parentProfile?.id
-      ? await db.getLinkedStudentsForParentAsync(parentProfile.id)
-      : [];
 
     return NextResponse.json({
       success: true,

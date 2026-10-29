@@ -14,3 +14,4 @@ CREATE TABLE IF NOT EXISTS parent_activity_completions (
 CREATE INDEX IF NOT EXISTS idx_parent_activity_student ON parent_activity_completions(student_id);
 CREATE INDEX IF NOT EXISTS idx_parent_activity_parent ON parent_activity_completions(parent_id);
 CREATE INDEX IF NOT EXISTS idx_parent_activity_composite ON parent_activity_completions(student_id, activity_id);
+

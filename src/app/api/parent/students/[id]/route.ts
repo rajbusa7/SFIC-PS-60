@@ -19,32 +19,34 @@ export async function GET(
     }
 
     const session = await verifySession(sessionToken);
-    if (!session || session.role !== "parent") {
+    if (!session || (session.role !== "parent" && session.role !== "teacher" && session.role !== "admin")) {
       return NextResponse.json(
-        { success: false, error: "Access denied. Parent role required." },
+        { success: false, error: "Access denied. Valid role required." },
         { status: 403 }
       );
     }
 
-    // Retrieve parent profile
-    const parentProfile = await db.getParentByUserIdAsync(session.id);
-    if (!parentProfile) {
-      return NextResponse.json(
-        { success: false, error: "Parent profile not found." },
-        { status: 404 }
-      );
-    }
+    if (session.role === "parent") {
+      // Retrieve parent profile
+      const parentProfile = await db.getParentByUserIdAsync(session.id);
+      if (!parentProfile) {
+        return NextResponse.json(
+          { success: false, error: "Parent profile not found." },
+          { status: 404 }
+        );
+      }
 
-    // STRICT RBAC CHECK: The requested studentId must belong to this parent's authorized students
-    const isAuthorized = (parentProfile.studentIds || []).includes(studentId);
-    if (!isAuthorized) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Forbidden: You are not authorized to access records for this student.",
-        },
-        { status: 403 }
-      );
+      // STRICT RBAC CHECK: The requested studentId must belong to this parent's authorized students
+      const isAuthorized = (parentProfile.studentIds || []).includes(studentId);
+      if (!isAuthorized) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Forbidden: You are not authorized to access records for this student.",
+          },
+          { status: 403 }
+        );
+      }
     }
 
     // Fetch real student information from persistent database

@@ -14,18 +14,10 @@ export async function POST(request: Request) {
     }
 
     const session = await verifySession(sessionToken);
-    if (!session || session.role !== "parent") {
+    if (!session || (session.role !== "parent" && session.role !== "teacher" && session.role !== "admin")) {
       return NextResponse.json(
-        { success: false, error: "Access denied. Parent role required." },
+        { success: false, error: "Access denied. Valid role required." },
         { status: 403 }
-      );
-    }
-
-    const parentProfile = await db.getParentByUserIdAsync(session.id);
-    if (!parentProfile) {
-      return NextResponse.json(
-        { success: false, error: "Parent profile not found." },
-        { status: 404 }
       );
     }
 
@@ -46,17 +38,29 @@ export async function POST(request: Request) {
       );
     }
 
-    // STRICT RBAC CHECK: The parent must be authorized for this student
-    const isAuthorized = (parentProfile.studentIds || []).includes(studentId);
-    if (!isAuthorized) {
-      return NextResponse.json(
-        { success: false, error: "Forbidden: You are not authorized for this student." },
-        { status: 403 }
-      );
+    let parentId = "par-001";
+    if (session.role === "parent") {
+      const parentProfile = await db.getParentByUserIdAsync(session.id);
+      if (!parentProfile) {
+        return NextResponse.json(
+          { success: false, error: "Parent profile not found." },
+          { status: 404 }
+        );
+      }
+
+      // STRICT RBAC CHECK: The parent must be authorized for this student
+      const isAuthorized = (parentProfile.studentIds || []).includes(studentId);
+      if (!isAuthorized) {
+        return NextResponse.json(
+          { success: false, error: "Forbidden: You are not authorized for this student." },
+          { status: 403 }
+        );
+      }
+      parentId = parentProfile.id;
     }
 
     const result = await db.recordParentActivityCompletionAsync(
-      parentProfile.id,
+      parentId,
       studentId,
       activityId,
       conceptId,
@@ -78,3 +82,4 @@ export async function POST(request: Request) {
     );
   }
 }
+

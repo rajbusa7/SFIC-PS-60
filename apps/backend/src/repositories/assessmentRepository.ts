@@ -21,6 +21,26 @@ export class AssessmentRepository {
     return db.createAssessment(data, initialResults);
   }
 
+  async update(
+    id: string,
+    updates: Partial<Assessment>,
+    resultsUpdates?: any[]
+  ): Promise<Assessment | null> {
+    return db.updateAssessment(id, updates, resultsUpdates);
+  }
+
+  async delete(id: string): Promise<boolean> {
+    return db.deleteAssessment(id);
+  }
+
+  async updateResult(id: string, updates: Partial<AssessmentResult>): Promise<AssessmentResult | null> {
+    return db.updateResult(id, updates);
+  }
+
+  async deleteResult(id: string): Promise<boolean> {
+    return db.deleteResult(id);
+  }
+
   async getResults(studentId?: string, conceptId?: string): Promise<AssessmentResult[]> {
     return db.getResults(studentId, conceptId);
   }

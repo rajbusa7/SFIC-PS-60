@@ -8,13 +8,19 @@ export interface LearningGap {
   id: string;
   studentId: string;
   studentName?: string;
+  studentCode?: string;
+  classroomId?: string;
   conceptId: string;
   conceptName?: string;
+  conceptNameGujarati?: string;
   subjectCode?: SubjectCode;
+  subjectName?: string;
   grade?: number;
+  section?: string;
   priority: GapPriority;
   masteryStatus: MasteryStatus;
   reason: string;
+  suggestedAction?: string;
   status: GapStatus;
   attemptsCount: number;
   latestPercentage: number;
@@ -22,4 +28,11 @@ export interface LearningGap {
   deltaPercentagePoints?: number;
   updatedAt: string;
   remedialPlanId?: string;
+  marksObtained?: number;
+  maximumMarks?: number;
+  assessmentDate?: string;
+  thresholdsUsed?: {
+    developing: number;
+    mastery: number;
+  };
 }

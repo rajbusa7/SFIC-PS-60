@@ -1,15 +1,6 @@
 import { NextResponse } from "next/server";
 import { studentService } from "@backend/services/studentService";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
-const noCacheHeaders = {
-  "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
-  Pragma: "no-cache",
-  Expires: "0",
-};
-
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -18,17 +9,11 @@ export async function GET(
     const { id } = await params;
     const student = await studentService.getStudentById(id);
     if (!student) {
-      return NextResponse.json(
-        { success: false, error: `Student with id '${id}' not found` },
-        { status: 404, headers: noCacheHeaders }
-      );
+      return NextResponse.json({ success: false, error: `Student with id '${id}' not found` }, { status: 404 });
     }
-    return NextResponse.json({ success: true, student }, { headers: noCacheHeaders });
+    return NextResponse.json({ success: true, student });
   } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 500, headers: noCacheHeaders }
-    );
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
 
@@ -41,16 +26,14 @@ export async function PUT(
     const body = await request.json();
     const updated = await studentService.updateStudent(id, body);
     if (!updated) {
-      return NextResponse.json(
-        { success: false, error: `Student with id '${id}' not found` },
-        { status: 404, headers: noCacheHeaders }
-      );
+      return NextResponse.json({ success: false, error: `Student with id '${id}' not found` }, { status: 404 });
     }
-    return NextResponse.json({ success: true, student: updated }, { headers: noCacheHeaders });
+    return NextResponse.json({ success: true, student: updated });
   } catch (error: any) {
+    const isConflict = error.message?.includes("already in use") || error.message?.includes("already exists");
     return NextResponse.json(
       { success: false, error: error.message || "Failed to update student" },
-      { status: 500, headers: noCacheHeaders }
+      { status: isConflict ? 409 : 500 }
     );
   }
 }
@@ -63,19 +46,10 @@ export async function DELETE(
     const { id } = await params;
     const deleted = await studentService.deleteStudent(id);
     if (!deleted) {
-      return NextResponse.json(
-        { success: false, error: `Student with id '${id}' not found` },
-        { status: 404, headers: noCacheHeaders }
-      );
+      return NextResponse.json({ success: false, error: `Student with id '${id}' not found` }, { status: 404 });
     }
-    return NextResponse.json(
-      { success: true, message: `Student '${id}' deleted successfully` },
-      { headers: noCacheHeaders }
-    );
+    return NextResponse.json({ success: true, message: `Student '${id}' deleted successfully` });
   } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to delete student" },
-      { status: 500, headers: noCacheHeaders }
-    );
+    return NextResponse.json({ success: false, error: error.message || "Failed to delete student" }, { status: 500 });
   }
 }

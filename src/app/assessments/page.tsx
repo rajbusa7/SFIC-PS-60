@@ -5,25 +5,32 @@ import Link from "next/link";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
 import { useLanguage } from "@/context/LanguageContext";
-import { subscribeToDataUpdates } from "@/lib/events";
+import { AssessmentDetailModal } from "@/components/assessment/AssessmentDetailModal";
 import {
   FileSpreadsheet,
   PlusCircle,
   Calendar,
-  CheckCircle2,
-  Clock,
   Layers,
   ArrowRight,
+  Eye,
+  Edit,
+  Trash2,
+  Sparkles,
 } from "lucide-react";
 
 export default function AssessmentsPage() {
-  const { t, language, formatSubject, formatClass } = useLanguage();
+  const { t } = useLanguage();
 
   const [assessments, setAssessments] = useState<any[]>([]);
   const [concepts, setConcepts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [subjectFilter, setSubjectFilter] = useState("all");
+
+  // Detail Modal state
+  const [selectedAssessmentId, setSelectedAssessmentId] = useState<string | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   const fetchAssessments = async () => {
     setLoading(true);
@@ -43,10 +50,6 @@ export default function AssessmentsPage() {
 
   useEffect(() => {
     fetchAssessments();
-    const unsubscribe = subscribeToDataUpdates(() => {
-      fetchAssessments();
-    }, ["assessments", "all"]);
-    return () => unsubscribe();
   }, []);
 
   const filteredAssessments = assessments.filter((a) => {
@@ -61,23 +64,28 @@ export default function AssessmentsPage() {
       .slice(0, 3);
   };
 
+  const openDetails = (id: string) => {
+    setSelectedAssessmentId(id);
+    setIsDetailOpen(true);
+  };
+
   return (
     <AppLayout>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl font-extrabold text-[#49352F] tracking-tight font-heading">
-              {t.assessments.title || "Classroom Assessments & Diagnostic Evaluations"}
+            <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+              Classroom Assessments & Diagnostic Evaluations
             </h1>
-            <p className="text-xs sm:text-sm text-[#7A6862] mt-0.5">
-              {t.assessments.subtitle || "Record concept-level assessment results to automatically trigger learning-gap detection."}
+            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+              Record concept-level assessment results to automatically trigger learning-gap detection.
             </p>
           </div>
 
           <Link
             href="/assessments/new"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#F2CAB3] hover:bg-white text-[#49352F] border border-[#49352F]/16 text-xs font-bold shadow-xs transition-colors cursor-pointer self-start sm:self-center"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer self-start sm:self-center"
           >
             <PlusCircle className="w-3.5 h-3.5" />
             <span>{t.actions.createAssessment}</span>
@@ -85,106 +93,153 @@ export default function AssessmentsPage() {
         </div>
 
         {/* Filters */}
-        <div className="flex items-center justify-between p-3 rounded-2xl bg-white/95 border border-[#49352F]/12 shadow-[0_4px_16px_rgba(73,53,47,0.04)]">
+        <div className="flex items-center justify-between p-3 rounded-2xl bg-white border border-slate-200 shadow-2xs">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-[#7A6862]">
-              {language === "gu" ? "વિષય દ્વારા ફિલ્ટર કરો:" : "Filter by Subject:"}
-            </span>
+            <span className="text-xs font-semibold text-slate-500">Filter by Subject:</span>
             <select
               value={subjectFilter}
               aria-label="Filter assessments by subject"
               onChange={(e) => setSubjectFilter(e.target.value)}
-              className="rounded-xl border border-[#49352F]/15 bg-[#FAF6E9] px-3 py-1.5 text-xs font-semibold text-[#49352F] outline-hidden cursor-pointer"
+              className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 outline-hidden cursor-pointer"
             >
-              <option value="all">{language === "gu" ? "બધા વિષયો" : "All Subjects"}</option>
-              <option value="MATH">{formatSubject("MATH")}</option>
-              <option value="ENG">{formatSubject("ENG")}</option>
-              <option value="GUJ">{formatSubject("GUJ")}</option>
-              <option value="EVS">{formatSubject("EVS")}</option>
+              <option value="all">All Subjects</option>
+              <option value="MATH">Mathematics (ગણિત)</option>
+              <option value="ENG">English</option>
+              <option value="GUJ">Gujarati (ગુજરાતી)</option>
+              <option value="EVS">Environmental Studies (પર્યાવરણ)</option>
             </select>
           </div>
-          <span className="text-xs text-[#7A6862]">
-            {filteredAssessments.length} {language === "gu" ? "મૂલ્યાંકન રેકોર્ડ્સ" : "assessment records"}
+          <span className="text-xs text-slate-400">
+            {filteredAssessments.length} assessment records
           </span>
         </div>
 
+        {/* Loading state skeleton */}
+        {loading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div
+                key={i}
+                className="h-48 rounded-2xl bg-slate-100 animate-pulse border border-slate-200/60 p-4"
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Empty state */}
+        {!loading && filteredAssessments.length === 0 && (
+          <div className="py-16 text-center space-y-3 bg-white rounded-2xl border border-slate-200 p-8 shadow-2xs">
+            <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto">
+              <FileSpreadsheet className="w-6 h-6" />
+            </div>
+            <h3 className="text-base font-bold text-slate-900">No Assessment Records Found</h3>
+            <p className="text-xs text-slate-500 max-w-sm mx-auto">
+              {subjectFilter === "all"
+                ? "No assessments have been recorded yet. Create an assessment to log formative marks and detect learning gaps."
+                : `No assessments found for subject '${subjectFilter}'. Create one or change your filter.`}
+            </p>
+            <Link
+              href="/assessments/new"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 transition-colors"
+            >
+              <PlusCircle className="w-3.5 h-3.5" />
+              <span>Create New Assessment</span>
+            </Link>
+          </div>
+        )}
+
         {/* Assessment Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredAssessments.map((asm) => {
-            const conceptNames = getConceptNames(asm.conceptIds);
+        {!loading && filteredAssessments.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredAssessments.map((asm) => {
+              const conceptNames = getConceptNames(asm.conceptIds);
 
-            return (
-              <Card key={asm.id} className="flex flex-col justify-between">
-                <div>
-                  <div className="flex items-start justify-between gap-2">
-                    <Badge variant="outline" size="sm">
-                      {formatSubject(asm.subjectCode)}
-                    </Badge>
-                    <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                        asm.status === "published"
-                          ? "bg-[#2E7D5E]/15 text-[#2E7D5E] border border-[#2E7D5E]/20"
-                          : "bg-[#B26A1B]/15 text-[#B26A1B] border border-[#B26A1B]/20"
-                      }`}
-                    >
-                      {asm.status === "published"
-                        ? language === "gu"
-                          ? "પ્રકાશિત અને વિશ્લેષિત"
-                          : "Published & Analyzed"
-                        : language === "gu"
-                        ? "ડ્રાફ્ટ"
-                        : "Draft"}
-                    </span>
-                  </div>
+              return (
+                <Card key={asm.id} className="flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-start justify-between gap-2">
+                      <Badge variant="outline" size="sm">
+                        {asm.subjectCode}
+                      </Badge>
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          asm.status === "published"
+                            ? "bg-emerald-100 text-emerald-800"
+                            : "bg-amber-100 text-amber-800"
+                        }`}
+                      >
+                        {asm.status === "published" ? "Published & Analyzed" : "Draft"}
+                      </span>
+                    </div>
 
-                  <h3 className="font-bold text-sm sm:text-base text-[#49352F] mt-2 line-clamp-2">
-                    {asm.title}
-                  </h3>
+                    <h3 className="font-bold text-sm sm:text-base text-slate-900 mt-2 line-clamp-2">
+                      {asm.title}
+                    </h3>
 
-                  <div className="flex items-center gap-3 text-xs text-[#7A6862] mt-2">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5 text-[#B26A1B]" />
-                      <span>{asm.assessmentDate}</span>
-                    </span>
-                    <span>
-                      {language === "gu" ? "કુલ ગુણ:" : "Max Marks:"}{" "}
-                      <strong className="text-[#49352F]">{asm.maxMarks}</strong>
-                    </span>
-                  </div>
+                    <div className="flex items-center gap-3 text-xs text-slate-500 mt-2">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                        <span>{asm.assessmentDate}</span>
+                      </span>
+                      <span>Max Marks: <strong>{asm.maxMarks}</strong></span>
+                    </div>
 
-                  {/* Concepts evaluated */}
-                  <div className="mt-3 pt-3 border-t border-[#49352F]/10">
-                    <span className="text-[11px] font-semibold text-[#7A6862] uppercase tracking-wider block mb-1">
-                      {language === "gu" ? "મૂલ્યાંકન કરાયેલ સંકલ્પનાઓ:" : "Target Concepts Assessed:"}
-                    </span>
-                    <div className="flex flex-wrap gap-1">
-                      {conceptNames.map((name, idx) => (
-                        <span
-                          key={idx}
-                          className="bg-[#FAF6E9] text-[#49352F] border border-[#49352F]/10 text-[11px] font-medium px-2 py-0.5 rounded-md"
-                        >
-                          {name}
-                        </span>
-                      ))}
+                    {/* Concepts evaluated */}
+                    <div className="mt-3 pt-3 border-t border-slate-100">
+                      <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
+                        Target Concepts Assessed:
+                      </span>
+                      <div className="flex flex-wrap gap-1">
+                        {conceptNames.map((name, idx) => (
+                          <span
+                            key={idx}
+                            className="bg-slate-100 text-slate-700 text-[11px] font-medium px-2 py-0.5 rounded-md"
+                          >
+                            {name}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="mt-4 pt-3 border-t border-[#49352F]/10 flex items-center justify-between">
-                  <span className="text-[11px] text-[#7A6862]">{formatClass("Class 4-A")}</span>
-                  <Link
-                    href={`/students`}
-                    className="inline-flex items-center gap-1 text-xs font-bold text-[#B26A1B] hover:text-[#49352F]"
-                  >
-                    <span>{language === "gu" ? "વિદ્યાર્થી ગુણ જુઓ" : "View Student Scores"}</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-              </Card>
-            );
-          })}
-        </div>
+                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                    <span className="text-[11px] text-slate-400 font-mono">
+                      {asm.classroomId ? asm.classroomId.toUpperCase() : "CLASS 4-A"}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => openDetails(asm.id)}
+                      className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-800 cursor-pointer"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>View Details & Scores</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </button>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        )}
       </div>
+
+      {/* Assessment Details & Editing Modal */}
+      {isDetailOpen && selectedAssessmentId && (
+        <AssessmentDetailModal
+          isOpen={isDetailOpen}
+          assessmentId={selectedAssessmentId}
+          onClose={() => {
+            setIsDetailOpen(false);
+            setSelectedAssessmentId(null);
+          }}
+          onUpdated={() => {
+            fetchAssessments();
+          }}
+          onDeleted={() => {
+            fetchAssessments();
+          }}
+        />
+      )}
     </AppLayout>
   );
 }

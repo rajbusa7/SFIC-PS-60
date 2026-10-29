@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 
 interface Tilt3DCardProps {
   children: React.ReactNode;
@@ -14,69 +14,36 @@ export function Tilt3DCard({
   glowColor = "rgba(99, 102, 241, 0.25)",
 }: Tilt3DCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
-  const glareRef = useRef<HTMLDivElement>(null);
-  const rectRef = useRef<{ left: number; top: number; width: number; height: number } | null>(null);
-  const rafId = useRef<number | null>(null);
-  const isReducedMotion = useRef(false);
-
-  useEffect(() => {
-    isReducedMotion.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    return () => {
-      if (rafId.current) cancelAnimationFrame(rafId.current);
-    };
-  }, []);
-
-  const handleMouseEnter = () => {
-    if (isReducedMotion.current) return;
-    if (cardRef.current) {
-      const rect = cardRef.current.getBoundingClientRect();
-      rectRef.current = {
-        left: rect.left,
-        top: rect.top,
-        width: rect.width,
-        height: rect.height,
-      };
-      if (glareRef.current) {
-        glareRef.current.style.opacity = "1";
-      }
-    }
-  };
+  const [rotate, setRotate] = useState({ x: 0, y: 0 });
+  const [glarePos, setGlarePos] = useState({ x: 50, y: 50 });
+  const [isHovered, setIsHovered] = useState(false);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (isReducedMotion.current || !rectRef.current || !cardRef.current) return;
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
 
-    const { left, top, width, height } = rectRef.current;
-    const x = e.clientX - left;
-    const y = e.clientY - top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
 
-    const centerX = width / 2;
-    const centerY = height / 2;
+    // Max 12 degrees rotation for clean, premium feel
+    const rotX = ((y - centerY) / centerY) * -10;
+    const rotY = ((x - centerX) / centerX) * 10;
 
-    const rotX = ((y - centerY) / centerY) * -8;
-    const rotY = ((x - centerX) / centerX) * 8;
-    const glareX = Math.round((x / width) * 100);
-    const glareY = Math.round((y / height) * 100);
-
-    if (rafId.current) cancelAnimationFrame(rafId.current);
-    rafId.current = requestAnimationFrame(() => {
-      if (cardRef.current) {
-        cardRef.current.style.transform = `perspective(1000px) rotateX(${rotX.toFixed(2)}deg) rotateY(${rotY.toFixed(2)}deg) translateY(-4px) scale3d(1.015, 1.015, 1.015)`;
-      }
-      if (glareRef.current) {
-        glareRef.current.style.background = `radial-gradient(circle at ${glareX}% ${glareY}%, ${glowColor} 0%, transparent 65%)`;
-      }
+    setRotate({ x: rotX, y: rotY });
+    setGlarePos({
+      x: (x / rect.width) * 100,
+      y: (y / rect.height) * 100,
     });
   };
 
+  const handleMouseEnter = () => setIsHovered(true);
+
   const handleMouseLeave = () => {
-    if (rafId.current) cancelAnimationFrame(rafId.current);
-    rectRef.current = null;
-    if (cardRef.current) {
-      cardRef.current.style.transform = "perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0px) scale3d(1, 1, 1)";
-    }
-    if (glareRef.current) {
-      glareRef.current.style.opacity = "0";
-    }
+    setIsHovered(false);
+    setRotate({ x: 0, y: 0 });
+    setGlarePos({ x: 50, y: 50 });
   };
 
   return (
@@ -87,15 +54,20 @@ export function Tilt3DCard({
       onMouseLeave={handleMouseLeave}
       className={`relative transition-transform duration-200 ease-out preserve-3d will-change-transform ${className}`}
       style={{
-        transform: "perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0px) scale3d(1, 1, 1)",
+        transform: isHovered
+          ? `perspective(1000px) rotateX(${rotate.x}deg) rotateY(${rotate.y}deg) translateY(-6px) scale3d(1.02, 1.02, 1.02)`
+          : "perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0px) scale3d(1, 1, 1)",
       }}
     >
-      {/* Dynamic 3D Glare Lighting Overlay — direct DOM opacity and gradient */}
-      <div
-        ref={glareRef}
-        className="pointer-events-none absolute inset-0 z-10 rounded-3xl transition-opacity duration-300 opacity-0"
-        aria-hidden="true"
-      />
+      {/* Dynamic 3D Glare Lighting Overlay */}
+      {isHovered && (
+        <div
+          className="pointer-events-none absolute inset-0 z-10 rounded-3xl transition-opacity duration-300"
+          style={{
+            background: `radial-gradient(circle at ${glarePos.x}% ${glarePos.y}%, ${glowColor} 0%, transparent 65%)`,
+          }}
+        />
+      )}
       {children}
     </div>
   );

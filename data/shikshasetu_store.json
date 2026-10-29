@@ -335,6 +335,17 @@
       "section": "A",
       "enrollmentStatus": "active",
       "createdAt": "2026-06-17T09:15:00Z"
+    },
+    {
+      "studentCode": "MPS-4A-PERSIST-2498",
+      "displayName": "Persistence Test Student",
+      "classroomId": "cls-4a",
+      "grade": 4,
+      "section": "A",
+      "enrollmentStatus": "active",
+      "notes": "Testing file persistence",
+      "id": "std-1793277402498-xglj",
+      "createdAt": "2026-10-29T12:36:42.498Z"
     }
   ],
   "assessments": [
@@ -670,9 +681,15 @@
       "id": "plan-aarav-div-01",
       "studentId": "std-aarav",
       "studentName": "Aarav Patel",
+      "studentCode": "GR04-012",
+      "classroomId": "cls-4a",
+      "grade": 4,
       "conceptId": "c-div-01",
       "conceptName": "Division Basics & Equal Sharing",
       "subjectCode": "MATH",
+      "subjectName": "Mathematics",
+      "learningGapId": "gap-aarav-div",
+      "baselineScore": 35,
       "learningObjective": "Understand division as equal grouping, sharing, and inverse multiplication.",
       "recommendationReason": "Recent assessment performance (35%) is below the configured support threshold (60%), and previous result (40%) also showed persistent difficulty.",
       "status": "Approved",
@@ -688,79 +705,181 @@
           "stepNumber": 1,
           "title": "Review Multiplication Link",
           "description": "Review times tables for 2, 3, 4, and 5. Demonstrate that 4 × 3 = 12 means 12 ÷ 3 = 4.",
-          "durationMinutes": 4
+          "durationMinutes": 4,
+          "activityType": "discussion",
+          "learningObjective": "Recall times tables and connect multiplication to division inverse facts.",
+          "materials": [
+            "Multiplication table 1-10 reference card"
+          ],
+          "checkUnderstanding": "Ask: If 5 × 4 = 20, what is 20 ÷ 4?",
+          "completed": true
         },
         {
           "stepNumber": 2,
           "title": "Concrete Equal Sharing Demonstration",
           "description": "Have Aarav physically distribute 12 counters into 3 equal cups or circles.",
-          "durationMinutes": 5
+          "durationMinutes": 5,
+          "activityType": "hands_on",
+          "learningObjective": "Model equal distribution physically using concrete counters.",
+          "materials": [
+            "12 counting tokens",
+            "3 paper plates or bowls"
+          ],
+          "checkUnderstanding": "Observe whether student distributes one by one or recognizes groups of 4.",
+          "completed": false
         },
         {
           "stepNumber": 3,
           "title": "Guided Problem Solving",
           "description": "Solve 3 basic division problems together on paper with step-by-step reasoning.",
-          "durationMinutes": 4
+          "durationMinutes": 4,
+          "activityType": "guided_practice",
+          "learningObjective": "Bridge tactile manipulation to drawn pictorial grouping diagrams.",
+          "materials": [
+            "Notebook",
+            "Pencil",
+            "Circular grouping template"
+          ],
+          "checkUnderstanding": "Have student explain why 15 divided by 5 equals 3 circles of 5.",
+          "completed": false
         },
         {
           "stepNumber": 4,
           "title": "Targeted Practice Activity",
           "description": "Aarav independently solves division problems using visual grouping diagrams.",
-          "durationMinutes": 5
+          "durationMinutes": 5,
+          "activityType": "independent_practice",
+          "learningObjective": "Independently calculate single-digit division quotients without teacher prompting.",
+          "materials": [
+            "Division practice worksheet",
+            "Pencil and eraser"
+          ],
+          "checkUnderstanding": "Verify student correctly answers at least 4 out of 5 worksheet problems.",
+          "completed": false
         },
         {
           "stepNumber": 5,
           "title": "Reassessment Check",
           "description": "Quick 5-question parallel assessment to verify mastery retention.",
-          "durationMinutes": 2
+          "durationMinutes": 2,
+          "activityType": "check_for_understanding",
+          "learningObjective": "Demonstrate independent mastery on an exit ticket check.",
+          "materials": [
+            "Exit slip"
+          ],
+          "checkUnderstanding": "Ask student to solve 18 ÷ 3 and 16 ÷ 4 aloud with reasoning.",
+          "completed": false
         }
       ],
+      "completedStepsCount": 1,
+      "progressPercentage": 20,
       "practiceQuestionsSummary": "5 targeted equal sharing and visual grouping questions.",
       "reassessmentCriteria": "Student must achieve at least 80% on the reassessment assessment for Division Basics.",
       "teacherInstructions": "Use concrete objects first. Avoid abstract long division symbols until the concept of sharing is crystal clear.",
       "teacherNotes": "Aarav enjoys hands-on token activities. Plan approved for daily zero-period session.",
       "createdAt": "2026-09-25T08:30:00Z",
+      "updatedAt": "2026-09-25T08:30:00Z",
       "reviewDate": "2026-10-05T08:30:00Z"
     },
     {
       "id": "plan-meera-mult-01",
       "studentId": "std-meera",
       "studentName": "Meera Shah",
+      "studentCode": "GR03-005",
+      "classroomId": "cls-3a",
+      "grade": 3,
       "conceptId": "c-mult-01",
       "conceptName": "Multiplication Tables (2 to 9)",
       "subjectCode": "MATH",
+      "subjectName": "Mathematics",
+      "learningGapId": "gap-std-meera-c-mult-01",
+      "baselineScore": 50,
       "learningObjective": "Master instant recall for 6, 7, and 8 times tables.",
-      "recommendationReason": "Student scored 70% (Developing); core concepts grasped but recall speed needs practice.",
+      "recommendationReason": "Student scored 50% (Needs Support); recall speed and fact accuracy require systematic practice.",
       "status": "In Progress",
-      "estimatedMinutes": 15,
+      "estimatedMinutes": 18,
       "difficulty": "Intermediate",
       "requiredMaterials": [
-        "10x10 multiplication grid",
-        "Flashcard deck"
+        "10x10 multiplication grid chart",
+        "Flashcard deck for 6, 7, and 8 times tables",
+        "Grid graph paper"
       ],
       "steps": [
         {
           "stepNumber": 1,
           "title": "Grid Pattern Scan",
           "description": "Highlight symmetry across diagonals in the multiplication table.",
-          "durationMinutes": 3
+          "durationMinutes": 3,
+          "activityType": "discussion",
+          "learningObjective": "Identify skip counting sequences and numerical patterns on a multiplication grid.",
+          "materials": [
+            "10x10 multiplication grid chart"
+          ],
+          "checkUnderstanding": "Prompt the student to skip count aloud by 6s up to 36.",
+          "completed": true
         },
         {
           "stepNumber": 2,
-          "title": "Flashcard Challenge",
-          "description": "Practice rapid recall for 7x6, 8x7, and 9x6.",
-          "durationMinutes": 7
+          "title": "Array Visualization with Concrete Dots",
+          "description": "Draw rectangular arrays on grid paper to represent products (e.g., 3 rows of 4 dots).",
+          "durationMinutes": 4,
+          "activityType": "hands_on",
+          "learningObjective": "Understand multiplication geometrically as rows and columns.",
+          "materials": [
+            "Grid paper",
+            "Colored sketch pens"
+          ],
+          "checkUnderstanding": "Ask student to draw an array representing 4 × 5.",
+          "completed": true
         },
         {
           "stepNumber": 3,
-          "title": "Practice Worksheet",
-          "description": "Complete 10 timed questions.",
-          "durationMinutes": 5
+          "title": "Commutative Matching Drill",
+          "description": "Pair multiplication equations that share answers (e.g. 6×7 and 7×6 = 42).",
+          "durationMinutes": 4,
+          "activityType": "interactive_drill",
+          "learningObjective": "Apply the commutative property to halve memorization effort.",
+          "materials": [
+            "Equation matching cards"
+          ],
+          "checkUnderstanding": "Ask: If you know 8 × 7 = 56, what is 7 × 8?",
+          "completed": false
+        },
+        {
+          "stepNumber": 4,
+          "title": "Targeted Flashcard Recall Practice",
+          "description": "Rapid response flashcards focusing on frequently missed facts (7×8, 6×7, 8×6, 9×6).",
+          "durationMinutes": 4,
+          "activityType": "independent_practice",
+          "learningObjective": "Achieve fast, accurate recall of challenging multiplication facts.",
+          "materials": [
+            "Multiplication flashcards"
+          ],
+          "checkUnderstanding": "Record whether student answers within 4 seconds without finger counting.",
+          "completed": false
+        },
+        {
+          "stepNumber": 5,
+          "title": "Speed Exit Verification Check",
+          "description": "Quick 5-question check to verify fact fluency and retention.",
+          "durationMinutes": 3,
+          "activityType": "check_for_understanding",
+          "learningObjective": "Score >= 80% on timed single-digit multiplication prompts.",
+          "materials": [
+            "Short 5-question exit slip"
+          ],
+          "checkUnderstanding": "Student solves 5 random multiplication prompts under 90 seconds.",
+          "completed": false
         }
       ],
-      "reassessmentCriteria": "Score >= 85% on 10 quick multiplication facts.",
+      "completedStepsCount": 2,
+      "progressPercentage": 40,
+      "practiceQuestionsSummary": "5 targeted multiplication steps.",
+      "reassessmentCriteria": "Score >= 80% on 10 quick multiplication facts.",
       "teacherInstructions": "Reinforce commutative property (6x8 = 8x6).",
-      "createdAt": "2026-09-12T09:00:00Z"
+      "teacherNotes": "Meera is making good progress with array visualizations.",
+      "createdAt": "2026-09-12T09:00:00Z",
+      "updatedAt": "2026-09-15T10:00:00Z"
     }
   ],
   "activities": [
@@ -978,582 +1097,5 @@
       "createdAt": "2026-09-01T10:00:00Z"
     }
   ],
-  "attempts": [],
-  "parents": [
-    {
-      "id": "par-aarav",
-      "userId": "usr-par-01",
-      "name": "Rajeshbhai Patel",
-      "phone": "9876543210",
-      "email": "rajesh.patel@gmail.com",
-      "preferredLanguage": "gu",
-      "studentIds": [
-        "std-aarav"
-      ],
-      "relationship": "father"
-    },
-    {
-      "id": "par-diya",
-      "userId": "usr-par-02",
-      "name": "Meenaben Joshi",
-      "phone": "9876543211",
-      "email": "meena.joshi@gmail.com",
-      "preferredLanguage": "gu",
-      "studentIds": [
-        "std-diya"
-      ],
-      "relationship": "mother"
-    },
-    {
-      "id": "par-pooja",
-      "userId": "usr-par-03",
-      "name": "Suresh Sharma",
-      "phone": "9876543212",
-      "email": "suresh.sharma@gmail.com",
-      "preferredLanguage": "hi",
-      "studentIds": [
-        "std-pooja"
-      ],
-      "relationship": "father"
-    },
-    {
-      "id": "par-karan",
-      "userId": "usr-par-04",
-      "name": "Anitaben Mehta",
-      "phone": "9876543213",
-      "email": "anita.mehta@gmail.com",
-      "preferredLanguage": "en",
-      "studentIds": [
-        "std-karan"
-      ],
-      "relationship": "mother"
-    },
-    {
-      "id": "par-dev",
-      "userId": "usr-par-05",
-      "name": "Pareshbhai Solanki",
-      "phone": "9876543214",
-      "email": "paresh.solanki@gmail.com",
-      "preferredLanguage": "gu",
-      "studentIds": [
-        "std-dev"
-      ],
-      "relationship": "father"
-    }
-  ],
-  "notices": [
-    {
-      "title": "Annual Sports Day Registration",
-      "originalContent": "All students must submit their event preferences for the Annual Sports Day before Nov 5.",
-      "simplifiedContent": "All students must submit their event preferences for the Annual Sports Day before Nov 5.",
-      "originalLanguage": "en",
-      "readingLevel": "simple",
-      "category": "event",
-      "targetAudience": "class",
-      "targetClassGrade": 5,
-      "targetSection": "A",
-      "urgency": "important",
-      "senderTeacherId": "tea-001",
-      "senderTeacherName": "Head Teacher",
-      "status": "sent",
-      "requiresAcknowledgment": true,
-      "id": "not-1793185694319",
-      "createdAt": "2026-10-28T11:08:14.319Z",
-      "updatedAt": "2026-10-28T11:08:14.337Z",
-      "sentAt": "2026-10-28T11:08:14.336Z"
-    },
-    {
-      "id": "not-01",
-      "schoolId": "sch-gn-01",
-      "title": "Quarterly Parent-Teacher Meeting (PTM) & Formative Report Distribution",
-      "originalContent": "It is hereby notified to all respected parents and guardians of Class 3, 4, and 5 that the Quarterly Parent-Teacher Meeting is scheduled on Saturday, October 25, 2026, between 10:00 AM and 1:00 PM. Parents are requested to bring their ward's student handbook to review remedial progress and sign the internal assessment docket.",
-      "originalLanguage": "en",
-      "simplifiedContent": "Quarterly Parent-Teacher Meeting is this Saturday, Oct 25, from 10:00 AM to 1:00 PM. Please come to meet the teachers and bring your child's handbook to check their progress.",
-      "readingLevel": "simple",
-      "category": "ptm",
-      "targetAudience": "all",
-      "authorId": "usr-teach-01",
-      "authorName": "Hitesh Trivedi (Lead Teacher)",
-      "status": "sent",
-      "isApprovedByTeacher": true,
-      "approvedAt": "2026-10-18T09:30:00Z",
-      "createdAt": "2026-10-18T09:00:00Z",
-      "updatedAt": "2026-10-18T09:30:00Z",
-      "sentAt": "2026-10-18T10:00:00Z"
-    },
-    {
-      "id": "not-02",
-      "schoolId": "sch-gn-01",
-      "title": "Annual Sports Day Uniform & Morning Arrival Guidelines",
-      "originalContent": "All enrolled students must report to the school sports ground in designated white sports tracksuits and canvas shoes before 7:45 AM tomorrow. Packed dry snacks and labeled water bottles are mandatory. Late entry post commencement of the march-past will strictly not be permitted.",
-      "originalLanguage": "en",
-      "simplifiedContent": "Tomorrow is Sports Day! Please send your child in their white sports uniform by 7:45 AM. Also send a water bottle with their name on it and light snacks. Gates close at 8:00 AM.",
-      "readingLevel": "simple",
-      "category": "announcement",
-      "targetAudience": "all",
-      "authorId": "usr-teach-01",
-      "authorName": "Hitesh Trivedi (Lead Teacher)",
-      "status": "sent",
-      "isApprovedByTeacher": true,
-      "approvedAt": "2026-10-19T14:00:00Z",
-      "createdAt": "2026-10-19T13:45:00Z",
-      "updatedAt": "2026-10-19T14:00:00Z",
-      "sentAt": "2026-10-19T14:15:00Z"
-    },
-    {
-      "id": "not-03",
-      "schoolId": "sch-gn-01",
-      "title": "Grade 4 Mathematics Remedial Workshop for Division & Regrouping",
-      "originalContent": "To assist learners requiring foundational support in division and arithmetic regrouping, a specialized 5-step concrete manipulative workshop using counter beads and fractional discs will be held daily from 3:15 PM to 4:00 PM starting Monday.",
-      "originalLanguage": "en",
-      "simplifiedContent": "Starting Monday, we are holding a free 45-minute math activity after school (3:15 PM to 4:00 PM) to help Class 4 students learn division with fun counter beads.",
-      "readingLevel": "simple",
-      "category": "homework",
-      "targetAudience": "class",
-      "targetClassGrade": 4,
-      "targetClassSection": "A",
-      "authorId": "usr-teach-01",
-      "authorName": "Hitesh Trivedi (Lead Teacher)",
-      "status": "sent",
-      "isApprovedByTeacher": true,
-      "approvedAt": "2026-10-20T11:00:00Z",
-      "createdAt": "2026-10-20T10:30:00Z",
-      "updatedAt": "2026-10-20T11:00:00Z",
-      "sentAt": "2026-10-20T11:30:00Z"
-    }
-  ],
-  "translations": [
-    {
-      "id": "tr-01-gu",
-      "noticeId": "not-01",
-      "language": "gu",
-      "translatedTitle": "ત્રિમાસિક વાલી-શિક્ષક બેઠક (PTM) અને પ્રગતિ પત્રક વિતરણ",
-      "translatedContent": "ત્રિમાસિક વાલી-શિક્ષક બેઠક આ શનિવારે, ૨૫ ઓક્ટોબરના રોજ સવારે ૧૦:૦૦ થી બપોરે ૧:૦૦ વાગ્યા સુધી યોજાશે. કૃપા કરીને શિક્ષકોને મળવા આવો અને તમારા બાળકની પ્રગતિ જાણવા માટે વિદ્યાર્થી પુસ્તિકા સાથે લાવો.",
-      "isApproved": true,
-      "isTeacherEdited": false,
-      "providerUsed": "gemini",
-      "updatedAt": "2026-10-18T09:35:00Z"
-    },
-    {
-      "id": "tr-01-hi",
-      "noticeId": "not-01",
-      "language": "hi",
-      "translatedTitle": "त्रैमासिक अभिभावक-शिक्षक बैठक (PTM) एवं प्रगति पत्रक वितरण",
-      "translatedContent": "त्रैमासिक अभिभावक-शिक्षक बैठक इस शनिवार, 25 अक्टूबर को सुबह 10:00 से दोपहर 1:00 बजे तक आयोजित की जाएगी। कृपया शिक्षकों से मिलने आएं और अपने बच्चे की प्रगति जानने के लिए विद्यार्थी पुस्तिका साथ लाएं।",
-      "isApproved": true,
-      "isTeacherEdited": false,
-      "providerUsed": "gemini",
-      "updatedAt": "2026-10-18T09:36:00Z"
-    },
-    {
-      "id": "tr-02-gu",
-      "noticeId": "not-02",
-      "language": "gu",
-      "translatedTitle": "વાર્ષિક રમોત્સવ દિવસ ગણવેશ અને સવારના આગમનની માર્ગદર્શિકા",
-      "translatedContent": "આવતીકાલે વાર્ષિક રમોત્સવ છે! કૃપા કરીને તમારા બાળકને સવારે ૭:૪૫ વાગ્યા સુધીમાં સફેદ રમતગમતના ગણવેશમાં મોકલો. સાથે નામ લખેલી પાણીની બોટલ અને નાસ્તો મોકલવો. સવારે ૮:૦૦ વાગ્યે દરવાજા બંધ થશે.",
-      "isApproved": true,
-      "isTeacherEdited": false,
-      "providerUsed": "gemini",
-      "updatedAt": "2026-10-19T14:05:00Z"
-    },
-    {
-      "id": "tr-02-hi",
-      "noticeId": "not-02",
-      "language": "hi",
-      "translatedTitle": "वार्षिक खेल दिवस गणवेश एवं सुबह आगमन दिशा-निर्देश",
-      "translatedContent": "कल वार्षिक खेल दिवस है! कृपया अपने बच्चे को सुबह 7:45 बजे तक सफेद खेल गणवेश में भेजें। साथ ही नाम लिखी पानी की बोतल और हल्का नाश्ता भेजें। सुबह 8:00 बजे मुख्य द्वार बंद हो जाएगा।",
-      "isApproved": true,
-      "isTeacherEdited": false,
-      "providerUsed": "gemini",
-      "updatedAt": "2026-10-19T14:06:00Z"
-    },
-    {
-      "id": "tr-03-gu",
-      "noticeId": "not-03",
-      "language": "gu",
-      "translatedTitle": "ધોરણ ૪ ગણિત ઉપચારાત્મક વર્કશોપ (ભાગાકાર સમજૂતી)",
-      "translatedContent": "સોમવારથી શરૂ કરીને, ધોરણ ૪ ના વિદ્યાર્થીઓને કાંકરા અને મણકાની મદદથી રમતા રમતા ભાગાકાર શીખવવા માટે શાળા પછી ૪૫ મિનિટનો નિઃશુલ્ક વર્ગ (બપોરે ૩:૧૫ થી ૪:૦૦) રાખવામાં આવ્યો છે.",
-      "isApproved": true,
-      "isTeacherEdited": false,
-      "providerUsed": "gemini",
-      "updatedAt": "2026-10-20T11:05:00Z"
-    },
-    {
-      "noticeId": "not-1793185694319",
-      "language": "gu",
-      "translatedTitle": "Annual Sports Day Registration",
-      "translatedContent": "All students must submit their event preferences for the Annual રમતગમત દિવસ before Nov 5.",
-      "provider": "offline_fallback",
-      "isApprovedByTeacher": false,
-      "id": "tr-1793185694323-gu",
-      "updatedAt": "2026-10-28T11:08:14.323Z"
-    },
-    {
-      "noticeId": "not-1793185694319",
-      "language": "hi",
-      "translatedTitle": "Annual Sports Day Registration",
-      "translatedContent": "All students must submit their event preferences for the Annual Sports Day before Nov 5.",
-      "provider": "offline_fallback",
-      "isApprovedByTeacher": false,
-      "id": "tr-1793185694327-hi",
-      "updatedAt": "2026-10-28T11:08:14.327Z"
-    }
-  ],
-  "deliveries": [
-    {
-      "id": "del-01",
-      "noticeId": "not-01",
-      "parentId": "par-aarav",
-      "parentName": "Rajeshbhai Patel",
-      "studentId": "std-aarav",
-      "studentName": "Aarav Patel",
-      "studentGrade": 4,
-      "studentSection": "A",
-      "language": "gu",
-      "channel": "whatsapp",
-      "status": "acknowledged",
-      "sentAt": "2026-10-18T10:00:00Z",
-      "deliveredAt": "2026-10-18T10:01:00Z",
-      "readAt": "2026-10-18T10:14:00Z",
-      "acknowledgedAt": "2026-10-18T10:15:00Z",
-      "parentFeedback": "અમે ચોક્કસ શનિવારે ૧૦:૩૦ વાગ્યે ઉપસ્થિત રહીશું."
-    },
-    {
-      "id": "del-02",
-      "noticeId": "not-01",
-      "parentId": "par-diya",
-      "parentName": "Meenaben Joshi",
-      "studentId": "std-diya",
-      "studentName": "Diya Joshi",
-      "studentGrade": 4,
-      "studentSection": "A",
-      "language": "gu",
-      "channel": "whatsapp",
-      "status": "read",
-      "sentAt": "2026-10-18T10:00:00Z",
-      "deliveredAt": "2026-10-18T10:01:00Z",
-      "readAt": "2026-10-18T11:20:00Z"
-    },
-    {
-      "id": "del-03",
-      "noticeId": "not-01",
-      "parentId": "par-pooja",
-      "parentName": "Suresh Sharma",
-      "studentId": "std-pooja",
-      "studentName": "Pooja Sharma",
-      "studentGrade": 3,
-      "studentSection": "A",
-      "language": "hi",
-      "channel": "sms",
-      "status": "acknowledged",
-      "sentAt": "2026-10-18T10:00:00Z",
-      "deliveredAt": "2026-10-18T10:02:00Z",
-      "readAt": "2026-10-18T12:05:00Z",
-      "acknowledgedAt": "2026-10-18T12:06:00Z",
-      "parentFeedback": "नोटिस मिल गया है, हम उपस्थित रहेंगे।"
-    },
-    {
-      "id": "del-04",
-      "noticeId": "not-01",
-      "parentId": "par-karan",
-      "parentName": "Anitaben Mehta",
-      "studentId": "std-karan",
-      "studentName": "Karan Mehta",
-      "studentGrade": 5,
-      "studentSection": "A",
-      "language": "en",
-      "channel": "app",
-      "status": "delivered",
-      "sentAt": "2026-10-18T10:00:00Z",
-      "deliveredAt": "2026-10-18T10:00:45Z"
-    },
-    {
-      "id": "del-05",
-      "noticeId": "not-03",
-      "parentId": "par-aarav",
-      "parentName": "Rajeshbhai Patel",
-      "studentId": "std-aarav",
-      "studentName": "Aarav Patel",
-      "studentGrade": 4,
-      "studentSection": "A",
-      "language": "gu",
-      "channel": "whatsapp",
-      "status": "acknowledged",
-      "sentAt": "2026-10-20T11:30:00Z",
-      "deliveredAt": "2026-10-20T11:31:00Z",
-      "readAt": "2026-10-20T11:45:00Z",
-      "acknowledgedAt": "2026-10-20T11:46:00Z",
-      "parentFeedback": "આરવ સોમવારથી ૩:૧૫ વાગ્યે રોકાશે, આભાર."
-    },
-    {
-      "id": "del-1793185694330-std-yash",
-      "noticeId": "not-1793185694319",
-      "parentId": "par-gen-std-yash",
-      "parentName": "Parent of Yash Trivedi",
-      "studentId": "std-yash",
-      "studentName": "Yash Trivedi",
-      "studentGrade": 5,
-      "studentSection": "A",
-      "language": "gu",
-      "channel": "whatsapp",
-      "status": "acknowledged",
-      "sentAt": "2026-10-28T11:08:14.330Z",
-      "deliveredAt": "2026-10-28T11:08:14.330Z",
-      "readAt": "2026-10-28T11:08:14.342Z",
-      "acknowledgedAt": "2026-10-28T11:08:14.342Z",
-      "parentFeedback": "Received and confirmed."
-    },
-    {
-      "id": "del-1793185694330-std-tanvi",
-      "noticeId": "not-1793185694319",
-      "parentId": "par-gen-std-tanvi",
-      "parentName": "Parent of Tanvi Dave",
-      "studentId": "std-tanvi",
-      "studentName": "Tanvi Dave",
-      "studentGrade": 5,
-      "studentSection": "A",
-      "language": "gu",
-      "channel": "whatsapp",
-      "status": "delivered",
-      "sentAt": "2026-10-28T11:08:14.330Z",
-      "deliveredAt": "2026-10-28T11:08:14.330Z"
-    },
-    {
-      "id": "del-1793185694331-std-rohan",
-      "noticeId": "not-1793185694319",
-      "parentId": "par-gen-std-rohan",
-      "parentName": "Parent of Rohan Prajapati",
-      "studentId": "std-rohan",
-      "studentName": "Rohan Prajapati",
-      "studentGrade": 5,
-      "studentSection": "A",
-      "language": "gu",
-      "channel": "whatsapp",
-      "status": "delivered",
-      "sentAt": "2026-10-28T11:08:14.330Z",
-      "deliveredAt": "2026-10-28T11:08:14.330Z"
-    },
-    {
-      "id": "del-1793185694331-std-kavya",
-      "noticeId": "not-1793185694319",
-      "parentId": "par-gen-std-kavya",
-      "parentName": "Parent of Kavya Rathod",
-      "studentId": "std-kavya",
-      "studentName": "Kavya Rathod",
-      "studentGrade": 5,
-      "studentSection": "A",
-      "language": "gu",
-      "channel": "whatsapp",
-      "status": "delivered",
-      "sentAt": "2026-10-28T11:08:14.330Z",
-      "deliveredAt": "2026-10-28T11:08:14.330Z"
-    }
-  ],
-  "aiMetrics": [
-    {
-      "id": "metric-1793185694325-zp30",
-      "task": "translation",
-      "provider": "offline_fallback",
-      "model": "deterministic_pedagogical_rule_engine",
-      "tokensPrompt": 22,
-      "tokensCompletion": 22,
-      "latencyMs": 1,
-      "success": true,
-      "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T11:08:14.325Z"
-    },
-    {
-      "id": "metric-1793185694321-nihp",
-      "task": "translation",
-      "provider": "offline_fallback",
-      "model": "deterministic_pedagogical_rule_engine",
-      "tokensPrompt": 22,
-      "tokensCompletion": 45,
-      "latencyMs": 1,
-      "success": true,
-      "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T11:08:14.321Z"
-    },
-    {
-      "id": "metric-1793185694317-rlv1",
-      "task": "simplification",
-      "provider": "offline_fallback",
-      "model": "deterministic_pedagogical_rule_engine",
-      "tokensPrompt": 22,
-      "tokensCompletion": 22,
-      "latencyMs": 1,
-      "success": true,
-      "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T11:08:14.317Z"
-    },
-    {
-      "id": "metric-1793185694313-h3yr",
-      "task": "assistant",
-      "provider": "offline_fallback",
-      "model": "deterministic_pedagogical_rule_engine",
-      "tokensPrompt": 0,
-      "tokensCompletion": 0,
-      "latencyMs": 1,
-      "success": true,
-      "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T11:08:14.313Z"
-    },
-    {
-      "id": "metric-1793185694309-wo05",
-      "task": "assistant",
-      "provider": "offline_fallback",
-      "model": "deterministic_pedagogical_rule_engine",
-      "tokensPrompt": 0,
-      "tokensCompletion": 0,
-      "latencyMs": 1,
-      "success": true,
-      "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T11:08:14.309Z"
-    },
-    {
-      "id": "metric-1793185694305-1lyd",
-      "task": "text_to_speech",
-      "provider": "offline_fallback",
-      "model": "deterministic_local_synthesizer",
-      "tokensPrompt": 0,
-      "tokensCompletion": 0,
-      "latencyMs": 0,
-      "success": true,
-      "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T11:08:14.305Z"
-    },
-    {
-      "id": "metric-1793185694301-7fm8",
-      "task": "translation",
-      "provider": "offline_fallback",
-      "model": "deterministic_pedagogical_rule_engine",
-      "tokensPrompt": 32,
-      "tokensCompletion": 32,
-      "latencyMs": 1,
-      "success": true,
-      "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T11:08:14.301Z"
-    },
-    {
-      "id": "metric-1793185694299-sz8h",
-      "task": "translation",
-      "provider": "offline_fallback",
-      "model": "deterministic_pedagogical_rule_engine",
-      "tokensPrompt": 14,
-      "tokensCompletion": 14,
-      "latencyMs": 1,
-      "success": true,
-      "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T11:08:14.299Z"
-    },
-    {
-      "id": "metric-1793185694296-jwih",
-      "task": "translation",
-      "provider": "offline_fallback",
-      "model": "deterministic_pedagogical_rule_engine",
-      "tokensPrompt": 14,
-      "tokensCompletion": 14,
-      "latencyMs": 1,
-      "success": true,
-      "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T11:08:14.296Z"
-    },
-    {
-      "id": "metric-1793185694291-9n6v",
-      "task": "simplification",
-      "provider": "offline_fallback",
-      "model": "deterministic_pedagogical_rule_engine",
-      "tokensPrompt": 16,
-      "tokensCompletion": 16,
-      "latencyMs": 1,
-      "success": true,
-      "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T11:08:14.291Z"
-    },
-    {
-      "id": "metric-1793185694288-7j5n",
-      "task": "simplification",
-      "provider": "offline_fallback",
-      "model": "deterministic_pedagogical_rule_engine",
-      "tokensPrompt": 16,
-      "tokensCompletion": 16,
-      "latencyMs": 1,
-      "success": true,
-      "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T11:08:14.288Z"
-    },
-    {
-      "id": "metric-1793185694286-xgn5",
-      "task": "simplification",
-      "provider": "offline_fallback",
-      "model": "deterministic_pedagogical_rule_engine",
-      "tokensPrompt": 16,
-      "tokensCompletion": 16,
-      "latencyMs": 1,
-      "success": true,
-      "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T11:08:14.286Z"
-    },
-    {
-      "id": "metric-1793185694280-fizi",
-      "task": "simplification",
-      "provider": "offline_fallback",
-      "model": "deterministic_pedagogical_rule_engine",
-      "tokensPrompt": 37,
-      "tokensCompletion": 35,
-      "latencyMs": 1,
-      "success": true,
-      "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T11:08:14.280Z"
-    }
-  ],
-  "aiConfigs": [
-    {
-      "task": "chat",
-      "primaryProvider": "gemini",
-      "fallbackProvider": "openai",
-      "primaryModel": "gemini-3.5-flash-lite",
-      "fallbackModel": "gpt-4o-mini",
-      "enabled": true
-    },
-    {
-      "task": "simplification",
-      "primaryProvider": "offline_fallback",
-      "fallbackProvider": "offline_fallback",
-      "enabled": true
-    },
-    {
-      "task": "translation",
-      "primaryProvider": "gemini",
-      "fallbackProvider": "offline_fallback",
-      "primaryModel": "gemini-3.5-flash-lite",
-      "fallbackModel": "deterministic_pedagogical_rule_engine",
-      "enabled": true
-    },
-    {
-      "task": "speech_to_text",
-      "primaryProvider": "gemini",
-      "fallbackProvider": "offline_fallback",
-      "primaryModel": "gemini-3.5-flash-lite",
-      "fallbackModel": "deterministic_pedagogical_rule_engine",
-      "enabled": true
-    },
-    {
-      "task": "text_to_speech",
-      "primaryProvider": "openai",
-      "fallbackProvider": "bhashini",
-      "primaryModel": "tts-1",
-      "fallbackModel": "bhashini-tts",
-      "enabled": true
-    },
-    {
-      "task": "assistant",
-      "primaryProvider": "gemini",
-      "fallbackProvider": "offline_fallback",
-      "primaryModel": "gemini-3.5-flash-lite",
-      "fallbackModel": "deterministic_pedagogical_rule_engine",
-      "enabled": true
-    }
-  ],
-  "feedback": []
+  "attempts": []
 }

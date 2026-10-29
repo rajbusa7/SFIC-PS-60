@@ -15,19 +15,19 @@ export function Card({
 }: CardProps) {
   const variantStyles = {
     glass:
-      "bg-white/95 dark:bg-[#26201C]/95 backdrop-blur-md border border-[#49352F]/10 dark:border-[#F2CAB3]/15 text-[#49352F] dark:text-[#F4F1E1] shadow-[0_8px_24px_rgba(73,53,47,0.06)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.35)] rounded-[24px]",
+      "bg-white/85 dark:bg-[#14123D]/75 backdrop-blur-md border border-slate-200/70 dark:border-indigo-500/20 shadow-lg shadow-indigo-950/5 dark:shadow-black/30",
     solid:
-      "bg-white dark:bg-[#26201C] border border-[#49352F]/10 dark:border-[#F2CAB3]/15 text-[#49352F] dark:text-[#F4F1E1] shadow-xs rounded-[24px]",
+      "bg-white dark:bg-[#14123D] border border-slate-200 dark:border-indigo-900/50 shadow-md",
     interactive:
-      "bg-white/95 dark:bg-[#26201C]/95 border border-[#49352F]/10 dark:border-[#F2CAB3]/15 text-[#49352F] dark:text-[#F4F1E1] shadow-xs hover:shadow-md hover:-translate-y-1 hover:border-[#F2CAB3] dark:hover:border-[#F2CAB3] transition-all duration-200 cursor-pointer rounded-[24px]",
+      "bg-white/90 dark:bg-[#14123D]/80 backdrop-blur-md border border-slate-200/80 dark:border-indigo-500/20 shadow-md hover:shadow-xl hover:-translate-y-1 hover:border-[#FF8A3D]/40 transition-all duration-200 cursor-pointer",
   };
 
   return (
     <div
       className={cn(
-        "p-5 text-[#49352F] dark:text-[#F4F1E1]",
+        "rounded-2xl p-5 text-slate-900 dark:text-slate-100",
         variantStyles[variant],
-        glow && "ring-1 ring-[#F2CAB3] shadow-md shadow-[#F2CAB3]/25",
+        glow && "ring-1 ring-[#FF8A3D]/30 shadow-lg shadow-[#FF8A3D]/10",
         className
       )}
       {...props}
@@ -45,7 +45,7 @@ export function CardHeader({
   return (
     <div
       className={cn(
-        "flex items-center justify-between border-b border-[#49352F]/10 dark:border-[#F2CAB3]/15 pb-4 mb-4",
+        "flex items-center justify-between border-b border-slate-100/80 dark:border-indigo-500/15 pb-4 mb-4",
         className
       )}
       {...props}
@@ -63,7 +63,7 @@ export function CardTitle({
   return (
     <h3
       className={cn(
-        "text-base sm:text-lg font-bold text-[#49352F] dark:text-[#F4F1E1] tracking-tight font-heading",
+        "text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight font-heading",
         className
       )}
       {...props}
@@ -80,7 +80,7 @@ export function CardDescription({
 }: React.HTMLAttributes<HTMLParagraphElement>) {
   return (
     <p
-      className={cn("text-xs text-[#7A6862] dark:text-[#FAF6E9]/70 mt-0.5", className)}
+      className={cn("text-xs text-slate-500 dark:text-slate-400 mt-0.5", className)}
       {...props}
     >
       {children}

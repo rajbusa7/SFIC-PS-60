@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
-import { broadcastDataUpdate } from "@/lib/events";
 import {
   Sparkles,
   GraduationCap,
@@ -24,11 +23,6 @@ import {
   ChevronDown,
   ChevronUp,
   ShieldCheck,
-  Lightbulb,
-  Clock,
-  Package,
-  Info,
-  MessageSquare,
 } from "lucide-react";
 
 export type AiTab = "tutor" | "analyzer" | "remedial" | "worksheet" | "assistant";
@@ -307,8 +301,6 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
       });
       const data = await res.json();
       if (data.success) {
-        broadcastDataUpdate("plans", "create", data.plan?.id);
-        broadcastDataUpdate("gaps", "update");
         setRemSaveStatus("saved");
         setTimeout(() => setRemSaveStatus(null), 4000);
       } else {
@@ -388,8 +380,8 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
       role: "assistant",
       content:
         language === "gu"
-          ? "નમસ્તે! હું StudySaathi પ્રાથમિક શિક્ષક સહાયક છું. હું આપને પાયાની સંકલ્પનાઓ શીખવવામાં, ઉપચારાત્મક પ્રવૃત્તિઓ ગોઠવવામાં અને વર્ગખંડના શિક્ષણ ત્રુટિ ડેટાનું વિશ્લેષણ કરવામાં મદદ કરી શકું છું. આપ શું પૂછવા માંગો છો?"
-          : "Hello! I am your StudySaathi Primary Teacher AI Assistant. I can help you with foundational FLN concepts, manipulative-based remedial plans, worksheet ideas, or summarizing your classroom's latest assessment gaps. How can I support your teaching today?",
+          ? "નમસ્તે! હું શિક્ષાસેતુ પ્રાથમિક શિક્ષક સહાયક છું. હું આપને પાયાની સંકલ્પનાઓ શીખવવામાં, ઉપચારાત્મક પ્રવૃત્તિઓ ગોઠવવામાં અને વર્ગખંડના શિક્ષણ ત્રુટિ ડેટાનું વિશ્લેષણ કરવામાં મદદ કરી શકું છું. આપ શું પૂછવા માંગો છો?"
+          : "Hello! I am your ShikshaSetu Primary Teacher AI Assistant. I can help you with foundational FLN concepts, manipulative-based remedial plans, worksheet ideas, or summarizing your classroom's latest assessment gaps. How can I support your teaching today?",
     },
   ]);
   const [assistantLoading, setAssistantLoading] = useState(false);
@@ -449,22 +441,24 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
 
   return (
     <div className="space-y-6">
-      {/* Top Header: ShikshaSetu AI Workspace Branding with Warm Cream & Peach Styling */}
-      <div className="rounded-3xl border border-[#49352F]/15 bg-gradient-to-r from-[#F2DCB5]/90 via-[#FAF6E9] to-[#F2CAB3]/80 p-6 shadow-[0_8px_24px_rgba(73,53,47,0.06)] text-[#49352F] relative overflow-hidden">
+      {/* Top Header: ShikshaSetu AI Workspace Branding with Dark & Cyan Styling */}
+      <div className="rounded-3xl border border-cyan-500/20 bg-gradient-to-r from-[#060a14] via-[#091122] to-[#060a14] p-6 shadow-xl text-white relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
+
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
           <div>
             <div className="flex items-center gap-2">
-              <span className="p-2 rounded-xl bg-white border border-[#49352F]/15 text-[#B26A1B] shadow-xs">
+              <span className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-400/30 text-cyan-400">
                 <Sparkles className="w-5 h-5 animate-pulse" />
               </span>
-              <span className="text-xs font-mono font-bold uppercase tracking-[0.2em] text-[#B26A1B]">
-                StudySaathi AI Intelligence Hub
+              <span className="text-xs font-mono font-bold uppercase tracking-[0.2em] text-cyan-400">
+                ShikshaSetu AI Intelligence Hub
               </span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight mt-2 text-[#49352F]">
-              {language === "gu" ? "StudySaathi ઇન્ટરેક્ટિવ AI વર્કસ્પેસ" : "Functional AI Workspace"}
+            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight mt-2 text-white">
+              {language === "gu" ? "શિક્ષાસેતુ ઇન્ટરેક્ટિવ AI વર્કસ્પેસ" : "Functional AI Workspace"}
             </h2>
-            <p className="text-xs sm:text-sm text-[#7A6862] mt-1 max-w-2xl leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl leading-relaxed">
               {language === "gu"
                 ? "વાસ્તવિક શૈક્ષણિક AI ક્ષમતાઓ: શિક્ષા ટ્યુટર, ત્રુટિ વિશ્લેષક, ઉપચાર યોજના જનરેટર અને સ્માર્ટ વર્કશીટ નિર્માતા."
                 : "Fully functional pedagogical AI capabilities: AI Tutor, Learning-Gap Analyzer, Remedial Plan Generator, Worksheet Creator, and Teacher Assistant."}
@@ -476,8 +470,8 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
             <div
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold backdrop-blur-md ${
                 aiStatus.isLive
-                  ? "bg-[#2E7D5E]/15 border-[#2E7D5E]/30 text-[#2E7D5E]"
-                  : "bg-white border-[#49352F]/15 text-[#49352F]"
+                  ? "bg-emerald-950/60 border-emerald-500/40 text-emerald-300"
+                  : "bg-amber-950/60 border-amber-500/40 text-amber-300"
               }`}
               title={
                 aiStatus.isLive
@@ -487,7 +481,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
             >
               <span
                 className={`w-2 h-2 rounded-full ${
-                  aiStatus.isLive ? "bg-[#2E7D5E] animate-ping" : "bg-[#B26A1B]"
+                  aiStatus.isLive ? "bg-emerald-400 animate-ping" : "bg-amber-400"
                 }`}
               />
               <span>
@@ -497,14 +491,14 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
               </span>
             </div>
 
-            <div className="flex items-center rounded-xl bg-white border border-[#49352F]/15 p-1 text-xs shadow-xs">
+            <div className="flex items-center rounded-xl bg-[#0b1329] border border-cyan-500/30 p-1 text-xs">
               <button
                 type="button"
                 onClick={() => setLanguage("en")}
                 className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
                   language === "en"
-                    ? "bg-[#F2CAB3] text-[#49352F] shadow-xs border border-[#49352F]/15"
-                    : "text-[#7A6862] hover:text-[#49352F]"
+                    ? "bg-cyan-500 text-black shadow-xs"
+                    : "text-slate-400 hover:text-white"
                 }`}
               >
                 English
@@ -514,8 +508,8 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                 onClick={() => setLanguage("gu")}
                 className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
                   language === "gu"
-                    ? "bg-[#F2CAB3] text-[#49352F] shadow-xs border border-[#49352F]/15"
-                    : "text-[#7A6862] hover:text-[#49352F]"
+                    ? "bg-cyan-500 text-black shadow-xs"
+                    : "text-slate-400 hover:text-white"
                 }`}
               >
                 ગુજરાતી
@@ -525,18 +519,18 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
         </div>
 
         {/* 5 Navigation Tabs */}
-        <div className="mt-6 flex flex-wrap gap-2 border-t border-[#49352F]/10 pt-4">
+        <div className="mt-6 flex flex-wrap gap-2 border-t border-cyan-500/15 pt-4">
           <button
             type="button"
             onClick={() => setActiveTab("tutor")}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTab === "tutor"
-                ? "bg-[#F2CAB3] text-[#49352F] shadow-xs border border-[#49352F]/15"
-                : "bg-white/80 text-[#7A6862] hover:bg-white hover:text-[#49352F] border border-[#49352F]/10"
+                ? "bg-cyan-500 text-black shadow-md shadow-cyan-500/20"
+                : "bg-[#0b1329]/80 text-slate-300 hover:bg-[#121c38] hover:text-white border border-slate-700/50"
             }`}
           >
-            <GraduationCap className="w-4 h-4 text-[#B26A1B]" />
-            <span>{language === "gu" ? "૧. AI ટ્યુટર" : "1. AI Tutor"}</span>
+            <GraduationCap className="w-4 h-4" />
+            <span>1. AI Tutor</span>
           </button>
 
           <button
@@ -544,12 +538,12 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
             onClick={() => setActiveTab("analyzer")}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTab === "analyzer"
-                ? "bg-[#F2CAB3] text-[#49352F] shadow-xs border border-[#49352F]/15"
-                : "bg-white/80 text-[#7A6862] hover:bg-white hover:text-[#49352F] border border-[#49352F]/10"
+                ? "bg-cyan-500 text-black shadow-md shadow-cyan-500/20"
+                : "bg-[#0b1329]/80 text-slate-300 hover:bg-[#121c38] hover:text-white border border-slate-700/50"
             }`}
           >
-            <AlertTriangle className="w-4 h-4 text-[#C54738]" />
-            <span>{language === "gu" ? "૨. અધ્યયન ત્રુટિ વિશ્લેષક" : "2. Learning-Gap Analyzer"}</span>
+            <AlertTriangle className="w-4 h-4" />
+            <span>2. Learning-Gap Analyzer</span>
           </button>
 
           <button
@@ -557,12 +551,12 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
             onClick={() => setActiveTab("remedial")}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTab === "remedial"
-                ? "bg-[#F2CAB3] text-[#49352F] shadow-xs border border-[#49352F]/15"
-                : "bg-white/80 text-[#7A6862] hover:bg-white hover:text-[#49352F] border border-[#49352F]/10"
+                ? "bg-cyan-500 text-black shadow-md shadow-cyan-500/20"
+                : "bg-[#0b1329]/80 text-slate-300 hover:bg-[#121c38] hover:text-white border border-slate-700/50"
             }`}
           >
-            <ClipboardList className="w-4 h-4 text-[#2E7D5E]" />
-            <span>{language === "gu" ? "૩. ઉપચાર યોજના નિર્માતા" : "3. Remedial Plan Generator"}</span>
+            <ClipboardList className="w-4 h-4" />
+            <span>3. Remedial Plan Generator</span>
           </button>
 
           <button
@@ -570,12 +564,12 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
             onClick={() => setActiveTab("worksheet")}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTab === "worksheet"
-                ? "bg-[#F2CAB3] text-[#49352F] shadow-xs border border-[#49352F]/15"
-                : "bg-white/80 text-[#7A6862] hover:bg-white hover:text-[#49352F] border border-[#49352F]/10"
+                ? "bg-cyan-500 text-black shadow-md shadow-cyan-500/20"
+                : "bg-[#0b1329]/80 text-slate-300 hover:bg-[#121c38] hover:text-white border border-slate-700/50"
             }`}
           >
-            <FileSpreadsheet className="w-4 h-4 text-[#B26A1B]" />
-            <span>{language === "gu" ? "૪. વર્કશીટ નિર્માતા" : "4. Worksheet Generator"}</span>
+            <FileSpreadsheet className="w-4 h-4" />
+            <span>4. Worksheet Generator</span>
           </button>
 
           <button
@@ -583,12 +577,12 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
             onClick={() => setActiveTab("assistant")}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTab === "assistant"
-                ? "bg-[#F2CAB3] text-[#49352F] shadow-xs border border-[#49352F]/15"
-                : "bg-white/80 text-[#7A6862] hover:bg-white hover:text-[#49352F] border border-[#49352F]/10"
+                ? "bg-cyan-500 text-black shadow-md shadow-cyan-500/20"
+                : "bg-[#0b1329]/80 text-slate-300 hover:bg-[#121c38] hover:text-white border border-slate-700/50"
             }`}
           >
-            <Bot className="w-4 h-4 text-[#2E7D5E]" />
-            <span>{language === "gu" ? "૫. શિક્ષક સહાયક" : "5. Teacher Assistant"}</span>
+            <Bot className="w-4 h-4" />
+            <span>5. Teacher Assistant</span>
           </button>
         </div>
       </div>
@@ -656,10 +650,9 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                       setTutorQuery(chip);
                       handleTutorSubmit(undefined, chip);
                     }}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 text-xs text-slate-700 text-left transition-colors cursor-pointer"
+                    className="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 text-xs text-slate-700 text-left transition-colors cursor-pointer"
                   >
-                    <Lightbulb className="w-3.5 h-3.5 text-amber-500 shrink-0" aria-hidden="true" />
-                    <span>{chip}</span>
+                    💡 {chip}
                   </button>
                 ))}
               </div>
@@ -786,9 +779,8 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                           <span>{step.title}</span>
                         </span>
                         {step.durationMinutes && (
-                          <span className="inline-flex items-center gap-1 text-[10px] text-slate-400 font-normal">
-                            <Clock className="w-3 h-3 text-slate-400" aria-hidden="true" />
-                            <span>{step.durationMinutes}m</span>
+                          <span className="text-[10px] text-slate-400 font-normal">
+                            ⏱ {step.durationMinutes}m
                           </span>
                         )}
                       </div>
@@ -1100,9 +1092,8 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                         >
                           <span className="font-bold text-indigo-900 block">{act.activityTitle}</span>
                           <p className="text-slate-600">{act.description}</p>
-                          <span className="inline-flex items-center gap-1 text-[11px] text-slate-500 pt-1">
-                            <Package className="w-3.5 h-3.5 text-indigo-500 shrink-0" aria-hidden="true" />
-                            <span><strong>Materials:</strong> {act.concreteMaterials}</span>
+                          <span className="text-[11px] text-slate-400 block pt-1">
+                            📦 <strong>Materials:</strong> {act.concreteMaterials}
                           </span>
                         </div>
                       )
@@ -1287,12 +1278,12 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                     onClick={handleSavePlanToDb}
                     className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer disabled:opacity-50"
                   >
-                    <Save className="w-3.5 h-3.5" aria-hidden="true" />
+                    <Save className="w-3.5 h-3.5" />
                     <span>
                       {remSaveStatus === "saving"
                         ? "Saving..."
                         : remSaveStatus === "saved"
-                        ? "Saved to Database"
+                        ? "✓ Saved to Database"
                         : "Save to Remedial Plans"}
                     </span>
                   </button>
@@ -1328,10 +1319,9 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                   {remPlan.requiredMaterials?.map((mat: string, idx: number) => (
                     <span
                       key={idx}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 font-medium"
+                      className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 font-medium"
                     >
-                      <Check className="w-3 h-3 text-emerald-600 shrink-0" aria-hidden="true" />
-                      <span>{mat}</span>
+                      ✓ {mat}
                     </span>
                   ))}
                 </div>
@@ -1358,10 +1348,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                           </span>
                           <span>{step.title}</span>
                         </span>
-                        <span className="inline-flex items-center gap-1 text-slate-400 font-normal">
-                          <Clock className="w-3 h-3 text-slate-400" aria-hidden="true" />
-                          <span>{step.durationMinutes} mins</span>
-                        </span>
+                        <span className="text-slate-400 font-normal">⏱ {step.durationMinutes} mins</span>
                       </div>
                       <p className="text-slate-600 pl-7 leading-relaxed">{step.description}</p>
                     </div>
@@ -1606,9 +1593,8 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                 </div>
 
                 {wsResult.personalizedStudentNote && (
-                  <div className="py-2 text-[11px] font-semibold text-indigo-700 print:hidden inline-flex items-center gap-1.5">
-                    <Info className="w-3.5 h-3.5 text-indigo-600 shrink-0" aria-hidden="true" />
-                    <span>{wsResult.personalizedStudentNote}</span>
+                  <div className="py-2 text-[11px] font-semibold text-indigo-700 print:hidden">
+                    ℹ️ {wsResult.personalizedStudentNote}
                   </div>
                 )}
 
@@ -1676,7 +1662,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                 </div>
                 <div>
                   <h3 className="font-bold text-sm text-slate-900">
-                    StudySaathi Teacher AI Assistant
+                    ShikshaSetu Teacher AI Assistant
                   </h3>
                   <p className="text-[11px] text-slate-500">
                     Pedagogical coaching, foundational lesson ideas, & authorized classroom telemetry
@@ -1747,10 +1733,9 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                   key={idx}
                   type="button"
                   onClick={() => handleAssistantSend(chip)}
-                  className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg bg-slate-50 hover:bg-cyan-50 border border-slate-200 hover:border-cyan-200 text-slate-600 transition-colors cursor-pointer"
+                  className="text-[11px] px-2.5 py-1 rounded-lg bg-slate-50 hover:bg-cyan-50 border border-slate-200 hover:border-cyan-200 text-slate-600 transition-colors cursor-pointer"
                 >
-                  <MessageSquare className="w-3 h-3 text-cyan-600 shrink-0" aria-hidden="true" />
-                  <span>{chip}</span>
+                  💬 {chip}
                 </button>
               ))}
             </div>

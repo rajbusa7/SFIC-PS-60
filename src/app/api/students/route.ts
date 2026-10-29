@@ -1,114 +1,98 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db/database";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
-const noCacheHeaders = {
-  "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
-  Pragma: "no-cache",
-  Expires: "0",
-};
-
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const classroomId = searchParams.get("classroomId") || undefined;
     const grade = searchParams.get("grade") ? parseInt(searchParams.get("grade")!) : undefined;
-    const search = searchParams.get("search") || undefined;
+    const search = searchParams.get("search")?.toLowerCase();
 
-    const students = await db.getStudentsAsync({ classroomId, grade, search });
-    return NextResponse.json(
-      { success: true, count: students.length, students },
-      { headers: noCacheHeaders }
-    );
+    let students = db.getStudents(classroomId);
+
+    if (grade) {
+      students = students.filter((s) => s.grade === grade);
+    }
+
+    if (search) {
+      students = students.filter(
+        (s) =>
+          s.displayName.toLowerCase().includes(search) ||
+          s.studentCode.toLowerCase().includes(search)
+      );
+    }
+
+    return NextResponse.json({ success: true, count: students.length, students });
   } catch (error) {
     console.error("API /api/students error:", error);
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch students" },
-      { status: 500, headers: noCacheHeaders }
-    );
+    return NextResponse.json({ success: false, error: "Failed to fetch students" }, { status: 500 });
   }
 }
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    if (!body || typeof body !== "object") {
-      return NextResponse.json(
-        { success: false, error: "Invalid JSON request body" },
-        { status: 400, headers: noCacheHeaders }
-      );
-    }
-
     const { studentCode, displayName, classroomId, grade, section, enrollmentStatus, notes } = body;
 
-    const trimmedName = typeof displayName === "string" ? displayName.trim() : "";
-    const trimmedCode = typeof studentCode === "string" ? studentCode.trim() : "";
-    const parsedGrade = Number(grade);
-    const sec = typeof section === "string" && section.trim() ? section.trim().toUpperCase() : "A";
-
-    if (!trimmedName || trimmedName.length < 2) {
+    if (!displayName || !String(displayName).trim()) {
       return NextResponse.json(
-        { success: false, error: "Student full name is required (minimum 2 characters)" },
-        { status: 400, headers: noCacheHeaders }
+        { success: false, error: "Student full name is required" },
+        { status: 400 }
       );
     }
 
-    if (!trimmedCode || trimmedCode.length < 2) {
+    if (!studentCode || !String(studentCode).trim()) {
       return NextResponse.json(
-        { success: false, error: "Student code / roll number is required (minimum 2 characters)" },
-        { status: 400, headers: noCacheHeaders }
+        { success: false, error: "Student unique code / ID is required" },
+        { status: 400 }
       );
     }
 
-    if (isNaN(parsedGrade) || parsedGrade < 1 || parsedGrade > 5) {
+    const numGrade = Number(grade);
+    if (isNaN(numGrade) || numGrade < 1 || numGrade > 5) {
       return NextResponse.json(
-        { success: false, error: "Grade must be an integer between 1 and 5 (Primary School)" },
-        { status: 400, headers: noCacheHeaders }
+        { success: false, error: "Grade must be an integer between 1 and 5" },
+        { status: 400 }
       );
     }
 
-    if (!["A", "B", "C"].includes(sec)) {
+    if (!section || !String(section).trim()) {
       return NextResponse.json(
-        { success: false, error: "Section must be A, B, or C" },
-        { status: 400, headers: noCacheHeaders }
+        { success: false, error: "Section is required (e.g. 'A', 'B')" },
+        { status: 400 }
       );
     }
 
-    const clsId = classroomId || `cls-${parsedGrade}${sec.toLowerCase()}`;
+    const cleanCode = String(studentCode).trim();
+    const cleanSection = String(section).trim().toUpperCase();
+    const finalClassroomId = classroomId || `cls-${numGrade}${cleanSection.toLowerCase()}`;
 
-    // Duplicate check on roll / student code
-    const existingStudents = await db.getStudentsAsync();
-    const isDuplicate = existingStudents.some(
-      (s) => s.studentCode.trim().toLowerCase() === trimmedCode.toLowerCase()
-    );
-    if (isDuplicate) {
+    // Check duplicate studentCode
+    const existing = db.getStudentByCode(cleanCode);
+    if (existing) {
       return NextResponse.json(
-        { success: false, error: `Student with code '${trimmedCode}' already exists.` },
-        { status: 409, headers: noCacheHeaders }
+        { success: false, error: `Student with ID '${cleanCode}' already exists.` },
+        { status: 409 }
       );
     }
 
-    const newStudent = await db.addStudentAsync({
-      studentCode: trimmedCode,
-      displayName: trimmedName,
-      classroomId: clsId,
-      grade: parsedGrade,
-      section: sec,
+    const newStudent = db.addStudent({
+      studentCode: cleanCode,
+      displayName: String(displayName).trim(),
+      classroomId: finalClassroomId,
+      grade: numGrade,
+      section: cleanSection,
       enrollmentStatus: enrollmentStatus || "active",
-      notes: typeof notes === "string" ? notes.trim() : "",
+      notes: notes || "",
     });
 
-    return NextResponse.json(
-      { success: true, student: newStudent },
-      { status: 201, headers: noCacheHeaders }
-    );
-  } catch (error) {
+    return NextResponse.json({ success: true, student: newStudent }, { status: 201 });
+  } catch (error: any) {
     console.error("API POST /api/students error:", error);
+    const isConflict = error.message?.includes("already exists") || error.message?.includes("already in use");
     return NextResponse.json(
-      { success: false, error: "Failed to add student to database" },
-      { status: 500, headers: noCacheHeaders }
+      { success: false, error: error.message || "Failed to add student" },
+      { status: isConflict ? 409 : 500 }
     );
   }
 }

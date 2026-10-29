@@ -1,6 +1,5 @@
 import fs from "fs";
 import path from "path";
-import os from "os";
 import {
   SEED_SCHOOL,
   SEED_SETTINGS,
@@ -13,47 +12,39 @@ import {
   SEED_LEARNING_GAPS,
   SEED_REMEDIAL_PLANS,
   SEED_ACTIVITIES,
-  SEED_PARENTS,
-  SEED_NOTICES,
-  SEED_NOTICE_TRANSLATIONS,
-  SEED_NOTICE_DELIVERIES,
-  SEED_AI_CONFIGS,
-  SEED_USERS,
 } from "./seedData";
 import { detectLearningGap } from "../engine/gapDetection";
 import { generateRemedialPlan } from "../engine/remedialEngine";
 import { calculatePercentage } from "../engine/calculations";
-import {
-  isPostgresConfigured,
-  postgresStudentDb,
-  postgresAssessmentDb,
-  postgresLearningGapDb,
-  postgresRemedialPlanDb,
-  postgresActivityDb,
-  postgresSettingsDb,
-  postgresUserDb,
-} from "./postgres";
 import type {
   School,
   SchoolSettings,
   Classroom,
   Subject,
+  SubjectCode,
   Concept,
   Student,
   Assessment,
   AssessmentResult,
   LearningGap,
+  GapPriority,
+  GapStatus,
+  MasteryStatus,
   RemedialPlan,
   LearningActivity,
   ActivityAttempt,
-  SchoolNotice,
-  NoticeTranslation,
-  NoticeDelivery,
-  ParentProfile,
-  AiProviderConfig,
-  AiUsageMetric,
-  User,
 } from "../types";
+
+export interface LearningGapFilter {
+  studentId?: string;
+  classroomId?: string;
+  grade?: number;
+  subjectCode?: SubjectCode;
+  conceptId?: string;
+  priority?: GapPriority;
+  status?: GapStatus;
+  masteryStatus?: MasteryStatus;
+}
 
 interface DataStore {
   school: School;
@@ -68,164 +59,79 @@ interface DataStore {
   remedialPlans: RemedialPlan[];
   activities: LearningActivity[];
   attempts: ActivityAttempt[];
-  parents: ParentProfile[];
-  notices: SchoolNotice[];
-  translations: NoticeTranslation[];
-  deliveries: NoticeDelivery[];
-  aiMetrics: AiUsageMetric[];
-  aiConfigs: AiProviderConfig[];
-  users?: User[];
-  feedback?: { id: string; email: string; message?: string; submittedAt: string }[];
 }
 
-const DEFAULT_DATA_DIR = path.join(process.cwd(), "data");
-const DEFAULT_STORE_FILE = path.join(DEFAULT_DATA_DIR, "shikshasetu_store.json");
-const TMP_DATA_DIR = path.join(os.tmpdir(), "shikshasetu_data");
-const TMP_STORE_FILE = path.join(TMP_DATA_DIR, "shikshasetu_store.json");
+const DATA_DIR = path.join(process.cwd(), "data");
+const STORE_FILE = path.join(DATA_DIR, "shikshasetu_store.json");
 
 function getInitialStore(): DataStore {
   return {
     school: { ...SEED_SCHOOL },
     settings: { ...SEED_SETTINGS },
-    classrooms: JSON.parse(JSON.stringify(SEED_CLASSROOMS)),
-    subjects: JSON.parse(JSON.stringify(SEED_SUBJECTS)),
-    concepts: JSON.parse(JSON.stringify(SEED_CONCEPTS)),
-    students: JSON.parse(JSON.stringify(SEED_STUDENTS)),
-    assessments: JSON.parse(JSON.stringify(SEED_ASSESSMENTS)),
-    results: JSON.parse(JSON.stringify(SEED_RESULTS)),
-    learningGaps: JSON.parse(JSON.stringify(SEED_LEARNING_GAPS)),
-    remedialPlans: JSON.parse(JSON.stringify(SEED_REMEDIAL_PLANS)),
-    activities: JSON.parse(JSON.stringify(SEED_ACTIVITIES)),
+    classrooms: [...SEED_CLASSROOMS],
+    subjects: [...SEED_SUBJECTS],
+    concepts: [...SEED_CONCEPTS],
+    students: [...SEED_STUDENTS],
+    assessments: [...SEED_ASSESSMENTS],
+    results: [...SEED_RESULTS],
+    learningGaps: [...SEED_LEARNING_GAPS],
+    remedialPlans: [...SEED_REMEDIAL_PLANS],
+    activities: [...SEED_ACTIVITIES],
     attempts: [],
-    parents: JSON.parse(JSON.stringify(SEED_PARENTS)),
-    notices: JSON.parse(JSON.stringify(SEED_NOTICES)),
-    translations: JSON.parse(JSON.stringify(SEED_NOTICE_TRANSLATIONS)),
-    deliveries: JSON.parse(JSON.stringify(SEED_NOTICE_DELIVERIES)),
-    aiMetrics: [],
-    aiConfigs: JSON.parse(JSON.stringify(SEED_AI_CONFIGS)),
-    users: JSON.parse(JSON.stringify(SEED_USERS)),
-    feedback: [],
   };
 }
 
 let memoryStore: DataStore | null = null;
-let lastLoadedMtime = 0;
-let lastLoadedPath = "";
 
-function ensureDirectory(dirPath: string): boolean {
-  try {
-    if (!fs.existsSync(dirPath)) {
-      fs.mkdirSync(dirPath, { recursive: true });
-    }
-    return true;
-  } catch {
-    return false;
+function ensureDataDirectory() {
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
   }
 }
 
-function getWritableStorePath(): string {
-  // If running in Vercel or standard serverless Lambda, /var/task is read-only so write to /tmp
-  if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
-    ensureDirectory(TMP_DATA_DIR);
-    return TMP_STORE_FILE;
+function retryFs<T>(fn: () => T, retries = 5, delay = 20): T {
+  for (let i = 0; i < retries; i++) {
+    try {
+      return fn();
+    } catch (err: any) {
+      if ((err.code === "EBUSY" || err.code === "EPERM") && i < retries - 1) {
+        const start = Date.now();
+        while (Date.now() - start < delay) {}
+        continue;
+      }
+      throw err;
+    }
   }
-
-  // Local or standard Node environment
-  if (ensureDirectory(DEFAULT_DATA_DIR)) {
-    return DEFAULT_STORE_FILE;
-  }
-
-  ensureDirectory(TMP_DATA_DIR);
-  return TMP_STORE_FILE;
+  return fn();
 }
 
 function loadStore(): DataStore {
-  const targetFile = getWritableStorePath();
-  const candidates = [targetFile, TMP_STORE_FILE, DEFAULT_STORE_FILE];
+  if (memoryStore) return memoryStore;
 
-  for (const candidate of candidates) {
-    if (fs.existsSync(/*turbopackIgnore: true*/ candidate)) {
-      for (let attempt = 0; attempt < 4; attempt++) {
-        try {
-          const stat = fs.statSync(/*turbopackIgnore: true*/ candidate);
-          if (memoryStore && lastLoadedPath === candidate && lastLoadedMtime === stat.mtimeMs) {
-            return memoryStore;
-          }
-          const content = fs.readFileSync(/*turbopackIgnore: true*/ candidate, "utf-8");
-          memoryStore = JSON.parse(content) as DataStore;
-          if (!memoryStore.users) {
-            memoryStore.users = JSON.parse(JSON.stringify(SEED_USERS));
-          }
-          lastLoadedMtime = stat.mtimeMs;
-          lastLoadedPath = candidate;
-          return memoryStore;
-        } catch (e: any) {
-          if ((e.code === "EBUSY" || e.code === "EPERM") && attempt < 3) {
-            const start = Date.now();
-            while (Date.now() - start < 20 * (attempt + 1)) {}
-            continue;
-          }
-          console.warn(`Could not read store from ${candidate}:`, e);
-          break;
-        }
-      }
+  ensureDataDirectory();
+
+  if (fs.existsSync(STORE_FILE)) {
+    try {
+      const content = retryFs(() => fs.readFileSync(STORE_FILE, "utf-8"));
+      memoryStore = JSON.parse(content) as DataStore;
+      return memoryStore;
+    } catch (e) {
+      console.error("Failed to load store from disk, initializing fresh seed:", e);
     }
   }
 
-  if (memoryStore) return memoryStore;
   memoryStore = getInitialStore();
-  try {
-    saveStore(memoryStore);
-  } catch {}
+  saveStore(memoryStore);
   return memoryStore;
 }
 
 function saveStore(store: DataStore) {
-  memoryStore = store;
+  ensureDataDirectory();
   const json = JSON.stringify(store, null, 2);
-  const targetFile = getWritableStorePath();
-  const tempFile = `${targetFile}.tmp.${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-
-  for (let attempt = 0; attempt < 4; attempt++) {
-    try {
-      fs.writeFileSync(tempFile, json, "utf-8");
-      try {
-        fs.renameSync(tempFile, targetFile);
-      } catch {
-        fs.copyFileSync(tempFile, targetFile);
-        try {
-          fs.unlinkSync(tempFile);
-        } catch {}
-      }
-      try {
-        const stat = fs.statSync(targetFile);
-        lastLoadedMtime = stat.mtimeMs;
-        lastLoadedPath = targetFile;
-      } catch {}
-      return;
-    } catch (primaryErr: any) {
-      if ((primaryErr.code === "EBUSY" || primaryErr.code === "EPERM") && attempt < 3) {
-        const start = Date.now();
-        while (Date.now() - start < 25 * (attempt + 1)) {}
-        continue;
-      }
-
-      // If writing to target failed (e.g. EROFS on read-only system), attempt writing to os.tmpdir directly
-      try {
-        const fallbackFile = path.join(os.tmpdir(), "shikshasetu_store.json");
-        fs.writeFileSync(fallbackFile, json, "utf-8");
-        try {
-          const stat = fs.statSync(fallbackFile);
-          lastLoadedMtime = stat.mtimeMs;
-          lastLoadedPath = fallbackFile;
-        } catch {}
-      } catch {
-        // Memory store is already updated in memoryStore; do not crash serverless execution
-        console.warn("Storage notice: Persistent disk write skipped, store held in active memory.");
-      }
-      return;
-    }
-  }
+  retryFs(() => {
+    fs.writeFileSync(STORE_FILE, json, "utf-8");
+  });
+  memoryStore = store;
 }
 
 export const db = {
@@ -241,11 +147,6 @@ export const db = {
     const store = loadStore();
     store.settings = { ...store.settings, ...updates };
     saveStore(store);
-    if (isPostgresConfigured()) {
-      postgresSettingsDb.updateSettings(updates).catch((e) =>
-        console.error("[PostgreSQL updateSettings sync error]:", e)
-      );
-    }
     return store.settings;
   },
 
@@ -269,117 +170,120 @@ export const db = {
 
   getStudents(classroomId?: string): Student[] {
     const store = loadStore();
-    if (!classroomId || classroomId === "all") return store.students;
+    if (!classroomId) return store.students;
     return store.students.filter((s) => s.classroomId === classroomId);
-  },
-
-  async getStudentsAsync(filters?: { classroomId?: string; grade?: number; search?: string }): Promise<Student[]> {
-    if (isPostgresConfigured()) {
-      try {
-        const pgStudents = await postgresStudentDb.getStudents(filters);
-        // Sync local memory store with latest PostgreSQL records
-        const store = loadStore();
-        if (pgStudents && pgStudents.length > 0) {
-          store.students = pgStudents;
-        }
-        return pgStudents;
-      } catch (err) {
-        console.warn("[PostgreSQL] Query failed, falling back to persistent store:", err);
-      }
-    }
-    let students = this.getStudents(filters?.classroomId);
-    if (filters?.grade) {
-      students = students.filter((s) => s.grade === filters.grade);
-    }
-    if (filters?.search) {
-      const q = filters.search.toLowerCase().trim();
-      students = students.filter(
-        (s) => s.displayName.toLowerCase().includes(q) || s.studentCode.toLowerCase().includes(q)
-      );
-    }
-    return students;
   },
 
   getStudentById(id: string): Student | undefined {
     return loadStore().students.find((s) => s.id === id);
   },
 
-  async getStudentByIdAsync(id: string): Promise<Student | undefined> {
-    if (isPostgresConfigured()) {
-      try {
-        const student = await postgresStudentDb.getStudentById(id);
-        if (student) return student;
-      } catch (err) {
-        console.warn("[PostgreSQL] Query failed, falling back to persistent store:", err);
-      }
-    }
-    return this.getStudentById(id);
+  getStudentByCode(studentCode: string): Student | undefined {
+    const clean = studentCode.trim().toLowerCase();
+    return loadStore().students.find((s) => s.studentCode.trim().toLowerCase() === clean);
   },
 
-  addStudent(studentData: Omit<Student, "id" | "createdAt">): Student {
+  addStudent(studentData: Omit<Student, "id" | "createdAt"> & { id?: string }): Student {
     const store = loadStore();
+    const cleanCode = studentData.studentCode?.trim();
+    if (!cleanCode) {
+      throw new Error("Student code is required");
+    }
+    const cleanName = studentData.displayName?.trim();
+    if (!cleanName) {
+      throw new Error("Student full name is required");
+    }
+
+    const duplicate = store.students.find(
+      (s) => s.studentCode.trim().toLowerCase() === cleanCode.toLowerCase()
+    );
+    if (duplicate) {
+      throw new Error(`Student with ID/Code '${cleanCode}' already exists`);
+    }
+
+    const grade = Number(studentData.grade) || 4;
+    const section = (studentData.section || "A").toUpperCase();
+    const classroomId = studentData.classroomId || `cls-${grade}${section.toLowerCase()}`;
+
+    // Ensure classroom exists in store.classrooms
+    const existingClassroom = store.classrooms.find((c) => c.id === classroomId);
+    if (!existingClassroom) {
+      store.classrooms.push({
+        id: classroomId,
+        schoolId: store.school.id || "sch-gn-01",
+        grade,
+        section,
+        academicYear: "2026-27",
+      });
+    }
+
     const newStudent: Student = {
       ...studentData,
-      id: `std-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      id: studentData.id || `std-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      studentCode: cleanCode,
+      displayName: cleanName,
+      grade,
+      section,
+      classroomId,
+      enrollmentStatus: studentData.enrollmentStatus || "active",
+      notes: studentData.notes || "",
       createdAt: new Date().toISOString(),
     };
     store.students.push(newStudent);
     saveStore(store);
-    if (isPostgresConfigured()) {
-      postgresStudentDb.createStudent(newStudent).catch((e) =>
-        console.error("[PostgreSQL addStudent async sync error]:", e)
-      );
-    }
     return newStudent;
-  },
-
-  async addStudentAsync(studentData: Omit<Student, "id" | "createdAt">): Promise<Student> {
-    if (isPostgresConfigured()) {
-      try {
-        const newStudent = await postgresStudentDb.createStudent(studentData);
-        const store = loadStore();
-        store.students.push(newStudent);
-        saveStore(store);
-        return newStudent;
-      } catch (err) {
-        console.warn("[PostgreSQL] Error in addStudentAsync, falling back to local store:", err);
-      }
-    }
-    return this.addStudent(studentData);
   },
 
   updateStudent(id: string, updates: Partial<Student>): Student | null {
     const store = loadStore();
     const index = store.students.findIndex((s) => s.id === id);
     if (index === -1) return null;
-    store.students[index] = { ...store.students[index], ...updates };
-    saveStore(store);
-    if (isPostgresConfigured()) {
-      postgresStudentDb.updateStudent(id, updates).catch((e) =>
-        console.error("[PostgreSQL updateStudent async sync error]:", e)
-      );
-    }
-    return store.students[index];
-  },
 
-  async updateStudentAsync(id: string, updates: Partial<Student>): Promise<Student | null> {
-    if (isPostgresConfigured()) {
-      try {
-        const updated = await postgresStudentDb.updateStudent(id, updates);
-        if (updated) {
-          const store = loadStore();
-          const index = store.students.findIndex((s) => s.id === id);
-          if (index !== -1) {
-            store.students[index] = updated;
-            saveStore(store);
-          }
-          return updated;
-        }
-      } catch (err) {
-        console.warn("[PostgreSQL] Error in updateStudentAsync, falling back to local store:", err);
+    if (updates.studentCode !== undefined) {
+      const cleanCode = updates.studentCode.trim();
+      if (!cleanCode) {
+        throw new Error("Student code cannot be empty");
+      }
+      const duplicate = store.students.find(
+        (s) => s.id !== id && s.studentCode.trim().toLowerCase() === cleanCode.toLowerCase()
+      );
+      if (duplicate) {
+        throw new Error(`Student ID '${cleanCode}' is already in use by another student`);
+      }
+      updates.studentCode = cleanCode;
+    }
+
+    if (updates.displayName !== undefined) {
+      const cleanName = updates.displayName.trim();
+      if (!cleanName) {
+        throw new Error("Student full name cannot be empty");
+      }
+      updates.displayName = cleanName;
+    }
+
+    if (updates.grade !== undefined || updates.section !== undefined) {
+      const newGrade = updates.grade !== undefined ? Number(updates.grade) : store.students[index].grade;
+      const newSection = (updates.section !== undefined ? updates.section : store.students[index].section).toUpperCase();
+      const classroomId = updates.classroomId || `cls-${newGrade}${newSection.toLowerCase()}`;
+      updates.grade = newGrade;
+      updates.section = newSection;
+      updates.classroomId = classroomId;
+
+      const existingClassroom = store.classrooms.find((c) => c.id === classroomId);
+      if (!existingClassroom) {
+        store.classrooms.push({
+          id: classroomId,
+          schoolId: store.school.id || "sch-gn-01",
+          grade: newGrade,
+          section: newSection,
+          academicYear: "2026-27",
+        });
       }
     }
-    return this.updateStudent(id, updates);
+
+    store.students[index] = { ...store.students[index], ...updates };
+    saveStore(store);
+    return store.students[index];
   },
 
   deleteStudent(id: string): boolean {
@@ -387,41 +291,15 @@ export const db = {
     const beforeLen = store.students.length;
     store.students = store.students.filter((s) => s.id !== id);
     if (store.students.length !== beforeLen) {
-      // Cascading relational cleanups
+      // Cascading deletion of related records (foreign key integrity)
+      store.results = store.results.filter((r) => r.studentId !== id);
       store.learningGaps = store.learningGaps.filter((g) => g.studentId !== id);
       store.remedialPlans = store.remedialPlans.filter((p) => p.studentId !== id);
-      store.results = store.results.filter((r) => r.studentId !== id);
       store.attempts = store.attempts.filter((a) => a.studentId !== id);
-      store.deliveries = store.deliveries.filter((d) => d.studentId !== id);
       saveStore(store);
-      if (isPostgresConfigured()) {
-        postgresStudentDb.deleteStudent(id).catch((e) =>
-          console.error("[PostgreSQL deleteStudent async sync error]:", e)
-        );
-      }
       return true;
     }
     return false;
-  },
-
-  async deleteStudentAsync(id: string): Promise<boolean> {
-    if (isPostgresConfigured()) {
-      try {
-        const deleted = await postgresStudentDb.deleteStudent(id);
-        const store = loadStore();
-        store.students = store.students.filter((s) => s.id !== id);
-        store.learningGaps = store.learningGaps.filter((g) => g.studentId !== id);
-        store.remedialPlans = store.remedialPlans.filter((p) => p.studentId !== id);
-        store.results = store.results.filter((r) => r.studentId !== id);
-        store.attempts = store.attempts.filter((a) => a.studentId !== id);
-        store.deliveries = store.deliveries.filter((d) => d.studentId !== id);
-        saveStore(store);
-        return deleted;
-      } catch (err) {
-        console.warn("[PostgreSQL] Error in deleteStudentAsync, falling back to local store:", err);
-      }
-    }
-    return this.deleteStudent(id);
   },
 
   getAssessments(classroomId?: string): Assessment[] {
@@ -439,35 +317,80 @@ export const db = {
     initialResults?: Omit<AssessmentResult, "id" | "assessmentId">[]
   ): Assessment {
     const store = loadStore();
-    const assessmentId = `asm-${Date.now()}`;
+    const maxMarks = Number(assessmentData.maxMarks);
+    if (isNaN(maxMarks) || maxMarks <= 0) {
+      throw new Error("Maximum marks must be greater than zero");
+    }
+
+    // Safe deduplication: check if an identical assessment already exists (prevent duplicate submission)
+    const existing = store.assessments.find(
+      (a) =>
+        a.title.trim().toLowerCase() === assessmentData.title.trim().toLowerCase() &&
+        a.classroomId === assessmentData.classroomId &&
+        a.assessmentDate === assessmentData.assessmentDate &&
+        a.subjectCode === assessmentData.subjectCode
+    );
+
+    const assessmentId = existing ? existing.id : `asm-${Date.now()}`;
     const newAssessment: Assessment = {
       ...assessmentData,
+      maxMarks,
       id: assessmentId,
-      createdAt: new Date().toISOString(),
+      createdAt: existing ? existing.createdAt : new Date().toISOString(),
     };
-    store.assessments.push(newAssessment);
+
+    if (existing) {
+      const idx = store.assessments.findIndex((a) => a.id === existing.id);
+      store.assessments[idx] = newAssessment;
+    } else {
+      store.assessments.push(newAssessment);
+    }
 
     if (initialResults && initialResults.length > 0) {
       for (const res of initialResults) {
-        const pct = calculatePercentage(res.marksObtained, res.maximumMarks);
-        const resultRecord: AssessmentResult = {
-          ...res,
-          id: `res-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-          assessmentId,
-          percentage: pct,
-          recordedAt: res.recordedAt || new Date().toISOString(),
-        };
-        store.results.push(resultRecord);
+        const marksObtained = Number(res.marksObtained);
+        if (isNaN(marksObtained) || marksObtained < 0) {
+          throw new Error("Marks obtained cannot be negative");
+        }
+        if (marksObtained > maxMarks) {
+          throw new Error(`Marks obtained (${marksObtained}) cannot exceed maximum marks (${maxMarks})`);
+        }
+
+        const pct = calculatePercentage(marksObtained, maxMarks);
+
+        // Check if a result already exists for this assessment, student, and concept
+        const existingResIndex = store.results.findIndex(
+          (r) =>
+            r.assessmentId === assessmentId &&
+            r.studentId === res.studentId &&
+            r.conceptId === res.conceptId
+        );
+
+        if (existingResIndex !== -1) {
+          store.results[existingResIndex] = {
+            ...store.results[existingResIndex],
+            marksObtained,
+            maximumMarks: maxMarks,
+            percentage: pct,
+            notes: res.notes ?? store.results[existingResIndex].notes,
+            recordedAt: res.recordedAt || store.results[existingResIndex].recordedAt,
+          };
+        } else {
+          const resultRecord: AssessmentResult = {
+            ...res,
+            id: `res-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+            assessmentId,
+            marksObtained,
+            maximumMarks: maxMarks,
+            percentage: pct,
+            recordedAt: res.recordedAt || new Date().toISOString(),
+          };
+          store.results.push(resultRecord);
+        }
       }
     }
 
     saveStore(store);
-
-    if (isPostgresConfigured()) {
-      postgresAssessmentDb.createAssessment(assessmentData, initialResults).catch((e) =>
-        console.error("[PostgreSQL createAssessment sync error]:", e)
-      );
-    }
 
     // Recalculate learning gaps for affected students
     if (initialResults) {
@@ -480,39 +403,195 @@ export const db = {
     return newAssessment;
   },
 
-  getResults(studentId?: string, conceptId?: string): AssessmentResult[] {
+  updateAssessment(
+    id: string,
+    updates: Partial<Assessment>,
+    resultsUpdates?: { studentId: string; conceptId?: string; marksObtained: number; notes?: string }[]
+  ): Assessment | null {
+    const store = loadStore();
+    const index = store.assessments.findIndex((a) => a.id === id);
+    if (index === -1) return null;
+
+    const current = store.assessments[index];
+    const newMaxMarks = updates.maxMarks !== undefined ? Number(updates.maxMarks) : current.maxMarks;
+    if (newMaxMarks <= 0) {
+      throw new Error("Maximum marks must be greater than zero");
+    }
+
+    store.assessments[index] = {
+      ...current,
+      ...updates,
+      maxMarks: newMaxMarks,
+    };
+
+    const affectedStudents = new Set<string>();
+
+    // Update associated results if resultsUpdates provided
+    if (resultsUpdates && resultsUpdates.length > 0) {
+      const primaryConceptId = updates.conceptIds?.[0] || current.conceptIds[0];
+
+      for (const rUpdate of resultsUpdates) {
+        const conceptId = rUpdate.conceptId || primaryConceptId;
+        const marksObtained = Number(rUpdate.marksObtained);
+        if (isNaN(marksObtained) || marksObtained < 0) {
+          throw new Error("Marks obtained cannot be negative");
+        }
+        if (marksObtained > newMaxMarks) {
+          throw new Error(`Marks obtained (${marksObtained}) cannot exceed maximum marks (${newMaxMarks})`);
+        }
+
+        const pct = calculatePercentage(marksObtained, newMaxMarks);
+        const existingResIndex = store.results.findIndex(
+          (r) => r.assessmentId === id && r.studentId === rUpdate.studentId && r.conceptId === conceptId
+        );
+
+        if (existingResIndex !== -1) {
+          store.results[existingResIndex] = {
+            ...store.results[existingResIndex],
+            marksObtained,
+            maximumMarks: newMaxMarks,
+            percentage: pct,
+            notes: rUpdate.notes !== undefined ? rUpdate.notes : store.results[existingResIndex].notes,
+          };
+        } else {
+          store.results.push({
+            id: `res-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+            assessmentId: id,
+            studentId: rUpdate.studentId,
+            conceptId,
+            marksObtained,
+            maximumMarks: newMaxMarks,
+            percentage: pct,
+            notes: rUpdate.notes || "",
+            recordedAt: updates.assessmentDate || current.assessmentDate || new Date().toISOString(),
+          });
+        }
+        affectedStudents.add(rUpdate.studentId);
+      }
+    } else if (updates.maxMarks !== undefined) {
+      // Recalculate percentage for all existing results under this assessment if maxMarks changed
+      store.results = store.results.map((res) => {
+        if (res.assessmentId === id) {
+          affectedStudents.add(res.studentId);
+          return {
+            ...res,
+            maximumMarks: newMaxMarks,
+            percentage: calculatePercentage(res.marksObtained, newMaxMarks),
+          };
+        }
+        return res;
+      });
+    }
+
+    saveStore(store);
+
+    for (const sId of affectedStudents) {
+      this.recalculateLearningGapsForStudent(sId);
+    }
+
+    return store.assessments[index];
+  },
+
+  deleteAssessment(id: string): boolean {
+    const store = loadStore();
+    const beforeLen = store.assessments.length;
+    store.assessments = store.assessments.filter((a) => a.id !== id);
+    if (store.assessments.length !== beforeLen) {
+      // Find affected students before removing results
+      const affectedStudentIds = Array.from(
+        new Set(store.results.filter((r) => r.assessmentId === id).map((r) => r.studentId))
+      );
+
+      // Cascade remove results
+      store.results = store.results.filter((r) => r.assessmentId !== id);
+      saveStore(store);
+
+      // Recalculate gaps
+      for (const sId of affectedStudentIds) {
+        this.recalculateLearningGapsForStudent(sId);
+      }
+      return true;
+    }
+    return false;
+  },
+
+  getResults(studentId?: string, conceptId?: string, assessmentId?: string): AssessmentResult[] {
     const store = loadStore();
     let res = store.results;
     if (studentId) res = res.filter((r) => r.studentId === studentId);
     if (conceptId) res = res.filter((r) => r.conceptId === conceptId);
-    return res;
+    if (assessmentId) res = res.filter((r) => r.assessmentId === assessmentId);
+
+    const asmMap = new Map(store.assessments.map((a) => [a.id, a]));
+    const conceptMap = new Map(store.concepts.map((c) => [c.id, c]));
+
+    return res.map((r) => {
+      const asm = asmMap.get(r.assessmentId);
+      const concept = conceptMap.get(r.conceptId);
+      return {
+        ...r,
+        assessmentTitle: asm?.title || r.assessmentTitle || "Assessment",
+        subjectCode: (asm?.subjectCode || concept?.subjectCode || r.subjectCode || "MATH") as SubjectCode,
+        conceptName: concept?.name || r.conceptName || r.conceptId,
+      };
+    });
   },
 
-  recordResults(resultsData: Omit<AssessmentResult, "id">[]): AssessmentResult[] {
+  recordResults(resultsData: (Omit<AssessmentResult, "id" | "percentage"> & { percentage?: number })[]): AssessmentResult[] {
     const store = loadStore();
     const created: AssessmentResult[] = [];
     const studentIds = new Set<string>();
 
     for (const r of resultsData) {
-      const pct = calculatePercentage(r.marksObtained, r.maximumMarks);
-      const newResult: AssessmentResult = {
-        ...r,
-        id: `res-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-        percentage: pct,
-        recordedAt: r.recordedAt || new Date().toISOString(),
-      };
-      store.results.push(newResult);
-      created.push(newResult);
+      const marksObtained = Number(r.marksObtained);
+      const maximumMarks = Number(r.maximumMarks);
+
+      if (isNaN(maximumMarks) || maximumMarks <= 0) {
+        throw new Error("Maximum marks must be greater than zero");
+      }
+      if (isNaN(marksObtained) || marksObtained < 0) {
+        throw new Error("Marks obtained cannot be negative");
+      }
+      if (marksObtained > maximumMarks) {
+        throw new Error(`Marks obtained (${marksObtained}) cannot exceed maximum marks (${maximumMarks})`);
+      }
+
+      const pct = calculatePercentage(marksObtained, maximumMarks);
+
+      // Deduplicate: check if result already exists for same assessmentId, studentId, and conceptId
+      const existingIndex = store.results.findIndex(
+        (res) =>
+          res.assessmentId === r.assessmentId &&
+          res.studentId === r.studentId &&
+          res.conceptId === r.conceptId
+      );
+
+      if (existingIndex !== -1) {
+        store.results[existingIndex] = {
+          ...store.results[existingIndex],
+          marksObtained,
+          maximumMarks,
+          percentage: pct,
+          notes: r.notes !== undefined ? r.notes : store.results[existingIndex].notes,
+          recordedAt: r.recordedAt || store.results[existingIndex].recordedAt,
+        };
+        created.push(store.results[existingIndex]);
+      } else {
+        const newResult: AssessmentResult = {
+          ...r,
+          id: `res-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+          marksObtained,
+          maximumMarks,
+          percentage: pct,
+          recordedAt: r.recordedAt || new Date().toISOString(),
+        };
+        store.results.push(newResult);
+        created.push(newResult);
+      }
       studentIds.add(r.studentId);
     }
 
     saveStore(store);
-
-    if (isPostgresConfigured()) {
-      postgresAssessmentDb.recordResults(resultsData).catch((e) =>
-        console.error("[PostgreSQL recordResults sync error]:", e)
-      );
-    }
 
     // Automatically recalculate gaps for all updated students
     for (const sId of studentIds) {
@@ -522,10 +601,99 @@ export const db = {
     return created;
   },
 
-  getLearningGaps(studentId?: string): LearningGap[] {
+  updateResult(id: string, updates: Partial<AssessmentResult>): AssessmentResult | null {
     const store = loadStore();
-    if (!studentId) return store.learningGaps;
-    return store.learningGaps.filter((g) => g.studentId === studentId);
+    const index = store.results.findIndex((r) => r.id === id);
+    if (index === -1) return null;
+
+    const current = store.results[index];
+    const newMarksObtained = updates.marksObtained !== undefined ? Number(updates.marksObtained) : current.marksObtained;
+    const newMaxMarks = updates.maximumMarks !== undefined ? Number(updates.maximumMarks) : current.maximumMarks;
+
+    if (newMaxMarks <= 0) {
+      throw new Error("Maximum marks must be greater than zero");
+    }
+    if (newMarksObtained < 0) {
+      throw new Error("Marks obtained cannot be negative");
+    }
+    if (newMarksObtained > newMaxMarks) {
+      throw new Error(`Marks obtained (${newMarksObtained}) cannot exceed maximum marks (${newMaxMarks})`);
+    }
+
+    const pct = calculatePercentage(newMarksObtained, newMaxMarks);
+
+    store.results[index] = {
+      ...current,
+      ...updates,
+      marksObtained: newMarksObtained,
+      maximumMarks: newMaxMarks,
+      percentage: pct,
+    };
+
+    saveStore(store);
+
+    this.recalculateLearningGapsForStudent(current.studentId);
+    return store.results[index];
+  },
+
+  deleteResult(id: string): boolean {
+    const store = loadStore();
+    const index = store.results.findIndex((r) => r.id === id);
+    if (index === -1) return false;
+
+    const studentId = store.results[index].studentId;
+    store.results.splice(index, 1);
+    saveStore(store);
+
+    this.recalculateLearningGapsForStudent(studentId);
+    return true;
+  },
+
+  getLearningGaps(filterOrStudentId?: string | LearningGapFilter): LearningGap[] {
+    const store = loadStore();
+    const studentMap = new Map(store.students.map((s) => [s.id, s]));
+    const conceptMap = new Map(store.concepts.map((c) => [c.id, c]));
+    const subjectMap = new Map(store.subjects.map((sub) => [sub.code, sub]));
+
+    // Enrich gaps on the fly so any existing records have studentCode, classroomId, subjectName, thresholdsUsed
+    let gaps: LearningGap[] = store.learningGaps.map((g) => {
+      const student = studentMap.get(g.studentId);
+      const concept = conceptMap.get(g.conceptId);
+      const subject = g.subjectCode ? subjectMap.get(g.subjectCode) : undefined;
+      return {
+        ...g,
+        studentName: g.studentName || student?.displayName,
+        studentCode: g.studentCode || student?.studentCode,
+        classroomId: g.classroomId || student?.classroomId,
+        section: g.section || student?.section,
+        grade: g.grade || student?.grade,
+        conceptName: g.conceptName || concept?.name,
+        conceptNameGujarati: g.conceptNameGujarati || concept?.nameGujarati,
+        subjectName: g.subjectName || subject?.name || g.subjectCode,
+        thresholdsUsed: g.thresholdsUsed || {
+          developing: store.settings.developingThreshold,
+          mastery: store.settings.masteryThreshold,
+        },
+      };
+    });
+
+    if (typeof filterOrStudentId === "string") {
+      return gaps.filter((g) => g.studentId === filterOrStudentId);
+    }
+
+    if (filterOrStudentId && typeof filterOrStudentId === "object") {
+      const f = filterOrStudentId;
+      if (f.studentId) gaps = gaps.filter((g) => g.studentId === f.studentId);
+      if (f.classroomId) gaps = gaps.filter((g) => g.classroomId === f.classroomId);
+      if (f.grade !== undefined) gaps = gaps.filter((g) => g.grade === Number(f.grade));
+      if (f.subjectCode) gaps = gaps.filter((g) => g.subjectCode === f.subjectCode);
+      if (f.conceptId) gaps = gaps.filter((g) => g.conceptId === f.conceptId);
+      if (f.priority) gaps = gaps.filter((g) => g.priority === f.priority);
+      if (f.status) gaps = gaps.filter((g) => g.status === f.status);
+      if (f.masteryStatus) gaps = gaps.filter((g) => g.masteryStatus === f.masteryStatus);
+    }
+
+    return gaps;
   },
 
   recalculateLearningGapsForStudent(studentId: string): LearningGap[] {
@@ -542,18 +710,27 @@ export const db = {
     const studentResults = store.results.filter((r) => r.studentId === studentId);
     const conceptIds = Array.from(new Set(studentResults.map((r) => r.conceptId)));
 
+    // Clean up stale gaps for concepts that are no longer present in studentResults
+    store.learningGaps = store.learningGaps.filter(
+      (g) => g.studentId !== studentId || conceptIds.includes(g.conceptId)
+    );
+
     for (const conceptId of conceptIds) {
       const concept = store.concepts.find((c) => c.id === conceptId);
       if (!concept) continue;
+      const subject = store.subjects.find((s) => s.code === concept.subjectCode);
 
-      const history = studentResults
+      const conceptResultsSorted = studentResults
         .filter((r) => r.conceptId === conceptId)
-        .sort((a, b) => new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime())
-        .map((r) => ({
-          marksObtained: r.marksObtained,
-          maximumMarks: r.maximumMarks,
-          recordedAt: r.recordedAt,
-        }));
+        .sort((a, b) => new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime());
+
+      const history = conceptResultsSorted.map((r) => ({
+        marksObtained: r.marksObtained,
+        maximumMarks: r.maximumMarks,
+        recordedAt: r.recordedAt,
+      }));
+
+      const latestResult = conceptResultsSorted[conceptResultsSorted.length - 1];
 
       const detection = detectLearningGap(conceptId, concept.name, history, thresholds);
 
@@ -562,19 +739,53 @@ export const db = {
         (g) => g.studentId === studentId && g.conceptId === conceptId
       );
 
+      // Determine proper gap status:
+      // If mastered -> "Resolved"
+      // If not mastered:
+      //   If previously "Under Intervention", keep "Under Intervention"
+      //   Otherwise "Active" (this reactivates a gap if score dropped below mastery threshold)
+      let targetStatus: GapStatus = "Active";
+      if (detection.masteryStatus === "Mastered") {
+        targetStatus = "Resolved";
+      } else if (existingGapIndex !== -1 && store.learningGaps[existingGapIndex].status === "Under Intervention") {
+        targetStatus = "Under Intervention";
+      }
+
+      const gapData = {
+        studentId,
+        studentName: student.displayName,
+        studentCode: student.studentCode,
+        classroomId: student.classroomId,
+        section: student.section,
+        conceptId,
+        conceptName: concept.name,
+        conceptNameGujarati: concept.nameGujarati,
+        subjectCode: concept.subjectCode,
+        subjectName: subject?.name || concept.subjectCode,
+        grade: student.grade,
+        priority: detection.priority,
+        masteryStatus: detection.masteryStatus,
+        reason: detection.reason,
+        suggestedAction: detection.suggestedAction,
+        status: targetStatus,
+        attemptsCount: detection.attemptsCount,
+        latestPercentage: detection.latestPercentage,
+        previousPercentage: detection.previousPercentage,
+        deltaPercentagePoints: detection.deltaPercentagePoints,
+        marksObtained: latestResult?.marksObtained,
+        maximumMarks: latestResult?.maximumMarks,
+        assessmentDate: latestResult?.recordedAt,
+        thresholdsUsed: {
+          developing: thresholds.developing,
+          mastery: thresholds.mastery,
+        },
+        updatedAt: new Date().toISOString(),
+      };
+
       if (existingGapIndex !== -1) {
-        const existing = store.learningGaps[existingGapIndex];
         store.learningGaps[existingGapIndex] = {
-          ...existing,
-          priority: detection.priority,
-          masteryStatus: detection.masteryStatus,
-          reason: detection.reason,
-          status: detection.masteryStatus === "Mastered" ? "Resolved" : existing.status,
-          attemptsCount: detection.attemptsCount,
-          latestPercentage: detection.latestPercentage,
-          previousPercentage: detection.previousPercentage,
-          deltaPercentagePoints: detection.deltaPercentagePoints,
-          updatedAt: new Date().toISOString(),
+          ...store.learningGaps[existingGapIndex],
+          ...gapData,
         };
 
         if (detection.masteryStatus === "Mastered") {
@@ -585,42 +796,17 @@ export const db = {
             relatedPlan.status = "Completed";
           }
         }
-      } else if (detection.requiresRemediation) {
-        // Create new gap
+      } else {
         const newGap: LearningGap = {
           id: `gap-${studentId}-${conceptId}`,
-          studentId,
-          studentName: student.displayName,
-          conceptId,
-          conceptName: concept.name,
-          subjectCode: concept.subjectCode,
-          grade: student.grade,
-          priority: detection.priority,
-          masteryStatus: detection.masteryStatus,
-          reason: detection.reason,
-          status: "Active",
-          attemptsCount: detection.attemptsCount,
-          latestPercentage: detection.latestPercentage,
-          previousPercentage: detection.previousPercentage,
-          deltaPercentagePoints: detection.deltaPercentagePoints,
-          updatedAt: new Date().toISOString(),
+          ...gapData,
         };
         store.learningGaps.push(newGap);
       }
     }
 
     saveStore(store);
-
-    if (isPostgresConfigured()) {
-      const studentGaps = store.learningGaps.filter((g) => g.studentId === studentId);
-      for (const gap of studentGaps) {
-        postgresLearningGapDb.upsertLearningGap(gap).catch((e) =>
-          console.error("[PostgreSQL upsertLearningGap sync error]:", e)
-        );
-      }
-    }
-
-    return store.learningGaps.filter((g) => g.studentId === studentId);
+    return this.getLearningGaps(studentId);
   },
 
   getRemedialPlans(studentId?: string): RemedialPlan[] {
@@ -633,7 +819,11 @@ export const db = {
     return loadStore().remedialPlans.find((p) => p.id === id);
   },
 
-  createRemedialPlanForGap(gapId: string, customNotes?: string): RemedialPlan | null {
+  createRemedialPlanForGap(
+    gapId: string,
+    customNotes?: string,
+    options?: { forceRecreate?: boolean }
+  ): RemedialPlan | null {
     const store = loadStore();
     const gap = store.learningGaps.find((g) => g.id === gapId);
     if (!gap) return null;
@@ -642,9 +832,32 @@ export const db = {
     const concept = store.concepts.find((c) => c.id === gap.conceptId);
     if (!student || !concept) return null;
 
+    // Requirement 7: Prevent accidental duplicate plans from repeated button clicks.
+    // If a plan already exists for this student & concept and was created recently or is active,
+    // return the existing plan unless the teacher deliberately requested forceRecreate.
+    if (!options?.forceRecreate) {
+      const existingPlan = store.remedialPlans.find(
+        (p) => p.studentId === student.id && p.conceptId === concept.id
+      );
+      if (existingPlan) {
+        const timeDiffMs = Date.now() - new Date(existingPlan.createdAt).getTime();
+        // Return existing if created within last 15 seconds or is currently active/suggested
+        if (timeDiffMs < 15000 || existingPlan.status === "Suggested" || existingPlan.status === "In Progress" || existingPlan.status === "Approved") {
+          if (customNotes) existingPlan.teacherNotes = customNotes;
+          existingPlan.learningGapId = gap.id;
+          gap.status = "Under Intervention";
+          gap.remedialPlanId = existingPlan.id;
+          saveStore(store);
+          return existingPlan;
+        }
+      }
+    }
+
     const studentResults = store.results
       .filter((r) => r.studentId === gap.studentId && r.conceptId === gap.conceptId)
       .sort((a, b) => new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime());
+
+    const latestResult = studentResults[studentResults.length - 1];
 
     const detection = detectLearningGap(
       gap.conceptId,
@@ -660,6 +873,8 @@ export const db = {
       }
     );
 
+    const subjectObj = store.subjects.find((s) => s.id === concept.subjectId || s.code === concept.subjectCode);
+
     const plan = generateRemedialPlan(
       student.id,
       student.displayName,
@@ -667,16 +882,24 @@ export const db = {
       concept.name,
       concept.subjectCode,
       detection,
-      customNotes
+      customNotes,
+      {
+        studentCode: student.studentCode,
+        classroomId: student.classroomId,
+        grade: student.grade,
+        subjectName: subjectObj?.name || concept.subjectCode,
+        learningGapId: gap.id,
+        triggeringAssessmentId: latestResult?.id,
+      }
     );
 
     const existingPlanIndex = store.remedialPlans.findIndex(
       (p) => p.studentId === student.id && p.conceptId === concept.id
     );
-    if (existingPlanIndex !== -1) {
+    if (existingPlanIndex !== -1 && !options?.forceRecreate) {
       store.remedialPlans[existingPlanIndex] = plan;
     } else {
-      store.remedialPlans.push(plan);
+      store.remedialPlans.unshift(plan);
     }
 
     // Link plan to gap
@@ -685,13 +908,190 @@ export const db = {
     gap.updatedAt = new Date().toISOString();
 
     saveStore(store);
+    return plan;
+  },
 
-    if (isPostgresConfigured()) {
-      postgresRemedialPlanDb.upsertRemedialPlan(plan).catch((e) =>
-        console.error("[PostgreSQL upsertRemedialPlan sync error]:", e)
+  createRemedialPlanForStudentConcept(
+    studentId: string,
+    conceptId: string,
+    options?: { forceRecreate?: boolean; customNotes?: string }
+  ): RemedialPlan | null {
+    const store = loadStore();
+    const student = store.students.find((s) => s.id === studentId);
+    const concept = store.concepts.find((c) => c.id === conceptId);
+    if (!student || !concept) return null;
+
+    // Requirement 7: Deduplication check
+    if (!options?.forceRecreate) {
+      const existingPlan = store.remedialPlans.find(
+        (p) => p.studentId === student.id && p.conceptId === concept.id
       );
+      if (existingPlan) {
+        const timeDiffMs = Date.now() - new Date(existingPlan.createdAt).getTime();
+        if (timeDiffMs < 15000 || existingPlan.status === "Suggested" || existingPlan.status === "In Progress" || existingPlan.status === "Approved") {
+          return existingPlan;
+        }
+      }
     }
 
+    // Find real assessment results for this student and concept
+    const studentResults = store.results
+      .filter((r) => r.studentId === studentId && r.conceptId === conceptId)
+      .sort((a, b) => new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime());
+
+    const latestResult = studentResults[studentResults.length - 1];
+
+    let gap = store.learningGaps.find((g) => g.studentId === studentId && g.conceptId === conceptId);
+
+    const detection = detectLearningGap(
+      concept.id,
+      concept.name,
+      studentResults.map((r) => ({
+        marksObtained: r.marksObtained,
+        maximumMarks: r.maximumMarks,
+        recordedAt: r.recordedAt,
+      })),
+      {
+        mastery: store.settings.masteryThreshold,
+        developing: store.settings.developingThreshold,
+      }
+    );
+
+    const subjectObj = store.subjects.find((s) => s.id === concept.subjectId || s.code === concept.subjectCode);
+
+    // If gap record didn't exist yet, create one
+    if (!gap) {
+      gap = {
+        id: `gap-${student.id}-${concept.id}`,
+        studentId: student.id,
+        studentName: student.displayName,
+        studentCode: student.studentCode,
+        classroomId: student.classroomId,
+        section: student.section,
+        grade: student.grade,
+        conceptId: concept.id,
+        conceptName: concept.name,
+        conceptNameGujarati: concept.nameGujarati,
+        subjectCode: concept.subjectCode,
+        subjectName: subjectObj?.name || concept.subjectCode,
+        status: "Under Intervention",
+        priority: detection.masteryStatus === "Needs Support" ? "High" : "Medium",
+        masteryStatus: detection.masteryStatus,
+        reason: detection.reason,
+        suggestedAction: detection.suggestedAction,
+        attemptsCount: detection.attemptsCount,
+        latestPercentage: detection.latestPercentage,
+        previousPercentage: detection.previousPercentage,
+        deltaPercentagePoints: detection.deltaPercentagePoints,
+        marksObtained: latestResult?.marksObtained,
+        maximumMarks: latestResult?.maximumMarks,
+        assessmentDate: latestResult?.recordedAt,
+        updatedAt: new Date().toISOString(),
+      };
+      store.learningGaps.push(gap);
+    }
+
+    const activeGap = gap;
+
+    const plan = generateRemedialPlan(
+      student.id,
+      student.displayName,
+      concept.id,
+      concept.name,
+      concept.subjectCode,
+      detection,
+      options?.customNotes,
+      {
+        studentCode: student.studentCode,
+        classroomId: student.classroomId,
+        grade: student.grade,
+        subjectName: subjectObj?.name || concept.subjectCode,
+        learningGapId: activeGap.id,
+        triggeringAssessmentId: latestResult?.id,
+      }
+    );
+
+    const existingPlanIndex = store.remedialPlans.findIndex(
+      (p) => p.studentId === student.id && p.conceptId === concept.id
+    );
+    if (existingPlanIndex !== -1 && !options?.forceRecreate) {
+      store.remedialPlans[existingPlanIndex] = plan;
+    } else {
+      store.remedialPlans.unshift(plan);
+    }
+
+    activeGap.remedialPlanId = plan.id;
+    activeGap.status = "Under Intervention";
+    activeGap.updatedAt = new Date().toISOString();
+
+    saveStore(store);
+    return plan;
+  },
+
+  updateRemedialPlanStep(planId: string, stepNumber: number, completed: boolean): RemedialPlan | null {
+    const store = loadStore();
+    const plan = store.remedialPlans.find((p) => p.id === planId);
+    if (!plan) return null;
+
+    if (!plan.steps || plan.steps.length === 0) {
+      return null;
+    }
+
+    const stepIndex = plan.steps.findIndex((s) => s.stepNumber === stepNumber);
+    if (stepIndex === -1) return null;
+
+    plan.steps[stepIndex].completed = Boolean(completed);
+
+    // Recalculate progress
+    const completedCount = plan.steps.filter((s) => s.completed).length;
+    const totalSteps = plan.steps.length;
+    plan.completedStepsCount = completedCount;
+    plan.progressPercentage = Math.round((completedCount / Math.max(1, totalSteps)) * 100);
+    plan.updatedAt = new Date().toISOString();
+
+    // Auto-update plan status based on progress
+    if (completedCount === totalSteps) {
+      plan.status = "Completed";
+    } else if (completedCount > 0 && (plan.status === "Suggested" || plan.status === "Approved")) {
+      plan.status = "In Progress";
+    } else if (completedCount < totalSteps && plan.status === "Completed") {
+      plan.status = "In Progress";
+    }
+
+    // If plan is completed, also update linked learning gap status if present
+    if (plan.learningGapId) {
+      const gap = store.learningGaps.find((g) => g.id === plan.learningGapId);
+      if (gap) {
+        if (plan.status === "Completed") {
+          gap.status = "Resolved";
+        } else {
+          gap.status = "Under Intervention";
+        }
+        gap.updatedAt = new Date().toISOString();
+      }
+    }
+
+    saveStore(store);
+    return plan;
+  },
+
+  reopenRemedialPlan(planId: string): RemedialPlan | null {
+    const store = loadStore();
+    const plan = store.remedialPlans.find((p) => p.id === planId);
+    if (!plan) return null;
+
+    plan.status = "In Progress";
+    plan.updatedAt = new Date().toISOString();
+
+    if (plan.learningGapId) {
+      const gap = store.learningGaps.find((g) => g.id === plan.learningGapId);
+      if (gap) {
+        gap.status = "Under Intervention";
+        gap.updatedAt = new Date().toISOString();
+      }
+    }
+
+    saveStore(store);
     return plan;
   },
 
@@ -717,13 +1117,6 @@ export const db = {
     }
 
     saveStore(store);
-
-    if (isPostgresConfigured()) {
-      postgresRemedialPlanDb.upsertRemedialPlan(plan).catch((e) =>
-        console.error("[PostgreSQL saveCustomRemedialPlan sync error]:", e)
-      );
-    }
-
     return plan;
   },
 
@@ -732,15 +1125,21 @@ export const db = {
     const index = store.remedialPlans.findIndex((p) => p.id === id);
     if (index === -1) return null;
 
-    store.remedialPlans[index] = { ...store.remedialPlans[index], ...updates };
-    saveStore(store);
+    const currentPlan = store.remedialPlans[index];
+    const mergedPlan = { ...currentPlan, ...updates, updatedAt: new Date().toISOString() };
 
-    if (isPostgresConfigured()) {
-      postgresRemedialPlanDb.updateRemedialPlan(id, updates).catch((e) =>
-        console.error("[PostgreSQL updateRemedialPlan sync error]:", e)
-      );
+    // If steps were updated, recalculate completion stats
+    if (updates.steps) {
+      const completedCount = mergedPlan.steps.filter((s) => s.completed).length;
+      mergedPlan.completedStepsCount = completedCount;
+      mergedPlan.progressPercentage = Math.round((completedCount / Math.max(1, mergedPlan.steps.length)) * 100);
+      if (completedCount === mergedPlan.steps.length) {
+        mergedPlan.status = "Completed";
+      }
     }
 
+    store.remedialPlans[index] = mergedPlan;
+    saveStore(store);
     return store.remedialPlans[index];
   },
 
@@ -780,13 +1179,6 @@ export const db = {
     }
 
     saveStore(store);
-
-    if (isPostgresConfigured()) {
-      postgresActivityDb.recordAttempt(attempt).catch((e) =>
-        console.error("[PostgreSQL recordAttempt sync error]:", e)
-      );
-    }
-
     return attempt;
   },
 
@@ -794,458 +1186,6 @@ export const db = {
     const store = loadStore();
     if (!studentId) return store.attempts;
     return store.attempts.filter((a) => a.studentId === studentId);
-  },
-
-  // --- Parent & Notice Management ---
-  getParents(): ParentProfile[] {
-    const store = loadStore();
-    return store.parents || [];
-  },
-
-  getParentById(id: string): ParentProfile | undefined {
-    return this.getParents().find((p) => p.id === id);
-  },
-
-  getParentsByStudentId(studentId: string): ParentProfile[] {
-    return this.getParents().filter((p) => p.studentIds.includes(studentId));
-  },
-
-  getNotices(filter?: { category?: string; status?: string; grade?: number }): SchoolNotice[] {
-    const store = loadStore();
-    let notices = store.notices || [];
-    if (filter?.category && filter.category !== "all") {
-      notices = notices.filter((n) => n.category === filter.category);
-    }
-    if (filter?.status && filter.status !== "all") {
-      notices = notices.filter((n) => n.status === filter.status);
-    }
-    if (filter?.grade) {
-      notices = notices.filter(
-        (n) => n.targetAudience === "all" || n.targetClassGrade === filter.grade
-      );
-    }
-    return notices;
-  },
-
-  getNoticeById(id: string): SchoolNotice | undefined {
-    const store = loadStore();
-    return (store.notices || []).find((n) => n.id === id);
-  },
-
-  saveNotice(noticeData: Omit<SchoolNotice, "id" | "createdAt" | "updatedAt">): SchoolNotice {
-    const store = loadStore();
-    if (!store.notices) store.notices = [];
-    const now = new Date().toISOString();
-    const notice: SchoolNotice = {
-      ...noticeData,
-      id: `not-${Date.now()}`,
-      createdAt: now,
-      updatedAt: now,
-    };
-    store.notices.unshift(notice);
-    saveStore(store);
-    return notice;
-  },
-
-  updateNotice(id: string, updates: Partial<SchoolNotice>): SchoolNotice | null {
-    const store = loadStore();
-    if (!store.notices) store.notices = [];
-    const idx = store.notices.findIndex((n) => n.id === id);
-    if (idx === -1) return null;
-    store.notices[idx] = {
-      ...store.notices[idx],
-      ...updates,
-      updatedAt: new Date().toISOString(),
-    };
-    saveStore(store);
-    return store.notices[idx];
-  },
-
-  deleteNotice(id: string): boolean {
-    const store = loadStore();
-    if (!store.notices) return false;
-    const initialLen = store.notices.length;
-    store.notices = store.notices.filter((n) => n.id !== id);
-    if (store.notices.length !== initialLen) {
-      if (store.translations) {
-        store.translations = store.translations.filter((t) => t.noticeId !== id);
-      }
-      if (store.deliveries) {
-        store.deliveries = store.deliveries.filter((d) => d.noticeId !== id);
-      }
-      saveStore(store);
-      return true;
-    }
-    return false;
-  },
-
-  getTranslations(noticeId?: string): NoticeTranslation[] {
-    const store = loadStore();
-    const list = store.translations || [];
-    if (!noticeId) return list;
-    return list.filter((t) => t.noticeId === noticeId);
-  },
-
-  saveTranslation(translationData: Omit<NoticeTranslation, "id" | "updatedAt">): NoticeTranslation {
-    const store = loadStore();
-    if (!store.translations) store.translations = [];
-    const existingIdx = store.translations.findIndex(
-      (t) => t.noticeId === translationData.noticeId && t.language === translationData.language
-    );
-    const now = new Date().toISOString();
-    let result: NoticeTranslation;
-    if (existingIdx !== -1) {
-      store.translations[existingIdx] = {
-        ...store.translations[existingIdx],
-        ...translationData,
-        updatedAt: now,
-      };
-      result = store.translations[existingIdx];
-    } else {
-      result = {
-        ...translationData,
-        id: `tr-${Date.now()}-${translationData.language}`,
-        updatedAt: now,
-      };
-      store.translations.push(result);
-    }
-    saveStore(store);
-    return result;
-  },
-
-  getDeliveries(noticeId?: string, parentId?: string): NoticeDelivery[] {
-    const store = loadStore();
-    let deliveries = store.deliveries || [];
-    if (noticeId) {
-      deliveries = deliveries.filter((d) => d.noticeId === noticeId);
-    }
-    if (parentId) {
-      deliveries = deliveries.filter((d) => d.parentId === parentId);
-    }
-    return deliveries;
-  },
-
-  sendNoticeToParents(
-    noticeId: string,
-    options?: { grade?: number; section?: string; studentIds?: string[] }
-  ): NoticeDelivery[] {
-    const store = loadStore();
-    const notice = this.getNoticeById(noticeId);
-    if (!notice) return [];
-
-    let targetStudents = store.students || [];
-    if (options?.grade) {
-      targetStudents = targetStudents.filter((s) => s.grade === options.grade);
-    }
-    if (options?.section) {
-      targetStudents = targetStudents.filter((s) => s.section === options.section);
-    }
-    if (options?.studentIds && options.studentIds.length > 0) {
-      targetStudents = targetStudents.filter((s) => options.studentIds!.includes(s.id));
-    }
-
-    if (!store.deliveries) store.deliveries = [];
-    const now = new Date().toISOString();
-    const createdDeliveries: NoticeDelivery[] = [];
-
-    for (const student of targetStudents) {
-      const parents = this.getParentsByStudentId(student.id);
-      const parent = parents[0] || {
-        id: `par-gen-${student.id}`,
-        name: `Parent of ${student.displayName}`,
-        preferredLanguage: "gu",
-      };
-
-      // Check if delivery already exists to avoid duplicates
-      const exists = store.deliveries.some(
-        (d) => d.noticeId === noticeId && d.studentId === student.id
-      );
-      if (!exists) {
-        const delivery: NoticeDelivery = {
-          id: `del-${Date.now()}-${student.id}`,
-          noticeId,
-          parentId: parent.id,
-          parentName: parent.name,
-          studentId: student.id,
-          studentName: student.displayName,
-          studentGrade: student.grade,
-          studentSection: student.section,
-          language: (parent.preferredLanguage as any) || "gu",
-          channel: "whatsapp",
-          status: "delivered",
-          sentAt: now,
-          deliveredAt: now,
-        };
-        store.deliveries.push(delivery);
-        createdDeliveries.push(delivery);
-      }
-    }
-
-    // Mark notice as sent
-    this.updateNotice(noticeId, { status: "sent", sentAt: now });
-    saveStore(store);
-    return createdDeliveries;
-  },
-
-  recordAcknowledgment(deliveryId: string, feedback?: string): NoticeDelivery | null {
-    const store = loadStore();
-    if (!store.deliveries) return null;
-    const delivery = store.deliveries.find((d) => d.id === deliveryId);
-    if (!delivery) return null;
-    const now = new Date().toISOString();
-    delivery.status = "acknowledged";
-    delivery.readAt = delivery.readAt || now;
-    delivery.acknowledgedAt = now;
-    if (feedback) delivery.parentFeedback = feedback;
-    saveStore(store);
-    return delivery;
-  },
-
-  // --- AI Provider Configurations & Metrics ---
-  getAiProviderConfigs(): AiProviderConfig[] {
-    const store = loadStore();
-    return store.aiConfigs || SEED_AI_CONFIGS;
-  },
-
-  updateAiProviderConfig(task: string, updates: Partial<AiProviderConfig>): AiProviderConfig[] {
-    const store = loadStore();
-    if (!store.aiConfigs) store.aiConfigs = [...SEED_AI_CONFIGS];
-    const idx = store.aiConfigs.findIndex((c) => c.task === task);
-    if (idx !== -1) {
-      store.aiConfigs[idx] = { ...store.aiConfigs[idx], ...updates };
-    } else {
-      store.aiConfigs.push({
-        task: task as any,
-        primaryProvider: (updates.primaryProvider as any) || "offline_fallback",
-        fallbackProvider: updates.fallbackProvider as any,
-        enabled: updates.enabled ?? true,
-      });
-    }
-    saveStore(store);
-    return store.aiConfigs;
-  },
-
-  getAiMetrics(): AiUsageMetric[] {
-    const store = loadStore();
-    return store.aiMetrics || [];
-  },
-
-  recordAiMetric(metric: AiUsageMetric): void {
-    const store = loadStore();
-    if (!store.aiMetrics) store.aiMetrics = [];
-    store.aiMetrics.unshift(metric);
-    // Keep last 200 metrics to avoid storage bloat
-    if (store.aiMetrics.length > 200) {
-      store.aiMetrics = store.aiMetrics.slice(0, 200);
-    }
-    saveStore(store);
-  },
-
-  getFeedback(): { id: string; email: string; message?: string; submittedAt: string }[] {
-    const store = loadStore();
-    return store.feedback || [];
-  },
-
-  saveFeedback(email: string, message?: string): { id: string; email: string; message?: string; submittedAt: string } {
-    const store = loadStore();
-    if (!store.feedback) store.feedback = [];
-    const item = {
-      id: `fb-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-      email,
-      message,
-      submittedAt: new Date().toISOString(),
-    };
-    store.feedback.unshift(item);
-    saveStore(store);
-    return item;
-  },
-
-
-  getUsers(): User[] {
-    const store = loadStore();
-    return store.users || [];
-  },
-
-  getUserById(id: string): User | null {
-    const store = loadStore();
-    return (store.users || []).find((u) => u.id === id) || null;
-  },
-
-  getUserByEmail(email: string): User | null {
-    const store = loadStore();
-    const normalized = email.trim().toLowerCase();
-    return (store.users || []).find((u) => u.email.toLowerCase() === normalized) || null;
-  },
-
-  getUserByGoogleId(googleId: string): User | null {
-    const store = loadStore();
-    return (store.users || []).find((u) => u.googleId === googleId) || null;
-  },
-
-  createUser(userData: Partial<User> & { email: string; name: string }): User {
-    const store = loadStore();
-    const usersList = store.users || JSON.parse(JSON.stringify(SEED_USERS));
-    store.users = usersList;
-    const normalizedEmail = userData.email.trim().toLowerCase();
-    const existing = usersList.find((u: User) => u.email.toLowerCase() === normalizedEmail);
-    if (existing) {
-      throw new Error("A user with this email address already exists.");
-    }
-
-    const now = new Date().toISOString();
-    const newUser: User = {
-      id: userData.id || `usr-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-      name: userData.name,
-      email: userData.email.trim().toLowerCase(),
-      role: userData.role || "teacher",
-      schoolId: userData.schoolId || "sch-gn-01",
-      googleId: userData.googleId,
-      avatarUrl: userData.avatarUrl,
-      provider: userData.provider || "local",
-      passwordHash: userData.passwordHash,
-      status: userData.status || "active",
-      createdAt: now,
-      updatedAt: now,
-    };
-    usersList.push(newUser);
-    saveStore(store);
-    return newUser;
-  },
-
-  updateUser(id: string, updates: Partial<User>): User | null {
-    const store = loadStore();
-    const usersList = store.users || JSON.parse(JSON.stringify(SEED_USERS));
-    store.users = usersList;
-    const index = usersList.findIndex((u: User) => u.id === id);
-    if (index === -1) return null;
-
-    const existing = usersList[index];
-    const updated: User = {
-      ...existing,
-      ...updates,
-      id: existing.id,
-      email: existing.email,
-      updatedAt: new Date().toISOString(),
-    };
-    usersList[index] = updated;
-    saveStore(store);
-    return updated;
-  },
-
-  deleteUser(id: string): boolean {
-    const store = loadStore();
-    const usersList = store.users || JSON.parse(JSON.stringify(SEED_USERS));
-    const index = usersList.findIndex((u: User) => u.id === id);
-    if (index === -1) return false;
-    usersList.splice(index, 1);
-    store.users = usersList;
-    saveStore(store);
-    return true;
-  },
-
-  upsertUser(userData: Partial<User> & { email: string }): User {
-    const store = loadStore();
-    const usersList = store.users || JSON.parse(JSON.stringify(SEED_USERS));
-    store.users = usersList;
-    const normalizedEmail = userData.email.trim().toLowerCase();
-    const existingIndex = usersList.findIndex(
-      (u: User) =>
-        (userData.googleId && u.googleId === userData.googleId) ||
-        u.email.toLowerCase() === normalizedEmail
-    );
-
-    const now = new Date().toISOString();
-
-    if (existingIndex >= 0) {
-      const existing = usersList[existingIndex];
-      const updated: User = {
-        ...existing,
-        ...userData,
-        id: existing.id,
-        role: existing.role || userData.role || "teacher",
-        schoolId: existing.schoolId || userData.schoolId || "sch-gn-01",
-        passwordHash: userData.passwordHash || existing.passwordHash,
-        status: userData.status || existing.status || "active",
-        updatedAt: now,
-      };
-      usersList[existingIndex] = updated;
-      saveStore(store);
-      return updated;
-    } else {
-      const newUser: User = {
-        id: userData.id || `usr-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-        name: userData.name || "Educator",
-        email: userData.email.trim().toLowerCase(),
-        role: userData.role || "teacher",
-        schoolId: userData.schoolId || "sch-gn-01",
-        googleId: userData.googleId,
-        avatarUrl: userData.avatarUrl,
-        provider: userData.provider || "google",
-        passwordHash: userData.passwordHash,
-        status: userData.status || "active",
-        createdAt: now,
-        updatedAt: now,
-      };
-      usersList.push(newUser);
-      saveStore(store);
-      return newUser;
-    }
-  },
-
-  async getUsersAsync(): Promise<User[]> {
-    if (isPostgresConfigured()) {
-      return postgresUserDb.getAllUsers();
-    }
-    return this.getUsers();
-  },
-
-  async getUserByIdAsync(id: string): Promise<User | null> {
-    if (isPostgresConfigured()) {
-      return postgresUserDb.getUserById(id);
-    }
-    return this.getUserById(id);
-  },
-
-  async getUserByEmailAsync(email: string): Promise<User | null> {
-    if (isPostgresConfigured()) {
-      return postgresUserDb.getUserByEmail(email);
-    }
-    return this.getUserByEmail(email);
-  },
-
-  async getUserByGoogleIdAsync(googleId: string): Promise<User | null> {
-    if (isPostgresConfigured()) {
-      return postgresUserDb.getUserByGoogleId(googleId);
-    }
-    return this.getUserByGoogleId(googleId);
-  },
-
-  async createUserAsync(userData: Partial<User> & { email: string; name: string }): Promise<User> {
-    if (isPostgresConfigured()) {
-      return postgresUserDb.createUser(userData);
-    }
-    return this.createUser(userData);
-  },
-
-  async updateUserAsync(id: string, updates: Partial<User>): Promise<User | null> {
-    if (isPostgresConfigured()) {
-      return postgresUserDb.updateUser(id, updates);
-    }
-    return this.updateUser(id, updates);
-  },
-
-  async deleteUserAsync(id: string): Promise<boolean> {
-    if (isPostgresConfigured()) {
-      return postgresUserDb.deleteUser(id);
-    }
-    return this.deleteUser(id);
-  },
-
-  async upsertUserAsync(userData: Partial<User> & { email: string }): Promise<User> {
-    if (isPostgresConfigured()) {
-      return postgresUserDb.upsertUser(userData);
-    }
-    return this.upsertUser(userData);
   },
 
   resetToDemoData(): void {

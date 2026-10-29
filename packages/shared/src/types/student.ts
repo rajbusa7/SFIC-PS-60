@@ -1,5 +1,4 @@
-export type UserRole = "teacher" | "admin" | "parent";
-export type UserStatus = "active" | "pending" | "disabled";
+export type UserRole = "teacher" | "admin";
 
 export interface User {
   id: string;
@@ -7,13 +6,6 @@ export interface User {
   email: string;
   role: UserRole;
   schoolId: string;
-  googleId?: string;
-  avatarUrl?: string;
-  provider?: "local" | "google";
-  passwordHash?: string;
-  status?: "active" | "pending" | "disabled";
-  createdAt?: string;
-  updatedAt?: string;
 }
 
 export interface School {

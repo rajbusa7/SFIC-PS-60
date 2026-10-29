@@ -38,57 +38,57 @@ export function Badge({
 }: BadgeProps) {
   const variantStyles: Record<BadgeVariant, string> = {
     needsSupport:
-      "bg-[#FBECE9] text-[#A93327] border border-[#A93327]/25 font-semibold",
+      "bg-[#FFEAEB] dark:bg-[#FF5C6C]/15 text-[#E02438] dark:text-[#FF7D8A] border-[#FF5C6C]/30 font-semibold",
     developing:
-      "bg-[#FDF4E7] text-[#8D4E10] border border-[#8D4E10]/25 font-semibold",
+      "bg-[#FEF3C7] dark:bg-[#F59E0B]/15 text-[#B45309] dark:text-[#FCD34D] border-[#F59E0B]/30 font-medium",
     mastered:
-      "bg-[#EAF4EE] text-[#2E7D5E] border border-[#2E7D5E]/25 font-semibold",
-    high: "bg-[#FBECE9] text-[#A93327] border border-[#A93327]/30 font-bold",
+      "bg-[#E6FAF3] dark:bg-[#3DDBA9]/15 text-[#0A7353] dark:text-[#6EE7B7] border-[#3DDBA9]/35 font-semibold",
+    high: "bg-[#FF5C6C]/15 text-[#D91B32] dark:text-[#FF808E] border-[#FF5C6C]/40 font-bold",
     medium:
-      "bg-[#FDF4E7] text-[#8D4E10] border border-[#8D4E10]/30 font-semibold",
-    low: "bg-[#FAF6E9] text-[#49352F] border border-[#49352F]/12 font-medium",
+      "bg-[#F59E0B]/15 text-[#B45309] dark:text-[#FBBF24] border-[#F59E0B]/40 font-semibold",
+    low: "bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 font-medium",
     suggested:
-      "bg-[#FAF6E9] text-[#49352F] border border-[#49352F]/15 font-medium",
+      "bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-900",
     approved:
-      "bg-[#EAF4EE] text-[#2E7D5E] border border-[#2E7D5E]/25 font-semibold",
+      "bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-900",
     inProgress:
-      "bg-[#FDF4E7] text-[#8D4E10] border border-[#8D4E10]/25 font-semibold",
+      "bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-900",
     completed:
-      "bg-[#EAF4EE] text-[#2E7D5E] border border-[#2E7D5E]/25 font-semibold",
+      "bg-[#E6FAF3] dark:bg-[#3DDBA9]/15 text-[#0A7353] dark:text-[#6EE7B7] border-[#3DDBA9]/35 font-semibold",
     default:
-      "bg-[#FAF6E9] text-[#49352F] border border-[#49352F]/14 font-medium",
+      "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700",
     outline:
-      "bg-transparent text-[#49352F] border border-[#49352F]/20 font-medium",
+      "bg-transparent text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700",
     saffron:
-      "bg-[#F2CAB3] text-[#49352F] border border-[#49352F]/16 font-bold",
+      "bg-[#FFF0E6] dark:bg-[#FF8A3D]/20 text-[#D96316] dark:text-[#FFAE7A] border-[#FF8A3D]/40 font-bold",
     mint:
-      "bg-[#EAF4EE] text-[#2E7D5E] border border-[#2E7D5E]/25 font-semibold",
+      "bg-[#E6FAF3] dark:bg-[#3DDBA9]/15 text-[#0A7353] dark:text-[#6EE7B7] border-[#3DDBA9]/35 font-semibold",
     coral:
-      "bg-[#FBECE9] text-[#A93327] border border-[#A93327]/25 font-semibold",
+      "bg-[#FFEAEB] dark:bg-[#FF5C6C]/15 text-[#E02438] dark:text-[#FF7D8A] border-[#FF5C6C]/30 font-semibold",
     indigo:
-      "bg-[#F2DCB5]/80 text-[#49352F] border border-[#49352F]/14 font-semibold",
+      "bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800 font-semibold",
     amber:
-      "bg-[#FDF4E7] text-[#8D4E10] border border-[#8D4E10]/25 font-semibold",
+      "bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800 font-semibold",
   };
 
   const dotColors: Record<BadgeVariant, string> = {
-    needsSupport: "bg-[#A93327]",
-    developing: "bg-[#8D4E10]",
-    mastered: "bg-[#2E7D5E]",
-    high: "bg-[#A93327]",
-    medium: "bg-[#8D4E10]",
-    low: "bg-[#7A6862]",
-    suggested: "bg-[#49352F]",
-    approved: "bg-[#2E7D5E]",
-    inProgress: "bg-[#8D4E10]",
-    completed: "bg-[#2E7D5E]",
-    default: "bg-[#49352F]",
-    outline: "bg-[#49352F]",
-    saffron: "bg-[#8D4E10]",
-    mint: "bg-[#2E7D5E]",
-    coral: "bg-[#A93327]",
-    indigo: "bg-[#B8673E]",
-    amber: "bg-[#8D4E10]",
+    needsSupport: "bg-[#FF5C6C]",
+    developing: "bg-[#F59E0B]",
+    mastered: "bg-[#3DDBA9]",
+    high: "bg-[#FF5C6C]",
+    medium: "bg-[#F59E0B]",
+    low: "bg-slate-400",
+    suggested: "bg-blue-400",
+    approved: "bg-purple-400",
+    inProgress: "bg-amber-400",
+    completed: "bg-[#3DDBA9]",
+    default: "bg-slate-400",
+    outline: "bg-slate-400",
+    saffron: "bg-[#FF8A3D]",
+    mint: "bg-[#3DDBA9]",
+    coral: "bg-[#FF5C6C]",
+    indigo: "bg-indigo-400",
+    amber: "bg-amber-400",
   };
 
   const sizeStyles = {
@@ -109,18 +109,18 @@ export function Badge({
       {...props}
     >
       {showDot && (
-        <span className="relative flex h-2 w-2 items-center justify-center" aria-hidden="true">
+        <span className="relative flex h-2 w-2">
           {pulse && (
             <span
               className={cn(
-                "animate-pulse motion-reduce:animate-none absolute inline-flex h-3 w-3 rounded-full opacity-40",
+                "animate-ping absolute inline-flex h-full w-full rounded-full opacity-75",
                 dotColors[variant]
               )}
             />
           )}
           <span
             className={cn(
-              "relative inline-flex rounded-full h-1.5 w-1.5",
+              "relative inline-flex rounded-full h-2 w-2",
               dotColors[variant]
             )}
           />

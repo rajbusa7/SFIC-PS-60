@@ -6,88 +6,60 @@ export function BrandLogo({
   size = 38,
   showText = true,
   className = "",
-  variant = "auto",
 }: {
   size?: number;
   showText?: boolean;
   className?: string;
-  variant?: "auto" | "dark" | "light";
 }) {
-  const isDarkExplicit = variant === "dark";
-  const isLightExplicit = variant === "light";
-
-  const titleStudyClass = isDarkExplicit
-    ? "text-white"
-    : isLightExplicit
-    ? "text-[#49352F]"
-    : "text-[#49352F] dark:text-white";
-
-  const titleSaathiClass = isDarkExplicit
-    ? "text-[#FF8A3D]"
-    : isLightExplicit
-    ? "text-[#B26A1B]"
-    : "text-[#B26A1B] dark:text-[#FF8A3D]";
-
-  const badgeClass = isDarkExplicit
-    ? "bg-amber-500/20 border-amber-500/40 text-amber-300 shadow-[0_0_10px_rgba(255,138,61,0.25)]"
-    : isLightExplicit
-    ? "bg-[#F2CAB3] border-[#49352F]/15 text-[#49352F]"
-    : "bg-[#F2CAB3] dark:bg-amber-500/20 border-[#49352F]/15 dark:border-amber-500/30 text-[#49352F] dark:text-amber-300";
-
-  const subtitleClass = isDarkExplicit
-    ? "text-slate-300"
-    : isLightExplicit
-    ? "text-[#7A6862]"
-    : "text-[#7A6862] dark:text-slate-400";
   return (
     <div className={`flex items-center gap-3 select-none ${className}`}>
-      {/* Warm Bridge Glyph + Gujarati "શ" Icon */}
+      {/* Glowing Bridge Glyph + Gujarati "શ" Icon */}
       <div
-        className="relative shrink-0 flex items-center justify-center rounded-2xl bg-gradient-to-br from-[#F2DCB5] via-[#FAF6E9] to-[#F2CAB3] border border-[#49352F]/15 shadow-[0_4px_14px_rgba(73,53,47,0.08)] overflow-hidden"
+        className="relative shrink-0 flex items-center justify-center rounded-2xl bg-gradient-to-br from-[#2B2A6B] via-[#14123D] to-[#0A0923] border border-amber-500/30 shadow-[0_0_20px_rgba(255,138,61,0.25)] overflow-hidden"
         style={{ width: size, height: size }}
       >
-        {/* Soft arch behind letter */}
+        {/* Glowing arch behind letter */}
         <svg
-          className="absolute inset-0 w-full h-full opacity-40"
+          className="absolute inset-0 w-full h-full opacity-60"
           viewBox="0 0 48 48"
           fill="none"
         >
           {/* Bridge cable arch */}
           <path
             d="M6 36 C18 18, 30 18, 42 36"
-            stroke="#49352F"
+            stroke="#FF8A3D"
             strokeWidth="2.5"
             strokeLinecap="round"
           />
           {/* Bridge vertical suspenders */}
-          <line x1="15" y1="26" x2="15" y2="36" stroke="#2E7D5E" strokeWidth="1.5" strokeDasharray="2 2" />
-          <line x1="24" y1="21" x2="24" y2="36" stroke="#49352F" strokeWidth="1.5" />
-          <line x1="33" y1="26" x2="33" y2="36" stroke="#2E7D5E" strokeWidth="1.5" strokeDasharray="2 2" />
+          <line x1="15" y1="26" x2="15" y2="36" stroke="#3DDBA9" strokeWidth="1.5" strokeDasharray="2 2" />
+          <line x1="24" y1="21" x2="24" y2="36" stroke="#FF8A3D" strokeWidth="1.5" />
+          <line x1="33" y1="26" x2="33" y2="36" stroke="#3DDBA9" strokeWidth="1.5" strokeDasharray="2 2" />
         </svg>
 
-        {/* Center Gujarati "સ" Character */}
+        {/* Center Gujarati "શ" Character */}
         <span
-          className="relative font-gujarati font-black text-[#49352F]"
+          className="relative font-gujarati font-black text-transparent bg-clip-text bg-gradient-to-b from-white via-amber-200 to-amber-400 drop-shadow-[0_2px_8px_rgba(255,138,61,0.6)]"
           style={{ fontSize: `${Math.round(size * 0.48)}px` }}
         >
-          સ
+          શ
         </span>
 
-        {/* Inner sage accent dot */}
-        <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#2E7D5E] shadow-[0_0_6px_rgba(46,125,94,0.4)]" />
+        {/* Inner glow dot */}
+        <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#3DDBA9]" />
       </div>
 
       {showText && (
         <div className="flex flex-col">
           <div className="flex items-center gap-1.5">
-            <span className={`font-heading font-extrabold text-base tracking-tight leading-none ${titleStudyClass}`}>
-              Study<span className={titleSaathiClass}>Saathi</span>
+            <span className="font-heading font-extrabold text-base tracking-tight text-white leading-none">
+              Shiksha<span className="text-amber-400">Setu</span>
             </span>
-            <span className={`border text-[10px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider ${badgeClass}`}>
+            <span className="bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 text-[10px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider shadow-xs shadow-amber-500/30">
               AI
             </span>
           </div>
-          <span className={`text-[10px] font-semibold tracking-wider uppercase mt-1 ${subtitleClass}`}>
+          <span className="text-[10px] font-semibold text-slate-400 tracking-wider uppercase mt-1">
             Learning Gap Bridge
           </span>
         </div>

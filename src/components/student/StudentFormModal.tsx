@@ -2,9 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Dialog } from "../ui/Dialog";
-import { AlertCircle, Building, Sparkles } from "lucide-react";
-import { useLanguage } from "@/context/LanguageContext";
-import { broadcastDataUpdate } from "@/lib/events";
+import { AlertCircle, ShieldCheck } from "lucide-react";
 import type { Student } from "@/lib/types";
 
 interface StudentFormModalProps {
@@ -12,6 +10,7 @@ interface StudentFormModalProps {
   onClose: () => void;
   student?: Student | null;
   onSuccess: () => void;
+  existingCodes?: string[];
 }
 
 export function StudentFormModal({
@@ -19,16 +18,18 @@ export function StudentFormModal({
   onClose,
   student,
   onSuccess,
+  existingCodes = [],
 }: StudentFormModalProps) {
-  const { language } = useLanguage();
   const [studentCode, setStudentCode] = useState(student?.studentCode || "");
   const [displayName, setDisplayName] = useState(student?.displayName || "");
   const [grade, setGrade] = useState<number>(student?.grade || 4);
   const [section, setSection] = useState(student?.section || "A");
+  const [enrollmentStatus, setEnrollmentStatus] = useState<"active" | "transferred" | "graduated">(
+    student?.enrollmentStatus || "active"
+  );
   const [notes, setNotes] = useState(student?.notes || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isCustomCode, setIsCustomCode] = useState(false);
 
   useEffect(() => {
     if (student) {
@@ -36,53 +37,48 @@ export function StudentFormModal({
       setDisplayName(student.displayName);
       setGrade(student.grade);
       setSection(student.section);
+      setEnrollmentStatus(student.enrollmentStatus || "active");
       setNotes(student.notes || "");
-      setIsCustomCode(true);
+      setError(null);
     } else if (isOpen) {
-      setIsCustomCode(false);
-      const randomSuffix = Math.floor(100 + Math.random() * 900);
-      setStudentCode(`MPS-4A-${randomSuffix}`);
+      // Auto-generate unique placeholder code if blank
+      const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+      setStudentCode((prev) => (prev ? prev : `MPS-4A-${randomSuffix}`));
       setDisplayName("");
-      setNotes("");
       setGrade(4);
       setSection("A");
+      setEnrollmentStatus("active");
+      setNotes("");
       setError(null);
     }
   }, [student, isOpen]);
 
-  const handleGradeChange = (newGrade: number) => {
-    setGrade(newGrade);
-    if (!student && !isCustomCode) {
-      const randomSuffix = Math.floor(100 + Math.random() * 900);
-      setStudentCode(`MPS-${newGrade}${section}-${randomSuffix}`);
-    }
-  };
-
-  const handleSectionChange = (newSec: string) => {
-    setSection(newSec);
-    if (!student && !isCustomCode) {
-      const randomSuffix = Math.floor(100 + Math.random() * 900);
-      setStudentCode(`MPS-${grade}${newSec}-${randomSuffix}`);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!displayName.trim()) {
-      setError(
-        language === "gu"
-          ? "કૃપા કરીને વિદ્યાર્થીનું પૂરું નામ દાખલ કરો."
-          : "Please enter the student's full name."
-      );
+    const cleanName = displayName.trim();
+    const cleanCode = studentCode.trim();
+
+    if (!cleanName) {
+      setError("Please provide the student's full name.");
       return;
     }
 
-    if (!studentCode.trim()) {
-      setError(
-        language === "gu"
-          ? "કૃપા કરીને વિદ્યાર્થી કોડ / રોલ નંબર દાખલ કરો."
-          : "Please enter student code / roll number."
-      );
+    if (!cleanCode) {
+      setError("Please provide a unique student roll/ID code.");
+      return;
+    }
+
+    // Check duplicate code against existing codes (excluding student's current code when editing)
+    const normalizedCode = cleanCode.toLowerCase();
+    const isDuplicate = existingCodes.some((code) => {
+      if (student && student.studentCode.toLowerCase() === normalizedCode) {
+        return false;
+      }
+      return code.toLowerCase() === normalizedCode;
+    });
+
+    if (isDuplicate) {
+      setError(`Student ID '${cleanCode}' is already registered to another student. Please enter a unique ID.`);
       return;
     }
 
@@ -96,37 +92,26 @@ export function StudentFormModal({
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        cache: "no-store",
         body: JSON.stringify({
-          studentCode: studentCode.trim(),
-          displayName: displayName.trim(),
+          studentCode: cleanCode,
+          displayName: cleanName,
           grade: Number(grade),
-          section: section.trim().toUpperCase(),
+          section: section.toUpperCase(),
           classroomId: `cls-${grade}${section.toLowerCase()}`,
-          notes: notes.trim(),
-          enrollmentStatus: "active",
+          notes,
+          enrollmentStatus,
         }),
       });
 
       const data = await res.json();
-      if (res.ok && data.success) {
-        broadcastDataUpdate("students", student ? "update" : "create", data.student?.id);
+      if (data.success) {
         onSuccess();
         onClose();
       } else {
-        setError(
-          data.error ||
-            (language === "gu"
-              ? "વિદ્યાર્થી રેકોર્ડ સાચવવામાં નિષ્ફળ"
-              : "Failed to save student record")
-        );
+        setError(data.error || "Failed to save student record");
       }
     } catch {
-      setError(
-        language === "gu"
-          ? "નેટવર્ક ભૂલ: વિદ્યાર્થી સાચવી શકાયો નથી"
-          : "Network error saving student to database"
-      );
+      setError("Network error saving student. Your inputs have been kept, please retry.");
     } finally {
       setIsSubmitting(false);
     }
@@ -136,38 +121,14 @@ export function StudentFormModal({
     <Dialog
       isOpen={isOpen}
       onClose={onClose}
-      title={
-        student
-          ? language === "gu"
-            ? "વિદ્યાર્થી વિગતો સંપાદિત કરો"
-            : "Edit Student Details"
-          : language === "gu"
-          ? "નવા વિદ્યાર્થીની નોંધણી કરો"
-          : "Register New Student"
-      }
-      description={
-        language === "gu"
-          ? "પ્રાથમિક શાળા પ્રવેશ માહિતી નોંધો. સંવેદનશીલ પારિવારિક/બાયોમેટ્રિક ડેટા એકત્રિત કરવામાં આવતો નથી."
-          : "Record primary school enrollment information. Sensitive family/biometric data is not collected."
-      }
+      title={student ? "Edit Student Record" : "Register New Student"}
+      description="Record primary school enrollment information. Sensitive family/biometric data is not collected."
       maxWidth="md"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* School Association Display */}
-        <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#FAF6E9] border border-[#49352F]/10 text-xs">
-          <span className="text-[#7A6862] font-semibold flex items-center gap-1.5">
-            <Building className="w-3.5 h-3.5 text-[#B26A1B]" />
-            {language === "gu" ? "શાળા સંલગ્નતા:" : "School Association:"}
-          </span>
-          <span className="font-bold text-[#49352F] font-heading">
-            Model Primary School, Gandhinagar
-          </span>
-        </div>
-
         <div>
-          <label className="block text-xs font-semibold text-[#49352F] mb-1">
-            {language === "gu" ? "વિદ્યાર્થીનું પૂરું નામ" : "Student Full Name"}{" "}
-            <span className="text-rose-500">*</span>
+          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            Student Full Name <span className="text-rose-500">*</span>
           </label>
           <input
             type="text"
@@ -177,16 +138,15 @@ export function StudentFormModal({
               setDisplayName(e.target.value);
               if (error) setError(null);
             }}
-            placeholder={language === "gu" ? "દા.ત. આરવ પટેલ" : "e.g. Aarav Patel"}
-            className="w-full rounded-xl border border-[#49352F]/15 bg-white p-2.5 text-sm text-[#49352F] focus:border-[#B26A1B] focus:ring-1 focus:ring-[#B26A1B] outline-hidden"
+            placeholder="e.g. Aarav Patel"
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-hidden transition-colors"
           />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-semibold text-[#49352F] mb-1">
-              {language === "gu" ? "વિદ્યાર્થી કોડ / રોલ" : "Student Code / Roll"}{" "}
-              <span className="text-rose-500">*</span>
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              Student ID / Roll Code <span className="text-rose-500">*</span>
             </label>
             <input
               type="text"
@@ -194,102 +154,103 @@ export function StudentFormModal({
               value={studentCode}
               onChange={(e) => {
                 setStudentCode(e.target.value);
-                setIsCustomCode(true);
+                if (error) setError(null);
               }}
               placeholder="e.g. MPS-4A-12"
-              className="w-full rounded-xl border border-[#49352F]/15 bg-white p-2.5 text-sm font-mono text-[#49352F] focus:border-[#B26A1B] focus:ring-1 focus:ring-[#B26A1B] outline-hidden"
+              className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2.5 text-sm font-mono text-slate-900 dark:text-amber-400 placeholder-slate-400 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-hidden transition-colors"
             />
+            <p className="text-[10px] text-slate-400 mt-0.5">Must be unique across the school</p>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-[#49352F] mb-1">
-              {language === "gu" ? "ધોરણ (વર્ગ)" : "Grade (Class)"}
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              Grade (Class) <span className="text-rose-500">*</span>
             </label>
             <select
               value={grade}
-              onChange={(e) => handleGradeChange(Number(e.target.value))}
-              className="w-full rounded-xl border border-[#49352F]/15 bg-white p-2.5 text-sm text-[#49352F] focus:border-[#B26A1B] focus:ring-1 focus:ring-[#B26A1B] outline-hidden cursor-pointer"
+              onChange={(e) => setGrade(Number(e.target.value))}
+              className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2.5 text-sm text-slate-900 dark:text-white focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-hidden cursor-pointer"
             >
-              <option value={1}>{language === "gu" ? "ધોરણ ૧" : "Class 1"}</option>
-              <option value={2}>{language === "gu" ? "ધોરણ ૨" : "Class 2"}</option>
-              <option value={3}>{language === "gu" ? "ધોરણ ૩" : "Class 3"}</option>
-              <option value={4}>{language === "gu" ? "ધોરણ ૪" : "Class 4"}</option>
-              <option value={5}>{language === "gu" ? "ધોરણ ૫" : "Class 5"}</option>
+              <option value={1}>Class 1</option>
+              <option value={2}>Class 2</option>
+              <option value={3}>Class 3</option>
+              <option value={4}>Class 4</option>
+              <option value={5}>Class 5</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              Section <span className="text-rose-500">*</span>
+            </label>
+            <select
+              value={section}
+              onChange={(e) => setSection(e.target.value)}
+              className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2.5 text-sm text-slate-900 dark:text-white focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-hidden cursor-pointer"
+            >
+              <option value="A">Section A</option>
+              <option value="B">Section B</option>
+              <option value="C">Section C</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              Enrollment Status
+            </label>
+            <select
+              value={enrollmentStatus}
+              onChange={(e) => setEnrollmentStatus(e.target.value as any)}
+              className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2.5 text-sm text-slate-900 dark:text-white focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-hidden cursor-pointer"
+            >
+              <option value="active">Active Enrolled</option>
+              <option value="transferred">Transferred (Archived)</option>
+              <option value="graduated">Graduated (Archived)</option>
             </select>
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-[#49352F] mb-1">
-            {language === "gu" ? "વિભાગ" : "Section"}
-          </label>
-          <select
-            value={section}
-            onChange={(e) => handleSectionChange(e.target.value)}
-            className="w-full rounded-xl border border-[#49352F]/15 bg-white p-2.5 text-sm text-[#49352F] focus:border-[#B26A1B] focus:ring-1 focus:ring-[#B26A1B] outline-hidden cursor-pointer"
-          >
-            <option value="A">{language === "gu" ? "વિભાગ અ (Section A)" : "Section A"}</option>
-            <option value="B">{language === "gu" ? "વિભાગ બ (Section B)" : "Section B"}</option>
-            <option value="C">{language === "gu" ? "વિભાગ ક (Section C)" : "Section C"}</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-xs font-semibold text-[#49352F] mb-1">
-            {language === "gu" ? "શિક્ષકની નોંધ અને અવલોકનો" : "Teacher Notes & Observations"}
+          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            Teacher Notes & Observations
           </label>
           <textarea
             rows={2}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder={
-              language === "gu"
-                ? "દા.ત. વિઝ્યુઅલ ચાર્ટ્સ દ્વારા ઝડપી શીખે છે; વાંચન માટે વધારાના સમયની જરૂર છે."
-                : "e.g. Responsive to visual charts; needs extra time for reading."
-            }
-            className="w-full rounded-xl border border-[#49352F]/15 bg-white p-2.5 text-xs text-[#49352F] placeholder-[#7A6862]/60 focus:border-[#B26A1B] focus:ring-1 focus:ring-[#B26A1B] outline-hidden"
+            placeholder="e.g. Responsive to visual charts; needs extra time for reading."
+            className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-hidden"
           />
         </div>
 
+        {/* Data Privacy Guarantee Notice */}
+        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[11px]">
+          <ShieldCheck className="w-4 h-4 shrink-0 text-emerald-400" />
+          <span>Child Privacy Preserved: Aadhaar, biometric, and personal financial data are strictly excluded.</span>
+        </div>
+
         {error && (
-          <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 flex items-center gap-1.5">
-            <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
+          <div className="p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-xs text-rose-700 dark:text-rose-300 flex items-center gap-1.5 animate-in fade-in duration-200">
+            <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
-        <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#49352F]/10">
+        <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-xs font-semibold text-[#7A6862] hover:bg-[#FAF6E9] hover:text-[#49352F] rounded-xl cursor-pointer transition-colors"
+            className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg cursor-pointer transition-colors"
           >
-            {language === "gu" ? "રદ કરો" : "Cancel"}
+            Cancel
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="px-5 py-2 text-xs font-bold bg-[#F2CAB3] hover:bg-white text-[#49352F] border border-[#49352F]/16 rounded-xl shadow-xs transition-colors cursor-pointer disabled:opacity-50 inline-flex items-center gap-1.5"
+            className="px-5 py-2 text-xs font-bold bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl shadow-xs transition-colors cursor-pointer disabled:opacity-50"
           >
-            {isSubmitting ? (
-              <>
-                <Sparkles className="w-3.5 h-3.5 animate-spin text-[#B26A1B]" />
-                <span>
-                  {language === "gu"
-                    ? "ડેટાબેઝમાં સાચવી રહ્યું છે..."
-                    : "Saving to Database..."}
-                </span>
-              </>
-            ) : student ? (
-              language === "gu" ? (
-                "વિદ્યાર્થી અપડેટ કરો"
-              ) : (
-                "Update Student"
-              )
-            ) : language === "gu" ? (
-              "વિદ્યાર્થી નોંધણી કરો"
-            ) : (
-              "Register Student"
-            )}
+            {isSubmitting ? "Saving..." : student ? "Update Student Record" : "Register Student"}
           </button>
         </div>
       </form>

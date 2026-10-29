@@ -8,15 +8,26 @@ export interface RemedialStep {
   description: string;
   durationMinutes: number;
   activityType?: string;
+  learningObjective?: string;
+  materials?: string[];
+  checkUnderstanding?: string;
+  completed?: boolean;
 }
 
 export interface RemedialPlan {
   id: string;
   studentId: string;
   studentName?: string;
+  studentCode?: string;
+  classroomId?: string;
+  grade?: number;
   conceptId: string;
   conceptName?: string;
   subjectCode?: SubjectCode;
+  subjectName?: string;
+  learningGapId?: string;
+  triggeringAssessmentId?: string;
+  baselineScore?: number;
   learningObjective: string;
   recommendationReason: string;
   status: PlanStatus;
@@ -24,12 +35,14 @@ export interface RemedialPlan {
   difficulty: "Beginner" | "Intermediate" | "Advanced";
   requiredMaterials: string[];
   steps: RemedialStep[];
+  completedStepsCount?: number;
+  progressPercentage?: number;
   practiceQuestionsSummary?: string;
   reassessmentCriteria: string;
   teacherInstructions: string;
   teacherNotes?: string;
-  completedSteps?: number[];
   createdAt: string;
+  updatedAt?: string;
   reviewDate?: string;
 }
 

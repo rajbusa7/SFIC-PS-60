@@ -48,42 +48,42 @@ export function Modal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#49352F]/40 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-in fade-in duration-200">
       <div
         className={cn(
-          "w-full rounded-3xl bg-white dark:bg-[#26201C] border border-[#49352F]/12 dark:border-[#F2CAB3]/20 shadow-[0_20px_60px_rgba(73,53,47,0.18)] dark:shadow-[0_20px_60px_rgba(0,0,0,0.5)] overflow-hidden max-h-[90vh] flex flex-col text-[#49352F] dark:text-[#F4F1E1] relative",
+          "w-full rounded-2xl bg-slate-900/95 border border-slate-700/80 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col text-slate-100 backdrop-blur-xl relative",
           maxWidthClasses[maxWidth]
         )}
       >
-        {/* Subtle accent top line */}
-        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-[#F2CAB3] via-[#F2DCB5] to-[#2E7D5E]" />
+        {/* Glowing top line */}
+        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-amber-500 via-teal-400 to-indigo-500" />
 
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#49352F]/10 dark:border-[#F2CAB3]/15 px-6 py-4 bg-[#FAF6E9] dark:bg-[#1E1916]">
+        <div className="flex items-center justify-between border-b border-slate-800/80 px-6 py-4 bg-slate-950/50">
           <div>
-            <h3 className="font-heading text-lg font-bold text-[#49352F] dark:text-[#F4F1E1] tracking-tight">
+            <h3 className="font-heading text-lg font-bold text-white tracking-tight">
               {title}
             </h3>
             {description && (
-              <p className="text-xs text-[#7A6862] dark:text-[#FAF6E9]/70 mt-0.5">{description}</p>
+              <p className="text-xs text-slate-400 mt-0.5">{description}</p>
             )}
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close dialog"
-            className="p-1.5 rounded-xl text-[#7A6862] dark:text-[#FAF6E9]/70 hover:text-[#49352F] dark:hover:text-[#F4F1E1] hover:bg-[#F2CAB3]/30 dark:hover:bg-[#F2CAB3]/20 transition-colors cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content body */}
-        <div className="p-6 overflow-y-auto flex-1 bg-white dark:bg-[#26201C] text-[#49352F] dark:text-[#F4F1E1]">{children}</div>
+        <div className="p-6 overflow-y-auto flex-1">{children}</div>
 
         {/* Optional footer */}
         {footer && (
-          <div className="flex items-center justify-end gap-3 border-t border-[#49352F]/10 dark:border-[#F2CAB3]/15 px-6 py-4 bg-[#FAF6E9] dark:bg-[#1E1916]">
+          <div className="flex items-center justify-end gap-3 border-t border-slate-800/80 px-6 py-4 bg-slate-950/50">
             {footer}
           </div>
         )}

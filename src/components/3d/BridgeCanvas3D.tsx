@@ -3,10 +3,10 @@
 import React, { useState, useEffect, Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
 import { BridgeHero3D } from "./BridgeHero3D";
-import { Sparkles, Zap, Eye, Monitor, Star } from "lucide-react";
+import { Sparkles, Zap, Eye, Monitor } from "lucide-react";
 
 interface BridgeCanvas3DProps {
-  progress?: number;
+  progress: number;
 }
 
 // High performance 2D SVG Fallback for low-end devices or users who prefer Lite Mode
@@ -68,8 +68,8 @@ function BridgeLiteFallback({ progress }: { progress: number }) {
         <div className="flex flex-col items-center">
           <div className="w-28 h-28 rounded-2xl bg-slate-900/80 border border-emerald-500/40 p-3 shadow-[0_0_25px_rgba(61,219,169,0.3)] flex flex-col justify-between">
             <span className="text-[10px] font-mono font-bold text-emerald-400">MASTERY</span>
-            <div className="flex justify-center text-amber-400 animate-pulse">
-              <Star className="w-5 h-5 text-amber-400 fill-amber-400" aria-hidden="true" />
+            <div className="flex justify-center text-amber-400 text-xl font-bold animate-pulse">
+              ★
             </div>
             <span className="text-[9px] text-emerald-300 text-center font-bold">Goal: 85%+</span>
           </div>
@@ -80,44 +80,10 @@ function BridgeLiteFallback({ progress }: { progress: number }) {
   );
 }
 
-export const BridgeCanvas3D = React.memo(function BridgeCanvas3D({ progress: explicitProgress }: BridgeCanvas3DProps) {
+export function BridgeCanvas3D({ progress }: BridgeCanvas3DProps) {
   const [isMounted, setIsMounted] = useState(false);
   const [hasWebGl, setHasWebGl] = useState(true);
   const [isLiteMode, setIsLiteMode] = useState(false);
-  const [internalProgress, setInternalProgress] = useState(0);
-  const [isTabVisible, setIsTabVisible] = useState(true);
-
-  // Autonomous scroll listener if progress not explicitly controlled
-  useEffect(() => {
-    if (explicitProgress !== undefined) return;
-
-    let ticking = false;
-    const handleScroll = () => {
-      if (!ticking) {
-        ticking = true;
-        requestAnimationFrame(() => {
-          const scrollY = window.scrollY;
-          const vh = window.innerHeight || 1;
-          const p = Math.max(0, Math.min(5, scrollY / Math.max(1, vh)));
-          setInternalProgress(p);
-          ticking = false;
-        });
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll();
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [explicitProgress]);
-
-  // Tab visibility tracking to pause WebGL render loop when tab is backgrounded
-  useEffect(() => {
-    const handleVisibility = () => {
-      setIsTabVisible(!document.hidden);
-    };
-    document.addEventListener("visibilitychange", handleVisibility);
-    return () => document.removeEventListener("visibilitychange", handleVisibility);
-  }, []);
 
   useEffect(() => {
     setIsMounted(true);
@@ -145,8 +111,6 @@ export const BridgeCanvas3D = React.memo(function BridgeCanvas3D({ progress: exp
       return next;
     });
   };
-
-  const activeProgress = explicitProgress !== undefined ? explicitProgress : internalProgress;
 
   if (!isMounted) {
     return (
@@ -185,7 +149,7 @@ export const BridgeCanvas3D = React.memo(function BridgeCanvas3D({ progress: exp
 
       {/* Render 3D Canvas or 2D Lite Fallback */}
       {isLiteMode || !hasWebGl ? (
-        <BridgeLiteFallback progress={activeProgress} />
+        <BridgeLiteFallback progress={progress} />
       ) : (
         <div className="fixed inset-0 pointer-events-none -z-10 select-none overflow-hidden">
           {/* Subtle Ambient Radial Light Gradient */}
@@ -194,7 +158,7 @@ export const BridgeCanvas3D = React.memo(function BridgeCanvas3D({ progress: exp
           {/* Saffron Dawn Pool Light */}
           <div
             className="absolute bottom-[10%] right-[15%] w-[500px] h-[200px] rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,138,61,0.18)_0%,transparent_70%)] blur-3xl pointer-events-none transition-opacity duration-1000"
-            style={{ opacity: Math.min(1, 0.4 + activeProgress * 0.15) }}
+            style={{ opacity: Math.min(1, 0.4 + progress * 0.15) }}
           />
 
           <Canvas
@@ -204,15 +168,14 @@ export const BridgeCanvas3D = React.memo(function BridgeCanvas3D({ progress: exp
               powerPreference: "high-performance",
               alpha: true,
             }}
-            frameloop={isTabVisible ? "always" : "demand"}
-            dpr={[1, 1.5]} // Calibrated at 1.5 for locked 120fps on high-refresh & retina displays
+            dpr={[1, 1.5]} // Capped at 1.5 for buttery 60fps on mobile & retina
           >
             <Suspense fallback={null}>
-              <BridgeHero3D progress={activeProgress} />
+              <BridgeHero3D progress={progress} />
             </Suspense>
           </Canvas>
         </div>
       )}
     </>
   );
-});
+}

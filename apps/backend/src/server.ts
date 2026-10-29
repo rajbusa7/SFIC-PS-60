@@ -5,7 +5,7 @@ const PORT = config.port;
 
 const server = app.listen(PORT, () => {
   console.log(`====================================================`);
-  console.log(` StudySaathi AI Backend Server Running`);
+  console.log(` ShikshaSetu AI Backend Server Running`);
   console.log(` URL: http://localhost:${PORT}`);
   console.log(` API Prefix: ${config.apiPrefix}`);
   console.log(` Health Check: http://localhost:${PORT}${config.apiPrefix}/health`);
@@ -17,7 +17,7 @@ const server = app.listen(PORT, () => {
 function handleShutdown(signal: string) {
   console.log(`\nReceived ${signal}. Shutting down gracefully...`);
   server.close(() => {
-    console.log("StudySaathi AI Backend closed cleanly.");
+    console.log("ShikshaSetu AI Backend closed cleanly.");
     process.exit(0);
   });
 }

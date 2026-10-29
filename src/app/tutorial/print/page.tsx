@@ -16,20 +16,20 @@ export default function TutorialPrintPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F1E1] text-[#49352F] py-6 px-4 sm:px-8 font-sans print:p-0 print:bg-white print:text-black">
+    <div className="min-h-screen bg-slate-100 text-slate-900 py-6 px-4 sm:px-8 font-sans print:p-0 print:bg-white print:text-black">
       {/* Non-printed Top Action Bar */}
       <div className="max-w-4xl mx-auto mb-6 flex flex-wrap items-center justify-between gap-3 print:hidden">
         <div className="flex items-center gap-3">
           <Link
             href="/tutorial"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#49352F]/15 text-xs font-bold text-[#49352F] hover:bg-[#FAF6E9] shadow-xs transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-50 shadow-xs transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Back to Tutorial</span>
           </Link>
           <Link
             href="/dashboard"
-            className="text-xs font-semibold text-[#7A6862] hover:text-[#49352F]"
+            className="text-xs font-semibold text-slate-500 hover:text-slate-800"
           >
             Dashboard
           </Link>
@@ -37,14 +37,14 @@ export default function TutorialPrintPage() {
 
         <div className="flex items-center gap-2">
           {/* Print Language Toggle */}
-          <div className="inline-flex rounded-xl border border-[#49352F]/15 bg-white p-0.5 text-xs font-bold shadow-xs">
+          <div className="inline-flex rounded-xl border border-slate-300 bg-white p-0.5 text-xs font-bold shadow-xs">
             <button
               type="button"
               onClick={() => setPrintLang("en")}
               className={`px-3 py-1 rounded-lg transition-colors cursor-pointer ${
                 printLang === "en"
-                  ? "bg-[#F2CAB3] text-[#49352F] font-black"
-                  : "text-[#7A6862] hover:text-[#49352F]"
+                  ? "bg-indigo-600 text-white"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
               English
@@ -54,8 +54,8 @@ export default function TutorialPrintPage() {
               onClick={() => setPrintLang("gu")}
               className={`px-3 py-1 rounded-lg transition-colors cursor-pointer ${
                 printLang === "gu"
-                  ? "bg-[#F2CAB3] text-[#49352F] font-black"
-                  : "text-[#7A6862] hover:text-[#49352F]"
+                  ? "bg-indigo-600 text-white"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
               ગુજરાતી
@@ -66,9 +66,9 @@ export default function TutorialPrintPage() {
           <button
             type="button"
             onClick={handlePrint}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-xl bg-[#F2CAB3] hover:bg-white text-[#49352F] border border-[#49352F]/16 text-xs font-black shadow-xs transition-all cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-black shadow-sm transition-all cursor-pointer"
           >
-            <Printer className="w-4 h-4 text-[#B26A1B]" />
+            <Printer className="w-4 h-4" />
             <span>Print Quick-Start Sheet (Ctrl+P)</span>
           </button>
         </div>
@@ -77,24 +77,24 @@ export default function TutorialPrintPage() {
       {/* ============================================================== */}
       {/* PRINTABLE A4 SHEET CONTAINER                                   */}
       {/* ============================================================== */}
-      <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-xl border border-[#49352F]/15 p-8 sm:p-12 print:shadow-none print:border-none print:p-0 print:max-w-full">
+      <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-300 p-8 sm:p-12 print:shadow-none print:border-none print:p-0 print:max-w-full">
         {/* Document Header */}
-        <div className="border-b-2 border-[#49352F]/30 pb-4 flex items-start justify-between">
+        <div className="border-b-2 border-slate-900 pb-4 flex items-start justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xl font-black tracking-tight text-[#49352F] font-heading">
-                StudySaathi AI
+              <span className="text-xl font-black tracking-tight text-indigo-900">
+                શિક્ષાસેતુ AI • ShikshaSetu AI
               </span>
-              <span className="px-2 py-0.5 rounded-sm bg-[#FAF6E9] text-[#B26A1B] font-mono text-[10px] font-bold border border-[#B26A1B]/20">
+              <span className="px-2 py-0.5 rounded-sm bg-amber-100 text-amber-900 font-mono text-[10px] font-bold border border-amber-300">
                 SFIC PS-60
               </span>
             </div>
-            <h1 className="text-sm sm:text-base font-bold text-[#49352F] mt-1 font-heading">
+            <h1 className="text-sm sm:text-base font-bold text-slate-800 mt-1">
               {printLang === "gu"
                 ? "પ્રાથમિક શાળા શિક્ષક ઝડપી શરૂઆત માર્ગદર્શિકા (સંદર્ભ પત્રક)"
                 : "Primary School Teacher Quick-Start Desk Reference Guide"}
             </h1>
-            <p className="text-[11px] text-[#7A6862] mt-0.5">
+            <p className="text-[11px] text-slate-500 mt-0.5">
               Gujarat Primary Education • NIPUN Bharat Foundational Literacy &amp; Numeracy (FLN)
             </p>
           </div>
@@ -266,7 +266,7 @@ export default function TutorialPrintPage() {
             </div>
           </div>
           <div className="text-right text-[10px] text-slate-400 font-mono">
-            <div>StudySaathi AI • Gujarat SFIC PS-60</div>
+            <div>ShikshaSetu AI • Gujarat SFIC PS-60</div>
             <div>Printable Reference Sheet • Keep at Teacher Desk</div>
           </div>
         </div>

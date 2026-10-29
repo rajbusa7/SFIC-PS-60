@@ -6,7 +6,6 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { useLanguage } from "@/context/LanguageContext";
-import { subscribeToDataUpdates } from "@/lib/events";
 import {
   TrendingUp,
   Award,
@@ -30,7 +29,7 @@ import {
 } from "recharts";
 
 export default function ProgressTrackingPage() {
-  const { t, language, formatSubject, formatClass } = useLanguage();
+  const { t } = useLanguage();
 
   const [loading, setLoading] = useState(true);
   const [progressData, setProgressData] = useState<any>(null);
@@ -53,10 +52,6 @@ export default function ProgressTrackingPage() {
 
   useEffect(() => {
     fetchProgress();
-    const unsubscribe = subscribeToDataUpdates(() => {
-      fetchProgress();
-    });
-    return () => unsubscribe();
   }, []);
 
   const items = progressData?.progressItems || [];
@@ -81,62 +76,62 @@ export default function ProgressTrackingPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl font-extrabold text-[#49352F] tracking-tight font-heading">
-              {t.progress.title || "Curriculum Mastery & Progress Tracking"}
+            <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+              Curriculum Mastery & Progress Tracking
             </h1>
-            <p className="text-xs sm:text-sm text-[#7A6862] mt-0.5">
-              {t.progress.subtitle || "Empirical before-and-after evaluation measuring true percentage-point (pp) delta growth following remedial intervention."}
+            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+              Empirical before-and-after evaluation measuring true percentage-point (pp) delta growth following remedial intervention.
             </p>
           </div>
         </div>
 
         {/* 4 Summary Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <Card className="border-l-4 border-l-[#2E7D5E]">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#2E7D5E]">
-              {language === "gu" ? "પ્રગતિ દર્શાવતા વિદ્યાર્થીઓ" : "Students Showing Growth"}
+          <Card className="border-l-4 border-l-emerald-500">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-emerald-700">
+              Students Showing Growth
             </span>
-            <div className="text-2xl sm:text-3xl font-extrabold text-[#2E7D5E] mt-1 font-heading">
-              {progressData?.improvingCount ?? 0} {language === "gu" ? "વિદ્યાર્થીઓ" : "Students"}
+            <div className="text-2xl sm:text-3xl font-extrabold text-emerald-600 mt-1">
+              {progressData?.improvingCount || 2} Students
             </div>
-            <span className="text-[11px] text-[#7A6862] mt-1 block font-medium">
-              {language === "gu" ? "સકારાત્મક ટકાવારી-ગુણ ફેરફાર" : "Positive percentage-point delta"}
+            <span className="text-[11px] text-emerald-600/80 mt-1 block font-medium">
+              Positive percentage-point delta
             </span>
           </Card>
 
-          <Card className="border-l-4 border-l-[#B26A1B]">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#B26A1B]">
-              {language === "gu" ? "પૂર્ણ થયેલ હસ્તક્ષેપ" : "Interventions Completed"}
+          <Card className="border-l-4 border-l-purple-500">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-purple-700">
+              Interventions Completed
             </span>
-            <div className="text-2xl sm:text-3xl font-extrabold text-[#B26A1B] mt-1 font-heading">
-              {progressData?.completedPlansCount ?? 0} {language === "gu" ? "યોજનાઓ" : "Plans"}
+            <div className="text-2xl sm:text-3xl font-extrabold text-purple-600 mt-1">
+              {progressData?.completedPlansCount || 1} Plans
             </div>
-            <span className="text-[11px] text-[#7A6862] mt-1 block font-medium">
-              {language === "gu" ? "પ્રમાણિત મહાવરા સત્રો" : "Validated practice sessions"}
+            <span className="text-[11px] text-purple-600/80 mt-1 block font-medium">
+              Validated practice sessions
             </span>
           </Card>
 
-          <Card className="border-l-4 border-l-[#F2CAB3]">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#49352F]">
-              {language === "gu" ? "ઉકેલાયેલી ખામીઓ" : "Gaps Resolved"}
+          <Card className="border-l-4 border-l-indigo-500">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-indigo-700">
+              Gaps Resolved
             </span>
-            <div className="text-2xl sm:text-3xl font-extrabold text-[#49352F] mt-1 font-heading">
-              {progressData?.resolvedGapsCount ?? 0} {language === "gu" ? "ખામીઓ" : "Gaps"}
+            <div className="text-2xl sm:text-3xl font-extrabold text-indigo-600 mt-1">
+              {progressData?.resolvedGapsCount || 0} Gaps
             </div>
-            <span className="text-[11px] text-[#7A6862] mt-1 block font-medium">
-              {language === "gu" ? "≥૮૦% પ્રભુત્વ સિદ્ધ કર્યું" : "Met ≥80% mastery"}
+            <span className="text-[11px] text-indigo-600/80 mt-1 block font-medium">
+              Met &ge;80% mastery
             </span>
           </Card>
 
-          <Card className="border-l-4 border-l-[#C54738]">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#C54738]">
-              {language === "gu" ? "સક્રિય હસ્તક્ષેપ" : "Active Interventions"}
+          <Card className="border-l-4 border-l-amber-500">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-amber-700">
+              Active Interventions
             </span>
-            <div className="text-2xl sm:text-3xl font-extrabold text-[#C54738] mt-1 font-heading">
-              {progressData?.activeGapsCount ?? 0} {language === "gu" ? "ખામીઓ" : "Gaps"}
+            <div className="text-2xl sm:text-3xl font-extrabold text-amber-600 mt-1">
+              {progressData?.activeGapsCount || 3} Gaps
             </div>
-            <span className="text-[11px] text-[#7A6862] mt-1 block font-medium">
-              {language === "gu" ? "ચાલુ ઉપચાર મહાવરો" : "Ongoing remedial practice"}
+            <span className="text-[11px] text-amber-600/80 mt-1 block font-medium">
+              Ongoing remedial practice
             </span>
           </Card>
         </div>
@@ -145,31 +140,22 @@ export default function ProgressTrackingPage() {
         <Card>
           <CardHeader>
             <div>
-              <CardTitle>
-                {language === "gu"
-                  ? "મૂળ આધાર વિરુદ્ધ તાજેતરનું પુનઃમૂલ્યાંકન સરખામણી"
-                  : "Baseline vs. Latest Reassessment Comparison"}
-              </CardTitle>
+              <CardTitle>Baseline vs. Latest Reassessment Comparison</CardTitle>
               <CardDescription>
-                {language === "gu"
-                  ? "ઉપચાર કાર્ય પહેલા અને પછીના વિદ્યાર્થી ગુણ દર્શાવતી વાસ્તવિક સરખામણી."
-                  : "Empirical comparison showing student scores before and after remedial action. Delta is calculated in absolute percentage points (pp)."}
+                Empirical comparison showing student scores before and after remedial action. Delta is calculated in absolute percentage points (pp).
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-[#7A6862]">
-                {language === "gu" ? "વિષય:" : "Subject:"}
-              </span>
+              <span className="text-xs font-semibold text-slate-500">Subject:</span>
               <select
                 value={subjectFilter}
                 aria-label="Filter progress by subject"
                 onChange={(e) => setSubjectFilter(e.target.value)}
-                className="rounded-xl border border-[#49352F]/15 bg-[#FAF6E9] px-3 py-1 text-xs font-semibold text-[#49352F] outline-hidden cursor-pointer"
+                className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700 outline-hidden cursor-pointer"
               >
-                <option value="all">{language === "gu" ? "બધા" : "All"}</option>
-                <option value="MATH">{formatSubject("MATH")}</option>
-                <option value="ENG">{formatSubject("ENG")}</option>
-                <option value="GUJ">{formatSubject("GUJ")}</option>
+                <option value="all">All</option>
+                <option value="MATH">Math</option>
+                <option value="ENG">English</option>
               </select>
             </div>
           </CardHeader>
@@ -177,25 +163,15 @@ export default function ProgressTrackingPage() {
           <div className="h-72 w-full pt-2">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={beforeAfterChartData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5DEC9" />
-                <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#7A6862" }} />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: "#7A6862" }} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
                 <Tooltip
                   formatter={(val: any, name: any) => [`${val}%`, name]}
-                  contentStyle={{ borderRadius: "14px", border: "1px solid rgba(73,53,47,0.15)", backgroundColor: "#FAF6E9", color: "#49352F", fontSize: "12px" }}
+                  contentStyle={{ borderRadius: "12px", border: "1px solid #CBD5E1", fontSize: "12px" }}
                 />
-                <Bar
-                  dataKey="Baseline"
-                  fill="#C9BDAF"
-                  name={language === "gu" ? "પ્રારંભિક આધાર" : "Initial Baseline"}
-                  radius={[4, 4, 0, 0]}
-                />
-                <Bar
-                  dataKey="Latest"
-                  fill="#2E7D5E"
-                  name={language === "gu" ? "ઉપચાર પછીનો સ્કોર" : "Post-Intervention Score"}
-                  radius={[4, 4, 0, 0]}
-                />
+                <Bar dataKey="Baseline" fill="#94A3B8" name="Initial Baseline" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="Latest" fill="#059669" name="Post-Intervention Score" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -205,72 +181,64 @@ export default function ProgressTrackingPage() {
         <Card>
           <CardHeader>
             <div>
-              <CardTitle>
-                {language === "gu"
-                  ? "સંકલ્પના-સ્તર પ્રભુત્વ ખાતાવહી"
-                  : "Concept-Level Mastery Ledger"}
-              </CardTitle>
+              <CardTitle>Concept-Level Mastery Ledger</CardTitle>
               <CardDescription>
-                {language === "gu"
-                  ? "મૂળ સ્કોર, પુનઃમૂલ્યાંકન અને ગણતરી કરેલ ટકાવારી-ગુણ ડેલ્ટાની વિગતવાર નોંધણી"
-                  : "Detailed audit trail of baseline score, reassessment, and calculated percentage-point delta"}
+                Detailed audit trail of baseline score, reassessment, and calculated percentage-point delta
               </CardDescription>
             </div>
           </CardHeader>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[#FAF6E9] border-b border-[#49352F]/10 text-[#7A6862] uppercase tracking-wider text-[10px]">
+              <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-wider text-[10px]">
                 <tr>
-                  <th className="p-3">{language === "gu" ? "વિદ્યાર્થી" : "Student"}</th>
-                  <th className="p-3">{language === "gu" ? "વિષય અને સંકલ્પના" : "Subject & Concept"}</th>
-                  <th className="p-3">{language === "gu" ? "મૂલ્યાંકનો" : "Evaluations"}</th>
-                  <th className="p-3">{language === "gu" ? "પ્રારંભિક સ્કોર" : "Initial Score"}</th>
-                  <th className="p-3">{language === "gu" ? "તાજેતરનો સ્કોર" : "Latest Score"}</th>
-                  <th className="p-3">{language === "gu" ? "ફેરફાર (ગુણ)" : "Change (pp)"}</th>
-                  <th className="p-3">{language === "gu" ? "પ્રભુત્વ સ્થિતિ" : "Mastery Status"}</th>
-                  <th className="p-3">{language === "gu" ? "પ્રોફાઇલ" : "Profile Link"}</th>
+                  <th className="p-3">Student</th>
+                  <th className="p-3">Subject & Concept</th>
+                  <th className="p-3">Evaluations</th>
+                  <th className="p-3">Initial Score</th>
+                  <th className="p-3">Latest Score</th>
+                  <th className="p-3">Change (pp)</th>
+                  <th className="p-3">Mastery Status</th>
+                  <th className="p-3">Profile Link</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#49352F]/10">
+              <tbody className="divide-y divide-slate-100">
                 {filteredItems.map((item: any, i: number) => {
                   const isMastered = item.latestPercentage >= 80;
 
                   return (
-                    <tr key={i} className="hover:bg-[#FAF6E9]/50">
+                    <tr key={i} className="hover:bg-slate-50/50">
                       <td className="p-3">
-                        <div className="font-bold text-[#49352F]">{item.studentName}</div>
-                        <div className="text-[10px] text-[#7A6862]">{formatClass(`Class ${item.grade}-A`)}</div>
+                        <div className="font-bold text-slate-900">{item.studentName}</div>
+                        <div className="text-[10px] text-slate-400">Class {item.grade}-A</div>
                       </td>
                       <td className="p-3">
-                        <div className="font-semibold text-[#49352F]">{item.conceptName}</div>
-                        <span className="text-[10px] text-[#7A6862] font-mono">
-                          {formatSubject(item.subjectCode)}
+                        <div className="font-semibold text-slate-800">{item.conceptName}</div>
+                        <span className="text-[10px] text-slate-400 font-mono">
+                          {item.subjectCode}
                         </span>
                       </td>
-                      <td className="p-3 font-semibold text-[#49352F]">
-                        {item.attemptsCount} {language === "gu" ? "કસોટી(ઓ)" : "test(s)"}
-                      </td>
-                      <td className="p-3 font-medium text-[#7A6862]">
+                      <td className="p-3 font-semibold">{item.attemptsCount} test(s)</td>
+                      <td className="p-3 font-medium text-slate-600">
                         {item.hasSufficientEvidence ? `${item.initialPercentage}%` : "—"}
                       </td>
-                      <td className="p-3 font-bold text-[#49352F]">{item.latestPercentage}%</td>
+                      <td className="p-3 font-bold text-slate-900">{item.latestPercentage}%</td>
                       <td className="p-3">
                         {item.hasSufficientEvidence ? (
                           <span
                             className={`font-bold ${
                               item.deltaPercentagePoints > 0
-                                ? "text-[#2E7D5E]"
+                                ? "text-emerald-600"
                                 : item.deltaPercentagePoints < 0
                                 ? "text-rose-600"
-                                : "text-[#7A6862]"
+                                : "text-slate-600"
                             }`}
                           >
                             {item.deltaPercentagePoints > 0 ? `+${item.deltaPercentagePoints}` : item.deltaPercentagePoints} pp
                           </span>
                         ) : (
-                          <span className="text-[10px] text-[#7A6862] italic">
-                            {language === "gu" ? "એક જ અવલોકન" : "Single Observation"}
+                          <span className="text-[10px] text-slate-400 italic">
+                            Single Observation
                           </span>
                         )}
                       </td>
@@ -286,18 +254,18 @@ export default function ProgressTrackingPage() {
                           size="sm"
                         >
                           {isMastered
-                            ? language === "gu" ? "સિદ્ધ" : "Mastered"
+                            ? "Mastered"
                             : item.latestPercentage >= 60
-                            ? language === "gu" ? "પ્રગતિ હેઠળ" : "Developing"
-                            : language === "gu" ? "સહાય જરૂરી" : "Needs Support"}
+                            ? "Developing"
+                            : "Needs Support"}
                         </Badge>
                       </td>
                       <td className="p-3">
                         <Link
                           href={`/students/${item.studentId}`}
-                          className="font-bold text-[#B26A1B] hover:text-[#49352F] inline-flex items-center gap-1"
+                          className="font-bold text-indigo-600 hover:text-indigo-800 inline-flex items-center gap-1"
                         >
-                          <span>{language === "gu" ? "જુઓ" : "View"}</span>
+                          <span>View</span>
                           <ArrowRight className="w-3 h-3" />
                         </Link>
                       </td>

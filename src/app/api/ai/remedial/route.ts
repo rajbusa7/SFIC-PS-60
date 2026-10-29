@@ -39,7 +39,7 @@ export async function POST(request: Request) {
 
     const isGujarati = language === "gu";
 
-    const systemInstruction = `You are StudySaathi AI Remedial Plan Generator for Gujarat Primary Schools (Grades 1 to 5).
+    const systemInstruction = `You are ShikshaSetu AI Remedial Plan Generator for Gujarat Primary Schools (Grades 1 to 5).
 Generate a comprehensive, actionable remedial teaching plan tailored to a primary student struggling with a foundational concept.
 The plan MUST include:
 1. Learning Objective: Specific, measurable pedagogical goal.

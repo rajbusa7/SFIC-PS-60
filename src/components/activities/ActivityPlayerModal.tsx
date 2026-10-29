@@ -1,9 +1,9 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import { Dialog } from "../ui/Dialog";
 import { Badge } from "../ui/Badge";
-import { CheckCircle2, XCircle, ArrowRight, Sparkles, HelpCircle, Trophy, Lightbulb } from "lucide-react";
-import { useLanguage } from "@/context/LanguageContext";
-import { broadcastDataUpdate } from "@/lib/events";
+import { CheckCircle2, XCircle, ArrowRight, Sparkles, HelpCircle, Trophy } from "lucide-react";
 import type { LearningActivity, ActivityQuestion } from "@/lib/types";
 
 interface ActivityPlayerModalProps {
@@ -23,7 +23,6 @@ export function ActivityPlayerModal({
   onClose,
   onCompleted,
 }: ActivityPlayerModalProps) {
-  const { language } = useLanguage();
   const [currentIdx, setCurrentIdx] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string | number | boolean>>({});
   const [showHint, setShowHint] = useState(false);
@@ -75,8 +74,6 @@ export function ActivityPlayerModal({
       });
       const data = await res.json();
       if (data.success) {
-        broadcastDataUpdate("activities", "update", activity.id);
-        broadcastDataUpdate("students", "update", studentId);
         setAttemptResult(data);
         setIsSubmitted(true);
         if (onCompleted) onCompleted(data);
@@ -100,80 +97,57 @@ export function ActivityPlayerModal({
     <Dialog
       isOpen={isOpen}
       onClose={onClose}
-      title={`${activity.title} — ${studentName || (language === "gu" ? "વિદ્યાર્થી મહાવરો" : "Student Practice")}`}
-      description={
-        language === "gu"
-          ? `ઇન્ટરેક્ટિવ મહાવરો • વિષય: ${activity.subjectCode} • ધોરણ ${activity.grade}`
-          : `Interactive Practice • Subject: ${activity.subjectCode} • Grade ${activity.grade}`
-      }
+      title={`${activity.title} — ${studentName || "Student Practice"}`}
+      description={`Interactive Practice • Subject: ${activity.subjectCode} • Grade ${activity.grade}`}
       maxWidth="xl"
     >
       {!isSubmitted ? (
         <div className="space-y-6">
           {/* Progress bar */}
           <div className="space-y-1.5">
-            <div className="flex items-center justify-between text-xs font-semibold text-[#7A6862]">
-              <span>
-                {language === "gu"
-                  ? `પ્રશ્ન ${currentIdx + 1} / ${totalQuestions}`
-                  : `Question ${currentIdx + 1} of ${totalQuestions}`}
-              </span>
-              <span>
-                {language === "gu"
-                  ? `${Math.round(((currentIdx + 1) / totalQuestions) * 100)}% પૂર્ણ`
-                  : `${Math.round(((currentIdx + 1) / totalQuestions) * 100)}% Complete`}
-              </span>
+            <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
+              <span>Question {currentIdx + 1} of {totalQuestions}</span>
+              <span>{Math.round(((currentIdx + 1) / totalQuestions) * 100)}% Complete</span>
             </div>
-            <div className="h-2 w-full rounded-full bg-[#FAF6E9] border border-[#49352F]/10 overflow-hidden">
+            <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-[#F2CAB3] to-[#B26A1B] transition-all duration-300"
+                className="h-full bg-indigo-600 transition-all duration-300"
                 style={{ width: `${((currentIdx + 1) / totalQuestions) * 100}%` }}
               />
             </div>
           </div>
 
           {/* Question card */}
-          <div className="rounded-2xl border border-[#49352F]/12 bg-[#FAF6E9] p-5 shadow-2xs">
+          <div className="rounded-2xl border border-indigo-100 bg-indigo-50/40 p-5">
             <div className="flex items-center justify-between gap-2 mb-2">
-              <Badge variant="outline" size="sm">
+              <Badge variant="default" size="sm">
                 {currentQ.type.toUpperCase().replace("_", " ")}
               </Badge>
               {currentQ.hint && (
                 <button
                   type="button"
                   onClick={() => setShowHint(!showHint)}
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-[#B26A1B] hover:text-[#49352F] cursor-pointer"
+                  className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 hover:text-amber-800 cursor-pointer"
                 >
                   <HelpCircle className="w-3.5 h-3.5" />
-                  <span>
-                    {language === "gu"
-                      ? showHint
-                        ? "સંકેત છુપાવો"
-                        : "સંકેત જોઈએ છે?"
-                      : showHint
-                      ? "Hide Hint"
-                      : "Need a Hint?"}
-                  </span>
+                  <span>{showHint ? "Hide Hint" : "Need a Hint?"}</span>
                 </button>
               )}
             </div>
 
-            <p className="text-base sm:text-lg font-bold text-[#49352F] mt-2">
+            <p className="text-base sm:text-lg font-bold text-slate-900 mt-2">
               {currentQ.questionText}
             </p>
 
             {currentQ.questionTextGujarati && (
-              <p className="text-sm font-medium text-[#7A6862] mt-1 font-serif">
+              <p className="text-sm font-medium text-slate-700 mt-1 font-serif">
                 {currentQ.questionTextGujarati}
               </p>
             )}
 
             {showHint && currentQ.hint && (
-              <div className="mt-3 p-3 rounded-xl bg-[#F2DCB5]/40 border border-[#49352F]/12 text-xs text-[#49352F] font-medium flex items-start gap-2">
-                <Lightbulb className="w-4 h-4 text-[#8D4E10] shrink-0 mt-0.5" aria-hidden="true" />
-                <div>
-                  <strong>{language === "gu" ? "સંકેત:" : "Hint:"}</strong> {currentQ.hint}
-                </div>
+              <div className="mt-3 p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 font-medium">
+                💡 <strong>Hint:</strong> {currentQ.hint}
               </div>
             )}
           </div>
@@ -189,46 +163,34 @@ export function ActivityPlayerModal({
                   onClick={() => handleSelectOption(opt)}
                   className={`flex items-center justify-between p-4 rounded-xl border text-left font-medium text-sm transition-all cursor-pointer ${
                     isSelected
-                      ? "border-[#49352F] bg-[#F2CAB3] text-[#49352F] font-bold shadow-md scale-101"
-                      : "border-[#49352F]/12 bg-white text-[#49352F] hover:bg-[#FAF6E9] hover:border-[#49352F]/20"
+                      ? "border-indigo-600 bg-indigo-600 text-white shadow-md scale-101"
+                      : "border-slate-200 bg-white text-slate-800 hover:bg-slate-50 hover:border-slate-300"
                   }`}
                 >
                   <span>{opt}</span>
-                  {isSelected && <CheckCircle2 className="w-5 h-5 text-[#49352F] shrink-0" />}
+                  {isSelected && <CheckCircle2 className="w-5 h-5 text-white shrink-0" />}
                 </button>
               );
             })}
           </div>
 
           {/* Navigation controls */}
-          <div className="flex items-center justify-between pt-4 border-t border-[#49352F]/10">
+          <div className="flex items-center justify-between pt-4 border-t border-slate-100">
             <button
               type="button"
               disabled={currentIdx === 0}
               onClick={() => setCurrentIdx(currentIdx - 1)}
-              className="px-4 py-2 text-xs font-semibold text-[#7A6862] hover:bg-[#FAF6E9] hover:text-[#49352F] rounded-xl disabled:opacity-40 cursor-pointer transition-colors"
+              className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg disabled:opacity-40 cursor-pointer"
             >
-              {language === "gu" ? "પાછળ" : "Previous"}
+              Previous
             </button>
             <button
               type="button"
               disabled={currentAnswer === undefined || isSaving}
               onClick={handleNext}
-              className="inline-flex items-center gap-2 px-6 py-2.5 text-xs font-bold bg-[#F2CAB3] hover:bg-white text-[#49352F] border border-[#49352F]/16 rounded-xl shadow-xs transition-all disabled:opacity-50 cursor-pointer"
+              className="inline-flex items-center gap-2 px-6 py-2.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-md transition-all disabled:opacity-50 cursor-pointer"
             >
-              <span>
-                {currentIdx === totalQuestions - 1
-                  ? isSaving
-                    ? language === "gu"
-                      ? "સબમિટ થઈ રહ્યું છે..."
-                      : "Submitting..."
-                    : language === "gu"
-                    ? "જવાબો સબમિટ કરો"
-                    : "Submit Answers"
-                  : language === "gu"
-                  ? "આગળનો પ્રશ્ન"
-                  : "Next Question"}
-              </span>
+              <span>{currentIdx === totalQuestions - 1 ? (isSaving ? "Submitting..." : "Submit Answers") : "Next Question"}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -236,32 +198,26 @@ export function ActivityPlayerModal({
       ) : (
         /* Completion & Score Screen */
         <div className="text-center py-6 space-y-5">
-          <div className="w-16 h-16 mx-auto rounded-full bg-[#2E7D5E]/15 text-[#2E7D5E] flex items-center justify-center shadow-inner">
+          <div className="w-16 h-16 mx-auto rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shadow-inner">
             <Trophy className="w-8 h-8" />
           </div>
 
           <div>
-            <h4 className="text-xl font-bold text-[#49352F]">
-              {language === "gu" ? "પ્રવૃત્તિ પૂર્ણ થઈ!" : "Activity Completed!"}
-            </h4>
-            <p className="text-xs text-[#7A6862] mt-1">
-              {language === "gu"
-                ? `${studentName || "વિદ્યાર્થી"} માટે સ્કોર નોંધાયો`
-                : `Score recorded for ${studentName || "Student"}`}
+            <h4 className="text-xl font-bold text-slate-900">Activity Completed!</h4>
+            <p className="text-xs text-slate-500 mt-1">
+              Score recorded for {studentName || "Student"}
             </p>
           </div>
 
           {/* Score Badge Card */}
-          <div className="p-4 max-w-xs mx-auto rounded-2xl bg-[#FAF6E9] border border-[#49352F]/12">
-            <div className="text-3xl font-extrabold text-[#B26A1B]">
+          <div className="p-4 max-w-xs mx-auto rounded-2xl bg-slate-50 border border-slate-200">
+            <div className="text-3xl font-extrabold text-indigo-600">
               {attemptResult?.percentage}%
             </div>
-            <div className="text-xs font-semibold text-[#7A6862] mt-1">
-              {language === "gu"
-                ? `${totalQuestions} માંથી ${attemptResult?.attempt?.score} પ્રશ્નો સાચા`
-                : `${attemptResult?.attempt?.score} out of ${totalQuestions} questions correct`}
+            <div className="text-xs font-semibold text-slate-600 mt-1">
+              {attemptResult?.attempt?.score} out of {totalQuestions} questions correct
             </div>
-            <p className="text-xs text-[#49352F] mt-3 font-medium">
+            <p className="text-xs text-slate-700 mt-3 font-medium">
               {attemptResult?.feedback}
             </p>
           </div>
@@ -270,16 +226,16 @@ export function ActivityPlayerModal({
             <button
               type="button"
               onClick={resetActivity}
-              className="px-4 py-2 text-xs font-semibold text-[#7A6862] hover:bg-[#FAF6E9] hover:text-[#49352F] rounded-xl cursor-pointer transition-colors"
+              className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
             >
-              {language === "gu" ? "ફરીથી મહાવરો કરો" : "Practice Again"}
+              Practice Again
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2 text-xs font-bold bg-[#F2CAB3] hover:bg-white text-[#49352F] border border-[#49352F]/16 rounded-xl shadow-xs cursor-pointer transition-colors"
+              className="px-6 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-xs cursor-pointer"
             >
-              {language === "gu" ? "પૂર્ણ અને પ્રગતિ જુઓ" : "Done & View Progress"}
+              Done & View Progress
             </button>
           </div>
         </div>

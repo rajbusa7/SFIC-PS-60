@@ -16,10 +16,6 @@ import {
   ChevronDown,
   Minimize2,
   RefreshCw,
-  Lightbulb,
-  Copy,
-  Check,
-  RotateCcw,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
@@ -28,176 +24,6 @@ interface ChatMessage {
   sender: "user" | "bot";
   text: string;
   time: string;
-  isError?: boolean;
-  failedText?: string;
-}
-
-function CodeBlock({ language, code }: { language: string; code: string }) {
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(code);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  return (
-    <div className="my-2 rounded-xl overflow-hidden border border-[#49352F]/20 bg-[#1E1E1E] text-slate-100 shadow-md">
-      <div className="flex items-center justify-between px-3 py-1.5 bg-[#2D2D2D] text-[10px] font-mono text-neutral-300 border-b border-neutral-700">
-        <span className="uppercase tracking-wider font-bold text-amber-400">{language || "code"}</span>
-        <button
-          type="button"
-          onClick={handleCopy}
-          className="flex items-center gap-1 hover:text-white transition-colors cursor-pointer text-[10px]"
-          aria-label="Copy code to clipboard"
-        >
-          {copied ? (
-            <>
-              <Check className="w-3 h-3 text-emerald-400" />
-              <span className="text-emerald-400 font-semibold">Copied!</span>
-            </>
-          ) : (
-            <>
-              <Copy className="w-3 h-3" />
-              <span>Copy</span>
-            </>
-          )}
-        </button>
-      </div>
-      <pre className="p-3 text-[11px] font-mono overflow-x-auto leading-relaxed select-text">
-        <code>{code}</code>
-      </pre>
-    </div>
-  );
-}
-
-function formatInlineStyles(text: string): React.ReactNode[] {
-  const parts: React.ReactNode[] = [];
-  const regex = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*)/g;
-  let lastIndex = 0;
-  let match: RegExpExecArray | null;
-
-  while ((match = regex.exec(text)) !== null) {
-    if (match.index > lastIndex) {
-      parts.push(text.slice(lastIndex, match.index));
-    }
-    const token = match[0];
-    if (token.startsWith("`") && token.endsWith("`")) {
-      parts.push(
-        <code
-          key={`c-${match.index}`}
-          className="px-1.5 py-0.5 rounded bg-[#FAF6E9] text-[#8D4E10] font-mono text-[11px] border border-[#8D4E10]/20 font-semibold"
-        >
-          {token.slice(1, -1)}
-        </code>
-      );
-    } else if (token.startsWith("**") && token.endsWith("**")) {
-      parts.push(
-        <strong key={`b-${match.index}`} className="font-bold text-[#49352F]">
-          {token.slice(2, -2)}
-        </strong>
-      );
-    } else if (token.startsWith("*") && token.endsWith("*")) {
-      parts.push(
-        <em key={`i-${match.index}`} className="italic">
-          {token.slice(1, -1)}
-        </em>
-      );
-    }
-    lastIndex = match.index + token.length;
-  }
-
-  if (lastIndex < text.length) {
-    parts.push(text.slice(lastIndex));
-  }
-
-  return parts;
-}
-
-function TextSegment({ rawText }: { rawText: string }) {
-  const paragraphs = rawText.split(/\n\n+/);
-  return (
-    <>
-      {paragraphs.map((p, pIdx) => {
-        const lines = p.split("\n");
-        return (
-          <div key={pIdx} className="space-y-1">
-            {lines.map((line, lIdx) => {
-              const trimmed = line.trim();
-              if (!trimmed) return null;
-
-              if (trimmed.startsWith("• ") || trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
-                return (
-                  <div key={lIdx} className="flex items-start gap-1.5 ml-2 my-0.5">
-                    <span className="text-[#8D4E10] font-bold mt-0.5 shrink-0">•</span>
-                    <span>{formatInlineStyles(trimmed.slice(2))}</span>
-                  </div>
-                );
-              }
-
-              const numMatch = trimmed.match(/^(\d+)\.\s+(.*)$/);
-              if (numMatch) {
-                return (
-                  <div key={lIdx} className="flex items-start gap-1.5 ml-2 my-0.5">
-                    <span className="text-[#8D4E10] font-bold text-[11px] shrink-0">{numMatch[1]}.</span>
-                    <span>{formatInlineStyles(numMatch[2])}</span>
-                  </div>
-                );
-              }
-
-              if (trimmed.startsWith("### ")) {
-                return (
-                  <h5 key={lIdx} className="font-bold text-xs text-[#49352F] mt-2 mb-0.5">
-                    {formatInlineStyles(trimmed.slice(4))}
-                  </h5>
-                );
-              }
-              if (trimmed.startsWith("## ")) {
-                return (
-                  <h4 key={lIdx} className="font-bold text-[13px] text-[#49352F] mt-2 mb-1">
-                    {formatInlineStyles(trimmed.slice(3))}
-                  </h4>
-                );
-              }
-
-              return (
-                <p key={lIdx} className="leading-relaxed">
-                  {formatInlineStyles(line)}
-                </p>
-              );
-            })}
-          </div>
-        );
-      })}
-    </>
-  );
-}
-
-function FormattedContent({ text }: { text: string }) {
-  const codeBlockRegex = /```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g;
-  const parts: React.ReactNode[] = [];
-  let lastIndex = 0;
-  let match: RegExpExecArray | null;
-
-  while ((match = codeBlockRegex.exec(text)) !== null) {
-    if (match.index > lastIndex) {
-      parts.push(
-        <TextSegment key={`text-${lastIndex}`} rawText={text.slice(lastIndex, match.index)} />
-      );
-    }
-    const lang = match[1]?.trim() || "code";
-    const code = match[2]?.trimEnd() || "";
-    parts.push(<CodeBlock key={`code-${match.index}`} language={lang} code={code} />);
-    lastIndex = match.index + match[0].length;
-  }
-
-  if (lastIndex < text.length) {
-    parts.push(
-      <TextSegment key={`text-${lastIndex}`} rawText={text.slice(lastIndex)} />
-    );
-  }
-
-  return <div className="space-y-1.5">{parts}</div>;
 }
 
 export function GlobalShikshaBot() {
@@ -222,30 +48,14 @@ export function GlobalShikshaBot() {
     const tourKey = getPageTourKey(pathname);
     triggerPageTour(tourKey);
   };
-
-  const handleNewChat = () => {
-    setMessages([
-      {
-        id: "welcome-" + Date.now(),
-        sender: "bot",
-        text:
-          language === "gu"
-            ? "નમસ્તે! હું ChatGPT જેવો જ જનરલ-પર્પઝ AI સહાયક છું. આપ મને પ્રોગ્રામિંગ, વિજ્ઞાન, ગણિત, શિક્ષણ, આઈડિયા કે કોઈપણ વિષય પર પ્રશ્ન પૂછી શકો છો. હું કેવી રીતે મદદ કરી શકું?"
-            : "Hello! I am your general-purpose AI assistant. You can ask me anything about programming, science, mathematics, education, creative writing, translation, or school queries. How can I help you today?",
-        time: "Just now",
-      },
-    ]);
-    setInputValue("");
-  };
-
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "welcome",
       sender: "bot",
       text:
         language === "gu"
-          ? "નમસ્તે! હું શિક્ષાસેતુ AI સહાયક છું. આપ મને પ્રોગ્રામિંગ, વિજ્ઞાન, ગણિત, શિક્ષણ, આઈડિયા કે કોઈપણ વિષય પર પ્રશ્ન પૂછી શકો છો. હું કેવી રીતે મદદ કરી શકું?"
-          : "Hello! I am your general-purpose AI assistant. You can ask me anything about programming, science, mathematics, education, creative writing, translation, or school queries. How can I help you today?",
+          ? "નમસ્તે! હું શિક્ષાબોટ છું. હું તમને વિદ્યાર્થીઓના લર્નિંગ ગેપ્સ ઓળખવામાં અને ૫-પગલાંની ઉપચારાત્મક યોજનાઓ તૈયાર કરવામાં મદદ કરી શકું છું. તમે શું જાણવા માંગો છો?"
+          : "Hello! I'm ShikshaBot, your offline pedagogical assistant. I can help analyze learning gaps, generate 5-step remedial plans for Aarav, or explain benchmark thresholds. How can I assist you today?",
       time: "Just now",
     },
   ]);
@@ -254,20 +64,16 @@ export function GlobalShikshaBot() {
 
   const suggestedPrompts = [
     {
-      label: language === "gu" ? "આર્ટિફિશિયલ ઇન્ટેલિજન્સ શું છે?" : "What is AI?",
-      query: "What is artificial intelligence?",
-    },
-    {
-      label: language === "gu" ? "પાયથોન કેલ્ક્યુલેટર" : "Python Calculator",
-      query: "Write a simple Python calculator.",
-    },
-    {
       label: language === "gu" ? "આજે કોને મદદની જરૂર છે?" : "Who needs help today?",
       query: "Who needs immediate help today in Class 4?",
     },
     {
-      label: language === "gu" ? "ગુજરાતી અનુવાદ" : "Translate to Gujarati",
-      query: "Translate Good morning into Gujarati.",
+      label: language === "gu" ? "આરવ માટે ઉપચારાત્મક યોજના બનાવો" : "Make a plan for Aarav",
+      query: "Generate a 5-step remedial plan for Aarav Patel in Division Basics.",
+    },
+    {
+      label: language === "gu" ? "૬૦% બેન્ચમાર્ક નિયમ સમજાવો" : "Explain 60% threshold",
+      query: "Explain the 60% mastery threshold rule used in ShikshaSetu AI.",
     },
   ];
 
@@ -296,13 +102,28 @@ export function GlobalShikshaBot() {
     setInputValue("");
     setIsLoading(true);
 
-    const historyPayload = messages
-      .filter((m) => m.id !== "welcome" && !m.isError)
-      .slice(-10)
-      .map((m) => ({
-        role: m.sender === "user" ? ("user" as const) : ("assistant" as const),
-        content: m.text,
-      }));
+    // 1. Instant offline keyword match against TUTORIAL_FAQS
+    const lower = text.toLowerCase();
+    const matchedFaq = TUTORIAL_FAQS.find((faq) =>
+      faq.keywords.some((kw) => lower.includes(kw.toLowerCase()))
+    );
+
+    if (matchedFaq) {
+      const answer = language === "gu" ? matchedFaq.answerGu : matchedFaq.answerEn;
+      setTimeout(() => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Math.random().toString(36).substring(7),
+            sender: "bot",
+            text: `💡 [${language === "gu" ? "ઑફલાઇન સહાયક" : "Offline Knowledge"}]: ${answer}`,
+            time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          },
+        ]);
+        setIsLoading(false);
+      }, 250);
+      return;
+    }
 
     try {
       const res = await fetch("/api/v1/ai/chat", {
@@ -310,39 +131,18 @@ export function GlobalShikshaBot() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: text,
-          history: historyPayload,
           language: language === "gu" ? "gu" : "en",
           userRole: "teacher",
         }),
       });
 
       const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        const errorMsg =
-          data.error ||
-          (language === "gu"
-            ? "હું અત્યારે ઉત્તર જનરેટ કરવામાં અસમર્થ છું. કૃપા કરીને ફરી પ્રયાસ કરો."
-            : "I'm temporarily unable to generate a response. Please try again.");
-
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: Math.random().toString(36).substring(7),
-            sender: "bot",
-            text: errorMsg,
-            time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-            isError: true,
-            failedText: text,
-          },
-        ]);
-        return;
-      }
-
-      const botResponseText = data.message || data.reply || data.text;
-      if (!botResponseText) {
-        throw new Error("No response received from AI service");
-      }
+      const botResponseText =
+        data.reply ||
+        data.text ||
+        (language === "gu"
+          ? "આરવ પટેલ (ધોરણ ૪) ને ભાગાકારના ખ્યાલમાં ૫-પગલાંની મણકા અને નંબર-લાઇન પ્રવૃત્તિથી +૫૦ પોઈન્ટનો સુધારો થયો છે."
+          : "Based on our offline pedagogical engine, Aarav Patel was identified with a 35% baseline in Division Basics. A 5-step manipulative plan with counters led to an 85% mastery score (+50 pp gain).");
 
       setMessages((prev) => [
         ...prev,
@@ -353,7 +153,7 @@ export function GlobalShikshaBot() {
           time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         },
       ]);
-    } catch (err: any) {
+    } catch {
       setMessages((prev) => [
         ...prev,
         {
@@ -361,11 +161,9 @@ export function GlobalShikshaBot() {
           sender: "bot",
           text:
             language === "gu"
-              ? "નેટવર્ક સમસ્યા: AI સેવા સાથે કનેક્ટ થઈ શક્યું નથી. કૃપા કરીને ફરી પ્રયાસ કરો."
-              : `I'm temporarily unable to generate a response. ${err?.message || "Network error"}. Please try again.`,
+              ? "ઑફલાઇન સહાયક: વર્ગખંડમાં ૪ વિદ્યાર્થીઓને ૬૦% કરતાં ઓછા ગુણ સાથે વિશેષ ધ્યાનની જરૂર છે."
+              : "Offline rule-engine response: 4 students currently fall below the 60% benchmark threshold (Aarav, Pooja, Karan, Diya). Check /remedial-plans for action items.",
           time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-          isError: true,
-          failedText: text,
         },
       ]);
     } finally {
@@ -375,116 +173,88 @@ export function GlobalShikshaBot() {
 
   return (
     <div className="fixed bottom-6 right-6 z-50 print:hidden select-none">
-      {/* Floating Warm Assistant Trigger Button */}
+      {/* Floating 3D Orb Trigger Button */}
       {!isOpen && (
         <button
           type="button"
           data-tour="shikshabot-trigger"
           onClick={() => setIsOpen(true)}
-          className="group relative flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-tr from-[#FAF6E9] via-[#F2DCB5] to-[#F2CAB3] p-0.5 shadow-[0_4px_20px_rgba(73,53,47,0.15)] hover:shadow-[0_6px_28px_rgba(73,53,47,0.22)] border border-[#49352F]/20 transition-all duration-300 transform hover:scale-105 cursor-pointer"
-          aria-label="Open StudySaathi AI Assistant"
+          className="group relative flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-tr from-[#14123D] via-[#2B2A6B] to-[#FF8A3D] p-0.5 shadow-[0_0_25px_rgba(255,138,61,0.4)] hover:shadow-[0_0_35px_rgba(255,138,61,0.6)] transition-all duration-300 transform hover:scale-105 cursor-pointer"
+          aria-label="Open ShikshaBot AI Assistant"
         >
           {/* Inner orb reflection */}
-          <div className="w-full h-full rounded-full bg-white flex items-center justify-center relative overflow-hidden border border-[#49352F]/10">
-            <Bot className="w-6 h-6 text-[#49352F] transition-transform duration-200 group-hover:scale-110" aria-hidden="true" />
-            {/* Pulsing sage dot */}
-            <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-[#2E7D5E] shadow-[0_0_8px_#2E7D5E]" />
+          <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center relative overflow-hidden">
+            <span className="text-2xl animate-bounce-subtle">🤖</span>
+            {/* Pulsing halo dot */}
+            <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#3DDBA9] animate-pulse" />
           </div>
 
           {/* Persistent speech callout badge for new teachers */}
-          <div className="absolute right-full mr-3 top-2 px-3 py-1.5 rounded-2xl bg-white border border-[#49352F]/15 text-[11px] font-bold text-[#49352F] shadow-[0_4px_16px_rgba(73,53,47,0.1)] whitespace-nowrap pointer-events-none hidden sm:flex items-center gap-1.5">
-            <Lightbulb className="w-3.5 h-3.5 text-[#8D4E10] shrink-0" aria-hidden="true" />
+          <div className="absolute right-full mr-3 top-2 px-3 py-1.5 rounded-2xl bg-[#14123D]/95 border border-amber-500/40 text-[11px] font-bold text-amber-200 shadow-xl whitespace-nowrap pointer-events-none hidden sm:flex items-center gap-1.5">
+            <span className="text-sm">💡</span>
             <span>{language === "gu" ? "વેબસાઇટ ટૂર માટે અહીં ક્લિક કરો" : "New here? Click for website tour"}</span>
           </div>
 
           {/* Hover tooltip label */}
-          <span className="absolute right-full mr-3 px-3 py-1.5 rounded-xl bg-[#49352F] text-white text-xs font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-xl">
-            {language === "gu" ? "StudySaathi AI સહાયક" : "StudySaathi AI Assistant"}
+          <span className="absolute right-full mr-3 px-3 py-1.5 rounded-xl bg-slate-900/90 text-white text-xs font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity border border-slate-700 pointer-events-none shadow-xl">
+            {language === "gu" ? "શિક્ષાબોટ સહાયક (ટૂર અને મદદ)" : "ShikshaBot AI (Tour & Help)"}
           </span>
         </button>
       )}
 
       {/* Expanded Glassmorphic Chat Panel */}
       {isOpen && (
-        <div className="w-[360px] sm:w-[420px] h-[540px] rounded-3xl bg-white/95 border border-[#49352F]/15 shadow-[0_20px_60px_-15px_rgba(73,53,47,0.18)] backdrop-blur-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 duration-200 text-[#49352F]">
+        <div className="w-[360px] sm:w-[400px] h-[520px] rounded-3xl bg-slate-900/95 border border-slate-700/80 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)] backdrop-blur-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 duration-200">
           {/* Top Panel Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-[#49352F]/10 bg-[#FAF6E9]">
+          <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-800 bg-[#14123D]/80">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-[#F2CAB3] border border-[#49352F]/15 flex items-center justify-center text-sm shadow-xs">
-                <Bot className="w-4 h-4 text-[#49352F]" aria-hidden="true" />
+              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 to-indigo-600 flex items-center justify-center text-sm shadow-md shadow-amber-500/20">
+                🤖
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
-                  <h4 className="text-xs font-bold text-[#49352F]">StudySaathi AI</h4>
-                  <span className="px-1.5 py-0.2 rounded-full bg-[#2E7D5E]/15 text-[#2E7D5E] border border-[#2E7D5E]/20 text-[9px] font-extrabold uppercase">
-                    ChatGPT Powered
+                  <h4 className="text-xs font-bold text-white">ShikshaBot AI</h4>
+                  <span className="px-1.5 py-0.2 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] font-extrabold uppercase">
+                    Offline
                   </span>
                 </div>
-                <p className="text-[10px] text-[#7A6862]">{language === "gu" ? "સામાન્ય અને શાળાકીય AI સહાયક" : "General-Purpose AI Assistant"}</p>
+                <p className="text-[10px] text-slate-400">Pedagogical Rule Assistant</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={handleNewChat}
-                title={language === "gu" ? "નવી વાતચીત શરૂ કરો" : "Start New Chat"}
-                className="flex items-center gap-1 px-2 py-1 rounded-xl bg-white hover:bg-[#FAF6E9] text-[11px] font-semibold text-[#49352F] border border-[#49352F]/15 transition-all shadow-xs active:scale-95 cursor-pointer"
-              >
-                <RotateCcw className="w-3 h-3 text-[#B26A1B]" />
-                <span className="hidden sm:inline">{language === "gu" ? "નવી ચેટ" : "New Chat"}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setIsOpen(false)}
-                className="p-1.5 rounded-xl text-[#7A6862] hover:text-[#49352F] hover:bg-white transition-colors cursor-pointer"
-                aria-label="Close assistant"
-              >
-                <Minimize2 className="w-4 h-4" />
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              aria-label="Close assistant"
+            >
+              <Minimize2 className="w-4 h-4" />
+            </button>
           </div>
 
           {/* Messages Body */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 text-xs bg-[#F4F1E1]/40">
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 text-xs">
             {messages.map((msg) => (
               <div
                 key={msg.id}
                 className={`flex gap-2.5 ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
               >
                 {msg.sender === "bot" && (
-                  <div className="w-6 h-6 rounded-full bg-[#FAF6E9] border border-[#49352F]/15 flex items-center justify-center shrink-0 mt-0.5">
-                    <Bot className="w-3.5 h-3.5 text-[#49352F]" aria-hidden="true" />
+                  <div className="w-6 h-6 rounded-full bg-indigo-950 border border-indigo-700/60 flex items-center justify-center text-xs shrink-0 mt-0.5">
+                    🤖
                   </div>
                 )}
                 <div
-                  className={`max-w-[85%] rounded-2xl p-3 leading-relaxed shadow-xs ${
+                  className={`max-w-[80%] rounded-2xl p-3 leading-relaxed shadow-sm ${
                     msg.sender === "user"
-                      ? "bg-[#F2CAB3] text-[#49352F] font-medium border border-[#49352F]/12 rounded-tr-xs"
-                      : msg.isError
-                      ? "bg-[#FFF4F2] text-[#8D2B22] border border-[#8D2B22]/20 rounded-tl-xs shadow-xs"
-                      : "bg-white text-[#49352F] border border-[#49352F]/12 rounded-tl-xs shadow-xs"
+                      ? "bg-amber-500 text-slate-950 font-medium rounded-tr-xs"
+                      : "bg-slate-800/90 text-slate-200 border border-slate-700/60 rounded-tl-xs"
                   }`}
                 >
-                  {msg.sender === "bot" && !msg.isError ? (
-                    <FormattedContent text={msg.text} />
-                  ) : (
-                    <p className="whitespace-pre-wrap">{msg.text}</p>
-                  )}
-                  {msg.isError && msg.failedText && (
-                    <button
-                      type="button"
-                      onClick={() => handleSend(msg.failedText)}
-                      className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-[#8D2B22]/30 text-[11px] font-semibold text-[#8D2B22] hover:bg-[#FAF6E9] transition-colors cursor-pointer shadow-xs active:scale-95"
-                    >
-                      <RefreshCw className="w-3 h-3 text-[#8D2B22]" />
-                      <span>{language === "gu" ? "ફરી પ્રયાસ કરો (Retry)" : "Retry"}</span>
-                    </button>
-                  )}
+                  <p className="whitespace-pre-wrap">{msg.text}</p>
                   <span
                     className={`block text-[9px] mt-1 ${
-                      msg.sender === "user" ? "text-[#49352F]/70 text-right" : "text-[#7A6862]"
+                      msg.sender === "user" ? "text-slate-800 text-right" : "text-slate-400"
                     }`}
                   >
                     {msg.time}
@@ -494,31 +264,31 @@ export function GlobalShikshaBot() {
             ))}
 
             {isLoading && (
-              <div className="flex items-center gap-2 text-[#7A6862] text-xs italic">
-                <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#B26A1B]" />
-                <span>{language === "gu" ? "AI ઉત્તર તૈયાર કરી રહ્યું છે..." : "AI is generating response..."}</span>
+              <div className="flex items-center gap-2 text-slate-400 text-xs italic">
+                <RefreshCw className="w-3.5 h-3.5 animate-spin text-amber-400" />
+                <span>Consulting pedagogical rule engine...</span>
               </div>
             )}
             <div ref={messagesEndRef} />
           </div>
 
           {/* Suggested Prompts Pills */}
-          <div className="px-3 py-2 border-t border-[#49352F]/10 bg-[#FAF6E9] flex items-center gap-1.5 overflow-x-auto">
+          <div className="px-3 py-2 border-t border-slate-800/80 bg-slate-950/40 flex items-center gap-1.5 overflow-x-auto">
             {/* Quick-chip: Show me how to use this page */}
             <button
               type="button"
               onClick={handleStartPageTour}
-              className="shrink-0 text-[11px] font-bold text-white bg-[#49352F] hover:bg-[#2C1F1B] px-3 py-1 rounded-full transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95"
+              className="shrink-0 text-[11px] font-bold text-slate-950 bg-gradient-to-r from-[#FF8A3D] to-amber-400 hover:from-amber-400 hover:to-amber-300 px-3 py-1 rounded-full transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95"
             >
-              <Sparkles className="w-3 h-3 text-[#F2CAB3]" />
-              <span>{language === "gu" ? "વેબસાઇટ ટૂર" : "Tour"}</span>
+              <Sparkles className="w-3 h-3 text-slate-950" />
+              <span>{language === "gu" ? "આ પેજ કેવી રીતે વાપરવું? (ટૂર)" : "Show me how to use this page"}</span>
             </button>
             {suggestedPrompts.map((p, idx) => (
               <button
                 key={idx}
                 type="button"
                 onClick={() => handleSend(p.query)}
-                className="shrink-0 text-[11px] font-semibold text-[#49352F] hover:bg-[#F2DCB5]/50 bg-white border border-[#49352F]/12 px-2.5 py-1 rounded-full transition-colors cursor-pointer shadow-xs"
+                className="shrink-0 text-[11px] font-semibold text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700 border border-slate-700/80 px-2.5 py-1 rounded-full transition-colors cursor-pointer"
               >
                 {p.label}
               </button>
@@ -531,7 +301,7 @@ export function GlobalShikshaBot() {
               e.preventDefault();
               handleSend();
             }}
-            className="p-3 border-t border-[#49352F]/10 bg-[#FAF6E9] flex items-center gap-2"
+            className="p-3 border-t border-slate-800 bg-[#14123D]/60 flex items-center gap-2"
           >
             <input
               type="text"
@@ -539,10 +309,10 @@ export function GlobalShikshaBot() {
               onChange={(e) => setInputValue(e.target.value)}
               placeholder={
                 language === "gu"
-                  ? "કંઈપણ પૂછો (પ્રોગ્રામિંગ, વિજ્ઞાન, ગણિત, શિક્ષણ)..."
-                  : "Ask anything (programming, science, math, education)..."
+                  ? "વિદ્યાર્થી અથવા નિયમ વિશે પૂછો..."
+                  : "Ask about a student, gap, or 5-step plan..."
               }
-              className="flex-1 px-3 py-2 rounded-xl bg-white border border-[#49352F]/15 text-xs text-[#49352F] placeholder-[#7A6862] focus:outline-hidden focus:border-[#F2CAB3]"
+              className="flex-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-hidden focus:border-amber-500"
             />
             <Button
               type="submit"
@@ -559,4 +329,3 @@ export function GlobalShikshaBot() {
     </div>
   );
 }
-

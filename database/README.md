@@ -1,8 +1,8 @@
-# StudySaathi AI - Database Architecture & Migration Guide
+# ShikshaSetu AI - Database Architecture & Migration Guide
 
 ## 1. Current Storage Overview
 
-In the development and demonstration environment, StudySaathi AI uses a dual-layer store:
+In the development and demonstration environment, ShikshaSetu AI uses a dual-layer store:
 - **JSON File Store** (`data/shikshasetu_store.json`): Pre-seeded with realistic Gujarat Primary School data (Model Primary School, Gandhinagar - Class 4A, student Aarav Patel, assessments, division learning gaps, remedial plans, and interactive activities).
 - **In-Memory Cache**: Eliminates redundant disk I/O and provides sub-millisecond query responses for teacher and principal dashboards.
 

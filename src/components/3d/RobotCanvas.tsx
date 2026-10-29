@@ -4,7 +4,7 @@ import React, { useState, useEffect, Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
 import { ShikshaBot3D } from "./ShikshaBot3D";
 import { FloatingEducationObjects } from "./FloatingEducationObjects";
-import { Sparkles as SparklesIcon, Bot } from "lucide-react";
+import { Sparkles as SparklesIcon } from "lucide-react";
 
 interface RobotCanvasProps {
   scrollProgress?: number;
@@ -34,9 +34,9 @@ export function RobotCanvas({
 
   if (!isMounted) {
     return (
-      <div className={`flex items-center justify-center ${className} bg-[#49352F]/5 rounded-3xl animate-pulse`}>
-        <div className="flex items-center gap-2 text-[#49352F] text-xs font-semibold">
-          <SparklesIcon className="w-4 h-4 animate-spin text-[#B26A1B]" />
+      <div className={`flex items-center justify-center ${className} bg-slate-950/20 rounded-3xl animate-pulse`}>
+        <div className="flex items-center gap-2 text-indigo-400 text-xs font-semibold">
+          <SparklesIcon className="w-4 h-4 animate-spin" />
           <span>Initializing 3D Engine...</span>
         </div>
       </div>
@@ -46,13 +46,13 @@ export function RobotCanvas({
   // Graceful 2D fallback if WebGL is disabled or unsupported
   if (!hasWebGl) {
     return (
-      <div className={`flex items-center justify-center ${className} rounded-3xl border border-[#49352F]/15 bg-[#FAF6E9] p-8 text-center`}>
+      <div className={`flex items-center justify-center ${className} rounded-3xl border border-indigo-900/40 bg-slate-950/80 p-8 text-center`}>
         <div className="max-w-sm space-y-2">
-          <div className="w-16 h-16 rounded-full bg-[#F2CAB3] text-[#49352F] flex items-center justify-center mx-auto border border-[#49352F]/15">
-            <Bot className="w-8 h-8 text-[#49352F]" aria-hidden="true" />
+          <div className="w-16 h-16 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center mx-auto text-2xl font-bold border border-indigo-500/40">
+            🤖
           </div>
-          <h4 className="text-[#49352F] font-bold text-sm">SaathiBot Ready</h4>
-          <p className="text-xs text-[#7A6862]">
+          <h4 className="text-white font-bold text-sm">ShikshaBot Ready</h4>
+          <p className="text-xs text-slate-400">
             Hardware acceleration is disabled on this device. Experience continues in high-performance mode.
           </p>
         </div>

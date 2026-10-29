@@ -9,7 +9,7 @@ interface ShikshaBotProps {
 }
 
 export function ShikshaBot({
-  speechText = "Hi! I'm SaathiBot. Let's make learning better for everyone!",
+  speechText = "Hi! I'm ShikshaBot. Let's make learning better for everyone!",
   size = "lg",
 }: ShikshaBotProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -99,14 +99,14 @@ export function ShikshaBot({
       onClick={handleBotClick}
       role="button"
       tabIndex={0}
-      title="Click SaathiBot to hear encouragement!"
+      title="Click ShikshaBot to hear encouragement!"
     >
       {/* Speech Bubble */}
       <div className="absolute -top-12 sm:-top-16 left-1/2 -translate-x-1/2 z-20 w-64 sm:w-72 transition-all duration-300">
         <div className="relative bg-white/95 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-indigo-200/80 shadow-lg text-slate-800 text-xs sm:text-xs font-semibold text-center leading-snug animate-pulse-subtle">
           <div className="flex items-center justify-center gap-1.5 text-indigo-600 mb-0.5">
             <Sparkles className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />
-            <span className="text-[10px] font-bold uppercase tracking-wider">SaathiBot AI</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider">ShikshaBot AI</span>
           </div>
           <p>{activeSpeech}</p>
           {/* Bubble tail */}

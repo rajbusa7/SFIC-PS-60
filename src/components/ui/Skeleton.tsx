@@ -27,7 +27,7 @@ export function Skeleton({
     <div
       aria-hidden="true"
       className={cn(
-        "animate-pulse bg-[#49352F]/10 relative overflow-hidden",
+        "animate-pulse bg-slate-800/60 relative overflow-hidden",
         variantStyles,
         className
       )}
@@ -38,14 +38,14 @@ export function Skeleton({
       }}
       {...props}
     >
-      <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/50 to-transparent animate-shimmer" />
+      <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-slate-700/20 to-transparent animate-shimmer" />
     </div>
   );
 }
 
 export function SkeletonCard() {
   return (
-    <div className="p-6 rounded-2xl bg-white/90 border border-[#49352F]/12 space-y-4">
+    <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-4">
       <div className="flex items-center justify-between">
         <Skeleton variant="text" className="w-1/3 h-4" />
         <Skeleton variant="circle" className="w-8 h-8" />

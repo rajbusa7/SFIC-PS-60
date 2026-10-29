@@ -30,7 +30,7 @@ export function Tabs({
       <div
         role="tablist"
         className={cn(
-          "inline-flex items-center gap-1.5 p-1 rounded-2xl bg-[#FAF6E9] dark:bg-[#1E1916] border border-[#49352F]/15 dark:border-[#F2CAB3]/20 backdrop-blur-md",
+          "inline-flex items-center gap-1.5 p-1 rounded-2xl bg-slate-900/80 border border-slate-800 backdrop-blur-md",
           className
         )}
       >
@@ -47,8 +47,8 @@ export function Tabs({
               className={cn(
                 "relative inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer",
                 isActive
-                  ? "bg-[#F2CAB3] dark:bg-[#F2CAB3]/25 text-[#49352F] dark:text-[#F4F1E1] shadow-xs font-black border border-[#49352F]/15 dark:border-[#F2CAB3]/30"
-                  : "text-[#7A6862] dark:text-[#FAF6E9]/70 hover:text-[#49352F] dark:hover:text-[#F4F1E1] hover:bg-white dark:hover:bg-[#26201C]"
+                  ? "bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md shadow-amber-500/20 font-black"
+                  : "text-slate-400 hover:text-white hover:bg-slate-800/60"
               )}
             >
               {Icon && <Icon className="w-3.5 h-3.5" />}
@@ -58,8 +58,8 @@ export function Tabs({
                   className={cn(
                     "px-1.5 py-0.5 rounded-full text-[10px] font-extrabold",
                     isActive
-                      ? "bg-[#49352F]/10 dark:bg-[#F2CAB3]/20 text-[#49352F] dark:text-[#F4F1E1]"
-                      : "bg-[#49352F]/5 dark:bg-[#F2CAB3]/10 text-[#7A6862] dark:text-[#FAF6E9]/70"
+                      ? "bg-slate-950/20 text-slate-950"
+                      : "bg-slate-800 text-slate-400"
                   )}
                 >
                   {tab.count}
@@ -76,7 +76,7 @@ export function Tabs({
   return (
     <div
       role="tablist"
-      className={cn("flex items-center gap-6 border-b border-[#49352F]/15 dark:border-[#F2CAB3]/20", className)}
+      className={cn("flex items-center gap-6 border-b border-slate-800", className)}
     >
       {tabs.map((tab) => {
         const isActive = tab.id === activeTab;
@@ -91,14 +91,14 @@ export function Tabs({
             className={cn(
               "relative pb-3 pt-1 inline-flex items-center gap-2 text-xs font-bold transition-all cursor-pointer",
               isActive
-                ? "text-[#49352F] dark:text-[#F4F1E1] border-b-2 border-[#B26A1B] dark:border-[#F2CAB3] font-extrabold"
-                : "text-[#7A6862] dark:text-[#FAF6E9]/70 hover:text-[#49352F] dark:hover:text-[#F4F1E1]"
+                ? "text-amber-400 border-b-2 border-amber-500 font-extrabold"
+                : "text-slate-400 hover:text-white"
             )}
           >
             {Icon && <Icon className="w-3.5 h-3.5" />}
             <span>{tab.label}</span>
             {tab.count !== undefined && (
-              <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-[#FAF6E9] dark:bg-[#1E1916] text-[#7A6862] dark:text-[#FAF6E9]/70 border border-[#49352F]/10 dark:border-[#F2CAB3]/15">
+              <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-slate-800 text-slate-400">
                 {tab.count}
               </span>
             )}

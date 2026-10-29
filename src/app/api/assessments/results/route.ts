@@ -2,17 +2,16 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db/database";
 import { validateAssessmentMarks } from "@/lib/engine/calculations";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const studentId = searchParams.get("studentId") || undefined;
     const conceptId = searchParams.get("conceptId") || undefined;
-    const results = db.getResults(studentId, conceptId);
-    return NextResponse.json({ success: true, results });
-  } catch (error) {
+    const assessmentId = searchParams.get("assessmentId") || undefined;
+
+    const results = db.getResults(studentId, conceptId, assessmentId);
+    return NextResponse.json({ success: true, count: results.length, results });
+  } catch (error: any) {
     console.error("API GET /api/assessments/results error:", error);
     return NextResponse.json({ success: false, error: "Failed to fetch results" }, { status: 500 });
   }

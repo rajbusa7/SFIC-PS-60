@@ -1,84 +1,137 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { useLanguage } from "@/context/LanguageContext";
 import { calculatePercentage } from "@/lib/engine/calculations";
-import { broadcastDataUpdate } from "@/lib/events";
 import {
-  FileSpreadsheet,
   ArrowLeft,
   CheckCircle2,
   AlertCircle,
   Save,
   Send,
-  Plus,
+  User,
+  Users,
+  Sparkles,
 } from "lucide-react";
 
-export default function NewAssessmentPage() {
+function NewAssessmentContent() {
   const router = useRouter();
-  const { t, language, formatClass, formatSubject, formatStatus } = useLanguage();
+  const searchParams = useSearchParams();
+  const initialStudentParam = searchParams.get("studentId");
+  const initialClassroomParam = searchParams.get("classroomId");
 
-  const [title, setTitle] = useState("Class 4: Division & Multiplication Check");
-  const [classroomId, setClassroomId] = useState("cls-4a");
-  const [subjectCode, setSubjectCode] = useState<string>("MATH");
-  const [assessmentDate, setAssessmentDate] = useState("2026-10-18");
+  const { t } = useLanguage();
+
+  // Mode: "single" for one student, "class" for whole classroom roster
+  const [entryMode, setEntryMode] = useState<"class" | "single">(
+    initialStudentParam ? "single" : "class"
+  );
+  const [selectedStudentId, setSelectedStudentId] = useState<string>(initialStudentParam || "");
+
+  const [title, setTitle] = useState("Formative Evaluation Check");
+  const [classroomId, setClassroomId] = useState(initialClassroomParam || "cls-4a");
+  const [subjectCode, setSubjectCode] = useState<"MATH" | "ENG" | "GUJ" | "EVS">("MATH");
+  const [assessmentDate, setAssessmentDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
   const [maxMarks, setMaxMarks] = useState<number>(20);
-  const [selectedConcepts, setSelectedConcepts] = useState<string[]>(["c-div-01"]);
+  const [selectedConcepts, setSelectedConcepts] = useState<string[]>([]);
 
+  // Single student specific marks
+  const [singleStudentMarks, setSingleStudentMarks] = useState<string>("15");
+  const [singleStudentNotes, setSingleStudentNotes] = useState<string>("");
+
+  // Classroom roster scores: studentId -> { marks, notes }
   const [students, setStudents] = useState<any[]>([]);
+  const [allStudents, setAllStudents] = useState<any[]>([]);
   const [concepts, setConcepts] = useState<any[]>([]);
-  const [scores, setScores] = useState<Record<string, { marks: number; notes: string }>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [scores, setScores] = useState<Record<string, { marks: number | string; notes: string }>>({});
+
+  const [loading, setLoading] = useState<boolean>(true);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Load classroom students and concepts
   useEffect(() => {
     async function loadData() {
+      setLoading(true);
       try {
-        const [resStd, resAsm] = await Promise.all([
+        const [resStd, resAsm, resAllStd] = await Promise.all([
           fetch(`/api/students?classroomId=${classroomId}`),
           fetch("/api/assessments"),
+          fetch("/api/students"),
         ]);
-        const [dataStd, dataAsm] = await Promise.all([resStd.json(), resAsm.json()]);
+        const [dataStd, dataAsm, dataAllStd] = await Promise.all([
+          resStd.json(),
+          resAsm.json(),
+          resAllStd.json(),
+        ]);
 
         if (dataStd.success) {
-          setStudents(dataStd.students || []);
-          // Initialize scores map with default scores
-          const initialScores: Record<string, { marks: number; notes: string }> = {};
-          dataStd.students.forEach((s: any) => {
+          const list = dataStd.students || [];
+          setStudents(list);
+
+          // Populate initial scores
+          const initialScores: Record<string, { marks: number | string; notes: string }> = {};
+          list.forEach((s: any) => {
             initialScores[s.id] = { marks: 15, notes: "" };
           });
           setScores(initialScores);
         }
 
-        if (dataAsm.success) {
-          setConcepts(dataAsm.concepts || []);
+        if (dataAllStd.success) {
+          setAllStudents(dataAllStd.students || []);
+          if (initialStudentParam) {
+            const matched = (dataAllStd.students || []).find((s: any) => s.id === initialStudentParam);
+            if (matched) {
+              setSelectedStudentId(matched.id);
+              if (matched.classroomId) setClassroomId(matched.classroomId);
+            }
+          }
+        }
+
+        if (dataAsm.success && Array.isArray(dataAsm.concepts)) {
+          setConcepts(dataAsm.concepts);
         }
       } catch (e) {
         console.error("Failed to load setup data", e);
+        setError("Failed to load students and curriculum concepts");
+      } finally {
+        setLoading(false);
       }
     }
     loadData();
-  }, [classroomId]);
+  }, [classroomId, initialStudentParam]);
 
+  // When subject changes, select first relevant concept
   useEffect(() => {
-    if (concepts.length > 0) {
-      const match = concepts.filter((c) => c.subjectCode === subjectCode);
-      if (match.length > 0) {
-        setSelectedConcepts([match[0].id]);
-      }
+    const relevant = concepts.filter((c) => c.subjectCode === subjectCode);
+    if (relevant.length > 0) {
+      setSelectedConcepts([relevant[0].id]);
+      setTitle(`${relevant[0].name} Diagnostic Check`);
+    } else {
+      setSelectedConcepts([]);
     }
   }, [subjectCode, concepts]);
 
+  // When single student selection changes, sync classroom
+  const handleSelectSingleStudent = (sId: string) => {
+    setSelectedStudentId(sId);
+    const found = allStudents.find((s) => s.id === sId);
+    if (found && found.classroomId && found.classroomId !== classroomId) {
+      setClassroomId(found.classroomId);
+    }
+  };
+
   const handleScoreChange = (studentId: string, marksVal: string) => {
-    const num = Math.min(maxMarks, Math.max(0, parseFloat(marksVal) || 0));
     setScores((prev) => ({
       ...prev,
-      [studentId]: { ...prev[studentId], marks: num },
+      [studentId]: { ...prev[studentId], marks: marksVal },
     }));
   };
 
@@ -95,36 +148,91 @@ export default function NewAssessmentPage() {
     );
   };
 
+  const relevantConcepts = concepts.filter((c) => c.subjectCode === subjectCode);
+
   const handleSubmit = async (publish: boolean) => {
+    // Validation
     if (!title.trim()) {
-      setError(
-        language === "gu"
-          ? "કૃપા કરીને મૂલ્યાંકનનું શીર્ષક દાખલ કરો."
-          : "Please enter an assessment title."
-      );
+      setError("Please enter an assessment title.");
       return;
     }
     if (selectedConcepts.length === 0) {
-      setError(
-        language === "gu"
-          ? "કૃપા કરીને ઓછામાં ઓછી એક મૂલ્યાંકિત સંકલ્પના પસંદ કરો."
-          : "Please select at least one concept evaluated."
-      );
+      setError("Please select at least one competency or learning outcome evaluated.");
       return;
+    }
+    if (isNaN(maxMarks) || maxMarks <= 0) {
+      setError("Maximum marks must be greater than zero.");
+      return;
+    }
+
+    let scoresPayload: Array<{
+      studentId: string;
+      conceptId: string;
+      marksObtained: number;
+      notes?: string;
+    }> = [];
+
+    if (entryMode === "single") {
+      if (!selectedStudentId) {
+        setError("Please select a student for this assessment.");
+        return;
+      }
+      const obtained = parseFloat(singleStudentMarks);
+      if (isNaN(obtained)) {
+        setError("Please enter the marks obtained.");
+        return;
+      }
+      if (obtained < 0) {
+        setError("Marks obtained cannot be negative.");
+        return;
+      }
+      if (obtained > maxMarks) {
+        setError(`Marks obtained (${obtained}) cannot exceed maximum marks (${maxMarks}).`);
+        return;
+      }
+
+      scoresPayload = [
+        {
+          studentId: selectedStudentId,
+          conceptId: selectedConcepts[0],
+          marksObtained: obtained,
+          notes: singleStudentNotes.trim(),
+        },
+      ];
+    } else {
+      if (students.length === 0) {
+        setError("No students found in the selected classroom.");
+        return;
+      }
+
+      for (const std of students) {
+        const valStr = String(scores[std.id]?.marks ?? "");
+        const num = parseFloat(valStr);
+        if (isNaN(num)) {
+          setError(`Please provide valid marks for student ${std.displayName}.`);
+          return;
+        }
+        if (num < 0) {
+          setError(`Marks obtained for ${std.displayName} cannot be negative.`);
+          return;
+        }
+        if (num > maxMarks) {
+          setError(`Marks for ${std.displayName} (${num}) cannot exceed maximum marks (${maxMarks}).`);
+          return;
+        }
+        scoresPayload.push({
+          studentId: std.id,
+          conceptId: selectedConcepts[0],
+          marksObtained: num,
+          notes: scores[std.id]?.notes?.trim() || "",
+        });
+      }
     }
 
     setIsSubmitting(true);
     setError(null);
 
     try {
-      // Map scores to results array
-      const scoresPayload = Object.keys(scores).map((studentId) => ({
-        studentId,
-        conceptId: selectedConcepts[0], // primary concept
-        marksObtained: scores[studentId].marks,
-        notes: scores[studentId].notes,
-      }));
-
       const res = await fetch("/api/assessments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -132,7 +240,7 @@ export default function NewAssessmentPage() {
           classroomId,
           subjectId: `sub-${subjectCode.toLowerCase()}`,
           subjectCode,
-          title,
+          title: title.trim(),
           assessmentDate,
           maxMarks,
           conceptIds: selectedConcepts,
@@ -143,132 +251,184 @@ export default function NewAssessmentPage() {
 
       const data = await res.json();
       if (data.success) {
-        broadcastDataUpdate("assessments", "create", data.assessment?.id);
-        broadcastDataUpdate("gaps", "update");
-        broadcastDataUpdate("results", "create");
-        router.push("/assessments");
+        if (entryMode === "single" && selectedStudentId) {
+          router.push(`/students/${selectedStudentId}`);
+        } else {
+          router.push("/assessments");
+        }
       } else {
-        setError(data.error || (language === "gu" ? "મૂલ્યાંકન નોંધવામાં નિષ્ફળતા" : "Failed to record assessment"));
+        setError(data.error || "Failed to record assessment.");
       }
     } catch {
-      setError(language === "gu" ? "નેટવર્ક ભૂલ: મૂલ્યાંકન સબમિટ થઈ શક્યું નથી" : "Network error submitting assessment");
+      setError("Network error submitting assessment.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const relevantConcepts = concepts.filter((c) => c.subjectCode === subjectCode);
+  // Single student live metrics
+  const singleObtainedNum = parseFloat(singleStudentMarks);
+  const singleHasMarks = !isNaN(singleObtainedNum) && singleStudentMarks.trim() !== "";
+  const singlePct = singleHasMarks && maxMarks > 0 ? calculatePercentage(singleObtainedNum, maxMarks) : 0;
+  const singleStatus =
+    !singleHasMarks
+      ? null
+      : singlePct >= 80
+      ? "Mastered"
+      : singlePct >= 60
+      ? "Developing"
+      : "Needs Support";
 
   return (
     <AppLayout>
       <div className="space-y-6 max-w-4xl mx-auto">
-        {/* Breadcrumb */}
+        {/* Navigation Breadcrumb */}
         <Link
           href="/assessments"
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#7A6862] hover:text-[#49352F]"
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-white"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          <span>{language === "gu" ? "મૂલ્યાંકનો પર પાછા ફરો" : "Back to Assessments"}</span>
+          <span>Back to Assessments</span>
         </Link>
 
-        <div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-[#49352F] tracking-tight font-heading">
-            {language === "gu" ? "સંકલ્પના-સ્તરનું મૂલ્યાંકન રચો" : "Create Concept-Level Assessment"}
-          </h1>
-          <p className="text-xs sm:text-sm text-[#7A6862] mt-0.5">
-            {language === "gu"
-              ? "શીખવાની ખામીઓ આપમેળે શોધવા માટે પ્રાથમિક અભ્યાસક્રમ સંકલ્પનાઓ સાથે મેપ કરેલ વિદ્યાર્થી ગુણ નોંધો."
-              : "Record student scores mapped directly to primary curriculum concepts for automatic gap detection."}
-          </p>
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
+              Record Concept Assessment
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
+              Input student scores mapped directly to curriculum outcomes to update the learning gap bridge.
+            </p>
+          </div>
+
+          {/* Mode Switcher */}
+          <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-900 border border-slate-800 self-start sm:self-center">
+            <button
+              type="button"
+              onClick={() => setEntryMode("single")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                entryMode === "single"
+                  ? "bg-amber-500 text-slate-950 font-black shadow-xs"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              <User className="w-3.5 h-3.5" />
+              <span>Single Student</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setEntryMode("class")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                entryMode === "class"
+                  ? "bg-amber-500 text-slate-950 font-black shadow-xs"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>Whole Classroom</span>
+            </button>
+          </div>
         </div>
 
-        {/* Assessment Settings Card */}
-        <Card className="space-y-4">
+        {/* Assessment Configuration Card */}
+        <Card variant="glass" className="p-5 space-y-4 border-slate-800">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-[#49352F] mb-1">
-                {language === "gu" ? "મૂલ્યાંકન શીર્ષક" : "Assessment Title"}{" "}
-                <span className="text-rose-500">*</span>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">
+                Assessment Title <span className="text-rose-400">*</span>
               </label>
               <input
                 type="text"
                 required
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder={
-                  language === "gu"
-                    ? "દા.ત. એકમ ૩ ગુણાકાર અને ભાગાકાર ચકાસણી"
-                    : "e.g. Unit 3 Division & Multiplication Check"
-                }
-                className="w-full rounded-xl border border-[#49352F]/15 bg-white p-2.5 text-xs font-semibold text-[#49352F] focus:border-[#B26A1B] focus:ring-1 focus:ring-[#B26A1B] outline-hidden"
+                placeholder="e.g. Unit 3 Division & Multiplication Check"
+                className="w-full rounded-xl border border-slate-700 bg-slate-900 p-2.5 text-xs font-semibold text-white focus:border-amber-500 outline-hidden"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#49352F] mb-1">
-                {language === "gu" ? "તારીખ" : "Date"}
+              <label className="block text-xs font-semibold text-slate-300 mb-1">
+                Assessment Date <span className="text-rose-400">*</span>
               </label>
               <input
                 type="date"
+                required
                 value={assessmentDate}
                 onChange={(e) => setAssessmentDate(e.target.value)}
-                className="w-full rounded-xl border border-[#49352F]/15 bg-white p-2.5 text-xs text-[#49352F] focus:border-[#B26A1B] focus:ring-1 focus:ring-[#B26A1B] outline-hidden cursor-pointer"
+                className="w-full rounded-xl border border-slate-700 bg-slate-900 p-2.5 text-xs text-white focus:border-amber-500 outline-hidden"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-[#49352F] mb-1">
-                {language === "gu" ? "વર્ગખંડ" : "Classroom"}
-              </label>
-              <select
-                value={classroomId}
-                onChange={(e) => setClassroomId(e.target.value)}
-                className="w-full rounded-xl border border-[#49352F]/15 bg-white p-2.5 text-xs text-[#49352F] focus:border-[#B26A1B] focus:ring-1 focus:ring-[#B26A1B] outline-hidden cursor-pointer"
-              >
-                <option value="cls-3a">{formatClass("Class 3 - Section A")}</option>
-                <option value="cls-4a">{formatClass("Class 4 - Section A")}</option>
-                <option value="cls-5a">{formatClass("Class 5 - Section A")}</option>
-              </select>
-            </div>
+            {entryMode === "class" ? (
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Classroom</label>
+                <select
+                  value={classroomId}
+                  onChange={(e) => setClassroomId(e.target.value)}
+                  className="w-full rounded-xl border border-slate-700 bg-slate-900 p-2.5 text-xs text-white focus:border-amber-500 outline-hidden"
+                >
+                  <option value="cls-3a">Class 3 - Section A</option>
+                  <option value="cls-4a">Class 4 - Section A</option>
+                  <option value="cls-5a">Class 5 - Section A</option>
+                </select>
+              </div>
+            ) : (
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Select Student <span className="text-rose-400">*</span>
+                </label>
+                <select
+                  value={selectedStudentId}
+                  onChange={(e) => handleSelectSingleStudent(e.target.value)}
+                  className="w-full rounded-xl border border-slate-700 bg-slate-900 p-2.5 text-xs text-white focus:border-amber-500 outline-hidden font-bold"
+                >
+                  <option value="">-- Choose Student --</option>
+                  {allStudents.map((std) => (
+                    <option key={std.id} value={std.id}>
+                      {std.displayName} ({std.studentCode}) - Class {std.grade}-{std.section}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div>
-              <label className="block text-xs font-semibold text-[#49352F] mb-1">
-                {language === "gu" ? "વિષય" : "Subject"}
-              </label>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Subject</label>
               <select
                 value={subjectCode}
-                onChange={(e) => setSubjectCode(e.target.value)}
-                className="w-full rounded-xl border border-[#49352F]/15 bg-white p-2.5 text-xs text-[#49352F] focus:border-[#B26A1B] focus:ring-1 focus:ring-[#B26A1B] outline-hidden cursor-pointer"
+                onChange={(e) => setSubjectCode(e.target.value as any)}
+                className="w-full rounded-xl border border-slate-700 bg-slate-900 p-2.5 text-xs text-white focus:border-amber-500 outline-hidden"
               >
-                <option value="MATH">{formatSubject("MATH")}</option>
-                <option value="ENG">{formatSubject("ENG")}</option>
-                <option value="GUJ">{formatSubject("GUJ")}</option>
-                <option value="EVS">{formatSubject("EVS")}</option>
+                <option value="MATH">Mathematics (ગણિત)</option>
+                <option value="ENG">English</option>
+                <option value="GUJ">Gujarati (ગુજરાતી)</option>
+                <option value="EVS">Environmental Studies (પર્યાવરણ)</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#49352F] mb-1">
-                {language === "gu" ? "મહત્તમ ગુણ" : "Maximum Marks"}
+              <label className="block text-xs font-semibold text-slate-300 mb-1">
+                Maximum Marks <span className="text-rose-400">*</span>
               </label>
               <input
                 type="number"
                 min="1"
-                max="100"
+                step="any"
                 value={maxMarks}
                 onChange={(e) => setMaxMarks(Number(e.target.value))}
-                className="w-full rounded-xl border border-[#49352F]/15 bg-white p-2.5 text-xs font-semibold text-[#49352F] focus:border-[#B26A1B] focus:ring-1 focus:ring-[#B26A1B] outline-hidden"
+                className="w-full rounded-xl border border-slate-700 bg-slate-900 p-2.5 text-xs font-bold text-white focus:border-amber-500 outline-hidden"
               />
             </div>
           </div>
 
-          {/* Concepts Selector */}
+          {/* Competency / Concept Selector */}
           <div className="pt-2">
-            <label className="block text-xs font-semibold text-[#49352F] mb-2">
-              {language === "gu" ? "તપાસાયેલ સંકલ્પના(ઓ) પસંદ કરો" : "Select Concept(s) Evaluated"}{" "}
-              <span className="text-rose-500">*</span>
+            <label className="block text-xs font-semibold text-slate-300 mb-2">
+              Select Evaluated Competency / Learning Outcome <span className="text-rose-400">*</span>
             </label>
             <div className="flex flex-wrap gap-2">
               {relevantConcepts.map((c) => {
@@ -280,149 +440,226 @@ export default function NewAssessmentPage() {
                     onClick={() => toggleConcept(c.id)}
                     className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
                       isSelected
-                        ? "border-[#49352F] bg-[#F2CAB3] text-[#49352F] font-bold shadow-2xs"
-                        : "border-[#49352F]/12 bg-white text-[#7A6862] hover:bg-[#FAF6E9]"
+                        ? "border-amber-500 bg-amber-500/20 text-amber-300 shadow-xs"
+                        : "border-slate-800 bg-slate-900/60 text-slate-400 hover:text-white hover:border-slate-700"
                     }`}
                   >
-                    {c.name}
+                    {c.name} {c.nameGujarati ? `(${c.nameGujarati})` : ""}
                   </button>
                 );
               })}
+              {relevantConcepts.length === 0 && (
+                <span className="text-xs text-slate-500 italic">No concepts found for {subjectCode}</span>
+              )}
             </div>
           </div>
         </Card>
 
-        {/* Student Marks Entry Grid */}
-        <Card className="space-y-4">
-          <CardHeader className="mb-0">
+        {/* Single Student Score Entry Form */}
+        {entryMode === "single" && (
+          <Card variant="glass" className="p-5 space-y-4 border-slate-800">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-heading text-base font-bold text-white">Student Score & Observations</h3>
+                <p className="text-xs text-slate-400">
+                  Enter marks obtained out of {maxMarks}. Percentage and learning gap statuses update automatically.
+                </p>
+              </div>
+              <Badge variant="outline" size="sm">
+                Target: {selectedConcepts[0] || "None selected"}
+              </Badge>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Marks Obtained (0 &ndash; {maxMarks}) <span className="text-rose-400">*</span>
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max={maxMarks > 0 ? maxMarks : undefined}
+                  step="any"
+                  value={singleStudentMarks}
+                  onChange={(e) => setSingleStudentMarks(e.target.value)}
+                  className="w-full rounded-xl border border-slate-700 bg-slate-900 p-2.5 text-base font-bold text-amber-400 focus:border-amber-500 outline-hidden"
+                />
+              </div>
+
+              {/* Live Preview Card */}
+              <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800 flex items-center justify-between">
+                <div>
+                  <span className="text-[11px] text-slate-400 block font-medium">Calculated Percentage</span>
+                  <span className="text-2xl font-black text-white">
+                    {singleHasMarks ? `${singlePct}%` : "--"}
+                  </span>
+                </div>
+                <div className="text-right">
+                  <span className="text-[11px] text-slate-400 block font-medium">Mastery Classification</span>
+                  {singleStatus ? (
+                    <Badge
+                      variant={
+                        singleStatus === "Mastered"
+                          ? "mastered"
+                          : singleStatus === "Developing"
+                          ? "developing"
+                          : "needsSupport"
+                      }
+                      size="sm"
+                      dot
+                    >
+                      {singleStatus}
+                    </Badge>
+                  ) : (
+                    <span className="text-xs text-slate-500">Awaiting score</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
             <div>
-              <CardTitle>{language === "gu" ? "વિદ્યાર્થીવાર ગુણ નોંધણી" : "Record Marks by Student"}</CardTitle>
-              <CardDescription>
-                {language === "gu"
-                  ? `${maxMarks} માંથી મેળવેલ ગુણ દાખલ કરો. ટકાવારી અને શીખવાની ખામી સ્થિતિ આપમેળે અપડેટ થશે.`
-                  : `Enter marks obtained out of ${maxMarks}. Percentage and learning gap statuses will update automatically.`}
-              </CardDescription>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">
+                Teacher Notes / Observations (Optional)
+              </label>
+              <textarea
+                rows={2}
+                value={singleStudentNotes}
+                onChange={(e) => setSingleStudentNotes(e.target.value)}
+                placeholder="Qualitative observations during evaluation..."
+                className="w-full rounded-xl border border-slate-700 bg-slate-900 p-2.5 text-xs text-white placeholder-slate-500 focus:border-amber-500 outline-hidden"
+              />
             </div>
-          </CardHeader>
+          </Card>
+        )}
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-[#FAF6E9] border-b border-[#49352F]/10 text-[#7A6862] uppercase tracking-wider text-[10px]">
-                <tr>
-                  <th className="p-3">{language === "gu" ? "વિદ્યાર્થી" : "Student"}</th>
-                  <th className="p-3">
-                    {language === "gu" ? `ગુણ (૦ - ${maxMarks})` : `Marks (0 - ${maxMarks})`}
-                  </th>
-                  <th className="p-3">{language === "gu" ? "ગણતરી કરેલ %" : "Calculated %"}</th>
-                  <th className="p-3">{language === "gu" ? "નિપુણતા સ્થિતિ" : "Mastery Status"}</th>
-                  <th className="p-3">{language === "gu" ? "શિક્ષકની નોંધ" : "Teacher Notes"}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#49352F]/10">
-                {students.map((std) => {
-                  const studentScore = scores[std.id]?.marks ?? 12;
-                  const pct = calculatePercentage(studentScore, maxMarks);
-                  const status =
-                    pct >= 80 ? "Mastered" : pct >= 60 ? "Developing" : "Needs Support";
-                  const statusLabel =
-                    status === "Mastered"
-                      ? language === "gu"
-                        ? "પ્રવીણ (Mastered)"
-                        : "Mastered"
-                      : status === "Developing"
-                      ? language === "gu"
-                        ? "વિકાસશીલ (Developing)"
-                        : "Developing"
-                      : language === "gu"
-                      ? "સહાય જરૂરી (Needs Support)"
-                      : "Needs Support";
+        {/* Whole Classroom Roster Grid */}
+        {entryMode === "class" && (
+          <Card variant="glass" className="space-y-4 border-slate-800">
+            <CardHeader className="mb-0">
+              <div>
+                <CardTitle>Record Marks by Classroom Roster</CardTitle>
+                <CardDescription>
+                  Enter marks obtained out of {maxMarks}. Percentage and gap detection update automatically.
+                </CardDescription>
+              </div>
+            </CardHeader>
 
-                  return (
-                    <tr key={std.id} className="hover:bg-[#FAF6E9]/50">
-                      <td className="p-3">
-                        <div className="font-bold text-[#49352F]">{std.displayName}</div>
-                        <div className="text-[10px] font-mono text-[#7A6862]">{std.studentCode}</div>
-                      </td>
-                      <td className="p-3">
-                        <input
-                          type="number"
-                          step="0.5"
-                          min="0"
-                          max={maxMarks}
-                          value={scores[std.id]?.marks ?? ""}
-                          onChange={(e) => handleScoreChange(std.id, e.target.value)}
-                          className="w-20 rounded-lg border border-[#49352F]/15 bg-white p-1.5 text-xs font-bold text-[#49352F] focus:border-[#B26A1B] focus:ring-1 focus:ring-[#B26A1B] outline-hidden"
-                        />
-                      </td>
-                      <td className="p-3 font-bold text-[#49352F]">{pct}%</td>
-                      <td className="p-3">
-                        <Badge
-                          variant={
-                            status === "Mastered"
-                              ? "mastered"
-                              : status === "Developing"
-                              ? "developing"
-                              : "needsSupport"
-                          }
-                          size="sm"
-                        >
-                          {statusLabel}
-                        </Badge>
-                      </td>
-                      <td className="p-3">
-                        <input
-                          type="text"
-                          placeholder={language === "gu" ? "વૈકલ્પિક અવલોકન..." : "Optional observations..."}
-                          value={scores[std.id]?.notes ?? ""}
-                          onChange={(e) => handleNotesChange(std.id, e.target.value)}
-                          className="w-full rounded-lg border border-[#49352F]/15 bg-white p-1.5 text-xs text-[#49352F] placeholder-[#7A6862]/60 focus:border-[#B26A1B] outline-hidden"
-                        />
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </Card>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-900/90 border-b border-slate-800 text-slate-400 uppercase tracking-wider text-[10px]">
+                  <tr>
+                    <th className="p-3">Student</th>
+                    <th className="p-3">Marks (0 &ndash; {maxMarks})</th>
+                    <th className="p-3">Calculated %</th>
+                    <th className="p-3">Mastery Status</th>
+                    <th className="p-3">Teacher Notes</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60">
+                  {students.map((std) => {
+                    const studentMarksVal = scores[std.id]?.marks ?? 12;
+                    const num = parseFloat(String(studentMarksVal)) || 0;
+                    const pct = calculatePercentage(num, maxMarks);
+                    const status =
+                      pct >= 80 ? "Mastered" : pct >= 60 ? "Developing" : "Needs Support";
 
+                    return (
+                      <tr key={std.id} className="hover:bg-slate-900/40">
+                        <td className="p-3">
+                          <div className="font-bold text-white">{std.displayName}</div>
+                          <div className="text-[10px] font-mono text-slate-400">{std.studentCode}</div>
+                        </td>
+                        <td className="p-3">
+                          <input
+                            type="number"
+                            step="any"
+                            min="0"
+                            max={maxMarks}
+                            value={scores[std.id]?.marks ?? ""}
+                            onChange={(e) => handleScoreChange(std.id, e.target.value)}
+                            className="w-20 rounded-lg border border-slate-700 bg-slate-900 p-1.5 text-xs font-bold text-amber-400 focus:border-amber-500 outline-hidden"
+                          />
+                        </td>
+                        <td className="p-3 font-bold text-white">{pct}%</td>
+                        <td className="p-3">
+                          <Badge
+                            variant={
+                              status === "Mastered"
+                                ? "mastered"
+                                : status === "Developing"
+                                ? "developing"
+                                : "needsSupport"
+                            }
+                            size="sm"
+                            dot
+                          >
+                            {status}
+                          </Badge>
+                        </td>
+                        <td className="p-3">
+                          <input
+                            type="text"
+                            placeholder="Observations..."
+                            value={scores[std.id]?.notes ?? ""}
+                            onChange={(e) => handleNotesChange(std.id, e.target.value)}
+                            className="w-full rounded-lg border border-slate-700 bg-slate-900 p-1.5 text-xs text-white placeholder-slate-500 focus:border-amber-500 outline-hidden"
+                          />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        )}
+
+        {/* Error Notification */}
         {error && (
-          <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0" />
+          <div className="p-3 rounded-xl bg-rose-950/60 border border-rose-800 text-xs text-rose-300 flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
             <span>{error}</span>
           </div>
         )}
 
-        {/* Action buttons */}
-        <div className="flex items-center justify-end gap-3 pt-4">
+        {/* Submission Actions */}
+        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
           <button
             type="button"
             disabled={isSubmitting}
             onClick={() => handleSubmit(false)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-[#49352F] bg-white hover:bg-[#FAF6E9] rounded-xl border border-[#49352F]/15 shadow-2xs transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-slate-300 hover:text-white bg-slate-900 hover:bg-slate-800 rounded-xl border border-slate-700 shadow-xs transition-colors cursor-pointer disabled:opacity-50"
           >
             <Save className="w-3.5 h-3.5" />
-            <span>{language === "gu" ? "ડ્રાફ્ટ સાચવો" : "Save Draft"}</span>
+            <span>Save Draft</span>
           </button>
           <button
             type="button"
             disabled={isSubmitting}
             onClick={() => handleSubmit(true)}
-            className="inline-flex items-center gap-2 px-6 py-2.5 text-xs font-bold text-[#49352F] bg-[#F2CAB3] hover:bg-white border border-[#49352F]/16 rounded-xl shadow-md transition-colors cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-6 py-2.5 text-xs font-bold text-slate-950 bg-amber-500 hover:bg-amber-400 rounded-full shadow-lg shadow-amber-500/20 transition-all cursor-pointer disabled:opacity-50"
           >
             <Send className="w-3.5 h-3.5" />
-            <span>
-              {language === "gu"
-                ? isSubmitting
-                  ? "પ્રકાશિત અને પુનઃ ગણતરી..."
-                  : "પ્રકાશિત કરો અને ખામીઓ પુનઃ ગણો"
-                : isSubmitting
-                ? "Publishing & Recalculating..."
-                : "Publish & Recalculate Gaps"}
-            </span>
+            <span>{isSubmitting ? "Publishing & Recalculating..." : "Publish & Recalculate Gaps"}</span>
           </button>
         </div>
       </div>
     </AppLayout>
+  );
+}
+
+export default function NewAssessmentPage() {
+  return (
+    <Suspense
+      fallback={
+        <AppLayout>
+          <div className="py-20 text-center text-xs text-slate-400 animate-pulse">
+            Loading assessment builder...
+          </div>
+        </AppLayout>
+      }
+    >
+      <NewAssessmentContent />
+    </Suspense>
   );
 }

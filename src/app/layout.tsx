@@ -4,17 +4,12 @@ import { LanguageProvider } from "@/context/LanguageContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { FilterProvider } from "@/context/FilterContext";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { ToastProvider } from "@/components/ui/Toast";
 
 export const metadata: Metadata = {
-  applicationName: "StudySaathi AI",
-  title: "StudySaathi AI | Smart Learning Gap Tracking & Remedial Action System",
+  title: "ShikshaSetu AI | Smart Learning Gap Tracking & Remedial Action System",
   description:
     "Smart tracking and Remedial action system for student learning gaps in primary schools. SFIC Gujarat Hackathon.",
-  openGraph: {
-    title: "StudySaathi AI | Smart Learning Gap Tracking & Remedial Action System",
-    description: "Every Child Can Learn. AI Helps Us Find the Way. Smart tracking and remedial action system for primary schools.",
-    siteName: "StudySaathi AI",
-  },
 };
 
 export default function RootLayout({
@@ -36,18 +31,16 @@ export default function RootLayout({
             __html: `
               (function() {
                 try {
-                  var stored = localStorage.getItem('studysaathi_theme') || localStorage.getItem('shikshasetu_theme');
-                  var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-                  var isDark = stored === 'dark' || ((!stored || stored === 'system') && prefersDark);
-                  var root = document.documentElement;
+                  var stored = localStorage.getItem('shikshasetu_theme');
+                  var isDark = stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches) || (stored === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
                   if (isDark) {
-                    root.classList.add('dark');
-                    root.setAttribute('data-theme', 'dark');
-                    root.style.colorScheme = 'dark';
+                    document.documentElement.classList.add('dark');
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    document.documentElement.style.colorScheme = 'dark';
                   } else {
-                    root.classList.remove('dark');
-                    root.setAttribute('data-theme', 'light');
-                    root.style.colorScheme = 'light';
+                    document.documentElement.classList.remove('dark');
+                    document.documentElement.setAttribute('data-theme', 'light');
+                    document.documentElement.style.colorScheme = 'light';
                   }
                 } catch (e) {}
               })();
@@ -55,11 +48,13 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-screen bg-[#F4F1E1] text-[#49352F] dark:bg-[#1B1614] dark:text-[#F4F1E1] antialiased font-sans transition-colors duration-200">
+      <body className="min-h-screen bg-slate-50 dark:bg-[#070a13] text-slate-900 dark:text-slate-100 antialiased font-sans transition-colors duration-200">
         <ThemeProvider>
           <LanguageProvider>
             <AuthProvider>
-              <FilterProvider>{children}</FilterProvider>
+              <ToastProvider>
+                <FilterProvider>{children}</FilterProvider>
+              </ToastProvider>
             </AuthProvider>
           </LanguageProvider>
         </ThemeProvider>

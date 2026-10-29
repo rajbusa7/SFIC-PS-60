@@ -57,45 +57,36 @@ function SkillTreeMesh({
     }
   };
 
-  const branchGeometries = React.useMemo(() => {
-    const list: { id: string; geo: THREE.TubeGeometry; color: string; isGapPath: boolean }[] = [];
-    skills.forEach((source) => {
-      source.connectedTo?.forEach((targetId) => {
-        const target = skills.find((s) => s.id === targetId);
-        if (!target) return;
-        const points = [
-          new THREE.Vector3(...source.position),
-          new THREE.Vector3(...target.position),
-        ];
-        const curve = new THREE.LineCurve3(points[0], points[1]);
-        const tubeGeo = new THREE.TubeGeometry(curve, 12, 0.03, 8, false);
-        const isGapPath = source.status === "gap" || target.status === "gap";
-        const lineColor = isGapPath ? "#FF5C6C" : source.status === "mastered" ? "#3DDBA9" : "#6366F1";
-        list.push({ id: `${source.id}-${targetId}`, geo: tubeGeo, color: lineColor, isGapPath });
-      });
-    });
-    return list;
-  }, [skills]);
-
-  React.useEffect(() => {
-    return () => {
-      branchGeometries.forEach((b) => b.geo.dispose());
-    };
-  }, [branchGeometries]);
-
   return (
     <group ref={groupRef}>
       {/* Connecting Branch Cables */}
-      {branchGeometries.map((branch) => (
-        <mesh key={branch.id} geometry={branch.geo}>
-          <meshStandardMaterial
-            color={branch.color}
-            emissive={branch.color}
-            emissiveIntensity={branch.isGapPath ? 0.8 : 0.3}
-            roughness={0.4}
-          />
-        </mesh>
-      ))}
+      {skills.map((source) =>
+        source.connectedTo?.map((targetId) => {
+          const target = skills.find((s) => s.id === targetId);
+          if (!target) return null;
+
+          const points = [
+            new THREE.Vector3(...source.position),
+            new THREE.Vector3(...target.position),
+          ];
+          const curve = new THREE.LineCurve3(points[0], points[1]);
+          const tubeGeo = new THREE.TubeGeometry(curve, 12, 0.03, 8, false);
+
+          const isGapPath = source.status === "gap" || target.status === "gap";
+          const lineColor = isGapPath ? "#FF5C6C" : source.status === "mastered" ? "#3DDBA9" : "#6366F1";
+
+          return (
+            <mesh key={`${source.id}-${targetId}`} geometry={tubeGeo}>
+              <meshStandardMaterial
+                color={lineColor}
+                emissive={lineColor}
+                emissiveIntensity={isGapPath ? 0.8 : 0.3}
+                roughness={0.4}
+              />
+            </mesh>
+          );
+        })
+      )}
 
       {/* Skill Nodes */}
       {skills.map((skill) => {
@@ -153,7 +144,7 @@ function SkillTreeMesh({
   );
 }
 
-export const StudentSkillTree3D = React.memo(function StudentSkillTree3D({
+export function StudentSkillTree3D({
   studentName,
   skills,
   onSelectSkill,
@@ -163,31 +154,6 @@ export const StudentSkillTree3D = React.memo(function StudentSkillTree3D({
     skills.find((s) => s.status === "gap") || skills[0] || null
   );
   const [viewMode, setViewMode] = useState<"3d" | "2d">("3d");
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [isInView, setIsInView] = useState(true);
-  const [isTabVisible, setIsTabVisible] = useState(true);
-
-  // Tab visibility tracking
-  React.useEffect(() => {
-    const handleVis = () => setIsTabVisible(!document.hidden);
-    document.addEventListener("visibilitychange", handleVis);
-    return () => document.removeEventListener("visibilitychange", handleVis);
-  }, []);
-
-  // Viewport intersection observer to avoid rendering offscreen
-  React.useEffect(() => {
-    const el = containerRef.current;
-    if (!el || typeof IntersectionObserver === "undefined") return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsInView(entry.isIntersecting);
-      },
-      { rootMargin: "100px" }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
 
   const handleSelect = (skill: SkillNode) => {
     setSelectedSkill(skill);
@@ -195,15 +161,12 @@ export const StudentSkillTree3D = React.memo(function StudentSkillTree3D({
   };
 
   return (
-    <div
-      ref={containerRef}
-      className="relative w-full rounded-3xl bg-[#FAF6E9] border border-[#49352F]/12 overflow-hidden shadow-[0_8px_24px_rgba(73,53,47,0.06)] select-none"
-    >
+    <div className="relative w-full rounded-3xl bg-[#0d0c28] border border-slate-800 overflow-hidden shadow-2xl select-none">
       {/* Top Header */}
-      <div className="flex items-center justify-between p-4 border-b border-[#49352F]/10 bg-[#FAF6E9]">
+      <div className="flex items-center justify-between p-4 border-b border-slate-800 bg-[#14123D]/80">
         <div className="flex items-center gap-2">
-          <BrainCircuit className="w-5 h-5 text-[#B26A1B]" />
-          <h3 className="font-heading text-base font-bold text-[#49352F]">
+          <BrainCircuit className="w-5 h-5 text-amber-400" />
+          <h3 className="font-heading text-base font-bold text-white">
             {studentName}&apos;s 3D Skill Progression Tree
           </h3>
           <Badge variant="mint" size="sm">
@@ -216,9 +179,9 @@ export const StudentSkillTree3D = React.memo(function StudentSkillTree3D({
             variant="outline"
             size="sm"
             onClick={() => setViewMode(viewMode === "3d" ? "2d" : "3d")}
-            className="rounded-full text-xs h-7 border-[#49352F]/15 bg-white text-[#49352F]"
+            className="rounded-full text-xs h-7"
           >
-            {viewMode === "3d" ? <LayoutGrid className="w-3.5 h-3.5 mr-1 text-[#B26A1B]" /> : <Eye className="w-3.5 h-3.5 mr-1 text-[#B26A1B]" />}
+            {viewMode === "3d" ? <LayoutGrid className="w-3.5 h-3.5 mr-1" /> : <Eye className="w-3.5 h-3.5 mr-1" />}
             <span>{viewMode === "3d" ? "2D Hierarchy" : "3D Tree"}</span>
           </Button>
         </div>
@@ -229,16 +192,7 @@ export const StudentSkillTree3D = React.memo(function StudentSkillTree3D({
         {/* 3D Canvas / 2D Grid */}
         <div className="flex-1 relative h-full">
           {viewMode === "3d" ? (
-            <Canvas
-              camera={{ position: [0, 0, 4.5], fov: 45 }}
-              gl={{
-                antialias: true,
-                powerPreference: "high-performance",
-                alpha: true,
-              }}
-              frameloop={isInView && isTabVisible ? "always" : "demand"}
-              dpr={[1, 1.5]}
-            >
+            <Canvas camera={{ position: [0, 0, 4.5], fov: 45 }} gl={{ antialias: true, alpha: true }}>
               <ambientLight intensity={0.5} />
               <directionalLight position={[4, 5, 3]} intensity={1.5} color="#FFD59E" />
               <directionalLight position={[-4, 2, -2]} intensity={0.6} color="#3DDBA9" />
@@ -261,25 +215,25 @@ export const StudentSkillTree3D = React.memo(function StudentSkillTree3D({
                   onClick={() => handleSelect(skill)}
                   className={`flex items-center justify-between p-3.5 rounded-2xl border transition-all cursor-pointer ${
                     selectedSkill?.id === skill.id
-                      ? "bg-white border-[#B26A1B] shadow-sm"
-                      : "bg-white/80 border-[#49352F]/10 hover:border-[#49352F]/20"
+                      ? "bg-slate-800/90 border-amber-500/80 shadow-md"
+                      : "bg-slate-900/60 border-slate-800 hover:border-slate-700"
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <span
                       className={`w-3 h-3 rounded-full ${
                         skill.status === "mastered"
-                          ? "bg-[#2E7D5E]"
+                          ? "bg-emerald-400 shadow-[0_0_8px_#3DDBA9]"
                           : skill.status === "gap"
-                          ? "bg-[#C54738] animate-pulse"
+                          ? "bg-rose-400 shadow-[0_0_8px_#FF5C6C] animate-pulse"
                           : skill.status === "developing"
-                          ? "bg-[#B26A1B]"
-                          : "bg-slate-400"
+                          ? "bg-amber-400"
+                          : "bg-slate-600"
                       }`}
                     />
                     <div>
-                      <h4 className="text-xs font-bold text-[#49352F]">{skill.name}</h4>
-                      <span className="text-[10px] text-[#7A6862]">{skill.subject}</span>
+                      <h4 className="text-xs font-bold text-white">{skill.name}</h4>
+                      <span className="text-[10px] text-slate-400">{skill.subject}</span>
                     </div>
                   </div>
 
@@ -287,10 +241,10 @@ export const StudentSkillTree3D = React.memo(function StudentSkillTree3D({
                     <span
                       className={`text-xs font-black ${
                         skill.status === "mastered"
-                          ? "text-[#2E7D5E]"
+                          ? "text-emerald-400"
                           : skill.status === "gap"
-                          ? "text-rose-600"
-                          : "text-[#B26A1B]"
+                          ? "text-rose-400"
+                          : "text-amber-400"
                       }`}
                     >
                       {skill.score}%
@@ -314,32 +268,32 @@ export const StudentSkillTree3D = React.memo(function StudentSkillTree3D({
           )}
 
           {/* Legend Bottom Bar */}
-          <div className="absolute bottom-3 left-4 z-10 flex items-center gap-3 text-[10px] text-[#7A6862] bg-white/90 px-3 py-1.5 rounded-full border border-[#49352F]/10 backdrop-blur-md shadow-2xs">
+          <div className="absolute bottom-3 left-4 z-10 flex items-center gap-3 text-[10px] text-slate-400 bg-slate-950/80 px-3 py-1.5 rounded-full border border-slate-800 backdrop-blur-md">
             <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-[#2E7D5E]" /> Mastered
+              <span className="w-2 h-2 rounded-full bg-[#3DDBA9]" /> Mastered
             </span>
             <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-[#C54738] animate-pulse" /> Pulsing Gap
+              <span className="w-2 h-2 rounded-full bg-[#FF5C6C] animate-pulse" /> Pulsing Gap
             </span>
             <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-[#B26A1B]" /> Developing
+              <span className="w-2 h-2 rounded-full bg-[#FF8A3D]" /> Developing
             </span>
             <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-slate-400" /> Locked
+              <span className="w-2 h-2 rounded-full bg-[#475569]" /> Locked
             </span>
           </div>
         </div>
 
         {/* Selected Skill Detail Side Panel */}
         {selectedSkill && (
-          <div className="w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-[#49352F]/10 bg-white/95 p-5 flex flex-col justify-between overflow-y-auto">
+          <div className="w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-slate-800 bg-[#14123D]/95 p-5 flex flex-col justify-between overflow-y-auto">
             <div className="space-y-4">
               <div className="flex items-start justify-between">
                 <div>
-                  <span className="text-[10px] uppercase font-bold text-[#B26A1B]">
+                  <span className="text-[10px] uppercase font-bold text-amber-400">
                     {selectedSkill.subject}
                   </span>
-                  <h4 className="font-heading text-lg font-bold text-[#49352F] leading-tight mt-0.5">
+                  <h4 className="font-heading text-lg font-bold text-white leading-tight mt-0.5">
                     {selectedSkill.name}
                   </h4>
                 </div>
@@ -359,28 +313,28 @@ export const StudentSkillTree3D = React.memo(function StudentSkillTree3D({
               </div>
 
               {/* Score Display */}
-              <div className="grid grid-cols-2 gap-3 p-3 rounded-2xl bg-[#FAF6E9] border border-[#49352F]/10">
+              <div className="grid grid-cols-2 gap-3 p-3 rounded-2xl bg-slate-900/80 border border-slate-800">
                 <div>
-                  <span className="text-[10px] text-[#7A6862] block font-semibold">
+                  <span className="text-[10px] text-slate-400 block font-semibold">
                     Current Score
                   </span>
                   <span
                     className={`font-heading text-2xl font-black ${
                       selectedSkill.score >= 80
-                        ? "text-[#2E7D5E]"
+                        ? "text-emerald-400"
                         : selectedSkill.score >= 60
-                        ? "text-[#B26A1B]"
-                        : "text-rose-600"
+                        ? "text-amber-400"
+                        : "text-rose-400"
                     }`}
                   >
                     {selectedSkill.score}%
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-[#7A6862] block font-semibold">
+                  <span className="text-[10px] text-slate-400 block font-semibold">
                     Target Threshold
                   </span>
-                  <span className="font-heading text-2xl font-black text-[#49352F]">
+                  <span className="font-heading text-2xl font-black text-slate-200">
                     60% / 80%
                   </span>
                 </div>
@@ -388,12 +342,12 @@ export const StudentSkillTree3D = React.memo(function StudentSkillTree3D({
 
               {/* Explainable AI Reason */}
               {selectedSkill.reason && (
-                <div className="space-y-1.5 p-3 rounded-2xl bg-rose-50/70 border border-rose-200/80 text-xs">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-rose-700 flex items-center gap-1">
+                <div className="space-y-1.5 p-3 rounded-2xl bg-slate-900/60 border border-slate-800 text-xs">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400 flex items-center gap-1">
                     <BrainCircuit className="w-3.5 h-3.5" />
                     Rule-Engine Diagnosis
                   </span>
-                  <p className="text-[#49352F] leading-relaxed text-[11px]">
+                  <p className="text-slate-300 leading-relaxed text-[11px]">
                     {selectedSkill.reason}
                   </p>
                 </div>
@@ -401,13 +355,13 @@ export const StudentSkillTree3D = React.memo(function StudentSkillTree3D({
             </div>
 
             {/* Action Buttons */}
-            <div className="pt-4 border-t border-[#49352F]/10 space-y-2">
+            <div className="pt-4 border-t border-slate-800 space-y-2">
               {selectedSkill.status === "gap" && (
                 <Button
                   variant="saffron"
                   size="sm"
                   onClick={() => onGeneratePlan && onGeneratePlan(selectedSkill)}
-                  className="w-full rounded-xl text-xs font-black shadow-sm"
+                  className="w-full rounded-xl text-xs font-black shadow-md shadow-amber-500/30"
                 >
                   <span>Generate 5-Step Remedial Plan</span>
                   <ArrowRight className="w-3.5 h-3.5 ml-1" />
@@ -419,4 +373,4 @@ export const StudentSkillTree3D = React.memo(function StudentSkillTree3D({
       </div>
     </div>
   );
-});
+}

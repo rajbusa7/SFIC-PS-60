@@ -68,34 +68,34 @@ export function StatTile({
 
   const variantStyles = {
     saffron: {
-      glow: "border-[#49352F]/10 hover:border-[#F2CAB3] shadow-xs",
-      iconBg: "bg-[#F2CAB3] text-[#49352F] border border-[#49352F]/12",
-      accent: "text-[#B26A1B]",
-      stroke: "#F2CAB3",
+      glow: "border-amber-500/30 hover:border-amber-500/50 shadow-bridge-saffron/10",
+      iconBg: "bg-amber-500/10 text-amber-500 border border-amber-500/20",
+      accent: "text-amber-500",
+      stroke: "#FF8A3D",
     },
     mint: {
-      glow: "border-[#49352F]/10 hover:border-[#2E7D5E]/30 shadow-xs",
-      iconBg: "bg-[#EAF4EE] text-[#2E7D5E] border border-[#2E7D5E]/20",
-      accent: "text-[#2E7D5E]",
-      stroke: "#2E7D5E",
+      glow: "border-emerald-500/30 hover:border-emerald-500/50 shadow-bridge-mint/10",
+      iconBg: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
+      accent: "text-emerald-400",
+      stroke: "#3DDBA9",
     },
     coral: {
-      glow: "border-[#49352F]/10 hover:border-[#C54738]/30 shadow-xs",
-      iconBg: "bg-[#FBECE9] text-[#C54738] border border-[#C54738]/20",
-      accent: "text-[#C54738]",
-      stroke: "#C54738",
+      glow: "border-rose-500/30 hover:border-rose-500/50 shadow-bridge-coral/10",
+      iconBg: "bg-rose-500/10 text-rose-400 border border-rose-500/20",
+      accent: "text-rose-400",
+      stroke: "#FF5C6C",
     },
     indigo: {
-      glow: "border-[#49352F]/10 hover:border-[#49352F]/20 shadow-xs",
-      iconBg: "bg-[#F2DCB5]/80 text-[#49352F] border border-[#49352F]/15",
-      accent: "text-[#49352F]",
-      stroke: "#B8673E",
+      glow: "border-indigo-500/30 hover:border-indigo-500/50",
+      iconBg: "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20",
+      accent: "text-indigo-400",
+      stroke: "#6366F1",
     },
     neutral: {
-      glow: "border-[#49352F]/10 hover:border-[#49352F]/20 shadow-xs",
-      iconBg: "bg-[#FAF6E9] text-[#7A6862] border border-[#49352F]/10",
-      accent: "text-[#49352F]",
-      stroke: "#7A6862",
+      glow: "border-slate-800 hover:border-slate-700",
+      iconBg: "bg-slate-800/60 text-slate-400 border border-slate-700/60",
+      accent: "text-white",
+      stroke: "#94A3B8",
     },
   }[variant];
 
@@ -118,13 +118,13 @@ export function StatTile({
       <svg
         width={width}
         height={height}
-        className="overflow-visible opacity-85"
+        className="overflow-visible opacity-80"
         aria-hidden="true"
       >
         <polyline
           fill="none"
           stroke={variantStyles.stroke}
-          strokeWidth="2.5"
+          strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
           points={points.join(" ")}
@@ -140,14 +140,14 @@ export function StatTile({
     >
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1">
-          <p className="text-xs font-semibold uppercase tracking-wider text-[#7A6862]">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
             {label}
           </p>
           <div className="flex items-baseline gap-1">
             {prefix && (
-              <span className="text-lg font-bold text-[#7A6862]">{prefix}</span>
+              <span className="text-lg font-bold text-slate-400">{prefix}</span>
             )}
-            <span className="font-heading text-3xl font-extrabold tracking-tight text-[#49352F]">
+            <span className="font-heading text-3xl font-extrabold tracking-tight text-white">
               {displayValue}
             </span>
             {suffix && (
@@ -166,16 +166,16 @@ export function StatTile({
       </div>
 
       {(change || sparklineData || description) && (
-        <div className="mt-4 flex items-center justify-between border-t border-[#49352F]/10 pt-3 text-xs">
+        <div className="mt-4 flex items-center justify-between border-t border-slate-800/80 pt-3 text-xs">
           {change ? (
             <div className="flex items-center gap-1.5 font-medium">
               <span
                 className={`inline-flex items-center gap-0.5 font-bold ${
                   change.trend === "up"
-                    ? "text-[#2E7D5E]"
+                    ? "text-emerald-400"
                     : change.trend === "down"
-                    ? "text-[#C54738]"
-                    : "text-[#7A6862]"
+                    ? "text-rose-400"
+                    : "text-slate-400"
                 }`}
               >
                 {change.trend === "up" && <TrendingUp className="h-3.5 w-3.5" />}
@@ -184,11 +184,11 @@ export function StatTile({
                 {change.value}
               </span>
               {change.label && (
-                <span className="text-[#7A6862]">{change.label}</span>
+                <span className="text-slate-400">{change.label}</span>
               )}
             </div>
           ) : description ? (
-            <span className="text-[#7A6862]">{description}</span>
+            <span className="text-slate-400">{description}</span>
           ) : (
             <div />
           )}

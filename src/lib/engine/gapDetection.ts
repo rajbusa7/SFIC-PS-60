@@ -1,4 +1,5 @@
 import {
+  calculatePercentage,
   calculatePercentagePointDelta,
   determineTrend,
   calculateAverage,
@@ -71,8 +72,7 @@ export function detectLearningGap(
 
   // Calculate percentages chronologically
   const percentages = historySortedByDateAsc.map((h) => {
-    if (h.maximumMarks <= 0) return 0;
-    return Math.round(((h.marksObtained / h.maximumMarks) * 100) * 10) / 10;
+    return calculatePercentage(h.marksObtained, h.maximumMarks);
   });
 
   const attemptsCount = percentages.length;

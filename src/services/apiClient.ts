@@ -1,5 +1,5 @@
 /**
- * StudySaathi AI - Centralized Frontend API Client
+ * ShikshaSetu AI - Centralized Frontend API Client
  * SFIC Gujarat Hackathon 2026 Problem Statement PS-60
  *
  * Configurable via NEXT_PUBLIC_API_URL:
@@ -48,7 +48,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
   if (typeof window !== "undefined") {
     try {
-      const savedUser = localStorage.getItem("studysaathi_user") || localStorage.getItem("shikshasetu_user");
+      const savedUser = localStorage.getItem("shikshasetu_user");
       if (savedUser) {
         const u = JSON.parse(savedUser);
         if (u.role) {
@@ -60,7 +60,6 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   }
 
   const config: RequestInit = {
-    cache: "no-store",
     ...options,
     headers: {
       ...authHeaders,

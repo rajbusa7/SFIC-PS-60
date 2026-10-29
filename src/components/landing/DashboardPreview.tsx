@@ -22,51 +22,18 @@ import {
 
 export function DashboardPreview() {
   const [activeTab, setActiveTab] = useState<"attention" | "bridge" | "subjects">("bridge");
-  const [stats, setStats] = useState({
-    totalStudents: 15,
-    needsSupport: 4,
-    activePlans: 3,
-    reassessedGain: "+50 pp",
-  });
-
-  React.useEffect(() => {
-    async function loadStats() {
-      try {
-        const [repRes, progRes] = await Promise.all([
-          fetch("/api/v1/reports/overview"),
-          fetch("/api/progress"),
-        ]);
-        const [repData, progData] = await Promise.all([repRes.json(), progRes.json()]);
-        if (repData.success && repData.report) {
-          const r = repData.report;
-          const aaravItem = progData.progressItems?.find(
-            (i: any) => i.studentId === "std-aarav" && i.deltaPercentagePoints
-          );
-          setStats({
-            totalStudents: r.totalStudents,
-            needsSupport: r.masteryDistribution?.needsSupport ?? 4,
-            activePlans: r.remedialPlansUnderIntervention ?? 3,
-            reassessedGain: aaravItem ? `+${aaravItem.deltaPercentagePoints} pp` : "+50 pp",
-          });
-        }
-      } catch (e) {
-        console.error("Dashboard preview stat fetch error", e);
-      }
-    }
-    loadStats();
-  }, []);
 
   return (
-    <Tilt3DCard glowColor="rgba(242, 202, 179, 0.35)" className="w-full">
-      <div className="w-full rounded-3xl border border-[#49352F]/15 bg-[#FAF6E9] backdrop-blur-2xl shadow-xl overflow-hidden transition-all text-[#49352F]">
+    <Tilt3DCard glowColor="rgba(255, 138, 61, 0.25)" className="w-full">
+      <div className="w-full rounded-3xl border border-slate-700/80 bg-slate-900/90 backdrop-blur-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7)] overflow-hidden transition-all text-slate-100">
         {/* Top Browser / Window Chrome Header */}
-        <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-[#49352F]/10 bg-[#F4F1E1]">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-slate-800 bg-slate-950/70">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-[#C54738]/80 shadow-xs" />
-            <div className="w-3 h-3 rounded-full bg-[#B26A1B]/80 shadow-xs" />
-            <div className="w-3 h-3 rounded-full bg-[#2E7D5E]/80 shadow-xs" />
-            <span className="ml-2 text-xs font-mono font-semibold text-[#7A6862] hidden sm:inline">
-              studysaathi.edu.in/dashboard
+            <div className="w-3 h-3 rounded-full bg-rose-500/80 shadow-[0_0_8px_#FF5C6C]" />
+            <div className="w-3 h-3 rounded-full bg-amber-500/80 shadow-[0_0_8px_#FF8A3D]" />
+            <div className="w-3 h-3 rounded-full bg-emerald-500/80 shadow-[0_0_8px_#3DDBA9]" />
+            <span className="ml-2 text-xs font-mono font-semibold text-slate-400 hidden sm:inline">
+              shikshasetu.edu.in/dashboard
             </span>
           </div>
 
@@ -93,31 +60,31 @@ export function DashboardPreview() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <StatTile
               label="Total Enrolled"
-              value={stats.totalStudents}
+              value={15}
               icon={Users}
               variant="indigo"
               description="Classes 3, 4 & 5"
-              sparklineData={[12, 13, 14, 15, stats.totalStudents]}
+              sparklineData={[12, 13, 14, 15, 15]}
             />
             <StatTile
               label="Need Support"
-              value={stats.needsSupport}
+              value={4}
               icon={AlertTriangle}
               variant="coral"
               description="Score < 60% threshold"
-              sparklineData={[7, 6, 5, 4, stats.needsSupport]}
+              sparklineData={[7, 6, 5, 4, 4]}
             />
             <StatTile
               label="Active Plans"
-              value={stats.activePlans}
+              value={3}
               icon={Layers}
               variant="saffron"
               description="5-step manipulatives"
-              sparklineData={[1, 2, 3, 3, stats.activePlans]}
+              sparklineData={[1, 2, 3, 3, 3]}
             />
             <StatTile
               label="Reassessed Gain"
-              value={stats.reassessedGain}
+              value="+50 pp"
               icon={TrendingUp}
               variant="mint"
               description="Aarav: 35% -> 85%"
@@ -126,14 +93,14 @@ export function DashboardPreview() {
           </div>
 
           {/* Sub Navigation Tabs */}
-          <div className="flex items-center gap-2 border-b border-[#49352F]/10 pb-2">
+          <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
             <button
               type="button"
               onClick={() => setActiveTab("bridge")}
               className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                 activeTab === "bridge"
-                  ? "bg-[#F2CAB3] text-[#49352F] shadow-xs font-black border border-[#49352F]/15"
-                  : "text-[#7A6862] hover:text-[#49352F] hover:bg-white"
+                  ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black"
+                  : "text-slate-400 hover:text-white hover:bg-slate-800"
               }`}
             >
               The Bridge Story (Aarav Patel)
@@ -143,8 +110,8 @@ export function DashboardPreview() {
               onClick={() => setActiveTab("attention")}
               className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                 activeTab === "attention"
-                  ? "bg-[#F2CAB3] text-[#49352F] shadow-xs font-black border border-[#49352F]/15"
-                  : "text-[#7A6862] hover:text-[#49352F] hover:bg-white"
+                  ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black"
+                  : "text-slate-400 hover:text-white hover:bg-slate-800"
               }`}
             >
               Immediate Attention (4 Students)
@@ -154,8 +121,8 @@ export function DashboardPreview() {
               onClick={() => setActiveTab("subjects")}
               className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                 activeTab === "subjects"
-                  ? "bg-[#F2CAB3] text-[#49352F] shadow-xs font-black border border-[#49352F]/15"
-                  : "text-[#7A6862] hover:text-[#49352F] hover:bg-white"
+                  ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black"
+                  : "text-slate-400 hover:text-white hover:bg-slate-800"
               }`}
             >
               Subject Mastery Heatmap
@@ -164,23 +131,23 @@ export function DashboardPreview() {
 
           {/* Tab 1: The Aarav Patel Bridge Story */}
           {activeTab === "bridge" && (
-            <div className="p-5 rounded-2xl bg-white border border-[#49352F]/12 space-y-4">
+            <div className="p-5 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-bold text-[#49352F]">Aarav Patel • Class 4A</h3>
+                    <h3 className="text-sm font-bold text-white">Aarav Patel • Class 4A</h3>
                     <Badge variant="mint" size="sm">
                       Mastery Achieved (+50 pp)
                     </Badge>
                   </div>
-                  <p className="text-xs text-[#7A6862] mt-0.5">
+                  <p className="text-xs text-slate-400 mt-0.5">
                     Competency: Mathematics — Division Basics (Equal Sharing)
                   </p>
                 </div>
 
                 <Link
-                  href="/students/std-aarav"
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-[#49352F] hover:text-[#B26A1B]"
+                  href="/students/aarav-patel"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-amber-400 hover:text-amber-300"
                 >
                   <span>View Student Profile</span>
                   <ExternalLink className="w-3.5 h-3.5" />
@@ -196,30 +163,30 @@ export function DashboardPreview() {
               />
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs">
-                <div className="p-3 rounded-xl bg-[#FAF6E9] border border-[#49352F]/10">
-                  <span className="text-[10px] uppercase font-bold text-[#C54738] block">
+                <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800">
+                  <span className="text-[10px] uppercase font-bold text-rose-400 block">
                     Before Remediation
                   </span>
-                  <span className="text-lg font-black text-[#49352F]">35%</span>
-                  <p className="text-[11px] text-[#7A6862] mt-0.5">
+                  <span className="text-lg font-black text-white">35%</span>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
                     Confused equal sharing with remainders
                   </p>
                 </div>
-                <div className="p-3 rounded-xl bg-[#FAF6E9] border border-[#49352F]/10">
-                  <span className="text-[10px] uppercase font-bold text-[#B26A1B] block">
+                <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800">
+                  <span className="text-[10px] uppercase font-bold text-amber-400 block">
                     Remedial Intervention
                   </span>
-                  <span className="text-lg font-black text-[#49352F]">5 Steps</span>
-                  <p className="text-[11px] text-[#7A6862] mt-0.5">
+                  <span className="text-lg font-black text-white">5 Steps</span>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
                     Physical counting beads & number line worksheets
                   </p>
                 </div>
-                <div className="p-3 rounded-xl bg-[#FAF6E9] border border-[#49352F]/10">
-                  <span className="text-[10px] uppercase font-bold text-[#2E7D5E] block">
+                <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800">
+                  <span className="text-[10px] uppercase font-bold text-emerald-400 block">
                     After Reassessment
                   </span>
-                  <span className="text-lg font-black text-[#49352F]">85%</span>
-                  <p className="text-[11px] text-[#7A6862] mt-0.5">
+                  <span className="text-lg font-black text-white">85%</span>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
                     Independent mastery of remainder division
                   </p>
                 </div>
@@ -266,26 +233,26 @@ export function DashboardPreview() {
               ].map((student, i) => (
                 <div
                   key={i}
-                  className="flex items-center justify-between p-3.5 rounded-xl bg-white border border-[#49352F]/12 hover:border-[#F2CAB3] transition-colors"
+                  className="flex items-center justify-between p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 hover:border-slate-700 transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-rose-100 text-[#C54738] border border-rose-200 flex items-center justify-center font-bold text-xs shrink-0">
+                    <div className="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center font-bold text-xs shrink-0">
                       {student.score}%
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-[#49352F]">{student.name}</span>
-                        <span className="text-[10px] text-[#7A6862]">{student.class}</span>
+                        <span className="text-xs font-bold text-white">{student.name}</span>
+                        <span className="text-[10px] text-slate-400">{student.class}</span>
                         <Badge variant="coral" size="sm">
                           {student.subject}
                         </Badge>
                       </div>
-                      <p className="text-[11px] text-[#7A6862] mt-0.5">{student.reason}</p>
+                      <p className="text-[11px] text-slate-400 mt-0.5">{student.reason}</p>
                     </div>
                   </div>
 
                   <Link href="/remedial-plans">
-                    <Button variant="outline" size="sm" className="rounded-full text-xs h-8 text-[#49352F] border-[#49352F]/20 hover:bg-[#FAF6E9]">
+                    <Button variant="outline" size="sm" className="rounded-full text-xs h-8">
                       Remediate &rarr;
                     </Button>
                   </Link>
@@ -297,68 +264,64 @@ export function DashboardPreview() {
           {/* Tab 3: Subject Mastery */}
           {activeTab === "subjects" && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="p-4 rounded-xl bg-white border border-[#49352F]/12">
-                <h4 className="text-xs font-bold text-[#49352F] mb-2">Mathematics Proficiency</h4>
+              <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800">
+                <h4 className="text-xs font-bold text-white mb-2">Mathematics Proficiency</h4>
                 <div className="space-y-2">
                   <div>
-                    <div className="flex justify-between text-xs text-[#7A6862] mb-1">
+                    <div className="flex justify-between text-xs text-slate-400 mb-1">
                       <span>Multiplication (Class 3)</span>
-                      <span className="font-bold text-[#2E7D5E]">84%</span>
+                      <span className="font-bold text-emerald-400">84%</span>
                     </div>
-                    <div className="w-full h-2 rounded-full bg-[#FAF6E9] overflow-hidden">
-                      <div className="h-full bg-[#2E7D5E] w-[84%]" />
+                    <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+                      <div className="h-full bg-emerald-400 w-[84%]" />
                     </div>
                   </div>
                   <div>
-                    <div className="flex justify-between text-xs text-[#7A6862] mb-1">
+                    <div className="flex justify-between text-xs text-slate-400 mb-1">
                       <span>Division Basics (Class 4)</span>
-                      <span className="font-bold text-[#B26A1B]">68%</span>
+                      <span className="font-bold text-amber-400">68%</span>
                     </div>
-                    <div className="w-full h-2 rounded-full bg-[#FAF6E9] overflow-hidden">
-                      <div className="h-full bg-[#B26A1B] w-[68%]" />
+                    <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+                      <div className="h-full bg-amber-400 w-[68%]" />
                     </div>
                   </div>
                   <div>
-                    <div className="flex justify-between text-xs text-[#7A6862] mb-1">
+                    <div className="flex justify-between text-xs text-slate-400 mb-1">
                       <span>Fractions (Class 5)</span>
-                      <span className="font-bold text-[#C54738]">54%</span>
+                      <span className="font-bold text-rose-400">54%</span>
                     </div>
-                    <div className="w-full h-2 rounded-full bg-[#FAF6E9] overflow-hidden">
-                      <div className="h-full bg-[#C54738] w-[54%]" />
+                    <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+                      <div className="h-full bg-rose-500 w-[54%]" />
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="p-4 rounded-xl bg-white border border-[#49352F]/12">
-                <h4 className="text-xs font-bold text-[#49352F] mb-2">Gujarati Language Proficiency</h4>
+              <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800">
+                <h4 className="text-xs font-bold text-white mb-2">Gujarati Language Proficiency</h4>
                 <div className="space-y-2">
                   <div>
-                    <div className="flex justify-between text-xs text-[#7A6862] mb-1">
+                    <div className="flex justify-between text-xs text-slate-400 mb-1">
                       <span>Letter Recognition (Class 3)</span>
-                      <span className="font-bold text-[#2E7D5E]">92%</span>
+                      <span className="font-bold text-emerald-400">92%</span>
                     </div>
-                    <div className="w-full h-2 rounded-full bg-[#FAF6E9] overflow-hidden">
-                      <div className="h-full bg-[#2E7D5E] w-[92%]" />
+                    <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+                      <div className="h-full bg-emerald-400 w-[92%]" />
                     </div>
                   </div>
                   <div>
-                    <div className="flex justify-between text-xs text-[#7A6862] mb-1">
+                    <div className="flex justify-between text-xs text-slate-400 mb-1">
                       <span>Vowel Blends (Class 3)</span>
-                      <span className="font-bold text-[#B26A1B]">71%</span>
+                      <span className="font-bold text-amber-400">71%</span>
                     </div>
-                    <div className="w-full h-2 rounded-full bg-[#FAF6E9] overflow-hidden">
-                      <div className="h-full bg-[#B26A1B] w-[71%]" />
-                    </div>
+                    <div className="w-full h-2 rounded-full bg-amber-400 w-[71%]" />
                   </div>
                   <div>
-                    <div className="flex justify-between text-xs text-[#7A6862] mb-1">
+                    <div className="flex justify-between text-xs text-slate-400 mb-1">
                       <span>Reading Comprehension (Class 4)</span>
-                      <span className="font-bold text-[#B26A1B]">62%</span>
+                      <span className="font-bold text-amber-400">62%</span>
                     </div>
-                    <div className="w-full h-2 rounded-full bg-[#FAF6E9] overflow-hidden">
-                      <div className="h-full bg-[#B26A1B] w-[62%]" />
-                    </div>
+                    <div className="w-full h-2 rounded-full bg-amber-400 w-[62%]" />
                   </div>
                 </div>
               </div>

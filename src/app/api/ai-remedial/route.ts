@@ -62,7 +62,7 @@ export async function POST(request: Request) {
 
 Generate a targeted 5-step remedial plan adhering to Gujarat primary curriculum standards.`;
 
-    const systemInstruction = `You are StudySaathi AI Remedial Plan Generator for Gujarat Primary Schools.
+    const systemInstruction = `You are ShikshaSetu AI Remedial Plan Generator for Gujarat Primary Schools.
 Generate a comprehensive remedial curriculum with learning objective, 5 step-by-step activities with durations, low-cost materials, practice questions, and reassessment criteria.
 ${isGujarati ? "All pedagogical content MUST be in authentic Gujarati script." : "Use clear, practical primary English."}
 Return valid JSON adhering to the RemedialPlan schema.`;

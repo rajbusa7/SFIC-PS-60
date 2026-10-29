@@ -1,5 +1,5 @@
 /**
- * Core mathematical and trend calculations for StudySaathi AI.
+ * Core mathematical and trend calculations for ShikshaSetu AI.
  * Follows exact specifications:
  * - Safe numeric handling (no NaN/infinite values)
  * - True percentage points delta: (Latest % - Previous %)
@@ -44,7 +44,7 @@ export function calculatePercentage(
     return 0;
   }
   const pct = (marksObtained / maximumMarks) * 100;
-  return Math.min(100, Math.max(0, Math.round(pct * 10) / 10));
+  return Math.min(100, Math.max(0, Math.round(pct * 100) / 100));
 }
 
 /**

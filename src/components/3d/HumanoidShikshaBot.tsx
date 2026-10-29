@@ -285,7 +285,7 @@ export function HumanoidShikshaBot({
           />
         </mesh>
 
-        {/* Chest Plate Badge Emblem (STUDYSAATHI) */}
+        {/* Chest Plate Badge Emblem (SHIKSHASETU) */}
         <mesh position={[0, 0.23, 0.28]}>
           <boxGeometry args={[0.36, 0.09, 0.02]} />
           <meshStandardMaterial color="#1e293b" roughness={0.25} metalness={0.85} />

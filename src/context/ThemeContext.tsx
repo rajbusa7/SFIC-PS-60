@@ -29,7 +29,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<ThemeMode>(() => {
     if (typeof window === "undefined") return "system";
     try {
-      const saved = (localStorage.getItem("studysaathi_theme") || localStorage.getItem("shikshasetu_theme")) as ThemeMode | null;
+      const saved = localStorage.getItem("shikshasetu_theme") as ThemeMode | null;
       if (saved === "light" || saved === "dark" || saved === "system") {
         return saved;
       }
@@ -42,7 +42,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>(() => {
     if (typeof window === "undefined") return "light";
     try {
-      const saved = (localStorage.getItem("studysaathi_theme") || localStorage.getItem("shikshasetu_theme")) as ThemeMode | null;
+      const saved = localStorage.getItem("shikshasetu_theme") as ThemeMode | null;
       if (saved === "dark") return "dark";
       if (saved === "light") return "light";
       if (window.matchMedia("(prefers-color-scheme: dark)").matches) return "dark";
@@ -66,56 +66,58 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setResolvedTheme(active);
 
     const root = document.documentElement;
-    const body = document.body;
     if (active === "dark") {
       root.classList.add("dark");
       root.setAttribute("data-theme", "dark");
       root.style.colorScheme = "dark";
-      if (body) {
-        body.classList.add("dark");
-        body.setAttribute("data-theme", "dark");
-      }
     } else {
       root.classList.remove("dark");
       root.setAttribute("data-theme", "light");
       root.style.colorScheme = "light";
-      if (body) {
-        body.classList.remove("dark");
-        body.setAttribute("data-theme", "light");
-      }
     }
   }, []);
 
   useEffect(() => {
-    let savedMode: ThemeMode = "system";
-    try {
-      const saved = (localStorage.getItem("studysaathi_theme") || localStorage.getItem("shikshasetu_theme")) as ThemeMode | null;
-      if (saved === "light" || saved === "dark" || saved === "system") {
-        savedMode = saved;
-      }
-    } catch {}
-
-    applyTheme(savedMode);
+    const root = document.documentElement;
+    if (resolvedTheme === "dark") {
+      root.classList.add("dark");
+      root.setAttribute("data-theme", "dark");
+      root.style.colorScheme = "dark";
+    } else {
+      root.classList.remove("dark");
+      root.setAttribute("data-theme", "light");
+      root.style.colorScheme = "light";
+    }
 
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const handleSystemChange = () => {
+    const handleSystemChange = (e: MediaQueryListEvent) => {
       let currentSaved: string | null = null;
       try {
         currentSaved = localStorage.getItem("shikshasetu_theme");
       } catch {}
       if (!currentSaved || currentSaved === "system") {
-        applyTheme("system");
+        const next: ResolvedTheme = e.matches ? "dark" : "light";
+        setResolvedTheme(next);
+        const el = document.documentElement;
+        if (next === "dark") {
+          el.classList.add("dark");
+          el.setAttribute("data-theme", "dark");
+          el.style.colorScheme = "dark";
+        } else {
+          el.classList.remove("dark");
+          el.setAttribute("data-theme", "light");
+          el.style.colorScheme = "light";
+        }
       }
     };
 
     mediaQuery.addEventListener("change", handleSystemChange);
     return () => mediaQuery.removeEventListener("change", handleSystemChange);
-  }, [applyTheme]);
+  }, [resolvedTheme]);
 
   const setTheme = (mode: ThemeMode) => {
     setThemeState(mode);
     try {
-      localStorage.setItem("studysaathi_theme", mode);
       localStorage.setItem("shikshasetu_theme", mode);
     } catch {
       // storage unavailable

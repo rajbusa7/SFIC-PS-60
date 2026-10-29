@@ -44,4 +44,7 @@ export interface AssessmentResult {
   correctCount?: number;
   notes?: string;
   recordedAt: string;
+  assessmentTitle?: string;
+  subjectCode?: SubjectCode;
+  conceptName?: string;
 }

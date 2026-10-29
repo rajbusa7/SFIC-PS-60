@@ -46,34 +46,30 @@ export function Dialog({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#49352F]/40 backdrop-blur-sm animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-150">
       <div
         className={cn(
-          "w-full rounded-3xl bg-white dark:bg-[#26201C] shadow-[0_20px_60px_rgba(73,53,47,0.18)] dark:shadow-[0_20px_60px_rgba(0,0,0,0.5)] border border-[#49352F]/12 dark:border-[#F2CAB3]/20 overflow-hidden max-h-[90vh] flex flex-col text-[#49352F] dark:text-[#F4F1E1] relative",
+          "w-full rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden max-h-[90vh] flex flex-col text-slate-900 dark:text-slate-100",
           maxWidthClasses[maxWidth]
         )}
       >
-        {/* Subtle accent top line */}
-        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-[#F2CAB3] via-[#F2DCB5] to-[#2E7D5E]" />
-
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#49352F]/10 dark:border-[#F2CAB3]/15 px-6 py-4 bg-[#FAF6E9] dark:bg-[#1E1916]">
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-6 py-4 bg-slate-50/50 dark:bg-slate-800/40">
           <div>
-            <h3 className="text-base font-bold text-[#49352F] dark:text-[#F4F1E1] font-heading">{title}</h3>
-            {description && <p className="text-xs text-[#7A6862] dark:text-[#FAF6E9]/70 mt-0.5">{description}</p>}
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">{title}</h3>
+            {description && <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{description}</p>}
           </div>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close dialog"
-            className="p-1.5 rounded-xl text-[#7A6862] dark:text-[#FAF6E9]/70 hover:text-[#49352F] dark:hover:text-[#F4F1E1] hover:bg-[#F2CAB3]/30 dark:hover:bg-[#F2CAB3]/20 transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content body */}
-        <div className="p-6 overflow-y-auto flex-1 bg-white dark:bg-[#26201C] text-[#49352F] dark:text-[#F4F1E1]">{children}</div>
+        <div className="p-6 overflow-y-auto flex-1">{children}</div>
       </div>
     </div>
   );

@@ -9,7 +9,7 @@ export interface ValidationResult<T> {
   data?: T;
 }
 
-export function validateLogin(body: any): ValidationResult<{ email: string; password?: string; role?: "teacher" | "admin" }> {
+export function validateLogin(body: any): ValidationResult<{ email: string; role?: "teacher" | "admin" }> {
   const errors: ValidationError[] = [];
   if (!body || typeof body !== "object") {
     return { isValid: false, errors: [{ field: "body", message: "Request body must be a valid JSON object" }] };
@@ -23,7 +23,7 @@ export function validateLogin(body: any): ValidationResult<{ email: string; pass
   return {
     isValid: errors.length === 0,
     errors,
-    data: errors.length === 0 ? { email: body.email.trim(), password: typeof body.password === "string" ? body.password : undefined, role: body.role } : undefined,
+    data: errors.length === 0 ? { email: body.email.trim(), role: body.role } : undefined,
   };
 }
 
@@ -46,6 +46,9 @@ export function validateCreateStudent(body: any): ValidationResult<{
   if (!body.displayName || typeof body.displayName !== "string" || !body.displayName.trim()) {
     errors.push({ field: "displayName", message: "Student display name is required" });
   }
+  if (!body.classroomId || typeof body.classroomId !== "string" || !body.classroomId.trim()) {
+    errors.push({ field: "classroomId", message: "Classroom ID is required" });
+  }
   const grade = Number(body.grade);
   if (isNaN(grade) || grade < 1 || grade > 5) {
     errors.push({ field: "grade", message: "Grade must be an integer between 1 and 5" });
@@ -53,15 +56,6 @@ export function validateCreateStudent(body: any): ValidationResult<{
   if (!body.section || typeof body.section !== "string" || !body.section.trim()) {
     errors.push({ field: "section", message: "Section is required (e.g., 'A', 'B')" });
   }
-
-  let classroomId = typeof body.classroomId === "string" ? body.classroomId.trim() : "";
-  if (!classroomId && !isNaN(grade) && body.section) {
-    classroomId = `cls-${grade}${String(body.section).trim().toLowerCase()}`;
-  }
-  if (!classroomId) {
-    errors.push({ field: "classroomId", message: "Classroom ID is required" });
-  }
-
   return {
     isValid: errors.length === 0,
     errors,
@@ -69,9 +63,9 @@ export function validateCreateStudent(body: any): ValidationResult<{
       ? {
           studentCode: body.studentCode.trim(),
           displayName: body.displayName.trim(),
-          classroomId,
+          classroomId: body.classroomId.trim(),
           grade,
-          section: (body.section || "A").trim().toUpperCase(),
+          section: body.section.trim().toUpperCase(),
           enrollmentStatus: body.enrollmentStatus || "active",
           notes: body.notes || "",
         }

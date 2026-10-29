@@ -13,8 +13,6 @@ import {
   Sparkles,
   ArrowRight,
   Bot,
-  Lightbulb,
-  CheckCircle2,
 } from "lucide-react";
 import { fireCelebrationConfetti } from "@/lib/confetti";
 
@@ -99,15 +97,6 @@ export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps
     return () => window.removeEventListener("shikshasetu_start_tour", handleReplay);
   }, [page, startTour]);
 
-  // Scroll active target into view once when step changes
-  useEffect(() => {
-    if (!isActive || !currentStep?.targetSelector) return;
-    const el = document.querySelector(currentStep.targetSelector);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
-    }
-  }, [isActive, currentStepIndex, currentStep?.targetSelector]);
-
   // Calculate Target Rect
   const updateTargetRect = useCallback(() => {
     if (!isActive || !currentStep?.targetSelector) {
@@ -117,6 +106,8 @@ export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps
 
     const el = document.querySelector(currentStep.targetSelector);
     if (el) {
+      // Scroll into view if needed
+      el.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
       const rect = el.getBoundingClientRect();
       const padding = 8;
       setTargetRect({
@@ -140,13 +131,13 @@ export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps
       updateTargetRect();
     }, 120);
 
-    window.addEventListener("resize", updateTargetRect, { passive: true });
-    window.addEventListener("scroll", updateTargetRect, { passive: true });
+    window.addEventListener("resize", updateTargetRect);
+    window.addEventListener("scroll", updateTargetRect, true);
 
     return () => {
       clearTimeout(timer);
       window.removeEventListener("resize", updateTargetRect);
-      window.removeEventListener("scroll", updateTargetRect);
+      window.removeEventListener("scroll", updateTargetRect, true);
     };
   }, [isActive, currentStepIndex, updateTargetRect]);
 
@@ -363,11 +354,11 @@ export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps
 
           {/* ShikshaBot speech callout tip */}
           <div className="mt-2.5 p-2.5 rounded-2xl bg-white/5 border border-white/10 flex items-start gap-2 text-[11px] text-amber-200/90 leading-snug">
-            <Lightbulb className="w-4 h-4 text-amber-300 shrink-0 mt-0.5" aria-hidden="true" />
+            <span className="text-base leading-none">💡</span>
             <span>
               {language === "gu"
-                ? "સાથીબોટ ટિપ: તમે ઉપરના ટૂલબારમાંથી અથવા 'Esc' દબાવીને આ ટૂર ગમે ત્યારે ફરી જોઈ શકો છો."
-                : "SaathiBot tip: You can replay this guided walkthrough anytime from the top bar or press 'Esc' to exit."}
+                ? "શિક્ષાબોટ ટિપ: તમે ઉપરના ટૂલબારમાંથી અથવા 'Esc' દબાવીને આ ટૂર ગમે ત્યારે ફરી જોઈ શકો છો."
+                : "ShikshaBot tip: You can replay this guided walkthrough anytime from the top bar or press 'Esc' to exit."}
             </span>
           </div>
         </div>
@@ -411,17 +402,13 @@ export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps
                   ? currentStep.ctaTextKey
                     ? resolveText(currentStep.ctaTextKey, "Finish Tour")
                     : language === "gu"
-                    ? "સમાપ્ત કરો"
-                    : "Finish Tour"
+                    ? "સમાપ્ત કરો 🎉"
+                    : "Finish Tour 🎉"
                   : language === "gu"
                   ? "આગળ"
                   : "Next"}
               </span>
-              {isLast ? (
-                <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
-              ) : (
-                <ChevronRight className="w-3.5 h-3.5" aria-hidden="true" />
-              )}
+              {!isLast && <ChevronRight className="w-3.5 h-3.5" />}
             </button>
           </div>
         </div>

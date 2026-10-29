@@ -3,24 +3,34 @@ import type { Student, Classroom } from "../../../../packages/shared/src/types";
 
 export class StudentRepository {
   async findAll(classroomId?: string, grade?: number, search?: string): Promise<Student[]> {
-    return db.getStudentsAsync({ classroomId, grade, search });
+    let students = db.getStudents(classroomId);
+    if (grade) {
+      students = students.filter((s) => s.grade === grade);
+    }
+    if (search) {
+      const q = search.toLowerCase();
+      students = students.filter(
+        (s) => s.displayName.toLowerCase().includes(q) || s.studentCode.toLowerCase().includes(q)
+      );
+    }
+    return students;
   }
 
   async findById(id: string): Promise<Student | null> {
-    const student = await db.getStudentByIdAsync(id);
+    const student = db.getStudentById(id);
     return student || null;
   }
 
   async create(data: Omit<Student, "id" | "createdAt">): Promise<Student> {
-    return db.addStudentAsync(data);
+    return db.addStudent(data);
   }
 
   async update(id: string, updates: Partial<Student>): Promise<Student | null> {
-    return db.updateStudentAsync(id, updates);
+    return db.updateStudent(id, updates);
   }
 
   async delete(id: string): Promise<boolean> {
-    return db.deleteStudentAsync(id);
+    return db.deleteStudent(id);
   }
 
   async getClassrooms(): Promise<Classroom[]> {

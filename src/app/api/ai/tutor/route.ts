@@ -36,7 +36,7 @@ export async function POST(request: Request) {
 
     const isGujarati = language === "gu";
 
-    const systemInstruction = `You are StudySaathi AI Tutor, an expert primary education pedagogical specialist for schools in Gujarat, India (Grades 1 to 5).
+    const systemInstruction = `You are ShikshaSetu AI Tutor, an expert primary education pedagogical specialist for schools in Gujarat, India (Grades 1 to 5).
 Your mission is to equip primary teachers with concrete, manipulative-based teaching strategies, simple language explanations, and low-cost classroom activities.
 When asked how to teach a concept, or when given a student difficulty:
 1. Provide a crystal-clear, intuitive explanation suitable for primary school students (using everyday analogies).

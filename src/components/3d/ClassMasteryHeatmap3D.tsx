@@ -54,7 +54,7 @@ function HeatmapBars({
       {/* Ground Grid Plate */}
       <mesh position={[0, -0.05, 0]}>
         <boxGeometry args={[students.length * xSpacing + 0.6, 0.05, concepts.length * zSpacing + 0.6]} />
-        <meshStandardMaterial color="#E2D7C3" roughness={0.7} />
+        <meshStandardMaterial color="#14123D" roughness={0.7} />
       </mesh>
 
       {/* Render 3D Bars */}
@@ -92,45 +92,20 @@ function HeatmapBars({
   );
 }
 
-export const ClassMasteryHeatmap3D = React.memo(function ClassMasteryHeatmap3D({
+export function ClassMasteryHeatmap3D({
   data,
   students,
   concepts,
 }: ClassMasteryHeatmap3DProps) {
   const [viewMode, setViewMode] = useState<"3d" | "2d">("3d");
   const [hoveredPoint, setHoveredPoint] = useState<StudentMasteryPoint | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [isInView, setIsInView] = useState(true);
-  const [isTabVisible, setIsTabVisible] = useState(true);
-
-  // Tab visibility tracking
-  React.useEffect(() => {
-    const handleVis = () => setIsTabVisible(!document.hidden);
-    document.addEventListener("visibilitychange", handleVis);
-    return () => document.removeEventListener("visibilitychange", handleVis);
-  }, []);
-
-  // Viewport intersection observer to avoid rendering offscreen
-  React.useEffect(() => {
-    const el = containerRef.current;
-    if (!el || typeof IntersectionObserver === "undefined") return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsInView(entry.isIntersecting);
-      },
-      { rootMargin: "100px" }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
 
   // 2D Matrix Grid Fallback
   if (viewMode === "2d") {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-[#7A6862]">
+          <span className="text-xs font-semibold text-slate-400">
             2D Matrix View ({students.length} students × {concepts.length} concepts)
           </span>
           <Button
@@ -139,15 +114,15 @@ export const ClassMasteryHeatmap3D = React.memo(function ClassMasteryHeatmap3D({
             onClick={() => setViewMode("3d")}
             className="rounded-full text-xs h-7 gap-1"
           >
-            <Eye className="w-3.5 h-3.5 text-[#B26A1B]" />
+            <Eye className="w-3.5 h-3.5 text-amber-400" />
             <span>Switch to 3D View</span>
           </Button>
         </div>
 
-        <div className="overflow-x-auto rounded-2xl border border-[#49352F]/12 bg-white p-3 shadow-2xs">
+        <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-950/60 p-3">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-[#49352F]/10 text-[#7A6862]">
+              <tr className="border-b border-slate-800 text-slate-400">
                 <th className="p-2 font-bold">Student</th>
                 {concepts.map((c, i) => (
                   <th key={i} className="p-2 font-semibold truncate max-w-[120px]">{c}</th>
@@ -156,8 +131,8 @@ export const ClassMasteryHeatmap3D = React.memo(function ClassMasteryHeatmap3D({
             </thead>
             <tbody>
               {students.map((student, sIdx) => (
-                <tr key={sIdx} className="border-b border-[#49352F]/8 hover:bg-[#FAF6E9]/60">
-                  <td className="p-2 font-bold text-[#49352F] whitespace-nowrap">{student}</td>
+                <tr key={sIdx} className="border-b border-slate-800/60 hover:bg-slate-900/40">
+                  <td className="p-2 font-bold text-white whitespace-nowrap">{student}</td>
                   {concepts.map((concept, cIdx) => {
                     const match = data.find(
                       (d) => d.studentName === student && d.conceptName === concept
@@ -171,10 +146,10 @@ export const ClassMasteryHeatmap3D = React.memo(function ClassMasteryHeatmap3D({
                         <span
                           className={`inline-block px-2 py-0.5 rounded-md font-bold text-[11px] ${
                             isMastered
-                              ? "bg-[#2E7D5E]/15 text-[#2E7D5E] border border-[#2E7D5E]/25"
+                              ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
                               : isGap
-                              ? "bg-rose-100 text-rose-700 border border-rose-200 animate-pulse"
-                              : "bg-[#B26A1B]/15 text-[#B26A1B] border border-[#B26A1B]/25"
+                              ? "bg-rose-500/20 text-rose-300 border border-rose-500/30 animate-pulse"
+                              : "bg-amber-500/20 text-amber-300 border border-amber-500/30"
                           }`}
                         >
                           {score}%
@@ -192,24 +167,21 @@ export const ClassMasteryHeatmap3D = React.memo(function ClassMasteryHeatmap3D({
   }
 
   return (
-    <div
-      ref={containerRef}
-      className="relative w-full h-[320px] rounded-2xl bg-[#FAF6E9] border border-[#49352F]/12 overflow-hidden select-none shadow-[0_8px_24px_rgba(73,53,47,0.06)]"
-    >
+    <div className="relative w-full h-[320px] rounded-2xl bg-[#0e0c2b] border border-slate-800 overflow-hidden select-none">
       {/* View Switcher Top Bar */}
       <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
         {hoveredPoint && (
-          <div className="px-3 py-1 rounded-xl bg-white/95 border border-[#49352F]/15 text-xs shadow-md backdrop-blur-md animate-in fade-in">
-            <span className="font-bold text-[#49352F]">{hoveredPoint.studentName}</span>
-            <span className="text-[#7A6862] mx-1.5">•</span>
-            <span className="text-[#49352F]">{hoveredPoint.conceptName}: </span>
+          <div className="px-3 py-1 rounded-xl bg-slate-900/95 border border-slate-700 text-xs shadow-xl backdrop-blur-md animate-in fade-in">
+            <span className="font-bold text-white">{hoveredPoint.studentName}</span>
+            <span className="text-slate-400 mx-1.5">•</span>
+            <span className="text-slate-300">{hoveredPoint.conceptName}: </span>
             <span
               className={`font-black ${
                 hoveredPoint.score >= 80
-                  ? "text-[#2E7D5E]"
+                  ? "text-emerald-400"
                   : hoveredPoint.score >= 60
-                  ? "text-[#B26A1B]"
-                  : "text-rose-600"
+                  ? "text-amber-400"
+                  : "text-rose-400"
               }`}
             >
               {hoveredPoint.score}%
@@ -221,9 +193,9 @@ export const ClassMasteryHeatmap3D = React.memo(function ClassMasteryHeatmap3D({
           variant="outline"
           size="sm"
           onClick={() => setViewMode("2d")}
-          className="rounded-full text-xs h-7 gap-1 bg-white/90 border-[#49352F]/15 text-[#49352F] shadow-2xs"
+          className="rounded-full text-xs h-7 gap-1 bg-slate-900/80 border-slate-700"
         >
-          <LayoutGrid className="w-3.5 h-3.5 text-[#B26A1B]" />
+          <LayoutGrid className="w-3.5 h-3.5 text-amber-400" />
           <span>2D Matrix</span>
         </Button>
       </div>
@@ -231,13 +203,7 @@ export const ClassMasteryHeatmap3D = React.memo(function ClassMasteryHeatmap3D({
       {/* 3D WebGL Canvas */}
       <Canvas
         camera={{ position: [2.5, 2.2, 3.2], fov: 42 }}
-        gl={{
-          antialias: true,
-          powerPreference: "high-performance",
-          alpha: true,
-        }}
-        frameloop={isInView && isTabVisible ? "always" : "demand"}
-        dpr={[1, 1.5]}
+        gl={{ antialias: true, alpha: true }}
       >
         <ambientLight intensity={0.6} />
         <directionalLight position={[4, 5, 3]} intensity={1.5} color="#FFD59E" />
@@ -261,20 +227,20 @@ export const ClassMasteryHeatmap3D = React.memo(function ClassMasteryHeatmap3D({
       </Canvas>
 
       {/* Bottom Color Key */}
-      <div className="absolute bottom-2 left-3 z-10 flex items-center gap-3 text-[10px] text-[#7A6862] bg-white/90 px-2.5 py-1 rounded-lg backdrop-blur-xs border border-[#49352F]/10 shadow-2xs">
+      <div className="absolute bottom-2 left-3 z-10 flex items-center gap-3 text-[10px] text-slate-400 bg-slate-950/70 px-2.5 py-1 rounded-lg backdrop-blur-xs border border-slate-800">
         <div className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-xs bg-[#2E7D5E]" />
+          <span className="w-2 h-2 rounded-xs bg-[#3DDBA9]" />
           <span>&ge; 80% Mastered</span>
         </div>
         <div className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-xs bg-[#B26A1B]" />
+          <span className="w-2 h-2 rounded-xs bg-[#FF8A3D]" />
           <span>60-79% Developing</span>
         </div>
         <div className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-xs bg-[#C54738]" />
+          <span className="w-2 h-2 rounded-xs bg-[#FF5C6C]" />
           <span>&lt; 60% Needs Support</span>
         </div>
       </div>
     </div>
   );
-});
+}

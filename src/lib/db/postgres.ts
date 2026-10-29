@@ -74,8 +74,6 @@ export function getPostgresPool(): Pool | null {
   return poolInstance;
 }
 
-export const getPgPool = getPostgresPool;
-
 /**
  * Execute parameterized query safely with connection pool
  */

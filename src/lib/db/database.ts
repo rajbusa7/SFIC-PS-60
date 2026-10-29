@@ -74,7 +74,6 @@ interface DataStore {
   parents: ParentProfile[];
   parentLinkingCodes?: ParentLinkingCode[];
   parentMessages?: ParentMessage[];
-  parentActivityCompletions?: any[];
   notices: SchoolNotice[];
   translations: NoticeTranslation[];
   deliveries: NoticeDelivery[];
@@ -1363,93 +1362,6 @@ export const db = {
     }
     const store = loadStore();
     return (store.parentMessages || []).filter((m) => m.parentId === parentId);
-  },
-
-  async recordParentActivityCompletionAsync(
-    parentId: string,
-    studentId: string,
-    activityId: string,
-    conceptId?: string,
-    completed = true
-  ): Promise<{ success: boolean; completion: any }> {
-    const store = loadStore();
-    if (!store.parentActivityCompletions) store.parentActivityCompletions = [];
-
-    let existing = store.parentActivityCompletions.find(
-      (c) => c.studentId === studentId && c.activityId === activityId
-    );
-
-    if (existing) {
-      existing.completed = completed;
-      existing.completedAt = new Date().toISOString();
-    } else {
-      existing = {
-        id: `pac-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-        parentId,
-        studentId,
-        activityId,
-        conceptId: conceptId || "",
-        completed,
-        completedAt: new Date().toISOString(),
-      };
-      store.parentActivityCompletions.push(existing);
-    }
-
-    // Also update any related remedial plan steps
-    const relatedPlan = store.remedialPlans.find(
-      (p) => p.studentId === studentId && (p.conceptId === conceptId || p.id === activityId)
-    );
-    if (relatedPlan) {
-      if (!relatedPlan.completedSteps) relatedPlan.completedSteps = [];
-      if (completed && !relatedPlan.completedSteps.includes(1)) {
-        relatedPlan.completedSteps.push(1);
-      }
-    }
-
-    saveStore(store);
-
-    if (isPostgresConfigured()) {
-      try {
-        const { getPostgresPool } = await import("./postgres");
-        const pool = getPostgresPool();
-        if (pool) {
-          await pool.query(
-            `INSERT INTO parent_activity_completions (id, parent_id, student_id, activity_id, concept_id, completed, completed_at)
-             VALUES ($1, $2, $3, $4, $5, $6, NOW())
-             ON CONFLICT (id) DO UPDATE SET completed = $6, completed_at = NOW()`,
-            [existing.id, parentId, studentId, activityId, conceptId || "", completed]
-          );
-        }
-      } catch (e) {
-        console.error("Postgres error in recordParentActivityCompletionAsync:", e);
-      }
-    }
-
-    return { success: true, completion: existing };
-  },
-
-  async getParentActivityCompletionsAsync(studentId: string): Promise<any[]> {
-    if (isPostgresConfigured()) {
-      try {
-        const { getPostgresPool } = await import("./postgres");
-        const pool = getPostgresPool();
-        if (pool) {
-          const res = await pool.query(
-            `SELECT id, parent_id as "parentId", student_id as "studentId", activity_id as "activityId", concept_id as "conceptId", completed, completed_at as "completedAt"
-             FROM parent_activity_completions
-             WHERE student_id = $1 AND completed = TRUE`,
-            [studentId]
-          );
-          if (res.rows && res.rows.length > 0) return res.rows;
-        }
-      } catch (e) {
-        console.error("Postgres error in getParentActivityCompletionsAsync:", e);
-      }
-    }
-    const store = loadStore();
-    return (store.parentActivityCompletions || []).filter(
-      (c) => c.studentId === studentId && c.completed
-    );
   },
 
   getParentsByStudentId(studentId: string): ParentProfile[] {

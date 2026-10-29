@@ -43,17 +43,10 @@ export function AppSidebar() {
     },
     {
       href: "/notices",
-      label: language === "gu" ? "શાળા સૂચનાઓ" : "School Notices",
+      label: t.nav.parentBridge || "Parent Bridge",
       icon: Languages,
       badge: t.sidebar?.badgeMultilingual || "Multilingual",
       badgeColor: "bg-[#2E7D5E]/15 text-[#2E7D5E] border border-[#2E7D5E]/20 font-bold",
-    },
-    {
-      href: "/parent/dashboard",
-      label: language === "gu" ? "વાલી સેતુ" : "Parent Bridge",
-      icon: Users,
-      badge: language === "gu" ? "પોર્ટલ" : "Portal",
-      badgeColor: "bg-[#F2CAB3] text-[#49352F] border border-[#49352F]/15 font-bold",
     },
     { href: "/students", label: t.nav.students, icon: Users },
     { href: "/assessments", label: t.nav.assessments, icon: FileSpreadsheet },

@@ -881,7 +881,10 @@
       "createdAt": "2026-09-25T08:30:00Z",
       "startDate": "2026-09-26T09:00:00Z",
       "targetDate": "2026-10-04T09:00:00Z",
-      "reviewDate": "2026-10-05T08:30:00Z"
+      "reviewDate": "2026-10-05T08:30:00Z",
+      "completedSteps": [
+        1
+      ]
     },
     {
       "id": "plan-meera-mult-01",
@@ -1200,6 +1203,40 @@
         "std-dev"
       ],
       "relationship": "father"
+    },
+    {
+      "id": "par-1793292124000-x8va",
+      "userId": "usr-1793292123998-n5oh",
+      "name": "Sureshbhai Patel",
+      "email": "parent.bridge.1793292123989@example.com",
+      "phone": "9876543211",
+      "preferredLanguage": "gu",
+      "relationship": "guardian",
+      "studentIds": []
+    },
+    {
+      "id": "par-1793292198403-dyat",
+      "userId": "usr-1793292198402-nk0q",
+      "name": "Sureshbhai Patel",
+      "email": "parent.bridge.1793292198392@example.com",
+      "phone": "9876543211",
+      "preferredLanguage": "gu",
+      "relationship": "guardian",
+      "studentIds": [
+        "std-aarav"
+      ]
+    },
+    {
+      "id": "par-1793292435175-ktlh",
+      "userId": "usr-1793292435174-t8q5",
+      "name": "Sureshbhai Patel",
+      "email": "parent.bridge.1793292435165@example.com",
+      "phone": "9876543211",
+      "preferredLanguage": "gu",
+      "relationship": "guardian",
+      "studentIds": [
+        "std-aarav"
+      ]
     }
   ],
   "parentLinkingCodes": [
@@ -1207,17 +1244,39 @@
       "id": "plc-demo-aarav",
       "studentId": "std-aarav",
       "code": "PAR-4892",
-      "expiresAt": "2026-11-05T16:14:26.723Z",
+      "expiresAt": "2026-11-05T16:40:16.633Z",
       "status": "active",
-      "createdAt": "2026-10-29T16:14:26.723Z"
+      "createdAt": "2026-10-29T16:40:16.633Z"
     },
     {
       "id": "plc-demo-diya",
       "studentId": "std-diya",
       "code": "PAR-5219",
-      "expiresAt": "2026-11-05T16:14:26.723Z",
+      "expiresAt": "2026-11-05T16:40:16.633Z",
       "status": "active",
-      "createdAt": "2026-10-29T16:14:26.723Z"
+      "createdAt": "2026-10-29T16:40:16.633Z"
+    },
+    {
+      "id": "plc-1793292198421-23ii",
+      "studentId": "std-aarav",
+      "code": "PAR-3611",
+      "expiresAt": "2026-11-05T16:43:18.421Z",
+      "status": "used",
+      "createdByUserId": "usr-teacher-01",
+      "createdAt": "2026-10-29T16:43:18.421Z",
+      "usedByUserId": "usr-1793292198402-nk0q",
+      "usedAt": "2026-10-29T16:43:18.422Z"
+    },
+    {
+      "id": "plc-1793292435191-ju2x",
+      "studentId": "std-aarav",
+      "code": "PAR-7054",
+      "expiresAt": "2026-11-05T16:47:15.191Z",
+      "status": "used",
+      "createdByUserId": "usr-teacher-01",
+      "createdAt": "2026-10-29T16:47:15.191Z",
+      "usedByUserId": "usr-1793292435174-t8q5",
+      "usedAt": "2026-10-29T16:47:15.192Z"
     }
   ],
   "parentMessages": [],
@@ -1512,7 +1571,54 @@
       "status": "active",
       "createdAt": "2026-01-01T00:00:00Z",
       "updatedAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "usr-1793292123998-n5oh",
+      "name": "Sureshbhai Patel",
+      "email": "parent.bridge.1793292123989@example.com",
+      "role": "parent",
+      "schoolId": "sch-gn-01",
+      "provider": "local",
+      "passwordHash": "faddadac2b056a8dd09de554ad92d1d3:36c23725dfb0e20d21575f6994b73de962a5d879d8578eb5215f807b2874482f34c39ed49b2d63db00db9c963140dac62c86481943de58aa2e5da9b2f5e46047",
+      "status": "active",
+      "createdAt": "2026-10-29T16:42:03.998Z",
+      "updatedAt": "2026-10-29T16:42:03.998Z"
+    },
+    {
+      "id": "usr-1793292198402-nk0q",
+      "name": "Sureshbhai Patel",
+      "email": "parent.bridge.1793292198392@example.com",
+      "role": "parent",
+      "schoolId": "sch-gn-01",
+      "provider": "local",
+      "passwordHash": "b596f05f6dbbfbf766d12d21d5489d71:9a506ad29dc57d9ffe4a406c590c9341612b7635e6f3a48dfb0f21e85b8f49f048f2a4385142ba4f63fb03b8a1db2eb2ed0b9e25159e103977c42530c508a376",
+      "status": "active",
+      "createdAt": "2026-10-29T16:43:18.401Z",
+      "updatedAt": "2026-10-29T16:43:18.401Z"
+    },
+    {
+      "id": "usr-1793292435174-t8q5",
+      "name": "Sureshbhai Patel",
+      "email": "parent.bridge.1793292435165@example.com",
+      "role": "parent",
+      "schoolId": "sch-gn-01",
+      "provider": "local",
+      "passwordHash": "142c198666af48586c78d4bc30be5030:8f4a31f7bc856721b221f6791d2cc22879e0f965b4e145026589ceb88999dce29095140674533f0a66a338a12f0f8af70968a1e8c2d1c0b89bdbf28a36138c03",
+      "status": "active",
+      "createdAt": "2026-10-29T16:47:15.173Z",
+      "updatedAt": "2026-10-29T16:47:15.173Z"
     }
   ],
-  "feedback": []
+  "feedback": [],
+  "parentActivityCompletions": [
+    {
+      "id": "pac-1793292198436-h23y",
+      "parentId": "par-1793292198403-dyat",
+      "studentId": "std-aarav",
+      "activityId": "act-div-01",
+      "conceptId": "c-div-01",
+      "completed": true,
+      "completedAt": "2026-10-29T16:47:15.205Z"
+    }
+  ]
 }

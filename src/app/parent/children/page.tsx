@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function ParentChildrenPage() {
-  redirect("/parent/dashboard?tab=children");
+  redirect("/parent/dashboard?tab=my-child");
 }
-

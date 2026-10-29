@@ -24,7 +24,7 @@ const TutorialContext = createContext<TutorialContextType>({
   tutorialOpen: false,
   tutorialMode: "manual",
   tutorialStep: 0,
-  activeTourPage: "dashboard",
+  activeTourPage: "tutorial",
   steps: dashboardTourSteps,
   openTutorial: () => {},
   closeTutorial: () => {},
@@ -43,7 +43,7 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [tutorialMode, setTutorialMode] = useState<"auto" | "manual">("manual");
   const [tutorialStep, setTutorialStepState] = useState(0);
-  const [activeTourPage, setActiveTourPage] = useState<string>("dashboard");
+  const [activeTourPage, setActiveTourPage] = useState<string>("tutorial");
 
   const steps: TourStep[] = PAGE_TOURS[activeTourPage] || dashboardTourSteps;
 
@@ -54,7 +54,7 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
   // Central manual tutorial opener - called by both "Replay Guided Tour" & "Open Tutorial →"
   const openTutorial = useCallback(
     (options?: { step?: number; page?: string }) => {
-      const targetPage = options?.page || "dashboard";
+      const targetPage = options?.page || "tutorial";
       const startStep = options?.step ?? 0;
 
       setTutorialMode("manual");
@@ -62,19 +62,20 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
       setActiveTourPage(targetPage);
       setTutorialOpen(true);
 
-      // If target page is dashboard and user is on another page, navigate there
-      if (targetPage === "dashboard" && pathname !== "/dashboard") {
-        if (typeof window !== "undefined") {
-          sessionStorage.setItem(
-            "shikshasetu_pending_tutorial",
-            JSON.stringify({
-              mode: "manual",
-              step: startStep,
-              page: targetPage,
-            })
-          );
-        }
-        router.push("/dashboard");
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem(
+          "shikshasetu_pending_tutorial",
+          JSON.stringify({
+            mode: "manual",
+            step: startStep,
+            page: targetPage,
+          })
+        );
+      }
+
+      // Directly navigate to the dedicated Tutorial page /tutorial
+      if (pathname !== "/tutorial") {
+        router.push("/tutorial");
       }
     },
     [pathname, router]
@@ -113,6 +114,7 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== "undefined") {
       const keys = [
         "shikshasetu_tour_completed_dashboard",
+        "shikshasetu_tour_completed_tutorial",
         "shikshasetu_tour_completed_students",
         "shikshasetu_tour_completed_studentDetail",
         "shikshasetu_tour_completed_learningGaps",
@@ -137,13 +139,13 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
       try {
         const parsed = JSON.parse(pending);
         sessionStorage.removeItem("shikshasetu_pending_tutorial");
-        if (pathname === "/dashboard") {
+        if (pathname === "/tutorial" || pathname === "/dashboard") {
           setTutorialMode(parsed.mode || "manual");
           setTutorialStepState(parsed.step || 0);
-          setActiveTourPage(parsed.page || "dashboard");
+          setActiveTourPage(parsed.page || "tutorial");
           const timer = setTimeout(() => {
             setTutorialOpen(true);
-          }, 150);
+          }, 100);
           return () => clearTimeout(timer);
         }
       } catch {
@@ -152,24 +154,22 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
     }
 
     // 2. Automatic onboarding logic:
-    // ONLY fires for brand new users (has_seen_tutorial === false) on /dashboard!
+    // ONLY fires for brand new users (has_seen_tutorial === false) on first login!
     // Experienced users (has_seen_tutorial === true) will NEVER trigger this.
     if (pathname === "/dashboard" && user && user.has_seen_tutorial === false && !tutorialOpen) {
       setTutorialMode("auto");
       setTutorialStepState(0);
-      setActiveTourPage("dashboard");
-      const timer = setTimeout(() => {
-        setTutorialOpen(true);
-      }, 500);
-      return () => clearTimeout(timer);
+      setActiveTourPage("tutorial");
+      setTutorialOpen(true);
+      router.push("/tutorial");
     }
-  }, [pathname, user, tutorialOpen]);
+  }, [pathname, user, tutorialOpen, router]);
 
   // Support global custom event for backwards compatibility
   useEffect(() => {
     const handleReplay = (e: Event) => {
       const customEvent = e as CustomEvent;
-      const targetPage = customEvent.detail?.page || "dashboard";
+      const targetPage = customEvent.detail?.page || "tutorial";
       openTutorial({ page: targetPage, step: 0 });
     };
     window.addEventListener("shikshasetu_start_tour", handleReplay);

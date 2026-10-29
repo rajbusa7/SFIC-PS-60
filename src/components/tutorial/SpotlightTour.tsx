@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
 import { useTutorial } from "@/context/TutorialContext";
 import { TourStep, PAGE_TOURS, dashboardTourSteps } from "@/lib/tutorialData";
@@ -35,6 +35,7 @@ interface TargetRect {
 
 export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps = {}) {
   const router = useRouter();
+  const pathname = usePathname();
   const { t, language } = useLanguage();
   const {
     tutorialOpen,
@@ -50,8 +51,8 @@ export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps
   const tooltipRef = useRef<HTMLDivElement>(null);
 
   // If a specific page prop is provided, only show if activeTourPage matches
-  const currentPage = page || activeTourPage || "dashboard";
-  const shouldRender = tutorialOpen && (!page || page === activeTourPage);
+  const currentPage = page || activeTourPage || (pathname === "/tutorial" ? "tutorial" : "dashboard");
+  const shouldRender = tutorialOpen && (!page || page === activeTourPage || activeTourPage === "tutorial");
 
   const steps: TourStep[] = PAGE_TOURS[currentPage] || dashboardTourSteps;
   const currentStep = steps[tutorialStep] || steps[0];
@@ -161,7 +162,7 @@ export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps
 
   const handleNext = () => {
     if (isLast) {
-      if (currentPage === "dashboard") {
+      if (currentPage === "dashboard" || currentPage === "tutorial") {
         fireCelebrationConfetti();
       }
       closeTutorial();

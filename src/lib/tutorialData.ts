@@ -232,9 +232,50 @@ export const reportsTourSteps: TourStep[] = [
   },
 ];
 
+export const tutorialTourSteps: TourStep[] = [
+  {
+    id: "tutorial-welcome",
+    titleKey: "tutorial.tour.welcomeBadge",
+    descKey: "tutorial.heroSubtitle",
+    placement: "center",
+    badgeKey: "tutorial.badge",
+  },
+  {
+    id: "tutorial-workflow",
+    titleKey: "tutorial.activeTabWorkflow",
+    descKey: "tutorial.tour.dashboard.step1.desc",
+    targetSelector: '[data-tour="tutorial-workflow"]',
+    placement: "bottom",
+  },
+  {
+    id: "tutorial-tabs",
+    titleKey: "tutorial.activeTabLessons",
+    descKey: "tutorial.tour.dashboard.step5.desc",
+    targetSelector: '[data-tour="tutorial-tabs"]',
+    placement: "bottom",
+  },
+  {
+    id: "tutorial-sandbox-btn",
+    titleKey: "tutorial.trySandbox",
+    descKey: "tutorial.tour.tryAaravCta",
+    targetSelector: '[data-tour="tutorial-sandbox-btn"]',
+    placement: "top",
+  },
+  {
+    id: "tutorial-finish",
+    titleKey: "tutorial.tour.finishBadge",
+    descKey: "tutorial.tour.dashboard.step8.desc",
+    placement: "center",
+    ctaTextKey: "tutorial.tour.tryAaravCta",
+    ctaAction: "/students/std-aarav",
+    badgeKey: "tutorial.tour.finishBadge",
+  },
+];
+
 // Map of page route to its tour steps
 export const PAGE_TOURS: Record<string, TourStep[]> = {
   dashboard: dashboardTourSteps,
+  tutorial: tutorialTourSteps,
   students: studentsTourSteps,
   studentDetail: studentDetailTourSteps,
   learningGaps: learningGapsTourSteps,

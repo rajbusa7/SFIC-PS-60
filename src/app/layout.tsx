@@ -4,6 +4,7 @@ import { LanguageProvider } from "@/context/LanguageContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { FilterProvider } from "@/context/FilterContext";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { TutorialProvider } from "@/context/TutorialContext";
 
 export const metadata: Metadata = {
   applicationName: "StudySaathi AI",
@@ -59,7 +60,9 @@ export default function RootLayout({
         <ThemeProvider>
           <LanguageProvider>
             <AuthProvider>
-              <FilterProvider>{children}</FilterProvider>
+              <FilterProvider>
+                <TutorialProvider>{children}</TutorialProvider>
+              </FilterProvider>
             </AuthProvider>
           </LanguageProvider>
         </ThemeProvider>

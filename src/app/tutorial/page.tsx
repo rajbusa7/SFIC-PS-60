@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { useLanguage } from "@/context/LanguageContext";
+import { useTutorial } from "@/context/TutorialContext";
 import { triggerPageTour } from "@/components/tutorial/SpotlightTour";
 import {
   TUTORIAL_FAQS,
@@ -47,6 +48,7 @@ import {
 
 export default function TutorialPage() {
   const { t, language } = useLanguage();
+  const { openTutorial } = useTutorial();
 
   const [activeTab, setActiveTab] = useState<
     "workflow" | "lessons" | "sandbox" | "faq" | "glossary" | "tips"
@@ -169,7 +171,7 @@ export default function TutorialPage() {
                 <Button
                   variant="saffron"
                   size="sm"
-                  onClick={() => triggerPageTour("dashboard")}
+                  onClick={() => openTutorial()}
                   className="rounded-full text-xs font-bold shadow-md cursor-pointer"
                 >
                   <RotateCcw className="w-3.5 h-3.5 mr-1.5" />

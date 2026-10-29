@@ -6,6 +6,7 @@ import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/Ca
 import { Badge } from "@/components/ui/Badge";
 import { useLanguage } from "@/context/LanguageContext";
 import { useTheme } from "@/context/ThemeContext";
+import { useTutorial } from "@/context/TutorialContext";
 import { broadcastDataUpdate } from "@/lib/events";
 import {
   Settings,
@@ -26,6 +27,7 @@ import {
 export default function SettingsPage() {
   const { t, language, setLanguage } = useLanguage();
   const { theme, resolvedTheme, setTheme } = useTheme();
+  const { resetTutorial } = useTutorial();
 
   const [masteryThreshold, setMasteryThreshold] = useState<number>(80);
   const [developingThreshold, setDevelopingThreshold] = useState<number>(60);
@@ -42,31 +44,9 @@ export default function SettingsPage() {
   const [tutorialResetSuccess, setTutorialResetSuccess] = useState(false);
 
   const handleResetTutorial = () => {
-    if (typeof window !== "undefined") {
-      const keys = [
-        "studysaathi_tour_completed_dashboard",
-        "studysaathi_tour_completed_students",
-        "studysaathi_tour_completed_studentDetail",
-        "studysaathi_tour_completed_learningGaps",
-        "studysaathi_tour_completed_remedialPlans",
-        "studysaathi_tour_completed_reports",
-        "studysaathi_checklist_completed",
-        "studysaathi_checklist_steps",
-        "studysaathi_checklist_dismissed",
-        "shikshasetu_tour_completed_dashboard",
-        "shikshasetu_tour_completed_students",
-        "shikshasetu_tour_completed_studentDetail",
-        "shikshasetu_tour_completed_learningGaps",
-        "shikshasetu_tour_completed_remedialPlans",
-        "shikshasetu_tour_completed_reports",
-        "shikshasetu_checklist_completed",
-        "shikshasetu_checklist_steps",
-        "shikshasetu_checklist_dismissed",
-      ];
-      keys.forEach((k) => localStorage.removeItem(k));
-      setTutorialResetSuccess(true);
-      setTimeout(() => setTutorialResetSuccess(false), 4000);
-    }
+    resetTutorial();
+    setTutorialResetSuccess(true);
+    setTimeout(() => setTutorialResetSuccess(false), 4000);
   };
 
   useEffect(() => {

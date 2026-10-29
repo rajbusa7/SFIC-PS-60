@@ -7,6 +7,7 @@ import { AppSidebar } from "./AppSidebar";
 import { AppHeader } from "./AppHeader";
 import { HackathonDemoBanner } from "./HackathonDemoBanner";
 import { GlobalShikshaBot } from "@/components/shared/GlobalShikshaBot";
+import { SpotlightTour } from "@/components/tutorial/SpotlightTour";
 import {
   LayoutDashboard,
   Users,
@@ -57,6 +58,9 @@ export function AppLayout({ children, showDemoBanner = true }: AppLayoutProps) {
 
       {/* Global Offline ShikshaBot Assistant */}
       <GlobalShikshaBot />
+
+      {/* Central Interactive Spotlight Tour Engine */}
+      <SpotlightTour />
 
       {/* Mobile Bottom Tab Bar */}
       <nav

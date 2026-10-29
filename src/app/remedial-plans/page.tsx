@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { useLanguage } from "@/context/LanguageContext";
 import { ActivityPlayerModal } from "@/components/activities/ActivityPlayerModal";
-import { SpotlightTour } from "@/components/tutorial/SpotlightTour";
 import { ContextualHelp } from "@/components/shared/ContextualHelp";
 import { broadcastDataUpdate, subscribeToDataUpdates } from "@/lib/events";
 import {
@@ -1428,7 +1427,6 @@ export default function RemedialPlansPage() {
       )}
 
       {/* Guided Tour */}
-      <SpotlightTour page="remedialPlans" />
-    </AppLayout>
+          </AppLayout>
   );
 }

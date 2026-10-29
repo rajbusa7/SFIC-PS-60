@@ -11,7 +11,6 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useFilter } from "@/context/FilterContext";
 import { StudentFormModal } from "@/components/student/StudentFormModal";
 import { StudentCsvModal } from "@/components/student/StudentCsvModal";
-import { SpotlightTour } from "@/components/tutorial/SpotlightTour";
 import { broadcastDataUpdate, subscribeToDataUpdates } from "@/lib/events";
 import {
   Users,
@@ -624,7 +623,6 @@ export default function StudentsPage() {
       )}
 
       {/* Guided Tour */}
-      <SpotlightTour page="students" />
-    </AppLayout>
+          </AppLayout>
   );
 }

@@ -13,7 +13,7 @@ import type { StudentMasteryPoint } from "@/components/3d/ClassMasteryHeatmap3D"
 import { fireCelebrationConfetti } from "@/lib/confetti";
 import { useLanguage } from "@/context/LanguageContext";
 import { useFilter } from "@/context/FilterContext";
-import { SpotlightTour, triggerPageTour } from "@/components/tutorial/SpotlightTour";
+import { useTutorial } from "@/context/TutorialContext";
 import { ChecklistWidget } from "@/components/tutorial/ChecklistWidget";
 import { ContextualHelp } from "@/components/shared/ContextualHelp";
 import { subscribeToDataUpdates } from "@/lib/events";
@@ -80,6 +80,7 @@ const StudentFormModal = dynamic(
 
 export default function DashboardPage() {
   const { t, language, formatSubject, formatClass, formatPriority } = useLanguage();
+  const { openTutorial } = useTutorial();
 
   const [loading, setLoading] = useState(true);
   const [students, setStudents] = useState<any[]>([]);
@@ -334,10 +335,7 @@ export default function DashboardPage() {
                   variant="primary"
                   size="sm"
                   onClick={() => {
-                    if (typeof window !== "undefined") {
-                      localStorage.removeItem("shikshasetu_tour_completed_dashboard");
-                    }
-                    triggerPageTour("dashboard");
+                    openTutorial();
                   }}
                   className="rounded-xl text-xs font-bold shadow-xs flex-1 md:flex-initial cursor-pointer"
                 >
@@ -738,9 +736,6 @@ export default function DashboardPage() {
           }}
         />
       )}
-
-      {/* Interactive Guided Tour */}
-      <SpotlightTour page="dashboard" />
 
       {/* Onboarding Checklist Widget */}
       <ChecklistWidget />

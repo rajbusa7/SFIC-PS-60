@@ -17,6 +17,7 @@ interface AuthContextType {
   refreshSession: () => Promise<User | null>;
   logout: () => Promise<void>;
   switchRole: (role: UserRole) => void;
+  setHasSeenTutorial: (seen: boolean) => void;
 }
 
 const DEMO_TEACHER: User = {
@@ -26,6 +27,7 @@ const DEMO_TEACHER: User = {
   role: "teacher",
   schoolId: "sch-gn-01",
   provider: "local",
+  has_seen_tutorial: true,
 };
 
 const DEMO_ADMIN: User = {
@@ -35,6 +37,7 @@ const DEMO_ADMIN: User = {
   role: "admin",
   schoolId: "sch-gn-01",
   provider: "local",
+  has_seen_tutorial: true,
 };
 
 const DEMO_PARENT: User = {
@@ -44,6 +47,7 @@ const DEMO_PARENT: User = {
   role: "parent",
   schoolId: "sch-gn-01",
   provider: "local",
+  has_seen_tutorial: true,
 };
 
 const AuthContext = createContext<AuthContextType>({
@@ -60,6 +64,7 @@ const AuthContext = createContext<AuthContextType>({
   refreshSession: async () => null,
   logout: async () => {},
   switchRole: () => {},
+  setHasSeenTutorial: () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -93,9 +98,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (res.ok) {
           const data = await res.json();
           if (data.authenticated && data.user && isMounted) {
-            setUser(data.user);
+            const u = data.user;
+            const cleanEmail = u.email ? u.email.toLowerCase().trim() : u.id;
+            const stored = typeof window !== "undefined" ? localStorage.getItem(`shikshasetu_seen_tutorial_${cleanEmail}`) : null;
+            const resolvedUser = { ...u, has_seen_tutorial: stored !== null ? stored === "true" : (u.has_seen_tutorial ?? false) };
+            setUser(resolvedUser);
             setIsDemoMode(false);
-            saveUserStorage(data.user);
+            saveUserStorage(resolvedUser);
             setIsLoading(false);
             return;
           }
@@ -112,7 +121,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             localStorage.getItem("shikshasetu_user");
           if (saved) {
             const parsed = JSON.parse(saved);
-            setUser(parsed);
+            const cleanEmail = parsed.email ? parsed.email.toLowerCase().trim() : parsed.id;
+            const stored = typeof window !== "undefined" ? localStorage.getItem(`shikshasetu_seen_tutorial_${cleanEmail}`) : null;
+            const resolvedUser = { ...parsed, has_seen_tutorial: stored !== null ? stored === "true" : (parsed.has_seen_tutorial ?? false) };
+            setUser(resolvedUser);
             setIsDemoMode(false);
           } else {
             setUser(null);
@@ -149,9 +161,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     const realUser: User = data.user;
-    setUser(realUser);
+    const cleanEmail = realUser.email ? realUser.email.toLowerCase().trim() : realUser.id;
+    const stored = typeof window !== "undefined" ? localStorage.getItem(`shikshasetu_seen_tutorial_${cleanEmail}`) : null;
+    const resolvedUser = { ...realUser, has_seen_tutorial: stored !== null ? stored === "true" : (realUser.has_seen_tutorial ?? false) };
+    setUser(resolvedUser);
     setIsDemoMode(false);
-    saveUserStorage(realUser);
+    saveUserStorage(resolvedUser);
     return true;
   };
 
@@ -252,6 +267,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     saveUserStorage(null);
   };
 
+  const setHasSeenTutorial = useCallback((seen: boolean) => {
+    setUser((prev) => {
+      if (!prev) return null;
+      const updated = { ...prev, has_seen_tutorial: seen };
+      if (typeof window !== "undefined") {
+        const cleanEmail = prev.email ? prev.email.toLowerCase().trim() : prev.id;
+        localStorage.setItem(`shikshasetu_seen_tutorial_${cleanEmail}`, String(seen));
+      }
+      saveUserStorage(updated);
+      return updated;
+    });
+  }, [saveUserStorage]);
+
   const switchRole = (newRole: UserRole) => {
     if (!user) return;
     const updated = { ...user, role: newRole };
@@ -275,6 +303,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         refreshSession,
         logout,
         switchRole,
+        setHasSeenTutorial,
       }}
     >
       {children}

@@ -4,7 +4,8 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
-import { TourStep, PAGE_TOURS } from "@/lib/tutorialData";
+import { useTutorial } from "@/context/TutorialContext";
+import { TourStep, PAGE_TOURS, dashboardTourSteps } from "@/lib/tutorialData";
 import {
   ChevronLeft,
   ChevronRight,
@@ -18,8 +19,8 @@ import {
 } from "lucide-react";
 import { fireCelebrationConfetti } from "@/lib/confetti";
 
-interface SpotlightTourProps {
-  page: "dashboard" | "students" | "studentDetail" | "learningGaps" | "remedialPlans" | "reports";
+export interface SpotlightTourProps {
+  page?: "dashboard" | "students" | "studentDetail" | "learningGaps" | "remedialPlans" | "reports" | string;
   autoStartDelay?: number;
 }
 
@@ -32,17 +33,28 @@ interface TargetRect {
   bottom: number;
 }
 
-export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps) {
+export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps = {}) {
   const router = useRouter();
   const { t, language } = useLanguage();
-  const [isActive, setIsActive] = useState(false);
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const {
+    tutorialOpen,
+    tutorialMode,
+    tutorialStep,
+    activeTourPage,
+    closeTutorial,
+    nextStep,
+    prevStep,
+  } = useTutorial();
+
   const [targetRect, setTargetRect] = useState<TargetRect | null>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
 
-  const steps: TourStep[] = PAGE_TOURS[page] || [];
-  const currentStep = steps[currentStepIndex];
-  const storageKey = `shikshasetu_tour_completed_${page}`;
+  // If a specific page prop is provided, only show if activeTourPage matches
+  const currentPage = page || activeTourPage || "dashboard";
+  const shouldRender = tutorialOpen && (!page || page === activeTourPage);
+
+  const steps: TourStep[] = PAGE_TOURS[currentPage] || dashboardTourSteps;
+  const currentStep = steps[tutorialStep] || steps[0];
 
   // Helper to resolve translation string by key path
   const resolveText = (keyPath: string, fallback: string = ""): string => {
@@ -59,58 +71,21 @@ export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps
     }
   };
 
-  // Start Tour
-  const startTour = useCallback(() => {
-    setCurrentStepIndex(0);
-    setIsActive(true);
-  }, []);
-
-  // End / Skip Tour
-  const finishTour = useCallback(() => {
-    setIsActive(false);
-    if (typeof window !== "undefined") {
-      localStorage.setItem(storageKey, "true");
-      // Fire action completed for checklist milestone 1 (Review class)
-      window.dispatchEvent(new CustomEvent("shikshasetu_step_class_reviewed"));
-    }
-  }, [storageKey]);
-
-  // Check auto-start on first visit
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const hasCompleted = localStorage.getItem(storageKey);
-    if (!hasCompleted && steps.length > 0) {
-      const timer = setTimeout(() => {
-        setIsActive(true);
-      }, autoStartDelay);
-      return () => clearTimeout(timer);
-    }
-  }, [storageKey, steps.length, autoStartDelay]);
-
-  // Listen for global custom event to trigger or replay tour
-  useEffect(() => {
-    const handleReplay = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      if (!customEvent.detail?.page || customEvent.detail.page === page) {
-        startTour();
-      }
-    };
-    window.addEventListener("shikshasetu_start_tour", handleReplay);
-    return () => window.removeEventListener("shikshasetu_start_tour", handleReplay);
-  }, [page, startTour]);
-
   // Scroll active target into view once when step changes
   useEffect(() => {
-    if (!isActive || !currentStep?.targetSelector) return;
-    const el = document.querySelector(currentStep.targetSelector);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
-    }
-  }, [isActive, currentStepIndex, currentStep?.targetSelector]);
+    if (!shouldRender || !currentStep?.targetSelector) return;
+    const scrollTimer = setTimeout(() => {
+      const el = document.querySelector(currentStep.targetSelector!);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+      }
+    }, 60);
+    return () => clearTimeout(scrollTimer);
+  }, [shouldRender, tutorialStep, currentStep?.targetSelector]);
 
   // Calculate Target Rect
   const updateTargetRect = useCallback(() => {
-    if (!isActive || !currentStep?.targetSelector) {
+    if (!shouldRender || !currentStep?.targetSelector) {
       setTargetRect(null);
       return;
     }
@@ -130,75 +105,76 @@ export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps
     } else {
       setTargetRect(null);
     }
-  }, [isActive, currentStep]);
+  }, [shouldRender, currentStep]);
 
   useEffect(() => {
-    if (!isActive) return;
+    if (!shouldRender) return;
 
-    // Small delay to let animations settle
-    const timer = setTimeout(() => {
-      updateTargetRect();
-    }, 120);
+    // Run rect updates with progressive settling delays
+    updateTargetRect();
+    const timer1 = setTimeout(updateTargetRect, 80);
+    const timer2 = setTimeout(updateTargetRect, 220);
+    const timer3 = setTimeout(updateTargetRect, 500);
 
     window.addEventListener("resize", updateTargetRect, { passive: true });
     window.addEventListener("scroll", updateTargetRect, { passive: true });
 
     return () => {
-      clearTimeout(timer);
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
       window.removeEventListener("resize", updateTargetRect);
       window.removeEventListener("scroll", updateTargetRect);
     };
-  }, [isActive, currentStepIndex, updateTargetRect]);
+  }, [shouldRender, tutorialStep, updateTargetRect]);
 
   // Keyboard navigation & Esc to close
   useEffect(() => {
-    if (!isActive) return;
+    if (!shouldRender) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault();
-        finishTour();
+        closeTutorial();
       } else if (e.key === "ArrowRight") {
-        if (currentStepIndex < steps.length - 1) {
+        if (tutorialStep < steps.length - 1) {
           e.preventDefault();
-          setCurrentStepIndex((prev) => prev + 1);
+          nextStep();
         }
       } else if (e.key === "ArrowLeft") {
-        if (currentStepIndex > 0) {
+        if (tutorialStep > 0) {
           e.preventDefault();
-          setCurrentStepIndex((prev) => prev - 1);
+          prevStep();
         }
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isActive, currentStepIndex, steps.length, finishTour]);
+  }, [shouldRender, tutorialStep, steps.length, closeTutorial, nextStep, prevStep]);
 
-  if (!isActive || !currentStep) return null;
+  if (!shouldRender || !currentStep) return null;
 
-  const isFirst = currentStepIndex === 0;
-  const isLast = currentStepIndex === steps.length - 1;
+  const isFirst = tutorialStep === 0;
+  const isLast = tutorialStep === steps.length - 1;
   const isCentered = !currentStep.targetSelector || !targetRect || currentStep.placement === "center";
 
   const handleNext = () => {
     if (isLast) {
-      if (page === "dashboard") {
+      if (currentPage === "dashboard") {
         fireCelebrationConfetti();
       }
-      finishTour();
+      closeTutorial();
       if (currentStep.ctaAction) {
         router.push(currentStep.ctaAction);
       }
     } else {
-      setCurrentStepIndex((prev) => prev + 1);
+      nextStep();
     }
   };
 
   const handleBack = () => {
-    if (currentStepIndex > 0) {
-      setCurrentStepIndex((prev) => prev - 1);
-    }
+    prevStep();
   };
 
   // Dynamic Tooltip Position for small screens and desktop
@@ -273,7 +249,7 @@ export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps
         style={{ zIndex: 51 }}
       >
         <defs>
-          <mask id={`spotlight-mask-${page}`}>
+          <mask id={`spotlight-mask-${currentPage}`}>
             {/* White area = dimmed backdrop */}
             <rect x="0" y="0" width="100%" height="100%" fill="white" />
             {/* Black area = cut-out hole showing original element */}
@@ -298,7 +274,7 @@ export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps
           height="100%"
           fill="#070a13"
           fillOpacity={isCentered ? "0.85" : "0.78"}
-          mask={`url(#spotlight-mask-${page})`}
+          mask={`url(#spotlight-mask-${currentPage})`}
         />
       </svg>
 
@@ -336,15 +312,15 @@ export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps
               </span>
               <div className="text-[11px] font-semibold text-slate-300">
                 {language === "gu"
-                  ? `પગલું ${currentStepIndex + 1} / ${steps.length}`
-                  : `Step ${currentStepIndex + 1} of ${steps.length}`}
+                  ? `પગલું ${tutorialStep + 1} / ${steps.length}`
+                  : `Step ${tutorialStep + 1} of ${steps.length}`}
               </div>
             </div>
           </div>
 
           <button
             type="button"
-            onClick={finishTour}
+            onClick={closeTutorial}
             className="p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
             aria-label={language === "gu" ? "ટૂર બંધ કરો" : "Close tour"}
           >
@@ -366,8 +342,8 @@ export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps
             <Lightbulb className="w-4 h-4 text-amber-300 shrink-0 mt-0.5" aria-hidden="true" />
             <span>
               {language === "gu"
-                ? "સાથીબોટ ટિપ: તમે ઉપરના ટૂલબારમાંથી અથવા 'Esc' દબાવીને આ ટૂર ગમે ત્યારે ફરી જોઈ શકો છો."
-                : "SaathiBot tip: You can replay this guided walkthrough anytime from the top bar or press 'Esc' to exit."}
+                ? "શિક્ષાબોટ ટિપ: તમે ઉપરના ટૂલબારમાંથી અથવા 'Esc' દબાવીને આ ટૂર ગમે ત્યારે ફરી જોઈ શકો છો."
+                : "ShikshaBot tip: You can replay this guided walkthrough anytime from the top bar or press 'Esc' to exit."}
             </span>
           </div>
         </div>
@@ -380,7 +356,7 @@ export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps
               <span
                 key={idx}
                 className={`h-1.5 rounded-full transition-all duration-300 ${
-                  idx === currentStepIndex
+                  idx === tutorialStep
                     ? "w-4 bg-[#FF8A3D]"
                     : "w-1.5 bg-slate-600/70"
                 }`}
@@ -430,7 +406,7 @@ export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps
   );
 }
 
-// Global helper to trigger replay from any component
+// Global helper to trigger replay from any component or event
 export function triggerPageTour(pageName: string = "dashboard") {
   if (typeof window !== "undefined") {
     window.dispatchEvent(

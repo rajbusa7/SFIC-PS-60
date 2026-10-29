@@ -11,6 +11,9 @@ import type {
   SchoolSettings,
   School,
   User,
+  ParentProfile,
+  ParentLinkingCode,
+  ParentMessage,
 } from "../types";
 import {
   SEED_SCHOOL,
@@ -25,6 +28,7 @@ import {
   SEED_REMEDIAL_PLANS,
   SEED_ACTIVITIES,
   SEED_USERS,
+  SEED_PARENTS,
 } from "./seedData";
 
 // Resolve PostgreSQL connection string from standard environment variables
@@ -1352,5 +1356,244 @@ export const postgresUserDb = {
     const pool = getPostgresPool()!;
     const res = await pool.query(`DELETE FROM users WHERE id = $1`, [id]);
     return (res.rowCount ?? 0) > 0;
+  },
+};
+
+export const postgresParentDb = {
+  async getParentByUserId(userId: string): Promise<ParentProfile | null> {
+    const pool = getPostgresPool()!;
+    const { rows: profileRows } = await pool.query(
+      `SELECT id, user_id as "userId", name, email, phone, 
+              preferred_language as "preferredLanguage", relationship, 
+              created_at as "createdAt", updated_at as "updatedAt"
+       FROM parent_profiles WHERE user_id = $1 LIMIT 1`,
+      [userId]
+    );
+    if (!profileRows[0]) return null;
+    const profile = profileRows[0];
+
+    const { rows: studentRows } = await pool.query(
+      `SELECT student_id as "studentId" FROM parent_students WHERE parent_id = $1 ORDER BY linked_at ASC`,
+      [profile.id]
+    );
+    profile.studentIds = studentRows.map((r: any) => r.studentId);
+    return profile;
+  },
+
+  async getParentById(id: string): Promise<ParentProfile | null> {
+    const pool = getPostgresPool()!;
+    const { rows: profileRows } = await pool.query(
+      `SELECT id, user_id as "userId", name, email, phone, 
+              preferred_language as "preferredLanguage", relationship, 
+              created_at as "createdAt", updated_at as "updatedAt"
+       FROM parent_profiles WHERE id = $1 LIMIT 1`,
+      [id]
+    );
+    if (!profileRows[0]) return null;
+    const profile = profileRows[0];
+
+    const { rows: studentRows } = await pool.query(
+      `SELECT student_id as "studentId" FROM parent_students WHERE parent_id = $1 ORDER BY linked_at ASC`,
+      [profile.id]
+    );
+    profile.studentIds = studentRows.map((r: any) => r.studentId);
+    return profile;
+  },
+
+  async createParentProfile(data: {
+    id?: string;
+    userId: string;
+    name: string;
+    email?: string;
+    phone?: string;
+    preferredLanguage?: string;
+    relationship?: string;
+    studentIds?: string[];
+  }): Promise<ParentProfile> {
+    const pool = getPostgresPool()!;
+    const id = data.id || `par-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    const prefLang = data.preferredLanguage || "gu";
+    const rel = data.relationship || "guardian";
+
+    await pool.query(
+      `INSERT INTO parent_profiles (id, user_id, name, email, phone, preferred_language, relationship)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       ON CONFLICT (id) DO UPDATE SET
+         name = EXCLUDED.name,
+         email = EXCLUDED.email,
+         phone = EXCLUDED.phone,
+         preferred_language = EXCLUDED.preferred_language,
+         relationship = EXCLUDED.relationship,
+         updated_at = CURRENT_TIMESTAMP`,
+      [id, data.userId, data.name, data.email || null, data.phone || null, prefLang, rel]
+    );
+
+    if (data.studentIds && data.studentIds.length > 0) {
+      for (const studentId of data.studentIds) {
+        await pool.query(
+          `INSERT INTO parent_students (parent_id, student_id, relationship)
+           VALUES ($1, $2, $3)
+           ON CONFLICT (parent_id, student_id) DO NOTHING`,
+          [id, studentId, rel]
+        );
+      }
+    }
+
+    return {
+      id,
+      userId: data.userId,
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      preferredLanguage: prefLang as any,
+      relationship: rel as any,
+      studentIds: data.studentIds || [],
+    };
+  },
+
+  async linkParentToStudent(parentId: string, studentId: string, relationship = "guardian"): Promise<boolean> {
+    const pool = getPostgresPool()!;
+    await pool.query(
+      `INSERT INTO parent_students (parent_id, student_id, relationship)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (parent_id, student_id) DO UPDATE SET relationship = EXCLUDED.relationship`,
+      [parentId, studentId, relationship]
+    );
+    return true;
+  },
+
+  async unlinkParentFromStudent(parentId: string, studentId: string): Promise<boolean> {
+    const pool = getPostgresPool()!;
+    const res = await pool.query(
+      `DELETE FROM parent_students WHERE parent_id = $1 AND student_id = $2`,
+      [parentId, studentId]
+    );
+    return (res.rowCount ?? 0) > 0;
+  },
+
+  async getLinkedStudentsForParent(parentId: string): Promise<Student[]> {
+    const pool = getPostgresPool()!;
+    const { rows } = await pool.query(
+      `SELECT s.id, s.roll_number as "rollNumber", s.first_name as "firstName", 
+              s.last_name as "lastName", s.display_name as "displayName", 
+              s.class_id as "classId", s.grade, s.section, s.gender, 
+              s.attendance_rate as "attendanceRate", s.performance_level as "performanceLevel",
+              s.preferred_language as "preferredLanguage", s.avatar_url as "avatarUrl"
+       FROM students s
+       JOIN parent_students ps ON ps.student_id = s.id
+       WHERE ps.parent_id = $1
+       ORDER BY s.roll_number ASC`,
+      [parentId]
+    );
+    return rows;
+  },
+
+  async createLinkingCode(studentId: string, createdByUserId?: string, expiresInDays = 7): Promise<ParentLinkingCode> {
+    const pool = getPostgresPool()!;
+    const id = `plc-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    const code = `PAR-${randomSuffix}`;
+    const expiresAt = new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000).toISOString();
+
+    const { rows } = await pool.query(
+      `INSERT INTO parent_linking_codes (id, student_id, code, expires_at, status, created_by_user_id)
+       VALUES ($1, $2, $3, $4, 'active', $5)
+       RETURNING id, student_id as "studentId", code, expires_at as "expiresAt", 
+                 status, created_by_user_id as "createdByUserId", created_at as "createdAt"`,
+      [id, studentId, code, expiresAt, createdByUserId || null]
+    );
+    return rows[0];
+  },
+
+  async getLinkingCode(code: string): Promise<ParentLinkingCode | null> {
+    const pool = getPostgresPool()!;
+    const normalized = code.trim().toUpperCase();
+    const { rows } = await pool.query(
+      `SELECT id, student_id as "studentId", code, expires_at as "expiresAt", 
+              status, created_by_user_id as "createdByUserId", used_by_user_id as "usedByUserId",
+              used_at as "usedAt", created_at as "createdAt"
+       FROM parent_linking_codes WHERE UPPER(code) = $1 LIMIT 1`,
+      [normalized]
+    );
+    return rows[0] || null;
+  },
+
+  async redeemLinkingCode(
+    code: string,
+    parentUserId: string,
+    parentProfileId: string
+  ): Promise<{ success: boolean; studentId?: string; error?: string }> {
+    const pool = getPostgresPool()!;
+    const linkingCode = await this.getLinkingCode(code);
+    if (!linkingCode) {
+      return { success: false, error: "Invalid verification code. Please check the code provided by your school." };
+    }
+
+    if (linkingCode.status === "used") {
+      return { success: false, error: "This linking code has already been redeemed." };
+    }
+
+    if (new Date(linkingCode.expiresAt).getTime() < Date.now()) {
+      await pool.query(`UPDATE parent_linking_codes SET status = 'expired' WHERE id = $1`, [linkingCode.id]);
+      return { success: false, error: "This linking code has expired. Please request a new code from the school teacher." };
+    }
+
+    // Mark as used
+    await pool.query(
+      `UPDATE parent_linking_codes 
+       SET status = 'used', used_by_user_id = $1, used_at = CURRENT_TIMESTAMP 
+       WHERE id = $2`,
+      [parentUserId, linkingCode.id]
+    );
+
+    // Link parent to student
+    await pool.query(
+      `INSERT INTO parent_students (parent_id, student_id, relationship)
+       VALUES ($1, $2, 'guardian')
+       ON CONFLICT (parent_id, student_id) DO NOTHING`,
+      [parentProfileId, linkingCode.studentId]
+    );
+
+    return { success: true, studentId: linkingCode.studentId };
+  },
+
+  async getLinkingCodesForStudent(studentId: string): Promise<ParentLinkingCode[]> {
+    const pool = getPostgresPool()!;
+    const { rows } = await pool.query(
+      `SELECT id, student_id as "studentId", code, expires_at as "expiresAt", 
+              status, created_by_user_id as "createdByUserId", used_by_user_id as "usedByUserId",
+              used_at as "usedAt", created_at as "createdAt"
+       FROM parent_linking_codes WHERE student_id = $1 ORDER BY created_at DESC`,
+      [studentId]
+    );
+    return rows;
+  },
+
+  async createParentMessage(
+    parentId: string,
+    studentId: string,
+    subject: string,
+    message: string
+  ): Promise<ParentMessage> {
+    const pool = getPostgresPool()!;
+    const id = `msg-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    const { rows } = await pool.query(
+      `INSERT INTO parent_messages (id, parent_id, student_id, subject, message, status)
+       VALUES ($1, $2, $3, $4, $5, 'sent')
+       RETURNING id, parent_id as "parentId", student_id as "studentId", subject, message, status, created_at as "createdAt"`,
+      [id, parentId, studentId, subject, message]
+    );
+    return rows[0];
+  },
+
+  async getMessagesForParent(parentId: string): Promise<ParentMessage[]> {
+    const pool = getPostgresPool()!;
+    const { rows } = await pool.query(
+      `SELECT id, parent_id as "parentId", student_id as "studentId", subject, message, status, 
+              reply, replied_at as "repliedAt", created_at as "createdAt"
+       FROM parent_messages WHERE parent_id = $1 ORDER BY created_at DESC`,
+      [parentId]
+    );
+    return rows;
   },
 };

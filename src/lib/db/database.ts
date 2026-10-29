@@ -32,6 +32,7 @@ import {
   postgresActivityDb,
   postgresSettingsDb,
   postgresUserDb,
+  postgresParentDb,
 } from "./postgres";
 import type {
   School,
@@ -50,6 +51,8 @@ import type {
   NoticeTranslation,
   NoticeDelivery,
   ParentProfile,
+  ParentLinkingCode,
+  ParentMessage,
   AiProviderConfig,
   AiUsageMetric,
   User,
@@ -69,6 +72,8 @@ interface DataStore {
   activities: LearningActivity[];
   attempts: ActivityAttempt[];
   parents: ParentProfile[];
+  parentLinkingCodes?: ParentLinkingCode[];
+  parentMessages?: ParentMessage[];
   notices: SchoolNotice[];
   translations: NoticeTranslation[];
   deliveries: NoticeDelivery[];
@@ -98,6 +103,25 @@ function getInitialStore(): DataStore {
     activities: JSON.parse(JSON.stringify(SEED_ACTIVITIES)),
     attempts: [],
     parents: JSON.parse(JSON.stringify(SEED_PARENTS)),
+    parentLinkingCodes: [
+      {
+        id: "plc-demo-aarav",
+        studentId: "std-aarav",
+        code: "PAR-4892",
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        status: "active",
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: "plc-demo-diya",
+        studentId: "std-diya",
+        code: "PAR-5219",
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        status: "active",
+        createdAt: new Date().toISOString(),
+      },
+    ],
+    parentMessages: [],
     notices: JSON.parse(JSON.stringify(SEED_NOTICES)),
     translations: JSON.parse(JSON.stringify(SEED_NOTICE_TRANSLATIONS)),
     deliveries: JSON.parse(JSON.stringify(SEED_NOTICE_DELIVERIES)),
@@ -804,6 +828,277 @@ export const db = {
 
   getParentById(id: string): ParentProfile | undefined {
     return this.getParents().find((p) => p.id === id);
+  },
+
+  getParentByUserId(userId: string): ParentProfile | undefined {
+    return this.getParents().find((p) => p.userId === userId);
+  },
+
+  async getParentByUserIdAsync(userId: string): Promise<ParentProfile | null> {
+    if (isPostgresConfigured()) {
+      try {
+        const profile = await postgresParentDb.getParentByUserId(userId);
+        if (profile) return profile;
+      } catch (e) {
+        console.error("Postgres error in getParentByUserIdAsync:", e);
+      }
+    }
+    return this.getParentByUserId(userId) || null;
+  },
+
+  async getParentByIdAsync(id: string): Promise<ParentProfile | null> {
+    if (isPostgresConfigured()) {
+      try {
+        const profile = await postgresParentDb.getParentById(id);
+        if (profile) return profile;
+      } catch (e) {
+        console.error("Postgres error in getParentByIdAsync:", e);
+      }
+    }
+    return this.getParentById(id) || null;
+  },
+
+  createParentProfile(data: {
+    id?: string;
+    userId: string;
+    name: string;
+    email?: string;
+    phone?: string;
+    preferredLanguage?: string;
+    relationship?: string;
+    studentIds?: string[];
+  }): ParentProfile {
+    const store = loadStore();
+    const id = data.id || `par-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    const newProfile: ParentProfile = {
+      id,
+      userId: data.userId,
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      preferredLanguage: (data.preferredLanguage as any) || "gu",
+      relationship: (data.relationship as any) || "guardian",
+      studentIds: data.studentIds || [],
+    };
+    if (!store.parents) store.parents = [];
+    const existingIndex = store.parents.findIndex((p) => p.id === id || p.userId === data.userId);
+    if (existingIndex >= 0) {
+      store.parents[existingIndex] = {
+        ...store.parents[existingIndex],
+        ...newProfile,
+        studentIds: Array.from(new Set([...(store.parents[existingIndex].studentIds || []), ...(data.studentIds || [])])),
+      };
+    } else {
+      store.parents.push(newProfile);
+    }
+    saveStore(store);
+
+    if (isPostgresConfigured()) {
+      postgresParentDb.createParentProfile(data).catch((e) =>
+        console.error("Postgres background createParentProfile error:", e)
+      );
+    }
+
+    return newProfile;
+  },
+
+  async createParentProfileAsync(data: {
+    id?: string;
+    userId: string;
+    name: string;
+    email?: string;
+    phone?: string;
+    preferredLanguage?: string;
+    relationship?: string;
+    studentIds?: string[];
+  }): Promise<ParentProfile> {
+    if (isPostgresConfigured()) {
+      try {
+        return await postgresParentDb.createParentProfile(data);
+      } catch (e) {
+        console.error("Postgres error in createParentProfileAsync, falling back to local:", e);
+      }
+    }
+    return this.createParentProfile(data);
+  },
+
+  async linkParentToStudentAsync(parentId: string, studentId: string, relationship = "guardian"): Promise<boolean> {
+    const store = loadStore();
+    const parent = (store.parents || []).find((p) => p.id === parentId || p.userId === parentId);
+    if (parent) {
+      if (!parent.studentIds) parent.studentIds = [];
+      if (!parent.studentIds.includes(studentId)) {
+        parent.studentIds.push(studentId);
+        saveStore(store);
+      }
+    }
+
+    if (isPostgresConfigured()) {
+      try {
+        await postgresParentDb.linkParentToStudent(parentId, studentId, relationship);
+      } catch (e) {
+        console.error("Postgres error in linkParentToStudentAsync:", e);
+      }
+    }
+    return true;
+  },
+
+  async getLinkedStudentsForParentAsync(parentId: string): Promise<Student[]> {
+    if (isPostgresConfigured()) {
+      try {
+        const students = await postgresParentDb.getLinkedStudentsForParent(parentId);
+        if (students && students.length > 0) return students;
+      } catch (e) {
+        console.error("Postgres error in getLinkedStudentsForParentAsync:", e);
+      }
+    }
+    const parent = this.getParentById(parentId) || this.getParentByUserId(parentId);
+    if (!parent || !parent.studentIds || parent.studentIds.length === 0) return [];
+    return this.getStudents().filter((s) => parent.studentIds.includes(s.id));
+  },
+
+  async createLinkingCodeAsync(studentId: string, createdByUserId?: string, expiresInDays = 7): Promise<ParentLinkingCode> {
+    if (isPostgresConfigured()) {
+      try {
+        return await postgresParentDb.createLinkingCode(studentId, createdByUserId, expiresInDays);
+      } catch (e) {
+        console.error("Postgres error in createLinkingCodeAsync, falling back to local:", e);
+      }
+    }
+    const store = loadStore();
+    if (!store.parentLinkingCodes) store.parentLinkingCodes = [];
+    const id = `plc-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    const code = `PAR-${randomSuffix}`;
+    const expiresAt = new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000).toISOString();
+
+    const linkingCode: ParentLinkingCode = {
+      id,
+      studentId,
+      code,
+      expiresAt,
+      status: "active",
+      createdByUserId,
+      createdAt: new Date().toISOString(),
+    };
+    store.parentLinkingCodes.push(linkingCode);
+    saveStore(store);
+    return linkingCode;
+  },
+
+  async getLinkingCodeAsync(code: string): Promise<ParentLinkingCode | null> {
+    if (isPostgresConfigured()) {
+      try {
+        const found = await postgresParentDb.getLinkingCode(code);
+        if (found) return found;
+      } catch (e) {
+        console.error("Postgres error in getLinkingCodeAsync:", e);
+      }
+    }
+    const store = loadStore();
+    const normalized = code.trim().toUpperCase();
+    return (store.parentLinkingCodes || []).find((c) => c.code.toUpperCase() === normalized) || null;
+  },
+
+  async redeemLinkingCodeAsync(
+    code: string,
+    parentUserId: string,
+    parentProfileId: string
+  ): Promise<{ success: boolean; studentId?: string; error?: string }> {
+    if (isPostgresConfigured()) {
+      try {
+        return await postgresParentDb.redeemLinkingCode(code, parentUserId, parentProfileId);
+      } catch (e) {
+        console.error("Postgres error in redeemLinkingCodeAsync, falling back to local:", e);
+      }
+    }
+
+    const store = loadStore();
+    const normalized = code.trim().toUpperCase();
+    const linkingCode = (store.parentLinkingCodes || []).find((c) => c.code.toUpperCase() === normalized);
+    if (!linkingCode) {
+      return { success: false, error: "Invalid verification code. Please check the code provided by your school." };
+    }
+    if (linkingCode.status === "used") {
+      return { success: false, error: "This linking code has already been redeemed." };
+    }
+    if (new Date(linkingCode.expiresAt).getTime() < Date.now()) {
+      linkingCode.status = "expired";
+      saveStore(store);
+      return { success: false, error: "This linking code has expired. Please request a new code from the school teacher." };
+    }
+
+    linkingCode.status = "used";
+    linkingCode.usedByUserId = parentUserId;
+    linkingCode.usedAt = new Date().toISOString();
+
+    // Link parent profile
+    const parent = (store.parents || []).find((p) => p.id === parentProfileId || p.userId === parentUserId);
+    if (parent) {
+      if (!parent.studentIds) parent.studentIds = [];
+      if (!parent.studentIds.includes(linkingCode.studentId)) {
+        parent.studentIds.push(linkingCode.studentId);
+      }
+    }
+
+    saveStore(store);
+    return { success: true, studentId: linkingCode.studentId };
+  },
+
+  async getLinkingCodesForStudentAsync(studentId: string): Promise<ParentLinkingCode[]> {
+    if (isPostgresConfigured()) {
+      try {
+        const codes = await postgresParentDb.getLinkingCodesForStudent(studentId);
+        if (codes && codes.length > 0) return codes;
+      } catch (e) {
+        console.error("Postgres error in getLinkingCodesForStudentAsync:", e);
+      }
+    }
+    const store = loadStore();
+    return (store.parentLinkingCodes || []).filter((c) => c.studentId === studentId);
+  },
+
+  async createParentMessageAsync(
+    parentId: string,
+    studentId: string,
+    subject: string,
+    message: string
+  ): Promise<ParentMessage> {
+    if (isPostgresConfigured()) {
+      try {
+        return await postgresParentDb.createParentMessage(parentId, studentId, subject, message);
+      } catch (e) {
+        console.error("Postgres error in createParentMessageAsync, falling back to local:", e);
+      }
+    }
+    const store = loadStore();
+    if (!store.parentMessages) store.parentMessages = [];
+    const id = `msg-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    const newMsg: ParentMessage = {
+      id,
+      parentId,
+      studentId,
+      subject,
+      message,
+      status: "sent",
+      createdAt: new Date().toISOString(),
+    };
+    store.parentMessages.push(newMsg);
+    saveStore(store);
+    return newMsg;
+  },
+
+  async getMessagesForParentAsync(parentId: string): Promise<ParentMessage[]> {
+    if (isPostgresConfigured()) {
+      try {
+        const messages = await postgresParentDb.getMessagesForParent(parentId);
+        if (messages && messages.length > 0) return messages;
+      } catch (e) {
+        console.error("Postgres error in getMessagesForParentAsync:", e);
+      }
+    }
+    const store = loadStore();
+    return (store.parentMessages || []).filter((m) => m.parentId === parentId);
   },
 
   getParentsByStudentId(studentId: string): ParentProfile[] {

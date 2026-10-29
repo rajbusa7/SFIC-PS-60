@@ -930,6 +930,16 @@ export const SEED_ACTIVITIES: LearningActivity[] = [
 
 export const SEED_PARENTS: ParentProfile[] = [
   {
+    id: "par-001",
+    userId: "par-001",
+    name: "Dineshbhai Patel",
+    phone: "9876543219",
+    email: "dinesh.patel@example.com",
+    preferredLanguage: "gu",
+    studentIds: ["std-aarav"],
+    relationship: "father",
+  },
+  {
     id: "par-aarav",
     userId: "usr-par-01",
     name: "Rajeshbhai Patel",

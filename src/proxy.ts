@@ -5,8 +5,8 @@ import {
   verifySession,
 } from "@/lib/auth/session";
 
-// Restricted application paths requiring an active authenticated session
-const PROTECTED_PREFIXES = [
+// Teacher application paths requiring an active teacher/admin session
+const TEACHER_PROTECTED_PREFIXES = [
   "/dashboard",
   "/students",
   "/assessments",
@@ -17,6 +17,15 @@ const PROTECTED_PREFIXES = [
   "/ai",
   "/settings",
   "/activities",
+];
+
+// Parent application paths requiring an active parent session
+const PARENT_PROTECTED_PREFIXES = [
+  "/parent/dashboard",
+  "/parent/children",
+  "/parent/progress",
+  "/parent/learning-gaps",
+  "/parent/settings",
 ];
 
 export async function proxy(request: NextRequest) {
@@ -36,28 +45,75 @@ export async function proxy(request: NextRequest) {
   const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME)?.value;
   const sessionUser = sessionCookie ? await verifySession(sessionCookie) : null;
   const isAuthenticated = Boolean(sessionUser);
+  const userRole = sessionUser?.role;
 
-  // 3. If accessing /login while already authenticated, redirect to /dashboard
+  // 3. Handle Login & Registration Pages Redirection for Authenticated Users
   if (pathname === "/login") {
     if (isAuthenticated) {
       const redirectUrl = request.nextUrl.clone();
-      redirectUrl.pathname = "/dashboard";
+      redirectUrl.pathname = userRole === "parent" ? "/parent/dashboard" : "/dashboard";
       redirectUrl.search = "";
       return NextResponse.redirect(redirectUrl);
     }
     return NextResponse.next();
   }
 
-  // 4. Check if the current route is protected
-  const isProtected = PROTECTED_PREFIXES.some(
+  if (pathname === "/parent/login" || pathname === "/parent/register") {
+    if (isAuthenticated) {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = userRole === "parent" ? "/parent/dashboard" : "/dashboard";
+      redirectUrl.search = "";
+      return NextResponse.redirect(redirectUrl);
+    }
+    return NextResponse.next();
+  }
+
+  // 4. Role-Based Route Protection: Parent Routes
+  const isParentProtected = PARENT_PROTECTED_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
   );
 
-  if (isProtected && !isAuthenticated) {
-    const loginUrl = request.nextUrl.clone();
-    loginUrl.pathname = "/login";
-    loginUrl.searchParams.set("redirect", `${pathname}${search}`);
-    return NextResponse.redirect(loginUrl);
+  if (isParentProtected) {
+    if (!isAuthenticated) {
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.pathname = "/parent/login";
+      loginUrl.searchParams.set("redirect", `${pathname}${search}`);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    // If teacher tries to access parent dashboard, redirect to teacher dashboard
+    if (userRole !== "parent") {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = "/dashboard";
+      redirectUrl.search = "";
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    return NextResponse.next();
+  }
+
+  // 5. Role-Based Route Protection: Teacher Routes
+  const isTeacherProtected = TEACHER_PROTECTED_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+  );
+
+  if (isTeacherProtected) {
+    if (!isAuthenticated) {
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.pathname = "/login";
+      loginUrl.searchParams.set("redirect", `${pathname}${search}`);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    // If parent tries to access teacher dashboard/management, redirect to parent dashboard
+    if (userRole === "parent") {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = "/parent/dashboard";
+      redirectUrl.search = "";
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    return NextResponse.next();
   }
 
   return NextResponse.next();

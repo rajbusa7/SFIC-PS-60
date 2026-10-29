@@ -173,3 +173,32 @@ export function getClearCookieOptions() {
     expires: new Date(0),
   };
 }
+
+/**
+ * Extracts session token safely from either the Request headers (cookie or Authorization)
+ * or via Next.js cookies(), without crashing if cookies() is called outside request scope.
+ */
+export async function extractSessionToken(request?: Request): Promise<string | null> {
+  if (request) {
+    const authHeader = request.headers.get("Authorization");
+    if (authHeader) {
+      const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+      if (token) return token;
+    }
+    const cookieHeader = request.headers.get("cookie");
+    if (cookieHeader) {
+      const match = cookieHeader.match(new RegExp('(?:^|;\\s*)' + SESSION_COOKIE_NAME + '=([^;]+)'));
+      if (match && match[1]) {
+        return decodeURIComponent(match[1]);
+      }
+    }
+  }
+
+  try {
+    const { cookies } = await import("next/headers");
+    const cookieStore = await cookies();
+    return cookieStore.get(SESSION_COOKIE_NAME)?.value || null;
+  } catch {
+    return null;
+  }
+}

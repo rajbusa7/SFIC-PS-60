@@ -1039,6 +1039,71 @@
         "std-dev"
       ],
       "relationship": "father"
+    },
+    {
+      "id": "par-1793283517016-i4p7",
+      "userId": "usr-1793283517015-g3jf",
+      "name": "Rameshbhai Patel",
+      "email": "parent.test.1793283517005@example.com",
+      "phone": "9876543299",
+      "preferredLanguage": "gu",
+      "relationship": "guardian",
+      "studentIds": [
+        "std-aarav",
+        "std-diya"
+      ]
+    },
+    {
+      "id": "par-1793283726426-pxav",
+      "userId": "usr-1793283726425-gizv",
+      "name": "Rameshbhai Patel",
+      "email": "parent.test.1793283726415@example.com",
+      "phone": "9876543299",
+      "preferredLanguage": "gu",
+      "relationship": "guardian",
+      "studentIds": [
+        "std-aarav",
+        "std-diya"
+      ]
+    },
+    {
+      "id": "par-1793283782642-synf",
+      "userId": "usr-1793283782641-573r",
+      "name": "Rameshbhai Patel",
+      "email": "parent.test.1793283782632@example.com",
+      "phone": "9876543299",
+      "preferredLanguage": "gu",
+      "relationship": "guardian",
+      "studentIds": [
+        "std-aarav",
+        "std-diya"
+      ]
+    },
+    {
+      "id": "par-1793283957035-cji9",
+      "userId": "usr-1793283957032-oep3",
+      "name": "Rameshbhai Patel",
+      "email": "parent.test.1793283957023@example.com",
+      "phone": "9876543299",
+      "preferredLanguage": "gu",
+      "relationship": "guardian",
+      "studentIds": [
+        "std-aarav",
+        "std-diya"
+      ]
+    },
+    {
+      "id": "par-1793284002046-jsmy",
+      "userId": "usr-1793284002044-i5zn",
+      "name": "Rameshbhai Patel",
+      "email": "parent.test.1793284002034@example.com",
+      "phone": "9876543299",
+      "preferredLanguage": "gu",
+      "relationship": "guardian",
+      "studentIds": [
+        "std-aarav",
+        "std-diya"
+      ]
     }
   ],
   "notices": [
@@ -1615,7 +1680,179 @@
       "status": "active",
       "createdAt": "2026-10-28T18:50:11.694Z",
       "updatedAt": "2026-10-28T18:50:11.694Z"
+    },
+    {
+      "id": "usr-1793283517015-g3jf",
+      "name": "Rameshbhai Patel",
+      "email": "parent.test.1793283517005@example.com",
+      "role": "parent",
+      "schoolId": "sch-gn-01",
+      "provider": "local",
+      "passwordHash": "048ba73c305ec8656b77aff7336dd563:f68ed9e4d3a1e6fcdf1f03ccb7044c496c6fefd2c2a26106537d65539dd101b9dd4d797db8b64480fd451e7f251ac8342bb08e6062251efb1c302684440bd08b",
+      "status": "active",
+      "createdAt": "2026-10-29T14:18:37.014Z",
+      "updatedAt": "2026-10-29T14:18:37.014Z"
+    },
+    {
+      "id": "usr-1793283726425-gizv",
+      "name": "Rameshbhai Patel",
+      "email": "parent.test.1793283726415@example.com",
+      "role": "parent",
+      "schoolId": "sch-gn-01",
+      "provider": "local",
+      "passwordHash": "8d73062482e218b0727cc4bd3d0e393f:bfd1bd59ba627b95fbc5e6be04ac3580f9484da600bdabfeb32d1c998a70071532e1048f373ae1eb7eee0278c66d835cabb5fcff7a95c94e5c7b667a8388c7a4",
+      "status": "active",
+      "createdAt": "2026-10-29T14:22:06.425Z",
+      "updatedAt": "2026-10-29T14:22:06.425Z"
+    },
+    {
+      "id": "usr-1793283782641-573r",
+      "name": "Rameshbhai Patel",
+      "email": "parent.test.1793283782632@example.com",
+      "role": "parent",
+      "schoolId": "sch-gn-01",
+      "provider": "local",
+      "passwordHash": "9a36856f270a12fcb7965fe344626428:66947dc924182418f22fc189eb10f09fe69b5337fa7ee81eed972f85d5179f549cdd76af12fcd9d6cb5888ad987bf2e5b5941abd1d348b5b7b8bbf3592227f31",
+      "status": "active",
+      "createdAt": "2026-10-29T14:23:02.640Z",
+      "updatedAt": "2026-10-29T14:23:02.640Z"
+    },
+    {
+      "id": "usr-1793283957032-oep3",
+      "name": "Rameshbhai Patel",
+      "email": "parent.test.1793283957023@example.com",
+      "role": "parent",
+      "schoolId": "sch-gn-01",
+      "provider": "local",
+      "passwordHash": "e05ebcecab7b91ca22325e721190c195:ceca23d011bf968700a70a0b89200271648a605d35495d664e4471c2d362d9fa40b4b46eff6a2c8c491f52d572800414502e917dc73e95da80a671b112d19cc5",
+      "status": "active",
+      "createdAt": "2026-10-29T14:25:57.032Z",
+      "updatedAt": "2026-10-29T14:25:57.032Z"
+    },
+    {
+      "id": "usr-1793284002044-i5zn",
+      "name": "Rameshbhai Patel",
+      "email": "parent.test.1793284002034@example.com",
+      "role": "parent",
+      "schoolId": "sch-gn-01",
+      "provider": "local",
+      "passwordHash": "1b7646d678789e17ade6613cf5a524a3:16e13b47aeea9875ea1e366639d5cdb964942f72c7af444a68f58559f6674ef24a0533385ccb8547745201e6b4ade49381e80c879e8535a08eea16a292ee9f94",
+      "status": "active",
+      "createdAt": "2026-10-29T14:26:42.043Z",
+      "updatedAt": "2026-10-29T14:26:42.043Z"
     }
   ],
-  "feedback": []
+  "feedback": [],
+  "parentLinkingCodes": [
+    {
+      "id": "plc-1793283517039-gi0x",
+      "studentId": "std-aarav",
+      "code": "PAR-4839",
+      "expiresAt": "2026-11-05T14:18:37.039Z",
+      "status": "used",
+      "createdByUserId": "usr-teacher-01",
+      "createdAt": "2026-10-29T14:18:37.039Z",
+      "usedByUserId": "usr-1793283517015-g3jf",
+      "usedAt": "2026-10-29T14:18:37.040Z"
+    },
+    {
+      "id": "plc-1793283517044-svbs",
+      "studentId": "std-diya",
+      "code": "PAR-9914",
+      "expiresAt": "2026-11-05T14:18:37.044Z",
+      "status": "used",
+      "createdByUserId": "usr-teacher-01",
+      "createdAt": "2026-10-29T14:18:37.044Z",
+      "usedByUserId": "usr-1793283517015-g3jf",
+      "usedAt": "2026-10-29T14:18:37.045Z"
+    },
+    {
+      "id": "plc-1793283726461-x5sd",
+      "studentId": "std-aarav",
+      "code": "PAR-6433",
+      "expiresAt": "2026-11-05T14:22:06.461Z",
+      "status": "used",
+      "createdByUserId": "usr-teacher-01",
+      "createdAt": "2026-10-29T14:22:06.461Z",
+      "usedByUserId": "usr-1793283726425-gizv",
+      "usedAt": "2026-10-29T14:22:06.463Z"
+    },
+    {
+      "id": "plc-1793283726469-j3v9",
+      "studentId": "std-diya",
+      "code": "PAR-1641",
+      "expiresAt": "2026-11-05T14:22:06.469Z",
+      "status": "used",
+      "createdByUserId": "usr-teacher-01",
+      "createdAt": "2026-10-29T14:22:06.469Z",
+      "usedByUserId": "usr-1793283726425-gizv",
+      "usedAt": "2026-10-29T14:22:06.470Z"
+    },
+    {
+      "id": "plc-1793283782680-iq01",
+      "studentId": "std-aarav",
+      "code": "PAR-1810",
+      "expiresAt": "2026-11-05T14:23:02.680Z",
+      "status": "used",
+      "createdByUserId": "usr-teacher-01",
+      "createdAt": "2026-10-29T14:23:02.680Z",
+      "usedByUserId": "usr-1793283782641-573r",
+      "usedAt": "2026-10-29T14:23:02.682Z"
+    },
+    {
+      "id": "plc-1793283782688-atac",
+      "studentId": "std-diya",
+      "code": "PAR-4141",
+      "expiresAt": "2026-11-05T14:23:02.688Z",
+      "status": "used",
+      "createdByUserId": "usr-teacher-01",
+      "createdAt": "2026-10-29T14:23:02.688Z",
+      "usedByUserId": "usr-1793283782641-573r",
+      "usedAt": "2026-10-29T14:23:02.689Z"
+    },
+    {
+      "id": "plc-1793283957068-ovi6",
+      "studentId": "std-aarav",
+      "code": "PAR-6086",
+      "expiresAt": "2026-11-05T14:25:57.068Z",
+      "status": "used",
+      "createdByUserId": "usr-teacher-01",
+      "createdAt": "2026-10-29T14:25:57.068Z",
+      "usedByUserId": "usr-1793283957032-oep3",
+      "usedAt": "2026-10-29T14:25:57.069Z"
+    },
+    {
+      "id": "plc-1793283957075-yop8",
+      "studentId": "std-diya",
+      "code": "PAR-1328",
+      "expiresAt": "2026-11-05T14:25:57.075Z",
+      "status": "used",
+      "createdByUserId": "usr-teacher-01",
+      "createdAt": "2026-10-29T14:25:57.075Z",
+      "usedByUserId": "usr-1793283957032-oep3",
+      "usedAt": "2026-10-29T14:25:57.076Z"
+    },
+    {
+      "id": "plc-1793284002081-dtje",
+      "studentId": "std-aarav",
+      "code": "PAR-7233",
+      "expiresAt": "2026-11-05T14:26:42.081Z",
+      "status": "used",
+      "createdByUserId": "usr-teacher-01",
+      "createdAt": "2026-10-29T14:26:42.081Z",
+      "usedByUserId": "usr-1793284002044-i5zn",
+      "usedAt": "2026-10-29T14:26:42.083Z"
+    },
+    {
+      "id": "plc-1793284002089-841h",
+      "studentId": "std-diya",
+      "code": "PAR-2479",
+      "expiresAt": "2026-11-05T14:26:42.089Z",
+      "status": "used",
+      "createdByUserId": "usr-teacher-01",
+      "createdAt": "2026-10-29T14:26:42.089Z",
+      "usedByUserId": "usr-1793284002044-i5zn",
+      "usedAt": "2026-10-29T14:26:42.091Z"
+    }
+  ]
 }

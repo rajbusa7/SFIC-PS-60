@@ -49,3 +49,4 @@ CREATE INDEX IF NOT EXISTS idx_parent_profiles_user ON parent_profiles(user_id);
 CREATE INDEX IF NOT EXISTS idx_parent_students_student ON parent_students(student_id);
 CREATE INDEX IF NOT EXISTS idx_parent_linking_codes_code ON parent_linking_codes(code);
 CREATE INDEX IF NOT EXISTS idx_parent_messages_student ON parent_messages(student_id);
+

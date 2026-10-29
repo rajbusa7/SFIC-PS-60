@@ -23,6 +23,7 @@ import {
   AlertTriangle,
   Compass,
   ExternalLink,
+  Users,
 } from "lucide-react";
 
 export function LandingNavbar() {
@@ -355,13 +356,22 @@ export function LandingNavbar() {
             {/* Theme Toggle with Glass Style */}
             <ThemeToggle variant="glass" />
 
-            {/* Sign In Button */}
+            {/* Sign In Button (Teacher) */}
             <Link
               href="/login"
               className="px-3.5 py-1.5 rounded-full text-xs font-bold text-slate-200 hover:text-white border border-white/10 hover:border-amber-400/40 bg-white/5 hover:bg-white/10 transition-all flex items-center gap-1.5 shadow-inner"
             >
               <LogIn className="w-3.5 h-3.5 text-amber-400" />
               <span>{t.nav?.login || "Sign In"}</span>
+            </Link>
+
+            {/* Parent Login Button */}
+            <Link
+              href="/parent/login"
+              className="px-3.5 py-1.5 rounded-full text-xs font-bold text-[#F2CAB3] hover:text-white border border-[#F2CAB3]/30 hover:border-[#F2CAB3]/60 bg-[#F2CAB3]/10 hover:bg-[#F2CAB3]/25 transition-all flex items-center gap-1.5 shadow-inner"
+            >
+              <Users className="w-3.5 h-3.5 text-[#F2CAB3]" />
+              <span>{language === "gu" ? "વાલી પ્રવેશ" : "Parent Login"}</span>
             </Link>
 
             {/* Primary Action Button: Explore Dashboard */}
@@ -514,7 +524,16 @@ export function LandingNavbar() {
                   className="w-full flex items-center justify-center gap-2 py-2.5 rounded-full text-xs font-bold border border-white/15 bg-white/5 hover:bg-white/10 text-slate-200 transition-colors"
                 >
                   <LogIn className="w-4 h-4 text-amber-400" />
-                  <span>{t.nav?.login || "Sign In (Demo Access)"}</span>
+                  <span>{t.nav?.login || "Sign In (Teacher Portal)"}</span>
+                </Link>
+
+                <Link
+                  href="/parent/login"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-full text-xs font-bold border border-[#F2CAB3]/30 bg-[#F2CAB3]/10 hover:bg-[#F2CAB3]/20 text-[#F2CAB3] transition-colors"
+                >
+                  <Users className="w-4 h-4 text-[#F2CAB3]" />
+                  <span>{language === "gu" ? "વાલી પ્રવેશ (Parent Portal)" : "Parent Portal (Parent Login)"}</span>
                 </Link>
 
                 <Link

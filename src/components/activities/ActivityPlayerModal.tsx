@@ -210,7 +210,7 @@ export function ActivityPlayerModal({
           </div>
 
           {/* Score Badge Card */}
-          <div className="p-4 max-w-xs mx-auto rounded-2xl bg-slate-50 border border-slate-200">
+          <div className="p-4 max-w-sm mx-auto rounded-2xl bg-slate-50 border border-slate-200">
             <div className="text-3xl font-extrabold text-indigo-600">
               {attemptResult?.percentage}%
             </div>
@@ -221,6 +221,58 @@ export function ActivityPlayerModal({
               {attemptResult?.feedback}
             </p>
           </div>
+
+          {/* Post-Submission Review (Only visible after submission) */}
+          {attemptResult?.results && attemptResult.results.length > 0 && (
+            <div className="max-w-lg mx-auto text-left space-y-3 pt-2">
+              <h5 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Question Review & Solutions:
+              </h5>
+              <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                {attemptResult.results.map((res: any, idx: number) => (
+                  <div
+                    key={idx}
+                    className={`p-3 rounded-xl border text-xs ${
+                      res.isCorrect
+                        ? "bg-emerald-50/70 border-emerald-200 text-emerald-950"
+                        : "bg-rose-50/70 border-rose-200 text-rose-950"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="font-semibold">
+                        Q{idx + 1}. {res.questionText}
+                      </p>
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${
+                          res.isCorrect
+                            ? "bg-emerald-200 text-emerald-800"
+                            : "bg-rose-200 text-rose-800"
+                        }`}
+                      >
+                        {res.isCorrect ? "Correct" : "Incorrect"}
+                      </span>
+                    </div>
+
+                    <div className="mt-1.5 text-[11px] space-y-0.5">
+                      <p>
+                        Your Answer: <span className="font-semibold">{String(res.selected ?? "None")}</span>
+                      </p>
+                      {!res.isCorrect && (
+                        <p className="text-emerald-700 font-semibold">
+                          Correct Answer: {String(res.correctAnswer)}
+                        </p>
+                      )}
+                      {res.explanation && (
+                        <p className="text-slate-600 italic mt-1">
+                          💡 {res.explanation}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="flex items-center justify-center gap-3 pt-4">
             <button

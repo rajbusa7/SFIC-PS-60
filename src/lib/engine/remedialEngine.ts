@@ -1083,7 +1083,7 @@ export function generateRemedialPlan(
   }));
 
   const totalMinutes = steps.reduce((acc, step) => acc + (step.durationMinutes || 0), 0);
-  const id = `plan-${studentId}-${conceptId}-${Date.now()}`;
+  const id = `plan-${studentId}-${conceptId}-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
   const now = new Date().toISOString();
   // Review date 7 days from now
   const reviewDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();

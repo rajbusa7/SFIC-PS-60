@@ -12,6 +12,7 @@ import {
   SEED_LEARNING_GAPS,
   SEED_REMEDIAL_PLANS,
   SEED_ACTIVITIES,
+  SEED_WORKSHEETS,
 } from "./seedData";
 import { detectLearningGap } from "../engine/gapDetection";
 import { generateRemedialPlan } from "../engine/remedialEngine";
@@ -33,6 +34,7 @@ import type {
   RemedialPlan,
   LearningActivity,
   ActivityAttempt,
+  WorksheetData,
 } from "../types";
 
 export interface LearningGapFilter {
@@ -59,6 +61,7 @@ interface DataStore {
   remedialPlans: RemedialPlan[];
   activities: LearningActivity[];
   attempts: ActivityAttempt[];
+  worksheets: WorksheetData[];
 }
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -78,6 +81,7 @@ function getInitialStore(): DataStore {
     remedialPlans: [...SEED_REMEDIAL_PLANS],
     activities: [...SEED_ACTIVITIES],
     attempts: [],
+    worksheets: [...SEED_WORKSHEETS],
   };
 }
 
@@ -114,6 +118,9 @@ function loadStore(): DataStore {
     try {
       const content = retryFs(() => fs.readFileSync(STORE_FILE, "utf-8"));
       memoryStore = JSON.parse(content) as DataStore;
+      if (!memoryStore.worksheets) {
+        memoryStore.worksheets = [...SEED_WORKSHEETS];
+      }
       return memoryStore;
     } catch (e) {
       console.error("Failed to load store from disk, initializing fresh seed:", e);
@@ -1143,49 +1150,311 @@ export const db = {
     return store.remedialPlans[index];
   },
 
-  getActivities(conceptId?: string): LearningActivity[] {
+  getActivities(conceptId?: string, subjectCode?: string, studentRole?: boolean): LearningActivity[] {
     const store = loadStore();
-    if (!conceptId) return store.activities;
-    return store.activities.filter((a) => a.conceptId === conceptId);
+    let acts = store.activities;
+    if (conceptId) acts = acts.filter((a) => a.conceptId === conceptId);
+    if (subjectCode) acts = acts.filter((a) => a.subjectCode === subjectCode);
+
+    if (studentRole) {
+      // Security: Strip correctAnswer and explanation so student cannot access answer keys before submission
+      return acts.map((a) => ({
+        ...a,
+        questions: a.questions.map((q) => {
+          const { correctAnswer, explanation, ...rest } = q;
+          return rest as any;
+        }),
+      }));
+    }
+    return acts;
   },
 
-  getActivityById(id: string): LearningActivity | undefined {
-    return loadStore().activities.find((a) => a.id === id);
+  getActivityById(id: string, studentRole?: boolean): LearningActivity | undefined {
+    const act = loadStore().activities.find((a) => a.id === id);
+    if (!act) return undefined;
+    if (studentRole) {
+      return {
+        ...act,
+        questions: act.questions.map((q) => {
+          const { correctAnswer, explanation, ...rest } = q;
+          return rest as any;
+        }),
+      };
+    }
+    return act;
+  },
+
+  createActivity(data: Omit<LearningActivity, "id" | "createdAt">): LearningActivity {
+    const store = loadStore();
+    if (!data.title || !data.title.trim()) {
+      throw new Error("Activity title is required");
+    }
+    if (!data.conceptId) {
+      throw new Error("Target concept ID is required");
+    }
+    if (!data.subjectCode) {
+      throw new Error("Subject code is required");
+    }
+    if (!data.questions || !Array.isArray(data.questions) || data.questions.length === 0) {
+      throw new Error("At least one question is required");
+    }
+    for (let i = 0; i < data.questions.length; i++) {
+      const q = data.questions[i];
+      if (!q.questionText || !q.questionText.trim()) {
+        throw new Error(`Question ${i + 1} must have question text`);
+      }
+      if (q.type === "mcq") {
+        if (!q.options || !Array.isArray(q.options) || q.options.length < 2) {
+          throw new Error(`Question ${i + 1} (MCQ) must have at least two answer options`);
+        }
+      }
+      if (q.correctAnswer === undefined || q.correctAnswer === null || String(q.correctAnswer).trim() === "") {
+        throw new Error(`Question ${i + 1} must specify a valid correct answer`);
+      }
+    }
+
+    const newActivity: LearningActivity = {
+      ...data,
+      id: `act-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      createdAt: new Date().toISOString(),
+    };
+    store.activities.unshift(newActivity);
+    saveStore(store);
+    return newActivity;
+  },
+
+  updateActivity(id: string, updates: Partial<LearningActivity>): LearningActivity | null {
+    const store = loadStore();
+    const index = store.activities.findIndex((a) => a.id === id);
+    if (index === -1) return null;
+
+    if (updates.questions) {
+      if (!Array.isArray(updates.questions) || updates.questions.length === 0) {
+        throw new Error("At least one question is required");
+      }
+      for (let i = 0; i < updates.questions.length; i++) {
+        const q = updates.questions[i];
+        if (!q.questionText || !q.questionText.trim()) {
+          throw new Error(`Question ${i + 1} must have question text`);
+        }
+        if (q.type === "mcq") {
+          if (!q.options || !Array.isArray(q.options) || q.options.length < 2) {
+            throw new Error(`Question ${i + 1} (MCQ) must have at least two answer options`);
+          }
+        }
+        if (q.correctAnswer === undefined || q.correctAnswer === null || String(q.correctAnswer).trim() === "") {
+          throw new Error(`Question ${i + 1} must specify a valid correct answer`);
+        }
+      }
+    }
+
+    const updated: LearningActivity = {
+      ...store.activities[index],
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    };
+    store.activities[index] = updated;
+    saveStore(store);
+    return updated;
+  },
+
+  deleteActivity(id: string): boolean {
+    const store = loadStore();
+    const lenBefore = store.activities.length;
+    store.activities = store.activities.filter((a) => a.id !== id);
+    if (store.activities.length < lenBefore) {
+      saveStore(store);
+      return true;
+    }
+    return false;
   },
 
   recordActivityAttempt(attemptData: Omit<ActivityAttempt, "id" | "completedAt">): ActivityAttempt {
     const store = loadStore();
+
+    // Accidental duplicate submission prevention (e.g. rapid double click on Submit):
+    const recentDuplicate = store.attempts.find((att) => {
+      if (att.studentId !== attemptData.studentId || att.activityId !== attemptData.activityId) return false;
+      const timeDiff = Date.now() - new Date(att.completedAt).getTime();
+      return timeDiff < 15000 && att.score === attemptData.score;
+    });
+    if (recentDuplicate) {
+      return recentDuplicate;
+    }
+
     const pct = calculatePercentage(attemptData.score, attemptData.maximumScore);
     const attempt: ActivityAttempt = {
       ...attemptData,
-      id: `att-${Date.now()}`,
+      id: `att-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       percentage: pct,
       completedAt: new Date().toISOString(),
     };
     store.attempts.push(attempt);
 
-    // If associated with a remedial plan, update plan status to 'In Progress' or 'Completed'
+    // If associated with a remedial plan, advance progress
     const activity = store.activities.find((a) => a.id === attempt.activityId);
     if (activity) {
       const relatedPlan = store.remedialPlans.find(
         (p) =>
           p.studentId === attempt.studentId &&
-          p.conceptId === activity.conceptId &&
+          (p.conceptId === activity.conceptId || (activity.remedialPlanId && p.id === activity.remedialPlanId)) &&
           (p.status === "Approved" || p.status === "In Progress" || p.status === "Suggested")
       );
       if (relatedPlan) {
-        relatedPlan.status = pct >= 80 ? "Completed" : "In Progress";
+        relatedPlan.status = "In Progress";
+        const practiceStep = relatedPlan.steps.find(
+          (s) => s.activityType === "independent_practice" || s.activityType === "hands_on"
+        );
+        if (practiceStep && !practiceStep.completed) {
+          practiceStep.completed = true;
+          relatedPlan.completedStepsCount = relatedPlan.steps.filter((s) => s.completed).length;
+          relatedPlan.progressPercentage = Math.round(
+            (relatedPlan.completedStepsCount / relatedPlan.steps.length) * 100
+          );
+        }
       }
     }
+
+    // Critical Requirement 4: DO NOT automatically mark a competency mastered based on activity completion alone.
 
     saveStore(store);
     return attempt;
   },
 
-  getAttempts(studentId?: string): ActivityAttempt[] {
+  getAttempts(studentId?: string, activityId?: string): ActivityAttempt[] {
     const store = loadStore();
-    if (!studentId) return store.attempts;
-    return store.attempts.filter((a) => a.studentId === studentId);
+    let atts = store.attempts;
+    if (studentId) atts = atts.filter((a) => a.studentId === studentId);
+    if (activityId) atts = atts.filter((a) => a.activityId === activityId);
+    return atts;
+  },
+
+  getWorksheets(conceptId?: string, subjectCode?: string, grade?: number): WorksheetData[] {
+    const store = loadStore();
+    let ws = store.worksheets || [];
+    if (conceptId) ws = ws.filter((w) => w.conceptId === conceptId);
+    if (subjectCode) ws = ws.filter((w) => w.subjectCode === subjectCode);
+    if (grade) ws = ws.filter((w) => w.grade === grade);
+    return ws;
+  },
+
+  getWorksheetById(id: string): WorksheetData | undefined {
+    const store = loadStore();
+    return (store.worksheets || []).find((w) => w.id === id);
+  },
+
+  createWorksheet(data: Omit<WorksheetData, "id" | "createdAt">): WorksheetData {
+    const store = loadStore();
+    if (!data.title || !data.title.trim()) {
+      throw new Error("Worksheet title is required");
+    }
+    if (!data.subject) {
+      throw new Error("Subject is required");
+    }
+    if (!data.concept) {
+      throw new Error("Concept is required");
+    }
+    if (!data.questions || !Array.isArray(data.questions) || data.questions.length === 0) {
+      throw new Error("At least one question is required");
+    }
+    for (let i = 0; i < data.questions.length; i++) {
+      const q = data.questions[i];
+      if (!q.question || !q.question.trim()) {
+        throw new Error(`Question ${i + 1} must have question text`);
+      }
+      if (!q.marks || q.marks <= 0) {
+        throw new Error(`Question ${i + 1} must specify marks greater than 0`);
+      }
+    }
+
+    const totalMarks =
+      data.totalMarks || data.questions.reduce((sum, q) => sum + (q.marks || 2), 0);
+
+    const newWorksheet: WorksheetData = {
+      ...data,
+      id: `ws-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      totalMarks,
+      createdAt: new Date().toISOString(),
+    };
+    store.worksheets = store.worksheets || [];
+    store.worksheets.unshift(newWorksheet);
+    saveStore(store);
+    return newWorksheet;
+  },
+
+  updateWorksheet(id: string, updates: Partial<WorksheetData>): WorksheetData | null {
+    const store = loadStore();
+    store.worksheets = store.worksheets || [];
+    const index = store.worksheets.findIndex((w) => w.id === id);
+    if (index === -1) return null;
+
+    if (updates.questions) {
+      if (!Array.isArray(updates.questions) || updates.questions.length === 0) {
+        throw new Error("At least one question is required");
+      }
+      for (let i = 0; i < updates.questions.length; i++) {
+        const q = updates.questions[i];
+        if (!q.question || !q.question.trim()) {
+          throw new Error(`Question ${i + 1} must have question text`);
+        }
+        if (!q.marks || q.marks <= 0) {
+          throw new Error(`Question ${i + 1} must specify marks greater than 0`);
+        }
+      }
+    }
+
+    const updated: WorksheetData = {
+      ...store.worksheets[index],
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    };
+    store.worksheets[index] = updated;
+    saveStore(store);
+    return updated;
+  },
+
+  deleteWorksheet(id: string): boolean {
+    const store = loadStore();
+    store.worksheets = store.worksheets || [];
+    const lenBefore = store.worksheets.length;
+    store.worksheets = store.worksheets.filter((w) => w.id !== id);
+    if (store.worksheets.length < lenBefore) {
+      saveStore(store);
+      return true;
+    }
+    return false;
+  },
+
+  getRecommendationsForStudent(studentId: string): {
+    gap: LearningGap;
+    remedialPlan?: RemedialPlan;
+    recommendedActivities: LearningActivity[];
+    recommendedWorksheets: WorksheetData[];
+  }[] {
+    const store = loadStore();
+    const gaps = this.getLearningGaps(studentId).filter((g) => g.latestPercentage < 80);
+    const plans = this.getRemedialPlans(studentId);
+
+    return gaps.map((gap) => {
+      const plan = plans.find((p) => p.conceptId === gap.conceptId || p.learningGapId === gap.id);
+      const acts = store.activities.filter(
+        (a) =>
+          a.conceptId === gap.conceptId ||
+          (gap.subjectCode && a.subjectCode === gap.subjectCode && a.grade === gap.grade)
+      );
+      const ws = (store.worksheets || []).filter(
+        (w) =>
+          w.conceptId === gap.conceptId ||
+          (gap.subjectCode && w.subjectCode === gap.subjectCode && w.grade === gap.grade)
+      );
+
+      return {
+        gap,
+        remedialPlan: plan,
+        recommendedActivities: acts,
+        recommendedWorksheets: ws,
+      };
+    });
   },
 
   resetToDemoData(): void {

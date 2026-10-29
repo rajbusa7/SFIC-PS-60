@@ -15,7 +15,7 @@ export interface ActivityQuestion {
   type: ActivityType;
   options?: string[]; // for mcq
   correctAnswer: string | number | boolean;
-  explanation: string;
+  explanation?: string;
   hint?: string;
   imageUrl?: string;
 }
@@ -32,7 +32,10 @@ export interface LearningActivity {
   difficulty: "Easy" | "Medium" | "Hard";
   estimatedMinutes: number;
   questions: ActivityQuestion[];
+  learningObjective?: string;
+  remedialPlanId?: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface ActivityAssignment {
@@ -56,6 +59,6 @@ export interface ActivityAttempt {
   maximumScore: number;
   percentage: number;
   answers: Record<string, string | number | boolean>;
-  incorrectQuestions: string[];
+  incorrectQuestions?: string[];
   completedAt: string;
 }

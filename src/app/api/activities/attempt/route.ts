@@ -1,14 +1,45 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db/database";
 
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const studentId = searchParams.get("studentId") || undefined;
+    const activityId = searchParams.get("activityId") || undefined;
+
+    const attempts = db.getAttempts(studentId, activityId);
+    return NextResponse.json({ success: true, count: attempts.length, attempts });
+  } catch (error: any) {
+    console.error("API GET /api/activities/attempt error:", error);
+    return NextResponse.json(
+      { success: false, error: error.message || "Failed to fetch activity attempts" },
+      { status: 500 }
+    );
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { activityId, studentId, assignmentId, answers } = body;
 
-    if (!activityId || !studentId || !answers) {
+    if (!activityId || !String(activityId).trim()) {
       return NextResponse.json(
-        { success: false, error: "Missing activityId, studentId, or answers" },
+        { success: false, error: "activityId is required" },
+        { status: 400 }
+      );
+    }
+
+    if (!studentId || !String(studentId).trim()) {
+      return NextResponse.json(
+        { success: false, error: "studentId is required" },
+        { status: 400 }
+      );
+    }
+
+    if (!answers || typeof answers !== "object") {
+      return NextResponse.json(
+        { success: false, error: "answers object is required" },
         { status: 400 }
       );
     }
@@ -21,26 +52,39 @@ export async function POST(request: Request) {
     let score = 0;
     const incorrectQuestions: string[] = [];
 
-    // Calculate score objectively against activity questions
-    activity.questions.forEach((q) => {
+    // Calculate score objectively against stored server answer key
+    const review = activity.questions.map((q) => {
       const studentAns = answers[q.id];
-      if (
+      const isCorrect =
         studentAns !== undefined &&
-        String(studentAns).trim().toLowerCase() === String(q.correctAnswer).trim().toLowerCase()
-      ) {
+        String(studentAns).trim().toLowerCase() === String(q.correctAnswer).trim().toLowerCase();
+
+      if (isCorrect) {
         score += 1;
       } else {
         incorrectQuestions.push(q.id);
       }
+
+      return {
+        questionId: q.id,
+        questionText: q.questionText,
+        questionTextGujarati: q.questionTextGujarati,
+        studentAnswer: studentAns ?? "Not answered",
+        correctAnswer: q.correctAnswer,
+        explanation: q.explanation,
+        isCorrect,
+      };
     });
+
+    const maxScore = Math.max(1, activity.questions.length);
 
     const attempt = db.recordActivityAttempt({
       assignmentId,
       studentId,
       activityId,
       score,
-      maximumScore: activity.questions.length,
-      percentage: Math.round((score / activity.questions.length) * 100),
+      maximumScore: maxScore,
+      percentage: Math.round((score / maxScore) * 100),
       answers,
       incorrectQuestions,
     });
@@ -48,7 +92,11 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       attempt,
+      score: attempt.score,
+      maximumScore: attempt.maximumScore,
       percentage: attempt.percentage,
+      review,
+      results: review,
       feedback:
         attempt.percentage >= 80
           ? "Outstanding work! Concept mastered with high confidence."
@@ -56,8 +104,8 @@ export async function POST(request: Request) {
           ? "Good practice! Review the questions you missed with your teacher."
           : "Keep practicing! Hands-on practice with objects will help build your foundation.",
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("API POST /api/activities/attempt error:", error);
-    return NextResponse.json({ success: false, error: "Failed to record attempt" }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message || "Failed to record attempt" }, { status: 500 });
   }
 }

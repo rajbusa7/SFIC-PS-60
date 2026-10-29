@@ -337,15 +337,15 @@
       "createdAt": "2026-06-17T09:15:00Z"
     },
     {
-      "studentCode": "MPS-4A-PERSIST-2498",
+      "studentCode": "MPS-4A-PERSIST-1192",
       "displayName": "Persistence Test Student",
       "classroomId": "cls-4a",
       "grade": 4,
       "section": "A",
       "enrollmentStatus": "active",
       "notes": "Testing file persistence",
-      "id": "std-1793277402498-xglj",
-      "createdAt": "2026-10-29T12:36:42.498Z"
+      "id": "std-1793281861193-978k",
+      "createdAt": "2026-10-29T13:51:01.193Z"
     }
   ],
   "assessments": [
@@ -1097,5 +1097,272 @@
       "createdAt": "2026-09-01T10:00:00Z"
     }
   ],
-  "attempts": []
+  "attempts": [],
+  "worksheets": [
+    {
+      "id": "ws-div-01",
+      "title": "Equal Sharing and Grouping Practice",
+      "subject": "Mathematics",
+      "subjectCode": "MATH",
+      "grade": 4,
+      "concept": "Division Basics & Equal Sharing",
+      "conceptId": "c-div-01",
+      "remedialPlanId": "plan-aarav-div-01",
+      "studentName": "Aarav Patel",
+      "difficulty": "Easy",
+      "instructions": "Read each question carefully. Use drawings of circles or dots to show your grouping work.",
+      "totalMarks": 10,
+      "teacherGuidelines": "Encourage students to use manipulative counters or sketches to confirm answers.",
+      "questions": [
+        {
+          "questionNumber": 1,
+          "question": "Share 15 marbles equally among 3 children. How many does each child get?",
+          "marks": 2,
+          "type": "word_problem",
+          "answerKey": "5 marbles",
+          "stepExplanation": "15 divided by 3 equals 5 (15 ÷ 3 = 5)."
+        },
+        {
+          "questionNumber": 2,
+          "question": "If 24 chocolates are placed equally into 4 gift boxes, how many in each box?",
+          "marks": 2,
+          "type": "word_problem",
+          "answerKey": "6 chocolates",
+          "stepExplanation": "24 divided by 4 equals 6 (24 ÷ 4 = 6)."
+        },
+        {
+          "questionNumber": 3,
+          "question": "Calculate: 18 ÷ 2 = ?",
+          "marks": 2,
+          "type": "numerical",
+          "answerKey": "9",
+          "stepExplanation": "2 groups of 9 make 18, so 18 ÷ 2 = 9."
+        },
+        {
+          "questionNumber": 4,
+          "question": "A teacher has 20 pencils. She gives 5 pencils to each group. How many groups receive pencils?",
+          "marks": 2,
+          "type": "word_problem",
+          "answerKey": "4 groups",
+          "stepExplanation": "20 ÷ 5 = 4 groups."
+        },
+        {
+          "questionNumber": 5,
+          "question": "True or False: 12 ÷ 3 gives the same answer as 12 ÷ 4.",
+          "marks": 2,
+          "type": "true_false",
+          "answerKey": "False",
+          "stepExplanation": "12 ÷ 3 = 4, but 12 ÷ 4 = 3. They are not the same quotient."
+        }
+      ],
+      "createdAt": "2026-09-10T10:00:00Z"
+    },
+    {
+      "id": "ws-mult-01",
+      "title": "Multiplication Tables Speed & Fluency Drill",
+      "subject": "Mathematics",
+      "subjectCode": "MATH",
+      "grade": 4,
+      "concept": "Multiplication Tables (2 to 9)",
+      "conceptId": "c-mult-01",
+      "remedialPlanId": "plan-meera-mult-01",
+      "studentName": "Meera Shah",
+      "difficulty": "Medium",
+      "instructions": "Complete all multiplication equations without using finger counting.",
+      "totalMarks": 10,
+      "teacherGuidelines": "Reinforce commutative property (e.g. 7×8 = 8×7).",
+      "questions": [
+        {
+          "questionNumber": 1,
+          "question": "Find the product: 7 × 8 = ____",
+          "marks": 2,
+          "type": "numerical",
+          "answerKey": "56",
+          "stepExplanation": "7 × 8 = 56."
+        },
+        {
+          "questionNumber": 2,
+          "question": "Find the product: 6 × 9 = ____",
+          "marks": 2,
+          "type": "numerical",
+          "answerKey": "54",
+          "stepExplanation": "6 × 9 = 54."
+        },
+        {
+          "questionNumber": 3,
+          "question": "If 8 × 4 = 32, what is 4 × 8?",
+          "marks": 2,
+          "type": "short_answer",
+          "answerKey": "32",
+          "stepExplanation": "Order does not change multiplication product (Commutative Property)."
+        },
+        {
+          "questionNumber": 4,
+          "question": "A crate holds 6 rows of 7 apples. How many apples are there in total?",
+          "marks": 2,
+          "type": "word_problem",
+          "answerKey": "42 apples",
+          "stepExplanation": "6 × 7 = 42 apples."
+        },
+        {
+          "questionNumber": 5,
+          "question": "Calculate: 9 × 8 = ____",
+          "marks": 2,
+          "type": "numerical",
+          "answerKey": "72",
+          "stepExplanation": "9 × 8 = 72."
+        }
+      ],
+      "createdAt": "2026-09-12T10:00:00Z"
+    },
+    {
+      "id": "ws-place-01",
+      "title": "Place Value & 3-Digit Column Addition",
+      "subject": "Mathematics",
+      "subjectCode": "MATH",
+      "grade": 3,
+      "concept": "Place Value & 3-Digit Addition",
+      "conceptId": "c-place-01",
+      "studentName": "Diya Joshi",
+      "difficulty": "Easy",
+      "instructions": "Align numbers carefully into Hundreds, Tens, and Ones columns before adding.",
+      "totalMarks": 8,
+      "questions": [
+        {
+          "questionNumber": 1,
+          "question": "What is the value of 4 in the number 348?",
+          "marks": 2,
+          "type": "short_answer",
+          "answerKey": "40 (4 Tens)",
+          "stepExplanation": "In 348, 3 is in Hundreds (300), 4 is in Tens (40), and 8 is in Ones."
+        },
+        {
+          "questionNumber": 2,
+          "question": "Add: 245 + 138 with column regrouping.",
+          "marks": 2,
+          "type": "numerical",
+          "answerKey": "383",
+          "stepExplanation": "5+8=13 (carry 1). 1+4+3=8. 2+1=3. Total: 383."
+        },
+        {
+          "questionNumber": 3,
+          "question": "Write 562 in expanded form.",
+          "marks": 2,
+          "type": "short_answer",
+          "answerKey": "500 + 60 + 2",
+          "stepExplanation": "5 Hundreds + 6 Tens + 2 Ones = 500 + 60 + 2."
+        },
+        {
+          "questionNumber": 4,
+          "question": "Calculate: 319 + 205 = ____",
+          "marks": 2,
+          "type": "numerical",
+          "answerKey": "524",
+          "stepExplanation": "9+5=14 (carry 1). 1+1+0=2. 3+2=5. Total: 524."
+        }
+      ],
+      "createdAt": "2026-09-15T10:00:00Z"
+    },
+    {
+      "id": "ws-verb-01",
+      "title": "Subject-Verb Agreement Foundation Worksheet",
+      "subject": "English",
+      "subjectCode": "ENG",
+      "grade": 4,
+      "concept": "Subject-Verb Agreement",
+      "conceptId": "c-eng-verb-01",
+      "studentName": "Dev Shah",
+      "difficulty": "Medium",
+      "instructions": "Choose the correct verb form that agrees with the singular or plural subject.",
+      "totalMarks": 8,
+      "questions": [
+        {
+          "questionNumber": 1,
+          "question": "The dog (bark / barks) loudly at the postman.",
+          "marks": 2,
+          "type": "fill_in_the_blank",
+          "answerKey": "barks",
+          "stepExplanation": "Singular subject 'The dog' takes singular verb 'barks' (with -s)."
+        },
+        {
+          "questionNumber": 2,
+          "question": "The students (is / are) reading storybooks in the library.",
+          "marks": 2,
+          "type": "fill_in_the_blank",
+          "answerKey": "are",
+          "stepExplanation": "Plural subject 'The students' takes plural verb 'are'."
+        },
+        {
+          "questionNumber": 3,
+          "question": "She (play / plays) cricket every evening after school.",
+          "marks": 2,
+          "type": "fill_in_the_blank",
+          "answerKey": "plays",
+          "stepExplanation": "Third-person singular pronoun 'She' requires 'plays'."
+        },
+        {
+          "questionNumber": 4,
+          "question": "They (has / have) completed their science project.",
+          "marks": 2,
+          "type": "fill_in_the_blank",
+          "answerKey": "have",
+          "stepExplanation": "Plural subject 'They' takes 'have'."
+        }
+      ],
+      "createdAt": "2026-09-18T10:00:00Z"
+    },
+    {
+      "id": "ws-guj-01",
+      "title": "ગુજરાતી માત્રા પરિચય અને શબ્દ રચના કાર્યપત્રક",
+      "subject": "Gujarati",
+      "subjectCode": "GUJ",
+      "grade": 3,
+      "concept": "કાનો-માત્રા અને દીર્ઘ-હ્રસ્વ સ્વર ચિહ્નો (Gujarati Matras)",
+      "conceptId": "c-guj-matra-01",
+      "difficulty": "Easy",
+      "instructions": "બધા પ્રશ્નો ધ્યાનથી વાંચો અને યોગ્ય માત્રા લગાવી સાચા શબ્દો બનાવો.",
+      "totalMarks": 8,
+      "questions": [
+        {
+          "questionNumber": 1,
+          "question": "'દ' ને દીર્ઘ ઈ (ી) લગાવી શબ્દ બનાવો: દ + ી + વ + ડ + ો = ____",
+          "marks": 2,
+          "type": "short_answer",
+          "answerKey": "દીવડો",
+          "stepExplanation": "દ+ી = દી, તેથી દીવડો સાચો શબ્દ બને છે."
+        },
+        {
+          "questionNumber": 2,
+          "question": "નીચેનામાંથી કઈ માત્રા 'કાનો' (ા) દર્શાવે છે? (A) િ  (B) ા  (C) ી  (D) ે",
+          "marks": 2,
+          "type": "mcq",
+          "options": [
+            "(A) િ",
+            "(B) ા",
+            "(C) ી",
+            "(D) ે"
+          ],
+          "answerKey": "(B) ા",
+          "stepExplanation": "(B) ા એ કાનાની નિશાની છે."
+        },
+        {
+          "questionNumber": 3,
+          "question": "શબ્દ સુધારો: 'ગુલાબ' શબ્દમાં 'ગ' ને કઈ માત્રા લાગે છે? (હ્રસ્વ ઉ કે દીર્ઘ ઊ)",
+          "marks": 2,
+          "type": "short_answer",
+          "answerKey": "હ્રસ્વ ઉ (ુ)",
+          "stepExplanation": "ગ + ુ = ગુ, ગુલાબ."
+        },
+        {
+          "questionNumber": 4,
+          "question": "યોગ્ય જોડકું બનાવો: ક + ે = ____",
+          "marks": 2,
+          "type": "short_answer",
+          "answerKey": "કે",
+          "stepExplanation": "એક માત્રા ે ઉમેરતા કે બને."
+        }
+      ],
+      "createdAt": "2026-09-20T10:00:00Z"
+    }
+  ]
 }

@@ -350,6 +350,18 @@ export async function ensurePostgresSchema(): Promise<void> {
         CREATE INDEX IF NOT EXISTS idx_parent_messages_student ON parent_messages(student_id);
         CREATE INDEX IF NOT EXISTS idx_parent_activity_student ON parent_activity_completions(student_id);
         CREATE INDEX IF NOT EXISTS idx_parent_activity_parent ON parent_activity_completions(parent_id);
+
+        -- Ensure phone columns & indexes exist for SMS OTP Authentication
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(32);
+        CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone);
+        ALTER TABLE parent_profiles ADD COLUMN IF NOT EXISTS phone VARCHAR(32);
+        CREATE INDEX IF NOT EXISTS idx_parent_profiles_phone ON parent_profiles(phone);
+
+        -- Update demo accounts with baseline verified phone numbers
+        UPDATE users SET phone = '+919876543210' WHERE id = 'usr-teacher-01' AND phone IS NULL;
+        UPDATE users SET phone = '+919876543211' WHERE id = 'usr-admin-01' AND phone IS NULL;
+        UPDATE users SET phone = '+919825012345' WHERE id = 'par-001' AND phone IS NULL;
+        UPDATE parent_profiles SET phone = '+919825012345' WHERE id = 'par-001' AND phone IS NULL;
       `);
 
       // Seed baseline School if empty
@@ -1307,11 +1319,27 @@ export const postgresUserDb = {
   async getUserByGoogleId(googleId: string): Promise<User | null> {
     const pool = getPostgresPool()!;
     const { rows } = await pool.query(
-      `SELECT id, name, email, role, school_id as "schoolId", google_id as "googleId", 
+      `SELECT id, name, email, phone, role, school_id as "schoolId", google_id as "googleId", 
               avatar_url as "avatarUrl", provider, status, password_hash as "passwordHash",
               created_at as "createdAt", updated_at as "updatedAt" 
        FROM users WHERE google_id = $1 LIMIT 1`,
       [googleId]
+    );
+    return rows[0] || null;
+  },
+
+  async getUserByPhone(phone: string): Promise<User | null> {
+    const pool = getPostgresPool();
+    if (!pool) return null;
+    const cleaned = phone.trim().replace(/[\s\-\(\)]/g, "");
+    const national = cleaned.slice(-10);
+    const { rows } = await pool.query(
+      `SELECT id, name, email, phone, role, school_id as "schoolId", google_id as "googleId", 
+              avatar_url as "avatarUrl", provider, status, password_hash as "passwordHash",
+              created_at as "createdAt", updated_at as "updatedAt" 
+       FROM users 
+       WHERE phone = $1 OR phone = $2 OR RIGHT(phone, 10) = $3 LIMIT 1`,
+      [phone, cleaned, national]
     );
     return rows[0] || null;
   },
@@ -1325,13 +1353,14 @@ export const postgresUserDb = {
 
     const id = userData.id || `usr-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
     const { rows } = await pool.query(
-      `INSERT INTO users (id, name, email, role, school_id, google_id, avatar_url, provider, password_hash, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-       RETURNING id, name, email, role, school_id as "schoolId", google_id as "googleId", avatar_url as "avatarUrl", provider, status, created_at as "createdAt", updated_at as "updatedAt"`,
+      `INSERT INTO users (id, name, email, phone, role, school_id, google_id, avatar_url, provider, password_hash, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+       RETURNING id, name, email, phone, role, school_id as "schoolId", google_id as "googleId", avatar_url as "avatarUrl", provider, status, created_at as "createdAt", updated_at as "updatedAt"`,
       [
         id,
         userData.name || "Educator",
         userData.email.trim().toLowerCase(),
+        userData.phone || null,
         userData.role || "teacher",
         userData.schoolId || "sch-gn-01",
         userData.googleId || null,
@@ -1430,6 +1459,30 @@ export const postgresParentDb = {
               created_at as "createdAt", updated_at as "updatedAt"
        FROM parent_profiles WHERE user_id = $1 LIMIT 1`,
       [userId]
+    );
+    if (!profileRows[0]) return null;
+    const profile = profileRows[0];
+
+    const { rows: studentRows } = await pool.query(
+      `SELECT student_id as "studentId" FROM parent_students WHERE parent_id = $1 ORDER BY linked_at ASC`,
+      [profile.id]
+    );
+    profile.studentIds = studentRows.map((r: any) => r.studentId);
+    return profile;
+  },
+
+  async getParentByPhone(phone: string): Promise<ParentProfile | null> {
+    const pool = getPostgresPool();
+    if (!pool) return null;
+    const cleaned = phone.trim().replace(/[\s\-\(\)]/g, "");
+    const national = cleaned.slice(-10);
+    const { rows: profileRows } = await pool.query(
+      `SELECT id, user_id as "userId", name, email, phone, 
+              preferred_language as "preferredLanguage", relationship, 
+              created_at as "createdAt", updated_at as "updatedAt"
+       FROM parent_profiles 
+       WHERE phone = $1 OR phone = $2 OR RIGHT(phone, 10) = $3 LIMIT 1`,
+      [phone, cleaned, national]
     );
     if (!profileRows[0]) return null;
     const profile = profileRows[0];

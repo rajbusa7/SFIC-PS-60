@@ -1122,6 +1122,27 @@ export const db = {
     return this.getParentById(id) || null;
   },
 
+  getParentByPhone(phone: string): ParentProfile | undefined {
+    const cleaned = phone.trim().replace(/[\s\-\(\)]/g, "");
+    return this.getParents().find((p) => {
+      if (!p.phone) return false;
+      const pClean = p.phone.trim().replace(/[\s\-\(\)]/g, "");
+      return pClean === cleaned || pClean.endsWith(cleaned) || cleaned.endsWith(pClean);
+    });
+  },
+
+  async getParentByPhoneAsync(phone: string): Promise<ParentProfile | null> {
+    if (isPostgresConfigured()) {
+      try {
+        const profile = await postgresParentDb.getParentByPhone(phone);
+        if (profile) return profile;
+      } catch (e) {
+        console.error("Postgres error in getParentByPhoneAsync:", e);
+      }
+    }
+    return this.getParentByPhone(phone) || null;
+  },
+
   createParentProfile(data: {
     id?: string;
     userId: string;
@@ -1711,6 +1732,18 @@ export const db = {
     return (store.users || []).find((u) => u.googleId === googleId) || null;
   },
 
+  getUserByPhone(phone: string): User | null {
+    const store = loadStore();
+    const cleaned = phone.trim().replace(/[\s\-\(\)]/g, "");
+    return (
+      (store.users || []).find((u) => {
+        if (!u.phone) return false;
+        const uClean = u.phone.trim().replace(/[\s\-\(\)]/g, "");
+        return uClean === cleaned || uClean.endsWith(cleaned) || cleaned.endsWith(uClean);
+      }) || null
+    );
+  },
+
   createUser(userData: Partial<User> & { email: string; name: string }): User {
     const store = loadStore();
     const usersList = store.users || JSON.parse(JSON.stringify(SEED_USERS));
@@ -1847,6 +1880,13 @@ export const db = {
       return postgresUserDb.getUserByGoogleId(googleId);
     }
     return this.getUserByGoogleId(googleId);
+  },
+
+  async getUserByPhoneAsync(phone: string): Promise<User | null> {
+    if (isPostgresConfigured()) {
+      return postgresUserDb.getUserByPhone(phone);
+    }
+    return this.getUserByPhone(phone);
   },
 
   async createUserAsync(userData: Partial<User> & { email: string; name: string }): Promise<User> {

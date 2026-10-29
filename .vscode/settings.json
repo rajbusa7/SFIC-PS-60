@@ -1,11 +1,15 @@
 {
   "css.customData": [".vscode/css-data.json"],
+  "css.validate": false,
+  "less.validate": false,
+  "scss.validate": false,
   "css.lint.unknownAtRules": "ignore",
   "css.lint.vendorPrefix": "ignore",
-  "files.associations": {
-    "globals.css": "tailwindcss",
-    "*.css": "tailwindcss"
-  },
+  "tailwindCSS.lint.unknownAtRules": "ignore",
+  "tailwindCSS.lint.invalidApply": "ignore",
+  "tailwindCSS.lint.invalidScreen": "ignore",
+  "tailwindCSS.lint.invalidVariant": "ignore",
+  "tailwindCSS.lint.recommendedVariantOrder": "ignore",
   "editor.quickSuggestions": {
     "strings": "on"
   },

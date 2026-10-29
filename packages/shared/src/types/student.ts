@@ -5,11 +5,13 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  phone?: string;
+  phoneVerified?: boolean;
   role: UserRole;
   schoolId: string;
   googleId?: string;
   avatarUrl?: string;
-  provider?: "local" | "google";
+  provider?: "local" | "google" | "phone";
   passwordHash?: string;
   status?: "active" | "pending" | "disabled";
   createdAt?: string;

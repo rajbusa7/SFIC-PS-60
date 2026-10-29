@@ -13,6 +13,8 @@ interface AuthContextType {
   loginAsDemoTeacher: () => Promise<void>;
   loginAsDemoAdmin: () => Promise<void>;
   loginAsDemoParent: () => Promise<void>;
+  loginWithSessionUser: (user: User) => void;
+  refreshSession: () => Promise<User | null>;
   logout: () => Promise<void>;
   switchRole: (role: UserRole) => void;
 }
@@ -54,6 +56,8 @@ const AuthContext = createContext<AuthContextType>({
   loginAsDemoTeacher: async () => {},
   loginAsDemoAdmin: async () => {},
   loginAsDemoParent: async () => {},
+  loginWithSessionUser: () => {},
+  refreshSession: async () => null,
   logout: async () => {},
   switchRole: () => {},
 });
@@ -204,6 +208,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const loginWithSessionUser = useCallback(
+    (sessionUser: User) => {
+      setUser(sessionUser);
+      setIsDemoMode(false);
+      saveUserStorage(sessionUser);
+    },
+    [saveUserStorage]
+  );
+
+  const refreshSession = useCallback(async (): Promise<User | null> => {
+    try {
+      const res = await fetch("/api/auth/me", {
+        cache: "no-store",
+        headers: { Accept: "application/json" },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.authenticated && data.user) {
+          setUser(data.user);
+          setIsDemoMode(false);
+          saveUserStorage(data.user);
+          return data.user;
+        }
+      }
+    } catch (err) {
+      console.warn("[AuthContext] Refresh session failed:", err);
+    }
+    return null;
+  }, [saveUserStorage]);
+
   const logout = async () => {
     try {
       await fetch("/api/auth/logout", {
@@ -237,6 +271,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loginAsDemoTeacher,
         loginAsDemoAdmin,
         loginAsDemoParent,
+        loginWithSessionUser,
+        refreshSession,
         logout,
         switchRole,
       }}

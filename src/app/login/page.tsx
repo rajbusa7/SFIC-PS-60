@@ -28,6 +28,10 @@ import {
   X,
   ExternalLink,
   Users,
+  Smartphone,
+  KeyRound,
+  RotateCcw,
+  Phone,
 } from "lucide-react";
 
 const BridgeCanvas3D = dynamic(
@@ -38,12 +42,27 @@ const BridgeCanvas3D = dynamic(
 function LoginCardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login, registerTeacher, loginAsDemoTeacher, loginAsDemoAdmin, loginAsDemoParent } = useAuth();
+  const { login, registerTeacher, loginAsDemoTeacher, loginAsDemoAdmin, loginAsDemoParent, loginWithSessionUser } = useAuth();
   const { language } = useLanguage();
 
   // Mode: "login" or "register"
   const initialMode = searchParams.get("mode") === "register" || searchParams.get("unregistered") === "true" ? "register" : "login";
   const [authMode, setAuthMode] = useState<"login" | "register">(initialMode);
+
+  // Login method: "password" or "otp"
+  const [loginMethod, setLoginMethod] = useState<"password" | "otp">("password");
+
+  // Real SMS OTP states
+  const [otpPhone, setOtpPhone] = useState("");
+  const [otpCode, setOtpCode] = useState("");
+  const [otpStep, setOtpStep] = useState<"phone" | "code">("phone");
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpVerifying, setOtpVerifying] = useState(false);
+  const [otpCooldown, setOtpCooldown] = useState(0);
+  const [otpError, setOtpError] = useState<string | null>(null);
+  const [otpSuccess, setOtpSuccess] = useState<string | null>(null);
+  const [smsProviderConfigured, setSmsProviderConfigured] = useState<boolean | null>(null);
+  const [smsProviderName, setSmsProviderName] = useState<string>("Twilio Verify / MSG91");
 
   // Login form state
   const [email, setEmail] = useState(searchParams.get("email") || "teacher@studysaathi.edu.in");
@@ -125,16 +144,130 @@ function LoginCardContent() {
       });
     }
 
-    // Check server Google configuration
+    // Check server Google configuration and SMS OTP provider status
     fetch("/api/auth/config")
       .then((res) => res.json())
       .then((data) => {
         if (data.success) {
           setGoogleConfigured(Boolean(data.googleConfigured));
+          if (typeof data.smsProviderConfigured === "boolean") {
+            setSmsProviderConfigured(data.smsProviderConfigured);
+            if (data.smsProviderName) {
+              setSmsProviderName(data.smsProviderName);
+            }
+          }
         }
       })
       .catch(() => setGoogleConfigured(false));
   }, [searchParams, language]);
+
+  // Real SMS OTP resend countdown timer
+  useEffect(() => {
+    if (otpCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setOtpCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [otpCooldown]);
+
+  const handleSendTeacherOtp = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setOtpError(null);
+    setOtpSuccess(null);
+
+    const cleanPhone = otpPhone.trim();
+    if (!cleanPhone || cleanPhone.replace(/\D/g, "").length < 10) {
+      setOtpError(
+        language === "gu"
+          ? "કૃપા કરીને માન્ય 10-અંકનો ભારતીય મોબાઇલ નંબર દાખલ કરો."
+          : "Please enter a valid 10-digit Indian mobile phone number."
+      );
+      return;
+    }
+
+    setOtpSending(true);
+    try {
+      const res = await fetch("/api/auth/otp/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: cleanPhone, role: "teacher" }),
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        if (res.status === 404) {
+          throw new Error(
+            language === "gu"
+              ? "આ મોબાઇલ નંબર શાળાના સ્ટાફ / શિક્ષક તરીકે નોંધાયેલ નથી. કૃપા કરીને શાળા વહીવટકર્તાનો સંપર્ક કરો અથવા તમારા ઈમેલ દ્વારા પ્રવેશ કરો."
+              : "This phone number is not registered as an authorized school teacher or staff member. Please use your registered phone or sign in with email."
+          );
+        }
+        if (res.status === 429) {
+          throw new Error(
+            data.error ||
+              (language === "gu"
+                ? "ખૂબ વધુ વિનંતીઓ. કૃપા કરીને થોડીવાર પછી ફરીથી પ્રયાસ કરો."
+                : "Rate limit reached. Please wait before requesting another OTP.")
+          );
+        }
+        throw new Error(data.error || "Failed to send SMS OTP.");
+      }
+
+      setOtpStep("code");
+      setOtpCooldown(60);
+      setOtpSuccess(
+        language === "gu"
+          ? `6-અંકનો ચકાસણી કોડ ${data.maskedPhone || cleanPhone} પર SMS દ્વારા મોકલવામાં આવ્યો છે.`
+          : `A 6-digit OTP code has been sent via SMS to ${data.maskedPhone || cleanPhone}.`
+      );
+    } catch (err: any) {
+      setOtpError(err.message || "Failed to send SMS OTP.");
+    } finally {
+      setOtpSending(false);
+    }
+  };
+
+  const handleVerifyTeacherOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setOtpError(null);
+
+    const cleanCode = otpCode.trim();
+    if (!cleanCode || cleanCode.length !== 6) {
+      setOtpError(
+        language === "gu"
+          ? "કૃપા કરીને 6-અંકનો ચકાસણી કોડ દાખલ કરો."
+          : "Please enter the 6-digit verification code."
+      );
+      return;
+    }
+
+    setOtpVerifying(true);
+    try {
+      const res = await fetch("/api/auth/otp/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone: otpPhone.trim(),
+          code: cleanCode,
+          role: "teacher",
+        }),
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Invalid OTP code. Please try again.");
+      }
+
+      if (data.user) {
+        loginWithSessionUser(data.user);
+      }
+      router.push("/dashboard");
+    } catch (err: any) {
+      setOtpError(err.message || "OTP verification failed.");
+    } finally {
+      setOtpVerifying(false);
+    }
+  };
 
   // Handle Standard Email/Password Login
   const handleLoginSubmit = async (e: React.FormEvent) => {
@@ -385,70 +518,282 @@ function LoginCardContent() {
         {/* ============================================================== */}
         {authMode === "login" && (
           <div className="space-y-4">
-            <form onSubmit={handleLoginSubmit} className="space-y-3.5">
-              <div>
-                <label className="block text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] mb-1">
-                  {language === "gu" ? "ઈમેલ સરનામું" : "Email Address"}
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3.5 top-3 h-4 w-4 text-[#7A6862]" />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="teacher@studysaathi.edu.in"
-                    className="w-full rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/25 bg-[#FAF6E9] dark:bg-[#26201C] py-2.5 pl-10 pr-3 text-xs text-[#49352F] dark:text-[#F4F1E1] placeholder-[#7A6862] focus:border-[#F2CAB3] focus:bg-white dark:focus:bg-[#201A16] outline-hidden"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] mb-1">
-                  {language === "gu" ? "પાસવર્ડ" : "Password"}
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3.5 top-3 h-4 w-4 text-[#7A6862]" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/25 bg-[#FAF6E9] dark:bg-[#26201C] py-2.5 pl-10 pr-10 text-xs text-[#49352F] dark:text-[#F4F1E1] focus:border-[#F2CAB3] focus:bg-white dark:focus:bg-[#201A16] outline-hidden"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-3 text-[#7A6862] hover:text-[#49352F] dark:hover:text-[#F4F1E1] cursor-pointer"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-
-              {loginError && (
-                <div className="p-2.5 rounded-xl bg-[#C54738]/10 border border-[#C54738]/20 text-xs text-[#C54738] dark:text-[#FA8C7C]">
-                  {loginError}
-                </div>
-              )}
-
-              <Button
-                type="submit"
-                variant="saffron"
-                size="md"
-                disabled={loginLoading}
-                className="w-full rounded-full text-xs font-black shadow-xs cursor-pointer"
+            {/* Method Switcher: Email/Password vs Real Mobile SMS OTP */}
+            <div className="grid grid-cols-2 p-1 rounded-2xl bg-[#FAF6E9] dark:bg-[#26201C] border border-[#49352F]/12 dark:border-[#F2CAB3]/20 gap-1 text-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setLoginMethod("password");
+                  setOtpError(null);
+                  setOtpSuccess(null);
+                }}
+                className={`py-1.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  loginMethod === "password"
+                    ? "bg-[#261B16] text-[#FAF6E9] shadow-xs"
+                    : "text-[#7A6862] dark:text-[#FAF6E9]/70 hover:text-[#49352F] dark:hover:text-[#F4F1E1]"
+                }`}
               >
-                <span>
-                  {loginLoading
-                    ? language === "gu"
-                      ? "પ્રવેશ થઈ રહ્યો છે..."
-                      : "Signing In..."
-                    : language === "gu"
-                    ? "ડેશબોર્ડમાં પ્રવેશ કરો"
-                    : "Sign In to Dashboard"}
-                </span>
-                <ArrowRight className="w-4 h-4 ml-1.5" />
-              </Button>
-            </form>
+                <Mail className="w-3.5 h-3.5" />
+                <span>{language === "gu" ? "ઈમેલ અને પાસવર્ડ" : "Email & Password"}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setLoginMethod("otp");
+                  setLoginError(null);
+                }}
+                className={`py-1.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  loginMethod === "otp"
+                    ? "bg-[#261B16] text-[#FAF6E9] shadow-xs"
+                    : "text-[#7A6862] dark:text-[#FAF6E9]/70 hover:text-[#49352F] dark:hover:text-[#F4F1E1]"
+                }`}
+              >
+                <Smartphone className="w-3.5 h-3.5 text-[#B26A1B] dark:text-[#F2CAB3]" />
+                <span>{language === "gu" ? "મોબાઈલ SMS OTP" : "Mobile SMS OTP"}</span>
+              </button>
+            </div>
+
+            {/* Sub-flow A: Password Form */}
+            {loginMethod === "password" && (
+              <form onSubmit={handleLoginSubmit} className="space-y-3.5">
+                <div>
+                  <label className="block text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] mb-1">
+                    {language === "gu" ? "ઈમેલ સરનામું" : "Email Address"}
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-3.5 top-3 h-4 w-4 text-[#7A6862]" />
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="teacher@studysaathi.edu.in"
+                      className="w-full rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/25 bg-[#FAF6E9] dark:bg-[#26201C] py-2.5 pl-10 pr-3 text-xs text-[#49352F] dark:text-[#F4F1E1] placeholder-[#7A6862] focus:border-[#F2CAB3] focus:bg-white dark:focus:bg-[#201A16] outline-hidden"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] mb-1">
+                    {language === "gu" ? "પાસવર્ડ" : "Password"}
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-3.5 top-3 h-4 w-4 text-[#7A6862]" />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/25 bg-[#FAF6E9] dark:bg-[#26201C] py-2.5 pl-10 pr-10 text-xs text-[#49352F] dark:text-[#F4F1E1] focus:border-[#F2CAB3] focus:bg-white dark:focus:bg-[#201A16] outline-hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3.5 top-3 text-[#7A6862] hover:text-[#49352F] dark:hover:text-[#F4F1E1] cursor-pointer"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {loginError && (
+                  <div className="p-2.5 rounded-xl bg-[#C54738]/10 border border-[#C54738]/20 text-xs text-[#C54738] dark:text-[#FA8C7C]">
+                    {loginError}
+                  </div>
+                )}
+
+                <Button
+                  type="submit"
+                  variant="saffron"
+                  size="md"
+                  disabled={loginLoading}
+                  className="w-full rounded-full text-xs font-black shadow-xs cursor-pointer"
+                >
+                  <span>
+                    {loginLoading
+                      ? language === "gu"
+                        ? "પ્રવેશ થઈ રહ્યો છે..."
+                        : "Signing In..."
+                      : language === "gu"
+                      ? "ડેશબોર્ડમાં પ્રવેશ કરો"
+                      : "Sign In to Dashboard"}
+                  </span>
+                  <ArrowRight className="w-4 h-4 ml-1.5" />
+                </Button>
+              </form>
+            )}
+
+            {/* Sub-flow B: Real SMS OTP Form */}
+            {loginMethod === "otp" && (
+              <div className="space-y-3.5">
+                {/* Information / Provider guidance banner */}
+                <div className="p-3 rounded-2xl bg-[#FAF6E9] dark:bg-[#26201C] border border-[#49352F]/12 dark:border-[#F2CAB3]/20 text-xs space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold flex items-center gap-1.5 text-[#49352F] dark:text-[#F4F1E1]">
+                      <Phone className="w-3.5 h-3.5 text-[#B26A1B] dark:text-[#F2CAB3]" />
+                      <span>{language === "gu" ? "વાસ્તવિક SMS OTP પ્રવેશ" : "Verified Carrier SMS Authentication"}</span>
+                    </span>
+                    <Badge variant={smsProviderConfigured ? "mint" : "outline"} size="sm">
+                      {smsProviderConfigured ? (smsProviderName || "Twilio / MSG91") : "Carrier Gateway"}
+                    </Badge>
+                  </div>
+                  <p className="text-[11px] text-[#7A6862] dark:text-[#FAF6E9]/70 leading-relaxed">
+                    {language === "gu"
+                      ? "તમારા નોંધાયેલ શાળા ફોન નંબર પર વાસ્તવિક SMS OTP મોકલવામાં આવશે. ફક્ત માન્ય શિક્ષક એકાઉન્ટ જ પ્રવેશી શકે છે."
+                      : "A real carrier SMS OTP is delivered to your registered mobile phone. Only verified school teachers in the roster can sign in."}
+                  </p>
+                </div>
+
+                {otpStep === "phone" ? (
+                  <form onSubmit={handleSendTeacherOtp} className="space-y-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] mb-1">
+                        {language === "gu" ? "નોંધાયેલ મોબાઇલ નંબર" : "Registered Mobile Phone Number"}
+                      </label>
+                      <div className="relative flex rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/25 bg-[#FAF6E9] dark:bg-[#26201C] overflow-hidden focus-within:border-[#F2CAB3] focus-within:bg-white dark:focus-within:bg-[#201A16]">
+                        <span className="inline-flex items-center px-3 text-xs font-bold text-[#7A6862] dark:text-[#FAF6E9]/70 bg-[#49352F]/5 dark:bg-[#F2CAB3]/10 border-r border-[#49352F]/10 dark:border-[#F2CAB3]/20">
+                          +91
+                        </span>
+                        <input
+                          type="tel"
+                          inputMode="numeric"
+                          value={otpPhone}
+                          onChange={(e) => setOtpPhone(e.target.value.replace(/[^\d]/g, "").slice(0, 10))}
+                          placeholder="98765 43210"
+                          className="w-full py-2.5 px-3 text-xs text-[#49352F] dark:text-[#F4F1E1] placeholder-[#7A6862] outline-hidden bg-transparent"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Pre-fill Demo Teacher Phone Shortcut */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOtpPhone("9876543210");
+                        setOtpError(null);
+                      }}
+                      className="w-full text-left p-2 rounded-xl border border-[#49352F]/10 dark:border-[#F2CAB3]/15 bg-white/60 dark:bg-[#1E1916]/60 text-[11px] hover:border-[#B26A1B] text-[#7A6862] dark:text-[#FAF6E9]/80 transition-all flex items-center justify-between cursor-pointer"
+                    >
+                      <span className="flex items-center gap-1.5 font-medium">
+                        <UserCheck className="w-3.5 h-3.5 text-[#B26A1B]" />
+                        <span>Pooja Sharma (Class 4-A Teacher)</span>
+                      </span>
+                      <span className="font-mono text-[10px] text-[#B26A1B] dark:text-[#F2CAB3] font-bold">+91 98765 43210</span>
+                    </button>
+
+                    {otpError && (
+                      <div className="p-2.5 rounded-xl bg-[#C54738]/10 border border-[#C54738]/20 text-xs text-[#C54738] dark:text-[#FA8C7C]">
+                        {otpError}
+                      </div>
+                    )}
+
+                    <Button
+                      type="submit"
+                      variant="saffron"
+                      size="md"
+                      disabled={otpSending || otpPhone.replace(/\D/g, "").length < 10}
+                      className="w-full rounded-full text-xs font-black shadow-xs cursor-pointer"
+                    >
+                      <span>
+                        {otpSending
+                          ? language === "gu"
+                            ? "SMS OTP મોકલી રહ્યા છીએ..."
+                            : "Sending Carrier SMS OTP..."
+                          : language === "gu"
+                          ? "SMS OTP મોકલો"
+                          : "Send SMS OTP"}
+                      </span>
+                      <ArrowRight className="w-4 h-4 ml-1.5" />
+                    </Button>
+                  </form>
+                ) : (
+                  <form onSubmit={handleVerifyTeacherOtp} className="space-y-3">
+                    {otpSuccess && (
+                      <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-xs text-emerald-900 dark:text-emerald-200">
+                        {otpSuccess}
+                      </div>
+                    )}
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1]">
+                          {language === "gu" ? "૬-અંકનો SMS ચકાસણી કોડ" : "6-Digit SMS Verification Code"}
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setOtpStep("phone");
+                            setOtpCode("");
+                            setOtpError(null);
+                          }}
+                          className="text-[11px] text-[#B26A1B] dark:text-[#F2CAB3] hover:underline cursor-pointer"
+                        >
+                          {language === "gu" ? "નંબર બદલો" : "Change Number"}
+                        </button>
+                      </div>
+                      <div className="relative">
+                        <KeyRound className="absolute left-3.5 top-3 h-4 w-4 text-[#7A6862]" />
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={6}
+                          value={otpCode}
+                          onChange={(e) => setOtpCode(e.target.value.replace(/[^\d]/g, "").slice(0, 6))}
+                          placeholder="6 8 2 9 1 4"
+                          className="w-full rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/25 bg-[#FAF6E9] dark:bg-[#26201C] py-2.5 pl-10 pr-3 text-xs tracking-widest font-mono font-bold text-[#49352F] dark:text-[#F4F1E1] placeholder-[#7A6862] focus:border-[#F2CAB3] focus:bg-white dark:focus:bg-[#201A16] outline-hidden"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-[#7A6862] dark:text-[#FAF6E9]/70">
+                        {otpCooldown > 0 ? (
+                          language === "gu"
+                            ? `ફરીથી OTP મોકલવા માટે: ${otpCooldown} સેકન્ડ`
+                            : `Resend available in ${otpCooldown}s`
+                        ) : (
+                          language === "gu" ? "OTP મળ્યો નથી?" : "Didn't receive SMS?"
+                        )}
+                      </span>
+                      {otpCooldown === 0 && (
+                        <button
+                          type="button"
+                          onClick={() => handleSendTeacherOtp()}
+                          disabled={otpSending}
+                          className="text-[#B26A1B] dark:text-[#F2CAB3] font-bold hover:underline flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                        >
+                          <RotateCcw className="w-3 h-3" />
+                          <span>{language === "gu" ? "ફરીથી મોકલો" : "Resend SMS"}</span>
+                        </button>
+                      )}
+                    </div>
+
+                    {otpError && (
+                      <div className="p-2.5 rounded-xl bg-[#C54738]/10 border border-[#C54738]/20 text-xs text-[#C54738] dark:text-[#FA8C7C]">
+                        {otpError}
+                      </div>
+                    )}
+
+                    <Button
+                      type="submit"
+                      variant="saffron"
+                      size="md"
+                      disabled={otpVerifying || otpCode.trim().length !== 6}
+                      className="w-full rounded-full text-xs font-black shadow-xs cursor-pointer"
+                    >
+                      <span>
+                        {otpVerifying
+                          ? language === "gu"
+                            ? "ચકાસણી ચાલુ છે..."
+                            : "Verifying Carrier OTP..."
+                          : language === "gu"
+                          ? "ચકાસો અને પ્રવેશ કરો"
+                          : "Verify & Sign In"}
+                      </span>
+                      <ArrowRight className="w-4 h-4 ml-1.5" />
+                    </Button>
+                  </form>
+                )}
+              </div>
+            )}
 
             {/* Subtle Divider: OR CONTINUE WITH */}
             <div className="relative my-4 text-center">

@@ -1,17 +1,38 @@
 {
+  "$schema": "https://raw.githubusercontent.com/microsoft/vscode-css-languageservice/master/docs/customData.schema.json",
   "version": 1.1,
   "atDirectives": [
     {
+      "name": "import",
+      "description": "Imports external stylesheet or package"
+    },
+    {
+      "name": "custom-variant",
+      "description": "Tailwind CSS v4 custom variant directive"
+    },
+    {
       "name": "@custom-variant",
       "description": "Tailwind CSS v4 custom variant directive"
+    },
+    {
+      "name": "theme",
+      "description": "Tailwind CSS v4 theme directive"
     },
     {
       "name": "@theme",
       "description": "Tailwind CSS v4 theme directive"
     },
     {
+      "name": "utility",
+      "description": "Tailwind CSS v4 utility directive"
+    },
+    {
       "name": "@utility",
       "description": "Tailwind CSS v4 utility directive"
+    },
+    {
+      "name": "variant",
+      "description": "Tailwind CSS variant directive"
     },
     {
       "name": "@variant",
@@ -19,4 +40,3 @@
     }
   ]
 }
-

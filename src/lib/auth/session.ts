@@ -12,11 +12,13 @@ export interface SessionUser {
   id: string;
   name: string;
   email: string;
+  phone?: string;
+  phoneVerified?: boolean;
   role: UserRole;
   schoolId: string;
   googleId?: string;
   avatarUrl?: string;
-  provider?: "google" | "local";
+  provider?: "google" | "local" | "phone";
   iat?: number;
   exp?: number;
 }

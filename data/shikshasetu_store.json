@@ -424,34 +424,6 @@
         "c-guj-conj-01"
       ],
       "createdAt": "2026-10-10T10:00:00Z"
-    },
-    {
-      "classroomId": "cls-4a",
-      "subjectId": "sub-math",
-      "subjectCode": "MATH",
-      "title": "Class 4: Fractions Evaluation Check",
-      "assessmentDate": "2026-10-28",
-      "status": "published",
-      "maxMarks": 20,
-      "conceptIds": [
-        "c-frac-01"
-      ],
-      "id": "asm-1793285254241",
-      "createdAt": "2026-10-29T14:47:34.241Z"
-    },
-    {
-      "classroomId": "cls-4a",
-      "subjectId": "sub-math",
-      "subjectCode": "MATH",
-      "title": "Class 4: Fractions Evaluation Check",
-      "assessmentDate": "2026-10-28",
-      "status": "published",
-      "maxMarks": 20,
-      "conceptIds": [
-        "c-frac-01"
-      ],
-      "id": "asm-1793285347880",
-      "createdAt": "2026-10-29T14:49:07.880Z"
     }
   ],
   "results": [
@@ -619,13 +591,13 @@
       "grade": 4,
       "priority": "High",
       "masteryStatus": "Needs Support",
-      "reason": "Assessment performance (35%) is below the configured support threshold (60%), and the previous result (40%) also showed persistent difficulty.",
+      "reason": "Recent assessment performance (35%) is below the configured support threshold (60%), and previous result (40%) also showed persistent difficulty.",
       "status": "Active",
       "attemptsCount": 2,
       "latestPercentage": 35,
       "previousPercentage": 40,
       "deltaPercentagePoints": -5,
-      "updatedAt": "2026-10-29T14:49:07.937Z",
+      "updatedAt": "2026-09-24T12:00:00Z",
       "remedialPlanId": "plan-aarav-div-01"
     },
     {
@@ -636,13 +608,13 @@
       "conceptName": "Subject-Verb Agreement",
       "subjectCode": "ENG",
       "grade": 4,
-      "priority": "Medium",
+      "priority": "High",
       "masteryStatus": "Needs Support",
-      "reason": "Score (45%) is below the operational mastery threshold (60%).",
+      "reason": "Score (45%) indicates confusion between singular and plural verbs.",
       "status": "Active",
       "attemptsCount": 1,
       "latestPercentage": 45,
-      "updatedAt": "2026-10-29T14:49:07.942Z"
+      "updatedAt": "2026-10-02T12:00:00Z"
     },
     {
       "id": "gap-diya-place",
@@ -652,13 +624,13 @@
       "conceptName": "Place Value & 3-Digit Addition",
       "subjectCode": "MATH",
       "grade": 3,
-      "priority": "Medium",
+      "priority": "High",
       "masteryStatus": "Needs Support",
-      "reason": "Score (50%) is below the operational mastery threshold (60%).",
+      "reason": "Score (50%) indicates difficulty with column regrouping.",
       "status": "Active",
       "attemptsCount": 1,
       "latestPercentage": 50,
-      "updatedAt": "2026-10-29T14:49:07.946Z"
+      "updatedAt": "2026-09-15T12:00:00Z"
     },
     {
       "id": "gap-meera-mult",
@@ -670,11 +642,11 @@
       "grade": 4,
       "priority": "Medium",
       "masteryStatus": "Developing",
-      "reason": "Student has grasped core basics (70%), but has not yet met the mastery threshold of 80%.",
+      "reason": "Student scored 70% (Developing); core concepts grasped but recall speed needs practice.",
       "status": "Under Intervention",
       "attemptsCount": 1,
       "latestPercentage": 70,
-      "updatedAt": "2026-10-29T14:49:07.939Z"
+      "updatedAt": "2026-09-10T12:00:00Z"
     },
     {
       "id": "gap-kabir-place",
@@ -686,75 +658,11 @@
       "grade": 3,
       "priority": "Medium",
       "masteryStatus": "Developing",
-      "reason": "Student has grasped core basics (65%), but has not yet met the mastery threshold of 80%.",
+      "reason": "Scored 65% (Developing); needs practice with carrying over into hundreds place.",
       "status": "Active",
       "attemptsCount": 1,
       "latestPercentage": 65,
-      "updatedAt": "2026-10-29T14:49:07.947Z"
-    },
-    {
-      "id": "gap-std-aarav-c-mult-01",
-      "studentId": "std-aarav",
-      "studentName": "Aarav Patel",
-      "conceptId": "c-mult-01",
-      "conceptName": "Multiplication Tables (2 to 9)",
-      "subjectCode": "MATH",
-      "grade": 4,
-      "priority": "Medium",
-      "masteryStatus": "Developing",
-      "reason": "Student has grasped core basics (65%), but has not yet met the mastery threshold of 80%.",
-      "status": "Active",
-      "attemptsCount": 1,
-      "latestPercentage": 65,
-      "updatedAt": "2026-10-29T14:49:07.937Z"
-    },
-    {
-      "id": "gap-std-aarav-c-eng-comp-01",
-      "studentId": "std-aarav",
-      "studentName": "Aarav Patel",
-      "conceptId": "c-eng-comp-01",
-      "conceptName": "Short Passage Reading Comprehension",
-      "subjectCode": "ENG",
-      "grade": 4,
-      "priority": "Medium",
-      "masteryStatus": "Developing",
-      "reason": "Student has grasped core basics (75%), but has not yet met the mastery threshold of 80%.",
-      "status": "Active",
-      "attemptsCount": 1,
-      "latestPercentage": 75,
-      "updatedAt": "2026-10-29T14:49:07.937Z"
-    },
-    {
-      "id": "gap-std-aarav-c-evs-water-01",
-      "studentId": "std-aarav",
-      "studentName": "Aarav Patel",
-      "conceptId": "c-evs-water-01",
-      "conceptName": "Water Cycle & Conservation",
-      "subjectCode": "EVS",
-      "grade": 4,
-      "priority": "Low",
-      "masteryStatus": "Mastered",
-      "reason": "Student achieved 80% on the single recorded assessment. Note: This is an initial single observation.",
-      "status": "Resolved",
-      "attemptsCount": 1,
-      "latestPercentage": 80,
-      "updatedAt": "2026-10-29T14:49:07.937Z"
-    },
-    {
-      "id": "gap-std-meera-c-div-01",
-      "studentId": "std-meera",
-      "studentName": "Meera Shah",
-      "conceptId": "c-div-01",
-      "conceptName": "Division Basics & Equal Sharing",
-      "subjectCode": "MATH",
-      "grade": 4,
-      "priority": "Medium",
-      "masteryStatus": "Developing",
-      "reason": "Student has grasped core basics (75%), but has not yet met the mastery threshold of 80%.",
-      "status": "Active",
-      "attemptsCount": 1,
-      "latestPercentage": 75,
-      "updatedAt": "2026-10-29T14:49:07.939Z"
+      "updatedAt": "2026-09-15T12:00:00Z"
     }
   ],
   "remedialPlans": [
@@ -762,10 +670,19 @@
       "id": "plan-aarav-div-01",
       "studentId": "std-aarav",
       "studentName": "Aarav Patel",
+      "studentClass": 4,
+      "studentSection": "A",
       "conceptId": "c-div-01",
       "conceptName": "Division Basics & Equal Sharing",
       "subjectCode": "MATH",
-      "learningObjective": "Understand division as equal grouping, sharing, and inverse multiplication.",
+      "learningObjective": "The student will correctly divide objects into equal groups, identify the quotient and remainder, and articulate division as the inverse of multiplication and repeated subtraction.",
+      "expectedSkill": "Demonstrate fluent ability to divide 2-digit numbers by 1-digit divisors using equal grouping diagrams with 80%+ accuracy without teacher assistance.",
+      "likelyMisconception": "Treating division as random subtraction or confusing divisor with dividend, and failing to distribute remainders into equal sets.",
+      "errorAnalysis": "Confuses divisor with dividend and treats division as arbitrary subtraction without creating equal sets.",
+      "gapEvidence": "Scored 35% on Class 4 Mathematics Periodic Assessment (Division of 2-digit numbers). Incorrect responses on sharing 12 into 3 equal parts.",
+      "isConfirmed": true,
+      "baselineScore": 35,
+      "masteryBenchmark": 80,
       "recommendationReason": "Recent assessment performance (35%) is below the configured support threshold (60%), and previous result (40%) also showed persistent difficulty.",
       "status": "Approved",
       "estimatedMinutes": 20,
@@ -773,45 +690,197 @@
       "requiredMaterials": [
         "20 physical counting tokens, bottle caps, or pebbles",
         "Equal grouping circular mats or drawing sheet",
-        "Multiplication table 1-10 reference card"
+        "Multiplication table 1-10 reference card",
+        "Targeted division practice worksheet"
       ],
       "steps": [
         {
           "stepNumber": 1,
-          "title": "Review Multiplication Link",
+          "title": "STEP 1 — Concept Review: Multiplication Link & Equal Groups",
           "description": "Review times tables for 2, 3, 4, and 5. Demonstrate that 4 × 3 = 12 means 12 ÷ 3 = 4.",
-          "durationMinutes": 4
+          "learningObjective": "Review prerequisite multiplication facts and understand division as inverse multiplication.",
+          "teacherInstructions": "Ask: 'If 3 friends share 12 laddus equally, how many does each get?' Write 3 × ? = 12 alongside 12 ÷ 3 = 4 on the chalkboard.",
+          "studentInstructions": "Recall multiplication tables 2, 3, 4, and 5. State aloud how many equal shares can be made.",
+          "requiredMaterials": [
+            "Multiplication 1-10 table reference card",
+            "Slate or notebook"
+          ],
+          "durationMinutes": 4,
+          "activityType": "discussion",
+          "questionsOrExercises": [
+            "What is 4 × 3?",
+            "If 15 ÷ 3 = 5, what multiplication fact confirms this?"
+          ],
+          "expectedResult": "Student verbally connects division facts to inverse multiplication without hesitation.",
+          "completed": false
         },
         {
           "stepNumber": 2,
-          "title": "Concrete Equal Sharing Demonstration",
+          "title": "STEP 2 — Concrete Demonstration: Physical Object Grouping",
           "description": "Have Aarav physically distribute 12 counters into 3 equal cups or circles.",
-          "durationMinutes": 5
+          "learningObjective": "Model fair sharing and equal grouping using hands-on physical manipulatives.",
+          "teacherInstructions": "Place 12 pebbles on the desk. Direct student: 'Take 3 cups. Place 1 pebble in each cup at a time until all 12 are shared.' Note that each cup holds exactly 4 pebbles.",
+          "studentInstructions": "Pick up the counters and place them one-by-one into the cups so each cup has the exact same count.",
+          "requiredMaterials": [
+            "15-20 counting tokens or bottle caps",
+            "3-4 paper cups or drawn chalk circles"
+          ],
+          "durationMinutes": 5,
+          "activityType": "hands_on",
+          "questionsOrExercises": [
+            "Share 12 tokens into 3 cups. How many in each cup?",
+            "Share 14 tokens into 3 cups. How many in each cup, and how many are left over?"
+          ],
+          "expectedResult": "Student places exactly 4 tokens per cup for 12, and identifies remainder 2 for 14 tokens.",
+          "completed": false
         },
         {
           "stepNumber": 3,
-          "title": "Guided Problem Solving",
+          "title": "STEP 3 — Guided Practice: Co-Solving Equal Sharing Problems",
           "description": "Solve 3 basic division problems together on paper with step-by-step reasoning.",
-          "durationMinutes": 4
+          "learningObjective": "Transition from concrete physical objects to semi-concrete visual grouping sketches.",
+          "teacherInstructions": "Guide the student through drawing circles for groups and tally marks for objects. Prompt: 'What is our total? How many groups must we draw?'",
+          "studentInstructions": "Draw the circles on paper, share the tally marks equally, and write the division number sentence.",
+          "requiredMaterials": [
+            "Graph paper or notebook",
+            "Colored pencils or crayons"
+          ],
+          "durationMinutes": 4,
+          "activityType": "guided_practice",
+          "questionsOrExercises": [
+            "Share 16 pencils among 4 students (16 ÷ 4).",
+            "Pack 18 mangoes into boxes of 6 (18 ÷ 6).",
+            "Distribute 20 notebooks among 5 classrooms (20 ÷ 5)."
+          ],
+          "expectedResult": "Student sketches visual groupings correctly and writes correct quotient for each guided problem.",
+          "completed": false
         },
         {
           "stepNumber": 4,
-          "title": "Targeted Practice Activity",
+          "title": "STEP 4 — Independent Targeted Practice: Structured Exercises",
           "description": "Aarav independently solves division problems using visual grouping diagrams.",
-          "durationMinutes": 5
+          "learningObjective": "Apply division concepts independently to achieve computational and conceptual fluency.",
+          "teacherInstructions": "Hand out practice sheet. Step back and observe without interrupting. Note any persistent error patterns or hesitations.",
+          "studentInstructions": "Read each question carefully. Draw groups if helpful, calculate your answer, and check your work.",
+          "requiredMaterials": [
+            "Targeted 5-question practice worksheet",
+            "Pencil and eraser"
+          ],
+          "durationMinutes": 5,
+          "activityType": "independent_practice",
+          "questionsOrExercises": [
+            "Calculate 15 ÷ 3.",
+            "Calculate 24 ÷ 4.",
+            "Calculate 18 ÷ 2.",
+            "If 20 apples are divided into 4 bags, how many in each bag?",
+            "Calculate 21 ÷ 3 and verify by multiplication."
+          ],
+          "expectedResult": "Student independently answers at least 4 out of 5 questions accurately.",
+          "completed": false
         },
         {
           "stepNumber": 5,
-          "title": "Reassessment Check",
+          "title": "STEP 5 — Reassessment: Formative Competency Check",
           "description": "Quick 5-question parallel assessment to verify mastery retention.",
-          "durationMinutes": 2
+          "learningObjective": "Evaluate independent mastery of division and measure percentage-point gain from baseline.",
+          "teacherInstructions": "Administer the 5 parallel assessment questions. Record student score and verify if the student meets or exceeds the 80% mastery benchmark.",
+          "studentInstructions": "Answer all 5 reassessment questions independently on your worksheet.",
+          "requiredMaterials": [
+            "5-question Formative Reassessment Sheet",
+            "Teacher scoring rubric"
+          ],
+          "durationMinutes": 4,
+          "activityType": "reassessment",
+          "questionsOrExercises": [
+            "Q1: 15 ÷ 3 = ?",
+            "Q2: If 18 kites are shared equally by 6 children, how many does each get?",
+            "Q3: 24 ÷ 4 = ?",
+            "Q4: Which multiplication fact shows that 20 ÷ 5 = 4?",
+            "Q5: Divide 16 marbles into 2 equal bowls. How many in each bowl?"
+          ],
+          "expectedResult": "Student scores ≥ 80% (at least 4/5 questions correct) to demonstrate concept mastery.",
+          "completed": false
         }
       ],
       "practiceQuestionsSummary": "5 targeted equal sharing and visual grouping questions.",
-      "reassessmentCriteria": "Student must achieve at least 80% on the reassessment assessment for Division Basics.",
-      "teacherInstructions": "Use concrete objects first. Avoid abstract long division symbols until the concept of sharing is crystal clear.",
+      "reassessmentCriteria": "Student must achieve at least 80% (4 out of 5 questions correct) on the independent reassessment without teacher hints.",
+      "teacherInstructions": "Use concrete objects first. Avoid abstract long division symbols until the concept of sharing is crystal clear. If student struggles, use alternative visual bar models.",
       "teacherNotes": "Aarav enjoys hands-on token activities. Plan approved for daily zero-period session.",
+      "reassessmentQuestions": [
+        {
+          "questionNumber": 1,
+          "question": "Divide 15 candies equally among 3 children. How many candies does each child receive?",
+          "options": [
+            "3 candies",
+            "4 candies",
+            "5 candies",
+            "6 candies"
+          ],
+          "correctAnswer": "5 candies",
+          "explanation": "15 ÷ 3 = 5 candies per child, because 3 × 5 = 15.",
+          "marks": 1,
+          "skillTarget": "Equal sharing with single-digit divisor"
+        },
+        {
+          "questionNumber": 2,
+          "question": "A teacher has 18 kites and gives an equal number to 6 students. How many kites does each student get?",
+          "options": [
+            "2 kites",
+            "3 kites",
+            "4 kites",
+            "5 kites"
+          ],
+          "correctAnswer": "3 kites",
+          "explanation": "18 ÷ 6 = 3 kites, because 6 × 3 = 18.",
+          "marks": 1,
+          "skillTarget": "Word problem division interpretation"
+        },
+        {
+          "questionNumber": 3,
+          "question": "What is 24 ÷ 4?",
+          "options": [
+            "4",
+            "5",
+            "6",
+            "8"
+          ],
+          "correctAnswer": "6",
+          "explanation": "24 ÷ 4 = 6, since 4 × 6 = 24.",
+          "marks": 1,
+          "skillTarget": "Direct arithmetic division fact recall"
+        },
+        {
+          "questionNumber": 4,
+          "question": "Which multiplication equation proves that 20 ÷ 5 = 4?",
+          "options": [
+            "5 + 4 = 9",
+            "5 × 4 = 20",
+            "20 - 5 = 15",
+            "20 × 4 = 80"
+          ],
+          "correctAnswer": "5 × 4 = 20",
+          "explanation": "Multiplication is the inverse of division: 5 groups of 4 equals 20.",
+          "marks": 1,
+          "skillTarget": "Multiplication-division inverse relationship"
+        },
+        {
+          "questionNumber": 5,
+          "question": "If 16 marbles are placed into 2 equal bowls, how many marbles are in each bowl?",
+          "options": [
+            "6 marbles",
+            "7 marbles",
+            "8 marbles",
+            "9 marbles"
+          ],
+          "correctAnswer": "8 marbles",
+          "explanation": "16 ÷ 2 = 8 marbles in each bowl.",
+          "marks": 1,
+          "skillTarget": "Partitioning into equal halves"
+        }
+      ],
       "createdAt": "2026-09-25T08:30:00Z",
+      "startDate": "2026-09-26T09:00:00Z",
+      "targetDate": "2026-10-04T09:00:00Z",
       "reviewDate": "2026-10-05T08:30:00Z"
     },
     {
@@ -1131,120 +1200,28 @@
         "std-dev"
       ],
       "relationship": "father"
-    },
-    {
-      "id": "par-1793283517016-i4p7",
-      "userId": "usr-1793283517015-g3jf",
-      "name": "Rameshbhai Patel",
-      "email": "parent.test.1793283517005@example.com",
-      "phone": "9876543299",
-      "preferredLanguage": "gu",
-      "relationship": "guardian",
-      "studentIds": [
-        "std-aarav",
-        "std-diya"
-      ]
-    },
-    {
-      "id": "par-1793283726426-pxav",
-      "userId": "usr-1793283726425-gizv",
-      "name": "Rameshbhai Patel",
-      "email": "parent.test.1793283726415@example.com",
-      "phone": "9876543299",
-      "preferredLanguage": "gu",
-      "relationship": "guardian",
-      "studentIds": [
-        "std-aarav",
-        "std-diya"
-      ]
-    },
-    {
-      "id": "par-1793283782642-synf",
-      "userId": "usr-1793283782641-573r",
-      "name": "Rameshbhai Patel",
-      "email": "parent.test.1793283782632@example.com",
-      "phone": "9876543299",
-      "preferredLanguage": "gu",
-      "relationship": "guardian",
-      "studentIds": [
-        "std-aarav",
-        "std-diya"
-      ]
-    },
-    {
-      "id": "par-1793283957035-cji9",
-      "userId": "usr-1793283957032-oep3",
-      "name": "Rameshbhai Patel",
-      "email": "parent.test.1793283957023@example.com",
-      "phone": "9876543299",
-      "preferredLanguage": "gu",
-      "relationship": "guardian",
-      "studentIds": [
-        "std-aarav",
-        "std-diya"
-      ]
-    },
-    {
-      "id": "par-1793284002046-jsmy",
-      "userId": "usr-1793284002044-i5zn",
-      "name": "Rameshbhai Patel",
-      "email": "parent.test.1793284002034@example.com",
-      "phone": "9876543299",
-      "preferredLanguage": "gu",
-      "relationship": "guardian",
-      "studentIds": [
-        "std-aarav",
-        "std-diya"
-      ]
-    },
-    {
-      "id": "par-1793284454322-mefm",
-      "userId": "usr-1793284454320-iil2",
-      "name": "Rameshbhai Patel",
-      "email": "parent.test.1793284454309@example.com",
-      "phone": "9876543299",
-      "preferredLanguage": "gu",
-      "relationship": "guardian",
-      "studentIds": [
-        "std-aarav",
-        "std-diya"
-      ]
-    },
-    {
-      "id": "par-1793285356940-513h",
-      "userId": "usr-1793285356937-h36q",
-      "name": "Rameshbhai Patel",
-      "email": "parent.test.1793285356926@example.com",
-      "phone": "9876543299",
-      "preferredLanguage": "gu",
-      "relationship": "guardian",
-      "studentIds": [
-        "std-aarav",
-        "std-diya"
-      ]
     }
   ],
-  "notices": [
+  "parentLinkingCodes": [
     {
-      "title": "Annual Sports Day Registration",
-      "originalContent": "All students must submit their event preferences for the Annual Sports Day before Nov 5.",
-      "simplifiedContent": "All students must submit their event preferences for the Annual Sports Day before Nov 5.",
-      "originalLanguage": "en",
-      "readingLevel": "simple",
-      "category": "event",
-      "targetAudience": "class",
-      "targetClassGrade": 5,
-      "targetSection": "A",
-      "urgency": "important",
-      "senderTeacherId": "tea-001",
-      "senderTeacherName": "Head Teacher",
-      "status": "sent",
-      "requiresAcknowledgment": true,
-      "id": "not-1793213412163",
-      "createdAt": "2026-10-28T18:50:12.163Z",
-      "updatedAt": "2026-10-28T18:50:12.180Z",
-      "sentAt": "2026-10-28T18:50:12.179Z"
+      "id": "plc-demo-aarav",
+      "studentId": "std-aarav",
+      "code": "PAR-4892",
+      "expiresAt": "2026-11-05T16:14:26.723Z",
+      "status": "active",
+      "createdAt": "2026-10-29T16:14:26.723Z"
     },
+    {
+      "id": "plc-demo-diya",
+      "studentId": "std-diya",
+      "code": "PAR-5219",
+      "expiresAt": "2026-11-05T16:14:26.723Z",
+      "status": "active",
+      "createdAt": "2026-10-29T16:14:26.723Z"
+    }
+  ],
+  "parentMessages": [],
+  "notices": [
     {
       "id": "not-01",
       "schoolId": "sch-gn-01",
@@ -1360,26 +1337,6 @@
       "isTeacherEdited": false,
       "providerUsed": "gemini",
       "updatedAt": "2026-10-20T11:05:00Z"
-    },
-    {
-      "noticeId": "not-1793213412163",
-      "language": "gu",
-      "translatedTitle": "Annual Sports Day Registration",
-      "translatedContent": "All students must submit their event preferences for the Annual રમતગમત દિવસ before Nov 5.",
-      "provider": "offline_fallback",
-      "isApprovedByTeacher": false,
-      "id": "tr-1793213412166-gu",
-      "updatedAt": "2026-10-28T18:50:12.166Z"
-    },
-    {
-      "noticeId": "not-1793213412163",
-      "language": "hi",
-      "translatedTitle": "Annual Sports Day Registration",
-      "translatedContent": "All students must submit their event preferences for the Annual Sports Day before Nov 5.",
-      "provider": "offline_fallback",
-      "isApprovedByTeacher": false,
-      "id": "tr-1793213412170-hi",
-      "updatedAt": "2026-10-28T18:50:12.170Z"
     }
   ],
   "deliveries": [
@@ -1467,229 +1424,9 @@
       "readAt": "2026-10-20T11:45:00Z",
       "acknowledgedAt": "2026-10-20T11:46:00Z",
       "parentFeedback": "આરવ સોમવારથી ૩:૧૫ વાગ્યે રોકાશે, આભાર."
-    },
-    {
-      "id": "del-1793213412174-std-yash",
-      "noticeId": "not-1793213412163",
-      "parentId": "par-gen-std-yash",
-      "parentName": "Parent of Yash Trivedi",
-      "studentId": "std-yash",
-      "studentName": "Yash Trivedi",
-      "studentGrade": 5,
-      "studentSection": "A",
-      "language": "gu",
-      "channel": "whatsapp",
-      "status": "acknowledged",
-      "sentAt": "2026-10-28T18:50:12.173Z",
-      "deliveredAt": "2026-10-28T18:50:12.173Z",
-      "readAt": "2026-10-28T18:50:12.185Z",
-      "acknowledgedAt": "2026-10-28T18:50:12.185Z",
-      "parentFeedback": "Received and confirmed."
-    },
-    {
-      "id": "del-1793213412174-std-tanvi",
-      "noticeId": "not-1793213412163",
-      "parentId": "par-gen-std-tanvi",
-      "parentName": "Parent of Tanvi Dave",
-      "studentId": "std-tanvi",
-      "studentName": "Tanvi Dave",
-      "studentGrade": 5,
-      "studentSection": "A",
-      "language": "gu",
-      "channel": "whatsapp",
-      "status": "delivered",
-      "sentAt": "2026-10-28T18:50:12.173Z",
-      "deliveredAt": "2026-10-28T18:50:12.173Z"
-    },
-    {
-      "id": "del-1793213412174-std-rohan",
-      "noticeId": "not-1793213412163",
-      "parentId": "par-gen-std-rohan",
-      "parentName": "Parent of Rohan Prajapati",
-      "studentId": "std-rohan",
-      "studentName": "Rohan Prajapati",
-      "studentGrade": 5,
-      "studentSection": "A",
-      "language": "gu",
-      "channel": "whatsapp",
-      "status": "delivered",
-      "sentAt": "2026-10-28T18:50:12.173Z",
-      "deliveredAt": "2026-10-28T18:50:12.173Z"
-    },
-    {
-      "id": "del-1793213412175-std-kavya",
-      "noticeId": "not-1793213412163",
-      "parentId": "par-gen-std-kavya",
-      "parentName": "Parent of Kavya Rathod",
-      "studentId": "std-kavya",
-      "studentName": "Kavya Rathod",
-      "studentGrade": 5,
-      "studentSection": "A",
-      "language": "gu",
-      "channel": "whatsapp",
-      "status": "delivered",
-      "sentAt": "2026-10-28T18:50:12.173Z",
-      "deliveredAt": "2026-10-28T18:50:12.173Z"
     }
   ],
-  "aiMetrics": [
-    {
-      "id": "metric-1793213412168-l98k",
-      "task": "translation",
-      "provider": "offline_fallback",
-      "model": "deterministic_pedagogical_rule_engine",
-      "tokensPrompt": 22,
-      "tokensCompletion": 22,
-      "latencyMs": 1,
-      "success": true,
-      "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T18:50:12.168Z"
-    },
-    {
-      "id": "metric-1793213412164-4c34",
-      "task": "translation",
-      "provider": "offline_fallback",
-      "model": "deterministic_pedagogical_rule_engine",
-      "tokensPrompt": 22,
-      "tokensCompletion": 45,
-      "latencyMs": 1,
-      "success": true,
-      "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T18:50:12.164Z"
-    },
-    {
-      "id": "metric-1793213412160-hm2e",
-      "task": "simplification",
-      "provider": "offline_fallback",
-      "model": "deterministic_pedagogical_rule_engine",
-      "tokensPrompt": 22,
-      "tokensCompletion": 22,
-      "latencyMs": 1,
-      "success": true,
-      "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T18:50:12.160Z"
-    },
-    {
-      "id": "metric-1793213412157-8hdg",
-      "task": "assistant",
-      "provider": "offline_fallback",
-      "model": "deterministic_pedagogical_rule_engine",
-      "tokensPrompt": 0,
-      "tokensCompletion": 0,
-      "latencyMs": 1,
-      "success": true,
-      "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T18:50:12.157Z"
-    },
-    {
-      "id": "metric-1793213412154-1g3n",
-      "task": "assistant",
-      "provider": "offline_fallback",
-      "model": "deterministic_pedagogical_rule_engine",
-      "tokensPrompt": 0,
-      "tokensCompletion": 0,
-      "latencyMs": 1,
-      "success": true,
-      "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T18:50:12.154Z"
-    },
-    {
-      "id": "metric-1793213412150-0huy",
-      "task": "text_to_speech",
-      "provider": "offline_fallback",
-      "model": "deterministic_local_synthesizer",
-      "tokensPrompt": 0,
-      "tokensCompletion": 0,
-      "latencyMs": 0,
-      "success": true,
-      "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T18:50:12.150Z"
-    },
-    {
-      "id": "metric-1793213412146-47m3",
-      "task": "translation",
-      "provider": "offline_fallback",
-      "model": "deterministic_pedagogical_rule_engine",
-      "tokensPrompt": 32,
-      "tokensCompletion": 32,
-      "latencyMs": 1,
-      "success": true,
-      "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T18:50:12.146Z"
-    },
-    {
-      "id": "metric-1793213412144-3ly5",
-      "task": "translation",
-      "provider": "offline_fallback",
-      "model": "deterministic_pedagogical_rule_engine",
-      "tokensPrompt": 14,
-      "tokensCompletion": 14,
-      "latencyMs": 1,
-      "success": true,
-      "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T18:50:12.144Z"
-    },
-    {
-      "id": "metric-1793213412142-lzem",
-      "task": "translation",
-      "provider": "offline_fallback",
-      "model": "deterministic_pedagogical_rule_engine",
-      "tokensPrompt": 14,
-      "tokensCompletion": 14,
-      "latencyMs": 1,
-      "success": true,
-      "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T18:50:12.142Z"
-    },
-    {
-      "id": "metric-1793213412138-cg8h",
-      "task": "simplification",
-      "provider": "offline_fallback",
-      "model": "deterministic_pedagogical_rule_engine",
-      "tokensPrompt": 16,
-      "tokensCompletion": 16,
-      "latencyMs": 1,
-      "success": true,
-      "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T18:50:12.138Z"
-    },
-    {
-      "id": "metric-1793213412135-dw6t",
-      "task": "simplification",
-      "provider": "offline_fallback",
-      "model": "deterministic_pedagogical_rule_engine",
-      "tokensPrompt": 16,
-      "tokensCompletion": 16,
-      "latencyMs": 1,
-      "success": true,
-      "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T18:50:12.135Z"
-    },
-    {
-      "id": "metric-1793213412133-qpv9",
-      "task": "simplification",
-      "provider": "offline_fallback",
-      "model": "deterministic_pedagogical_rule_engine",
-      "tokensPrompt": 16,
-      "tokensCompletion": 16,
-      "latencyMs": 1,
-      "success": true,
-      "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T18:50:12.133Z"
-    },
-    {
-      "id": "metric-1793213412128-jypb",
-      "task": "simplification",
-      "provider": "offline_fallback",
-      "model": "deterministic_pedagogical_rule_engine",
-      "tokensPrompt": 37,
-      "tokensCompletion": 35,
-      "latencyMs": 1,
-      "success": true,
-      "estimatedCostUsd": 0,
-      "timestamp": "2026-10-28T18:50:12.128Z"
-    }
-  ],
+  "aiMetrics": [],
   "aiConfigs": [
     {
       "task": "chat",
@@ -1701,8 +1438,10 @@
     },
     {
       "task": "simplification",
-      "primaryProvider": "offline_fallback",
+      "primaryProvider": "gemini",
       "fallbackProvider": "offline_fallback",
+      "primaryModel": "gemini-3.5-flash-lite",
+      "fallbackModel": "deterministic_pedagogical_rule_engine",
       "enabled": true
     },
     {
@@ -1773,294 +1512,7 @@
       "status": "active",
       "createdAt": "2026-01-01T00:00:00Z",
       "updatedAt": "2026-01-01T00:00:00Z"
-    },
-    {
-      "id": "usr-1793213411680-yk7q",
-      "name": "Bhavik Dave",
-      "email": "teacher.1793213411678@studysaathi.edu.in",
-      "role": "teacher",
-      "schoolId": "sch-gn-01",
-      "googleId": "google-sub-1793213411678",
-      "avatarUrl": "https://lh3.googleusercontent.com/test",
-      "provider": "google",
-      "status": "active",
-      "createdAt": "2026-10-28T18:50:11.679Z",
-      "updatedAt": "2026-10-28T18:50:11.679Z"
-    },
-    {
-      "id": "usr-1793213411694-fftx",
-      "name": "Meera Trivedi",
-      "email": "teacher.reg.1793213411690@studysaathi.edu.in",
-      "role": "teacher",
-      "schoolId": "sch-gn-01",
-      "provider": "local",
-      "passwordHash": "622a515b4e4b8dd3c95fa702563349b3:c465939334b7c434a5da9f0b458fa2f4a5db0cde6e0608a21a26a9c412512623c0c73ca64f5c81cb2f64d6680ec6912fdc08e5a1b85a421336165dac857d4c52",
-      "status": "active",
-      "createdAt": "2026-10-28T18:50:11.694Z",
-      "updatedAt": "2026-10-28T18:50:11.694Z"
-    },
-    {
-      "id": "usr-1793283517015-g3jf",
-      "name": "Rameshbhai Patel",
-      "email": "parent.test.1793283517005@example.com",
-      "role": "parent",
-      "schoolId": "sch-gn-01",
-      "provider": "local",
-      "passwordHash": "048ba73c305ec8656b77aff7336dd563:f68ed9e4d3a1e6fcdf1f03ccb7044c496c6fefd2c2a26106537d65539dd101b9dd4d797db8b64480fd451e7f251ac8342bb08e6062251efb1c302684440bd08b",
-      "status": "active",
-      "createdAt": "2026-10-29T14:18:37.014Z",
-      "updatedAt": "2026-10-29T14:18:37.014Z"
-    },
-    {
-      "id": "usr-1793283726425-gizv",
-      "name": "Rameshbhai Patel",
-      "email": "parent.test.1793283726415@example.com",
-      "role": "parent",
-      "schoolId": "sch-gn-01",
-      "provider": "local",
-      "passwordHash": "8d73062482e218b0727cc4bd3d0e393f:bfd1bd59ba627b95fbc5e6be04ac3580f9484da600bdabfeb32d1c998a70071532e1048f373ae1eb7eee0278c66d835cabb5fcff7a95c94e5c7b667a8388c7a4",
-      "status": "active",
-      "createdAt": "2026-10-29T14:22:06.425Z",
-      "updatedAt": "2026-10-29T14:22:06.425Z"
-    },
-    {
-      "id": "usr-1793283782641-573r",
-      "name": "Rameshbhai Patel",
-      "email": "parent.test.1793283782632@example.com",
-      "role": "parent",
-      "schoolId": "sch-gn-01",
-      "provider": "local",
-      "passwordHash": "9a36856f270a12fcb7965fe344626428:66947dc924182418f22fc189eb10f09fe69b5337fa7ee81eed972f85d5179f549cdd76af12fcd9d6cb5888ad987bf2e5b5941abd1d348b5b7b8bbf3592227f31",
-      "status": "active",
-      "createdAt": "2026-10-29T14:23:02.640Z",
-      "updatedAt": "2026-10-29T14:23:02.640Z"
-    },
-    {
-      "id": "usr-1793283957032-oep3",
-      "name": "Rameshbhai Patel",
-      "email": "parent.test.1793283957023@example.com",
-      "role": "parent",
-      "schoolId": "sch-gn-01",
-      "provider": "local",
-      "passwordHash": "e05ebcecab7b91ca22325e721190c195:ceca23d011bf968700a70a0b89200271648a605d35495d664e4471c2d362d9fa40b4b46eff6a2c8c491f52d572800414502e917dc73e95da80a671b112d19cc5",
-      "status": "active",
-      "createdAt": "2026-10-29T14:25:57.032Z",
-      "updatedAt": "2026-10-29T14:25:57.032Z"
-    },
-    {
-      "id": "usr-1793284002044-i5zn",
-      "name": "Rameshbhai Patel",
-      "email": "parent.test.1793284002034@example.com",
-      "role": "parent",
-      "schoolId": "sch-gn-01",
-      "provider": "local",
-      "passwordHash": "1b7646d678789e17ade6613cf5a524a3:16e13b47aeea9875ea1e366639d5cdb964942f72c7af444a68f58559f6674ef24a0533385ccb8547745201e6b4ade49381e80c879e8535a08eea16a292ee9f94",
-      "status": "active",
-      "createdAt": "2026-10-29T14:26:42.043Z",
-      "updatedAt": "2026-10-29T14:26:42.043Z"
-    },
-    {
-      "id": "usr-1793284454320-iil2",
-      "name": "Rameshbhai Patel",
-      "email": "parent.test.1793284454309@example.com",
-      "role": "parent",
-      "schoolId": "sch-gn-01",
-      "provider": "local",
-      "passwordHash": "4eab9d10e415622078b612dc7d443640:933149c56f2bfda4219754326683b7e4f695fc6ac0e8f12da954d65781b088e5dd1373bc3ceb73180b5ddc760206d8f9fb171f513f47e7ae328cb2a704cb268a",
-      "status": "active",
-      "createdAt": "2026-10-29T14:34:14.319Z",
-      "updatedAt": "2026-10-29T14:34:14.319Z"
-    },
-    {
-      "id": "usr-1793285356937-h36q",
-      "name": "Rameshbhai Patel",
-      "email": "parent.test.1793285356926@example.com",
-      "role": "parent",
-      "schoolId": "sch-gn-01",
-      "provider": "local",
-      "passwordHash": "52bfe307527c1666e0f21bce3a310998:e3f696fa16339948c5b67ffdc0e0470ad4fb794c90ffd92c2e11943bebd43abe23419e833c5d1bedfe01e36ea724535c7be28f9c6f79817e51a8a93a003d32b0",
-      "status": "active",
-      "createdAt": "2026-10-29T14:49:16.937Z",
-      "updatedAt": "2026-10-29T14:49:16.937Z"
     }
   ],
-  "feedback": [],
-  "parentLinkingCodes": [
-    {
-      "id": "plc-1793283517039-gi0x",
-      "studentId": "std-aarav",
-      "code": "PAR-4839",
-      "expiresAt": "2026-11-05T14:18:37.039Z",
-      "status": "used",
-      "createdByUserId": "usr-teacher-01",
-      "createdAt": "2026-10-29T14:18:37.039Z",
-      "usedByUserId": "usr-1793283517015-g3jf",
-      "usedAt": "2026-10-29T14:18:37.040Z"
-    },
-    {
-      "id": "plc-1793283517044-svbs",
-      "studentId": "std-diya",
-      "code": "PAR-9914",
-      "expiresAt": "2026-11-05T14:18:37.044Z",
-      "status": "used",
-      "createdByUserId": "usr-teacher-01",
-      "createdAt": "2026-10-29T14:18:37.044Z",
-      "usedByUserId": "usr-1793283517015-g3jf",
-      "usedAt": "2026-10-29T14:18:37.045Z"
-    },
-    {
-      "id": "plc-1793283726461-x5sd",
-      "studentId": "std-aarav",
-      "code": "PAR-6433",
-      "expiresAt": "2026-11-05T14:22:06.461Z",
-      "status": "used",
-      "createdByUserId": "usr-teacher-01",
-      "createdAt": "2026-10-29T14:22:06.461Z",
-      "usedByUserId": "usr-1793283726425-gizv",
-      "usedAt": "2026-10-29T14:22:06.463Z"
-    },
-    {
-      "id": "plc-1793283726469-j3v9",
-      "studentId": "std-diya",
-      "code": "PAR-1641",
-      "expiresAt": "2026-11-05T14:22:06.469Z",
-      "status": "used",
-      "createdByUserId": "usr-teacher-01",
-      "createdAt": "2026-10-29T14:22:06.469Z",
-      "usedByUserId": "usr-1793283726425-gizv",
-      "usedAt": "2026-10-29T14:22:06.470Z"
-    },
-    {
-      "id": "plc-1793283782680-iq01",
-      "studentId": "std-aarav",
-      "code": "PAR-1810",
-      "expiresAt": "2026-11-05T14:23:02.680Z",
-      "status": "used",
-      "createdByUserId": "usr-teacher-01",
-      "createdAt": "2026-10-29T14:23:02.680Z",
-      "usedByUserId": "usr-1793283782641-573r",
-      "usedAt": "2026-10-29T14:23:02.682Z"
-    },
-    {
-      "id": "plc-1793283782688-atac",
-      "studentId": "std-diya",
-      "code": "PAR-4141",
-      "expiresAt": "2026-11-05T14:23:02.688Z",
-      "status": "used",
-      "createdByUserId": "usr-teacher-01",
-      "createdAt": "2026-10-29T14:23:02.688Z",
-      "usedByUserId": "usr-1793283782641-573r",
-      "usedAt": "2026-10-29T14:23:02.689Z"
-    },
-    {
-      "id": "plc-1793283957068-ovi6",
-      "studentId": "std-aarav",
-      "code": "PAR-6086",
-      "expiresAt": "2026-11-05T14:25:57.068Z",
-      "status": "used",
-      "createdByUserId": "usr-teacher-01",
-      "createdAt": "2026-10-29T14:25:57.068Z",
-      "usedByUserId": "usr-1793283957032-oep3",
-      "usedAt": "2026-10-29T14:25:57.069Z"
-    },
-    {
-      "id": "plc-1793283957075-yop8",
-      "studentId": "std-diya",
-      "code": "PAR-1328",
-      "expiresAt": "2026-11-05T14:25:57.075Z",
-      "status": "used",
-      "createdByUserId": "usr-teacher-01",
-      "createdAt": "2026-10-29T14:25:57.075Z",
-      "usedByUserId": "usr-1793283957032-oep3",
-      "usedAt": "2026-10-29T14:25:57.076Z"
-    },
-    {
-      "id": "plc-1793284002081-dtje",
-      "studentId": "std-aarav",
-      "code": "PAR-7233",
-      "expiresAt": "2026-11-05T14:26:42.081Z",
-      "status": "used",
-      "createdByUserId": "usr-teacher-01",
-      "createdAt": "2026-10-29T14:26:42.081Z",
-      "usedByUserId": "usr-1793284002044-i5zn",
-      "usedAt": "2026-10-29T14:26:42.083Z"
-    },
-    {
-      "id": "plc-1793284002089-841h",
-      "studentId": "std-diya",
-      "code": "PAR-2479",
-      "expiresAt": "2026-11-05T14:26:42.089Z",
-      "status": "used",
-      "createdByUserId": "usr-teacher-01",
-      "createdAt": "2026-10-29T14:26:42.089Z",
-      "usedByUserId": "usr-1793284002044-i5zn",
-      "usedAt": "2026-10-29T14:26:42.091Z"
-    },
-    {
-      "id": "plc-1793284454364-pz7m",
-      "studentId": "std-aarav",
-      "code": "PAR-6112",
-      "expiresAt": "2026-11-05T14:34:14.364Z",
-      "status": "used",
-      "createdByUserId": "usr-teacher-01",
-      "createdAt": "2026-10-29T14:34:14.364Z",
-      "usedByUserId": "usr-1793284454320-iil2",
-      "usedAt": "2026-10-29T14:34:14.366Z"
-    },
-    {
-      "id": "plc-1793284454374-4geq",
-      "studentId": "std-diya",
-      "code": "PAR-1958",
-      "expiresAt": "2026-11-05T14:34:14.374Z",
-      "status": "used",
-      "createdByUserId": "usr-teacher-01",
-      "createdAt": "2026-10-29T14:34:14.374Z",
-      "usedByUserId": "usr-1793284454320-iil2",
-      "usedAt": "2026-10-29T14:34:14.376Z"
-    },
-    {
-      "id": "plc-1793285347992-nwkw",
-      "studentId": "std-aarav",
-      "code": "PAR-9432",
-      "expiresAt": "2026-11-05T14:49:07.992Z",
-      "status": "used",
-      "createdByUserId": "usr-teacher-01",
-      "createdAt": "2026-10-29T14:49:07.992Z",
-      "usedByUserId": "usr-1793285347948-pcl7",
-      "usedAt": "2026-10-29T14:49:07.994Z"
-    },
-    {
-      "id": "plc-1793285347999-jtpo",
-      "studentId": "std-diya",
-      "code": "PAR-6662",
-      "expiresAt": "2026-11-05T14:49:07.999Z",
-      "status": "used",
-      "createdByUserId": "usr-teacher-01",
-      "createdAt": "2026-10-29T14:49:07.999Z",
-      "usedByUserId": "usr-1793285347948-pcl7",
-      "usedAt": "2026-10-29T14:49:08.001Z"
-    },
-    {
-      "id": "plc-1793285356982-rw1v",
-      "studentId": "std-aarav",
-      "code": "PAR-5915",
-      "expiresAt": "2026-11-05T14:49:16.982Z",
-      "status": "used",
-      "createdByUserId": "usr-teacher-01",
-      "createdAt": "2026-10-29T14:49:16.982Z",
-      "usedByUserId": "usr-1793285356937-h36q",
-      "usedAt": "2026-10-29T14:49:16.985Z"
-    },
-    {
-      "id": "plc-1793285356992-1skp",
-      "studentId": "std-diya",
-      "code": "PAR-1027",
-      "expiresAt": "2026-11-05T14:49:16.992Z",
-      "status": "used",
-      "createdByUserId": "usr-teacher-01",
-      "createdAt": "2026-10-29T14:49:16.992Z",
-      "usedByUserId": "usr-1793285356937-h36q",
-      "usedAt": "2026-10-29T14:49:16.994Z"
-    }
-  ]
+  "feedback": []
 }

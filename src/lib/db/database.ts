@@ -684,6 +684,15 @@ export const db = {
       }
     );
 
+    // Extract student's real grade and section, baseline score, and confirmed vs inferred status
+    const baselineScore =
+      gap.latestPercentage ??
+      (studentResults.length > 0 ? studentResults[studentResults.length - 1].percentage : 35);
+    const confirmedOrInferred = (gap as any).isSingleObservation ? "inferred" : "confirmed";
+    const baselineEvidence =
+      gap.reason ||
+      `Student scored ${baselineScore}% on assessment. Prior results show persistent conceptual gap.`;
+
     const plan = generateRemedialPlan(
       student.id,
       student.displayName,
@@ -691,7 +700,16 @@ export const db = {
       concept.name,
       concept.subjectCode,
       detection,
-      customNotes
+      customNotes,
+      {
+        studentClass: student.grade,
+        studentSection: student.section,
+        baselineScore,
+        baselineEvidence,
+        knownMisconceptions: detection.reason,
+        confirmedOrInferred,
+        masteryBenchmark: store.settings.masteryThreshold || 80,
+      }
     );
 
     const existingPlanIndex = store.remedialPlans.findIndex(
@@ -756,7 +774,18 @@ export const db = {
     const index = store.remedialPlans.findIndex((p) => p.id === id);
     if (index === -1) return null;
 
-    store.remedialPlans[index] = { ...store.remedialPlans[index], ...updates };
+    const existing = store.remedialPlans[index];
+
+    // Enforce business logic: plan cannot be Completed solely because activities were checked off
+    // if reassessment is pending or benchmark has not been achieved
+    if (updates.status === "Completed") {
+      const hasPassedReassessment = existing.reassessmentResult?.isMastered === true;
+      if (!hasPassedReassessment && (!updates.reassessmentResult || !updates.reassessmentResult.isMastered)) {
+        updates.status = "In Progress";
+      }
+    }
+
+    store.remedialPlans[index] = { ...existing, ...updates, updatedAt: new Date().toISOString() };
     saveStore(store);
 
     if (isPostgresConfigured()) {
@@ -765,6 +794,240 @@ export const db = {
       );
     }
 
+    return store.remedialPlans[index];
+  },
+
+  /**
+   * Records empirical reassessment outcome for a remedial plan,
+   * calculating true percentage point growth, evaluating against benchmark,
+   * updating gap status, and scheduling retention checks.
+   */
+  recordPlanReassessment(
+    planId: string,
+    marksObtained: number,
+    maximumMarks: number,
+    answers?: Record<number, string>,
+    notes?: string,
+    teacherFeedback?: string
+  ): { success: boolean; plan?: RemedialPlan; error?: string } {
+    const store = loadStore();
+    const planIndex = store.remedialPlans.findIndex((p) => p.id === planId);
+    if (planIndex === -1) {
+      return { success: false, error: "Remedial plan not found." };
+    }
+
+    const plan = store.remedialPlans[planIndex];
+
+    // Validation
+    if (marksObtained < 0 || maximumMarks <= 0 || marksObtained > maximumMarks) {
+      return { success: false, error: "Marks obtained must be between 0 and maximum marks." };
+    }
+
+    const percentage = Math.round((marksObtained / maximumMarks) * 100);
+    const benchmark = plan.masteryBenchmark || store.settings.masteryThreshold || 80;
+    const isMastered = percentage >= benchmark;
+
+    const baselinePercentage = plan.baselineScore ?? 35;
+    // Percentage points difference (e.g. 80% - 35% = +45 percentage points)
+    const deltaPercentagePoints = percentage - baselinePercentage;
+
+    // Evaluate mastered skills vs needs support skills
+    const masteredSkills: string[] = [];
+    const needsSupportSkills: string[] = [];
+
+    if (Array.isArray(plan.reassessmentQuestions) && plan.reassessmentQuestions.length > 0) {
+      plan.reassessmentQuestions.forEach((q) => {
+        const studentAns = answers ? answers[q.questionNumber] : undefined;
+        const skill = q.skillTarget || `Question ${q.questionNumber}`;
+        if (studentAns && studentAns.trim().toLowerCase() === q.correctAnswer.trim().toLowerCase()) {
+          masteredSkills.push(skill);
+        } else if (studentAns !== undefined) {
+          needsSupportSkills.push(skill);
+        } else {
+          if (isMastered) masteredSkills.push(skill);
+          else needsSupportSkills.push(skill);
+        }
+      });
+    } else {
+      if (isMastered) masteredSkills.push(plan.conceptName || "Target Competency");
+      else needsSupportSkills.push(plan.conceptName || "Target Competency");
+    }
+
+    const retentionCheckDate = isMastered
+      ? new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
+      : undefined;
+
+    const reassessmentResult = {
+      recordedAt: new Date().toISOString(),
+      marksObtained,
+      maximumMarks,
+      percentage,
+      baselinePercentage,
+      deltaPercentagePoints,
+      isMastered,
+      studentAnswers: answers,
+      masteredSkills,
+      needsSupportSkills,
+      retentionCheckDate,
+      teacherFeedback: teacherFeedback || notes || "",
+    };
+
+    // Update plan status
+    plan.reassessmentResult = reassessmentResult;
+    if (isMastered) {
+      plan.status = "Completed";
+      plan.completedSteps = [1, 2, 3, 4, 5];
+    } else {
+      plan.status = "Needs Review";
+      plan.followUpRecommendations = `Student achieved ${percentage}% (target: ${benchmark}%). Needs adaptive follow-up intervention with concrete manipulatives.`;
+    }
+    plan.updatedAt = new Date().toISOString();
+    store.remedialPlans[planIndex] = plan;
+
+    // Record assessment result in persistent results store
+    const newResult = {
+      id: `res-retest-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      assessmentId: `asm-retest-${plan.conceptId}`,
+      studentId: plan.studentId,
+      conceptId: plan.conceptId,
+      marksObtained,
+      maximumMarks,
+      percentage,
+      notes: `Post-remediation reassessment for ${plan.conceptName}. Score: ${percentage}% (+${deltaPercentagePoints} pp gain).`,
+      recordedAt: new Date().toISOString(),
+    };
+    store.results.push(newResult);
+
+    // Update corresponding learning gap
+    const gap = store.learningGaps.find(
+      (g) => g.studentId === plan.studentId && g.conceptId === plan.conceptId
+    );
+    if (gap) {
+      gap.previousPercentage = gap.latestPercentage;
+      gap.latestPercentage = percentage;
+      gap.deltaPercentagePoints = deltaPercentagePoints;
+      gap.attemptsCount = (gap.attemptsCount || 1) + 1;
+      gap.updatedAt = new Date().toISOString();
+
+      if (isMastered) {
+        gap.status = "Resolved";
+        gap.masteryStatus = "Mastered";
+        gap.reason = `Demonstrated mastery on reassessment (${percentage}%, +${deltaPercentagePoints} pp improvement over baseline).`;
+      } else {
+        gap.status = "Under Intervention";
+        gap.masteryStatus = percentage >= store.settings.developingThreshold ? "Developing" : "Needs Support";
+        gap.reason = `Post-intervention reassessment scored ${percentage}%. Below ${benchmark}% mastery target; adaptive follow-up recommended.`;
+      }
+    }
+
+    saveStore(store);
+
+    return { success: true, plan };
+  },
+
+  /**
+   * Generates a targeted follow-up plan when a student does not meet the mastery benchmark.
+   */
+  generateFollowUpPlan(parentPlanId: string, customNotes?: string): RemedialPlan | null {
+    const store = loadStore();
+    const parent = store.remedialPlans.find((p) => p.id === parentPlanId);
+    if (!parent) return null;
+
+    const gap = store.learningGaps.find(
+      (g) => g.studentId === parent.studentId && g.conceptId === parent.conceptId
+    );
+    const detection = {
+      conceptId: parent.conceptId,
+      conceptName: parent.conceptName || "Target Concept",
+      requiresRemediation: true,
+      priority: "High" as const,
+      masteryStatus: "Needs Support" as const,
+      reason: parent.reassessmentResult
+        ? `Reassessment score was ${parent.reassessmentResult.percentage}% (below ${parent.masteryBenchmark || 80}% target). Needs alternative pedagogical approach.`
+        : "Follow-up intervention required.",
+      suggestedAction: "Initiate adaptive multi-sensory follow-up plan with modified manipulatives.",
+      attemptsCount: (gap?.attemptsCount || 1) + 1,
+      latestPercentage: parent.reassessmentResult?.percentage ?? parent.baselineScore ?? 35,
+      averagePercentage: parent.reassessmentResult?.percentage ?? 35,
+      isSingleObservation: false,
+    };
+
+    const followUpPlan = generateRemedialPlan(
+      parent.studentId,
+      parent.studentName || "Student",
+      parent.conceptId,
+      parent.conceptName || "Target Concept",
+      parent.subjectCode || "MATH",
+      detection,
+      customNotes || `Adaptive follow-up plan addressing remaining difficulties.`,
+      {
+        studentClass: parent.studentClass,
+        studentSection: parent.studentSection,
+        baselineScore: parent.reassessmentResult?.percentage ?? parent.baselineScore ?? 35,
+        baselineEvidence: `Follow-up plan generated after reassessment score of ${parent.reassessmentResult?.percentage ?? 35}%.`,
+        knownMisconceptions: parent.reassessmentResult?.needsSupportSkills?.join(", ") || parent.knownMisconceptions,
+        confirmedOrInferred: "confirmed",
+        masteryBenchmark: parent.masteryBenchmark || 80,
+        isFollowUp: true,
+        parentPlanId: parent.id,
+      }
+    );
+
+    parent.followUpPlanId = followUpPlan.id;
+    parent.updatedAt = new Date().toISOString();
+    store.remedialPlans.unshift(followUpPlan);
+
+    saveStore(store);
+    return followUpPlan;
+  },
+
+  /**
+   * Safely upgrades or repairs an existing plan with fewer than 5 steps or missing fields,
+   * preserving all student records and historical notes.
+   */
+  repairOrUpgradePlan(planId: string): RemedialPlan | null {
+    const store = loadStore();
+    const index = store.remedialPlans.findIndex((p) => p.id === planId);
+    if (index === -1) return null;
+
+    const existing = store.remedialPlans[index];
+    const dummyDetection = {
+      conceptId: existing.conceptId,
+      conceptName: existing.conceptName || "Concept",
+      requiresRemediation: true,
+      priority: "High" as const,
+      masteryStatus: "Needs Support" as const,
+      reason: existing.recommendationReason,
+      suggestedAction: "Upgrade to complete 5-step curriculum.",
+      attemptsCount: 1,
+      latestPercentage: existing.baselineScore || 35,
+      averagePercentage: existing.baselineScore || 35,
+      isSingleObservation: true,
+    };
+
+    const upgraded = generateRemedialPlan(
+      existing.studentId,
+      existing.studentName || "Student",
+      existing.conceptId,
+      existing.conceptName || "Concept",
+      existing.subjectCode || "MATH",
+      dummyDetection,
+      existing.teacherNotes
+    );
+
+    store.remedialPlans[index] = {
+      ...upgraded,
+      id: existing.id,
+      studentId: existing.studentId,
+      studentName: existing.studentName,
+      status: existing.status,
+      completedSteps: existing.completedSteps || [],
+      teacherNotes: existing.teacherNotes || upgraded.teacherNotes,
+      createdAt: existing.createdAt,
+      reassessmentResult: existing.reassessmentResult,
+    };
+
+    saveStore(store);
     return store.remedialPlans[index];
   },
 

@@ -71,7 +71,7 @@ export class RemedialService {
             { stepNumber: 2, title: "પ્રત્યક્ષ સાધનોથી સમજ (૮ મિ.)", description: "૧૨ કાંકરા ૩ બાળકો વચ્ચે સરખા વહેંચીને ભાગાકારનો ખ્યાલ આપો.", durationMinutes: 8 },
             { stepNumber: 3, title: "ચિત્રાત્મક રજૂઆત (૭ મિ.)", description: "નોટબુકમાં ગોળ દોરી તેમાં ટપકાં સરખા જૂથમાં વહેંચવા કહો.", durationMinutes: 7 },
             { stepNumber: 4, title: "જોડીમાં મહાવરો (૫ મિ.)", description: "સાથી વિદ્યાર્થી સાથે બેસાડી સાદા કોયડા ઉકેલાવો.", durationMinutes: 5 },
-            { stepNumber: 5, title: "પુનઃમૂલ્યાંકન (૫ મિ.)", description: "૩ સરળ પ્રશ્નો પૂછી સંકલ્પનાની સમજ ચકાસો.", durationMinutes: 5 },
+            { stepNumber: 5, title: "પુનઃમૂલ્યાંકન (૫ મિ.)", description: "૫ પ્રશ્નો પૂછી સંકલ્પનાની સ્વતંત્ર સમજ અને ૮૦% બેન્ચમાર્ક સિદ્ધિ ચકાસો.", durationMinutes: 5 },
           ],
         };
       }

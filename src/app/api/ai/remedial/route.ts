@@ -219,11 +219,49 @@ Generate the targeted 5-step AI Remedial Teaching Plan.`;
 
     const generated = aiResult.data || JSON.parse(aiResult.content);
 
+    // Ensure exactly 5 steps are present
+    let rawSteps: RemedialStep[] = Array.isArray(generated.steps) ? generated.steps : [];
+    if (rawSteps.length < 5) {
+      const template = CURRICULUM_TEMPLATES[conceptId] || CURRICULUM_TEMPLATES["c-div-01"];
+      rawSteps = template.steps;
+    }
+
+    const fiveSteps = rawSteps.slice(0, 5).map((s, idx) => ({
+      stepNumber: idx + 1,
+      title: s.title || `STEP ${idx + 1}`,
+      description: s.description || `Classroom activity description for step ${idx + 1}`,
+      durationMinutes: s.durationMinutes || 4,
+      activityType: s.activityType || (idx === 0 ? "discussion" : idx === 1 ? "hands_on" : idx === 2 ? "guided_practice" : idx === 3 ? "independent_practice" : "reassessment"),
+      learningObjective: s.learningObjective || `${generated.learningObjective} - Phase ${idx + 1}`,
+      teacherInstructions: s.teacherInstructions || generated.teacherInstructions || "Guide the student through the activity step-by-step.",
+      studentInstructions: s.studentInstructions || "Follow teacher guidance and solve exercises carefully.",
+      requiredMaterials: s.requiredMaterials || generated.lowCostMaterials || ["Notebook", "Pencil"],
+      questionsOrExercises: s.questionsOrExercises || [],
+      expectedResult: s.expectedResult || "Demonstrated evidence of learning",
+      completed: false,
+    }));
+
+    // Generate 5 structured reassessment questions
+    const templateRef = CURRICULUM_TEMPLATES[conceptId] || CURRICULUM_TEMPLATES["c-div-01"];
+    const reassessmentQuestions = (generated.practiceQuestions && generated.practiceQuestions.length >= 3)
+      ? generated.practiceQuestions.map((q: any, i: number) => ({
+          questionNumber: i + 1,
+          question: q.question,
+          options: q.options || undefined,
+          correctAnswer: q.answer || q.correctAnswer || "Correct Answer",
+          explanation: q.explanation || "Step-by-step reasoning",
+          marks: 1,
+          skillTarget: `${conceptName} Application Q${i + 1}`,
+        }))
+      : (templateRef.reassessmentQuestions || []);
+
     // Build complete RemedialPlan object ready for storage or preview
     const fullPlan: RemedialPlan = {
       id: `rp-ai-${Date.now()}`,
       studentId,
       studentName,
+      studentClass: grade,
+      studentSection: "A",
       conceptId,
       conceptName,
       subjectCode: subjectCode as SubjectCode,
@@ -232,14 +270,42 @@ Generate the targeted 5-step AI Remedial Teaching Plan.`;
       status: "Suggested",
       estimatedMinutes: generated.suggestedDurationMinutes || 20,
       difficulty: "Beginner",
-      requiredMaterials: generated.lowCostMaterials || [],
-      steps: generated.steps || [],
+      requiredMaterials: generated.lowCostMaterials || templateRef.materials || [],
+      steps: fiveSteps,
       practiceQuestionsSummary: generated.practiceQuestions
-        ? generated.practiceQuestions.map((q: any) => `Q${q.questionNumber}: ${q.question} (Ans: ${q.answer})`).join("; ")
-        : undefined,
+        ? generated.practiceQuestions.map((q: any) => `Q${q.questionNumber || 1}: ${q.question} (Ans: ${q.answer})`).join("; ")
+        : `${fiveSteps.length} structured remedial steps with exit reassessment.`,
       reassessmentCriteria: generated.masteryCriteria || "Achieve >= 80% on parallel reassessment",
       teacherInstructions: generated.teacherInstructions || "Reinforce concrete manipulatives first.",
       createdAt: new Date().toISOString(),
+      baselineScore: latestPercentage,
+      baselineEvidence: gapReason,
+      knownMisconceptions: generated.shortExplanation || gapReason,
+      confirmedOrInferred: "confirmed",
+      expectedSkill: generated.learningObjective,
+      masteryBenchmark: 80,
+      reassessmentQuestions,
+      worksheet: {
+        worksheetTitle: `${conceptName} - Remedial Practice Worksheet`,
+        schoolName: "Model Primary School, Gandhinagar",
+        grade,
+        subject: subjectCode,
+        concept: conceptName,
+        difficulty: "Beginner",
+        language,
+        instructions: isGujarati ? "બધા પ્રશ્નો ધ્યાનથી ગણો." : "Solve each question carefully.",
+        totalMarks: reassessmentQuestions.length * 2,
+        estimatedMinutes: 15,
+        questions: reassessmentQuestions.map((q: any, idx: number) => ({
+          questionNumber: idx + 1,
+          questionText: q.question,
+          questionType: q.options ? "mcq" : "open",
+          options: q.options,
+          marks: 2,
+          answerKey: q.correctAnswer,
+          stepExplanation: q.explanation,
+        })),
+      },
     };
 
     return NextResponse.json({

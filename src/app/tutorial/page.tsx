@@ -2,11 +2,13 @@
 
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { useLanguage } from "@/context/LanguageContext";
+import { useTutorial } from "@/context/TutorialContext";
 import { triggerPageTour } from "@/components/tutorial/SpotlightTour";
 import {
   TUTORIAL_FAQS,
@@ -46,13 +48,25 @@ import {
 } from "lucide-react";
 
 export default function TutorialPage() {
+  const router = useRouter();
   const { t, language } = useLanguage();
+  const { openTutorial, setTutorialStep } = useTutorial();
 
   const [activeTab, setActiveTab] = useState<
     "workflow" | "lessons" | "sandbox" | "faq" | "glossary" | "tips"
   >("workflow");
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedFaqId, setExpandedFaqId] = useState<string | null>("faq-threshold");
+
+  // Initialize tutorial from Step 1 whenever entering Tutorial page
+  React.useEffect(() => {
+    setTutorialStep(0);
+    setSandboxStep(1);
+    setSandboxScore(35);
+    setSandboxPlanGenerated(false);
+    setSandboxReassessed(false);
+    setActiveTab("workflow");
+  }, [setTutorialStep]);
   const [showPrintModal, setShowPrintModal] = useState(false);
 
   // Interactive Sandbox State (Section C: Aarav's Journey)
@@ -129,6 +143,10 @@ export default function TutorialPage() {
     setSandboxReassessed(false);
   };
 
+  const handleReplayTour = () => {
+    router.push("/dashboard?tour=full");
+  };
+
   const handlePrintGuide = () => {
     window.print();
   };
@@ -139,7 +157,7 @@ export default function TutorialPage() {
         {/* ============================================================== */}
         {/* HERO SECTION (3D Bridge / ShikshaBot Graphic + Action Buttons)  */}
         {/* ============================================================== */}
-        <div className="relative rounded-3xl bg-gradient-to-br from-[#FAF6E9] via-[#F4F1E1] to-[#F2DCB5]/40 dark:from-[#2A231E] dark:via-[#221C18] dark:to-[#1E1916] border border-[#49352F]/15 dark:border-[#F2CAB3]/25 p-6 sm:p-10 shadow-[0_12px_40px_rgba(73,53,47,0.06)] overflow-hidden text-[#49352F] dark:text-[#F4F1E1]">
+        <div data-tour="tutorial-hero" className="relative rounded-3xl bg-gradient-to-br from-[#FAF6E9] via-[#F4F1E1] to-[#F2DCB5]/40 dark:from-[#2A231E] dark:via-[#221C18] dark:to-[#1E1916] border border-[#49352F]/15 dark:border-[#F2CAB3]/25 p-6 sm:p-10 shadow-[0_12px_40px_rgba(73,53,47,0.06)] overflow-hidden text-[#49352F] dark:text-[#F4F1E1]">
           {/* Subtle Ambient Glows */}
           <div className="absolute top-0 right-0 w-80 h-80 rounded-full bg-[#F2CAB3]/30 dark:bg-[#F2CAB3]/10 blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-1/3 w-80 h-80 rounded-full bg-[#F2DCB5]/40 dark:bg-[#F2DCB5]/10 blur-3xl pointer-events-none" />
@@ -169,7 +187,7 @@ export default function TutorialPage() {
                 <Button
                   variant="saffron"
                   size="sm"
-                  onClick={() => triggerPageTour("dashboard")}
+                  onClick={handleReplayTour}
                   className="rounded-full text-xs font-bold shadow-md cursor-pointer"
                 >
                   <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
@@ -189,7 +207,7 @@ export default function TutorialPage() {
                 <button
                   type="button"
                   onClick={() => setActiveTab("sandbox")}
-                  className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/80 dark:bg-[#26201C] hover:bg-white dark:hover:bg-[#352B24] text-[#49352F] dark:text-[#F4F1E1] border border-[#49352F]/12 dark:border-[#F2CAB3]/20 transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
+                  data-tour="tutorial-sandbox-btn" className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/80 dark:bg-[#26201C] hover:bg-white dark:hover:bg-[#352B24] text-[#49352F] dark:text-[#F4F1E1] border border-[#49352F]/12 dark:border-[#F2CAB3]/20 transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
                 >
                   <Play className="w-3 h-3 text-[#2E7D5E] dark:text-[#5FE3B2]" />
                   <span>{t.tutorial?.trySandbox || (language === "gu" ? "ઇન્ટરેક્ટિવ ડેમો અજમાવો" : "Try Interactive Sandbox")}</span>
@@ -249,7 +267,7 @@ export default function TutorialPage() {
         {/* ============================================================== */}
         {/* SEARCH BOX & NAVIGATION TABS BAR                                */}
         {/* ============================================================== */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div data-tour="tutorial-tabs" className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           {/* Instant Search Box - Big, Prominent & Showable */}
           <div className="relative w-full lg:max-w-xl">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[#B26A1B] pointer-events-none" />
@@ -312,7 +330,7 @@ export default function TutorialPage() {
         {/* SECTION A: "HOW IT WORKS" (4 Animated Pedagogical Phases)       */}
         {/* ============================================================== */}
         {activeTab === "workflow" && (
-          <div className="space-y-6">
+          <div data-tour="tutorial-workflow" className="space-y-6">
             <Card className="p-6 border-[#49352F]/12 bg-white/95 space-y-6">
               <div>
                 <h3 className="font-heading text-lg font-bold text-[#49352F] flex items-center gap-2">

@@ -6,6 +6,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useFilter } from "@/context/FilterContext";
+import { useTutorial } from "@/context/TutorialContext";
 import { LanguageSelector } from "../shared/LanguageSelector";
 import { ThemeToggle } from "../shared/ThemeToggle";
 import { triggerPageTour } from "@/components/tutorial/SpotlightTour";
@@ -40,6 +41,7 @@ export function AppHeader({
   const pathname = usePathname();
   const { user, role, switchRole, logout } = useAuth();
   const { t, language } = useLanguage();
+  const { openTutorial } = useTutorial();
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const roleMenuRef = useRef<HTMLDivElement>(null);
@@ -338,11 +340,7 @@ export function AppHeader({
         <button
           type="button"
           onClick={() => {
-            const pageKey = getPageTourKey(pathname);
-            if (typeof window !== "undefined") {
-              localStorage.removeItem(`shikshasetu_tour_completed_${pageKey}`);
-            }
-            triggerPageTour(pageKey);
+            router.push("/dashboard?tour=full");
           }}
           className="hidden 2xl:inline-flex h-9 items-center gap-1.5 px-2.5 rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/20 bg-white dark:bg-[#26201C] hover:bg-[#F2CAB3] dark:hover:bg-[#F2CAB3]/20 text-[#49352F] dark:text-[#F4F1E1] text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-95 whitespace-nowrap shrink-0"
           aria-label={t.tutorial?.replayTour || "Start Page Guided Tour"}

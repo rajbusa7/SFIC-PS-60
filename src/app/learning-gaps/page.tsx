@@ -10,7 +10,6 @@ import { BridgeProgress } from "@/components/ui/BridgeProgress";
 import { StatTile } from "@/components/ui/StatTile";
 import { useLanguage } from "@/context/LanguageContext";
 import { ReassessmentModal } from "@/components/assessment/ReassessmentModal";
-import { SpotlightTour } from "@/components/tutorial/SpotlightTour";
 import { ContextualHelp } from "@/components/shared/ContextualHelp";
 import { broadcastDataUpdate, subscribeToDataUpdates } from "@/lib/events";
 import { normalizePriority, normalizeGapStatus } from "@/lib/learningGapFormatters";
@@ -794,7 +793,6 @@ export default function LearningGapsPage() {
         />
       )}
       {/* Guided Tour */}
-      <SpotlightTour page="learningGaps" />
-    </AppLayout>
+          </AppLayout>
   );
 }

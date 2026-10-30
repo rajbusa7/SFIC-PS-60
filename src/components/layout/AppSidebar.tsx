@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
+import { useTutorial } from "@/context/TutorialContext";
 import { BrandLogo } from "../shared/BrandLogo";
 import {
   LayoutDashboard,
@@ -29,6 +30,7 @@ export function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { t, language } = useLanguage();
+  const { openTutorial } = useTutorial();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -141,21 +143,21 @@ export function AppSidebar() {
             {t.sidebar?.tutorialDesc || "Learn how to spot gaps, create 5-step plans & reassess."}
           </p>
           <div className="mt-2.5 flex items-center gap-1.5">
-            <Link
-              href="/tutorial"
-              onClick={() => setIsMobileOpen(false)}
-              className="flex-1 py-1.5 text-center bg-[#F2CAB3] dark:bg-[#F2CAB3]/20 hover:bg-white dark:hover:bg-[#26201C] text-[#49352F] dark:text-[#F4F1E1] border border-[#49352F]/15 dark:border-[#F2CAB3]/20 rounded-xl text-[11px] font-bold transition-all shadow-xs"
-            >
-              {t.sidebar?.openTutorial || "Open Tutorial →"}
-            </Link>
             <button
               type="button"
               onClick={() => {
                 setIsMobileOpen(false);
-                if (typeof window !== "undefined") {
-                  localStorage.removeItem("shikshasetu_tour_completed_dashboard");
-                }
-                triggerPageTour("dashboard");
+                router.push("/dashboard?tour=full");
+              }}
+              className="flex-1 py-1.5 text-center bg-[#F2CAB3] dark:bg-[#F2CAB3]/20 hover:bg-white dark:hover:bg-[#26201C] text-[#49352F] dark:text-[#F4F1E1] border border-[#49352F]/15 dark:border-[#F2CAB3]/20 rounded-xl text-[11px] font-bold transition-all shadow-xs cursor-pointer"
+            >
+              {t.sidebar?.openTutorial || "Open Tutorial →"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsMobileOpen(false);
+                router.push("/dashboard?tour=full");
               }}
               className="px-2 py-1.5 rounded-xl border border-[#49352F]/20 dark:border-[#F2CAB3]/20 hover:bg-white dark:hover:bg-[#26201C] text-[#49352F] dark:text-[#F4F1E1] text-[11px] font-semibold cursor-pointer transition-colors"
               title={t.sidebar?.startTour || "Start Guided Tour"}
@@ -176,7 +178,7 @@ export function AppSidebar() {
             {t.sidebar?.demoDesc || "Evaluate Aarav's division gap remediation in 2 minutes."}
           </p>
           <Link
-            href="/students/std-aarav"
+            href="/students?tour=aarav"
             onClick={() => setIsMobileOpen(false)}
             className="mt-2 block w-full py-1 text-center bg-white dark:bg-[#26201C] hover:bg-[#F2CAB3] dark:hover:bg-[#F2CAB3]/20 text-[#49352F] dark:text-[#F4F1E1] border border-[#49352F]/15 dark:border-[#F2CAB3]/20 rounded-lg text-[11px] font-semibold transition-all shadow-xs"
           >

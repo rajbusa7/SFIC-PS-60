@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useTutorial } from "@/context/TutorialContext";
 import Link from "next/link";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card } from "@/components/ui/Card";
@@ -11,7 +13,6 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useFilter } from "@/context/FilterContext";
 import { StudentFormModal } from "@/components/student/StudentFormModal";
 import { StudentCsvModal } from "@/components/student/StudentCsvModal";
-import { SpotlightTour } from "@/components/tutorial/SpotlightTour";
 import { broadcastDataUpdate, subscribeToDataUpdates } from "@/lib/events";
 import {
   Users,
@@ -32,7 +33,7 @@ import {
   Building,
 } from "lucide-react";
 
-export default function StudentsPage() {
+function StudentsPageContent() {
   const { t, language } = useLanguage();
   const { searchTerm, setSearchTerm, selectedClass, setSelectedClass, gradeNumber } = useFilter();
 
@@ -51,6 +52,46 @@ export default function StudentsPage() {
   const [showCsvModal, setShowCsvModal] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { startTutorial } = useTutorial();
+  const tourParam = searchParams.get("tour");
+  const hasTriggeredAaravTour = useRef(false);
+
+  useEffect(() => {
+    const isAaravTourIntent = tourParam === "aarav" || tourParam === "AARAV_CASE_TOUR";
+    if (!isAaravTourIntent) {
+      hasTriggeredAaravTour.current = false;
+      return;
+    }
+
+    // Wait until students UI is ready and loaded from DB
+    if (loading || students.length === 0) {
+      return;
+    }
+
+    if (hasTriggeredAaravTour.current) {
+      return;
+    }
+
+    hasTriggeredAaravTour.current = true;
+
+    // Reset filters so Aarav is guaranteed to be in view
+    if (activeGrade !== "all") {
+      setSelectedClass("all");
+    }
+    if (searchTerm) {
+      setSearchTerm("");
+    }
+
+    // Start Aarav's Case tutorial from Step 1
+    startTutorial("AARAV_CASE_TOUR");
+
+    // Consume and clear navigation intent from URL
+    router.replace("/students", { scroll: false });
+  }, [tourParam, loading, students.length, gradeNumber, searchTerm, setSelectedClass, setSearchTerm, startTutorial, router]);
+
 
   const showToast = (message: string, type: "success" | "error" = "success") => {
     setNotification({ message, type });
@@ -402,6 +443,7 @@ export default function StudentsPage() {
               <Card
                 key={std.id}
                 variant="glass"
+                data-tour={isDemoCase ? "aarav-card" : undefined}
                 className={`p-5 flex flex-col justify-between transition-all border-[#49352F]/12 hover:border-[#49352F]/25 bg-white text-[#49352F] ${
                   isDemoCase
                     ? "ring-1 ring-[#F2CAB3] shadow-[0_8px_24px_rgba(73,53,47,0.08)]"
@@ -461,7 +503,7 @@ export default function StudentsPage() {
                         <span>{language === "gu" ? "મૂલ્યાંકન બાકી" : "Assessment Pending"}</span>
                       </Badge>
                     ) : gapCount > 0 ? (
-                      <Badge variant="needsSupport" size="sm" dot>
+                      <Badge data-tour={isDemoCase ? "aarav-gap-badge" : undefined} variant="needsSupport" size="sm" dot>
                         <AlertTriangle className="w-3 h-3 mr-1 text-[#C54738]" aria-hidden="true" />
                         <span>
                           {language === "gu"
@@ -505,7 +547,7 @@ export default function StudentsPage() {
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
 
-                    <Link href={`/students/${std.id}`} aria-label={`View 3D Profile for ${std.displayName}`}>
+                    <Link href={`/students/${std.id}`} data-tour={isDemoCase ? "aarav-inspect-btn" : undefined} aria-label={`View 3D Profile for ${std.displayName}`}>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -624,7 +666,15 @@ export default function StudentsPage() {
       )}
 
       {/* Guided Tour */}
-      <SpotlightTour page="students" />
-    </AppLayout>
+          </AppLayout>
+  );
+}
+
+
+export default function StudentsPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-[#7A6862]">Loading Students...</div>}>
+      <StudentsPageContent />
+    </Suspense>
   );
 }

@@ -6,7 +6,10 @@ export type ActivityType =
   | "fill_in_the_blank"
   | "matching"
   | "numerical"
-  | "word_problem";
+  | "word_problem"
+  | "sorting"
+  | "flashcard"
+  | "reading_comprehension";
 
 export interface ActivityQuestion {
   id: string;
@@ -14,9 +17,13 @@ export interface ActivityQuestion {
   questionTextGujarati?: string;
   type: ActivityType;
   options?: string[]; // for mcq
+  optionsGujarati?: string[]; // Gujarati options for bilingual display
   correctAnswer: string | number | boolean;
   explanation: string;
+  explanationGujarati?: string;
   hint?: string;
+  hintGujarati?: string;
+  marks?: number;
   imageUrl?: string;
 }
 
@@ -24,8 +31,15 @@ export interface LearningActivity {
   id: string;
   conceptId: string;
   conceptName?: string;
+  conceptNameGujarati?: string;
   subjectCode: SubjectCode;
   grade: number;
+  chapter?: string;
+  chapterGujarati?: string;
+  topic?: string;
+  topicGujarati?: string;
+  learningObjective?: string;
+  learningObjectiveGujarati?: string;
   title: string;
   titleGujarati?: string;
   activityType: ActivityType;
@@ -33,6 +47,12 @@ export interface LearningActivity {
   estimatedMinutes: number;
   questions: ActivityQuestion[];
   createdAt: string;
+  // For recommended next activity
+  recommendedNextActivityId?: string;
+  // XP points for completing this activity
+  xpReward?: number;
+  // Tags for filtering
+  tags?: string[];
 }
 
 export interface ActivityAssignment {

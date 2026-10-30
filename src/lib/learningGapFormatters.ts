@@ -243,6 +243,9 @@ export function resolveSubject(input: any): { code: SubjectCode; name: string } 
   if (upperCode === "EVS" || upperCode === "SUB-EVS")
     return { code: "EVS", name: "Environmental Studies" };
   if (upperCode === "MATH" || upperCode === "SUB-MATH") return { code: "MATH", name: "Mathematics" };
+  if (upperCode === "SCI" || upperCode === "SUB-SCI") return { code: "SCI" as SubjectCode, name: "Science" };
+  if (upperCode === "SST" || upperCode === "SUB-SST") return { code: "SST" as SubjectCode, name: "Social Science" };
+  if (upperCode === "HIN" || upperCode === "SUB-HIN") return { code: "HIN" as SubjectCode, name: "Hindi" };
 
   // 3. Keyword analysis from concept/subject names
   const combined = `${conceptName} ${subjectName}`.toLowerCase();
@@ -280,6 +283,27 @@ export function resolveSubject(input: any): { code: SubjectCode; name: string } 
   ) {
     return { code: "EVS", name: "Environmental Studies" };
   }
+  if (
+    combined.includes("sci") ||
+    combined.includes("science") ||
+    combined.includes("વિજ્ઞાન")
+  ) {
+    return { code: "SCI" as SubjectCode, name: "Science" };
+  }
+  if (
+    combined.includes("sst") ||
+    combined.includes("social") ||
+    combined.includes("સામાજિક")
+  ) {
+    return { code: "SST" as SubjectCode, name: "Social Science" };
+  }
+  if (
+    combined.includes("hin") ||
+    combined.includes("hindi") ||
+    combined.includes("હિન્દી")
+  ) {
+    return { code: "HIN" as SubjectCode, name: "Hindi" };
+  }
 
   return { code: "MATH", name: "Mathematics" };
 }
@@ -299,6 +323,12 @@ export function formatSubjectLabel(input: any, lang: Language = "en"): string {
         return "ગુજરાતી";
       case "EVS":
         return "પર્યાવરણ (આસપાસ)";
+      case "SCI":
+        return "વિજ્ઞાન";
+      case "SST":
+        return "સામાજિક વિજ્ઞાન";
+      case "HIN":
+        return "હિન્દી";
       default:
         return resolved.name;
     }

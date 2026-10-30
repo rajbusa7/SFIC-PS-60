@@ -6,7 +6,6 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { BridgeProgress } from "@/components/ui/BridgeProgress";
-import { SpotlightTour } from "@/components/tutorial/SpotlightTour";
 import { useLanguage } from "@/context/LanguageContext";
 import { subscribeToDataUpdates } from "@/lib/events";
 import {
@@ -545,7 +544,6 @@ export default function ReportsPage() {
         </div>
       </div>
       {/* Guided Tour */}
-      <SpotlightTour page="reports" />
-    </AppLayout>
+          </AppLayout>
   );
 }

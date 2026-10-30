@@ -33,7 +33,7 @@ export function HackathonDemoBanner() {
 
         <div className="flex items-center gap-2 self-end sm:self-center">
           <Link
-            href="/students/std-aarav"
+            href="/students?tour=aarav"
             className="inline-flex items-center gap-1.5 rounded-xl bg-[#49352F] dark:bg-[#F2CAB3] hover:bg-[#2C1F1B] dark:hover:bg-[#EFBDA4] px-3.5 py-2 text-xs font-bold text-white dark:text-[#35231C] shadow-xs transition-all hover:scale-102 cursor-pointer"
           >
             <Play className="w-3.5 h-3.5 fill-current" />

@@ -11,7 +11,6 @@ import { StatTile } from "@/components/ui/StatTile";
 import { BridgeProgress } from "@/components/ui/BridgeProgress";
 import type { SkillNode } from "@/components/3d/StudentSkillTree3D";
 import { useLanguage } from "@/context/LanguageContext";
-import { SpotlightTour } from "@/components/tutorial/SpotlightTour";
 import { ContextualHelp } from "@/components/shared/ContextualHelp";
 import { subscribeToDataUpdates } from "@/lib/events";
 import {
@@ -998,7 +997,6 @@ export default function StudentDetailPage({
       )}
 
       {/* Guided Tour */}
-      <SpotlightTour page="studentDetail" />
-    </AppLayout>
+          </AppLayout>
   );
 }

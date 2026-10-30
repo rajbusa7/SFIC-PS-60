@@ -575,6 +575,18 @@ export const translations = {
         welcomeBadge: "Welcome to StudySaathi",
         finishBadge: "Ready to Explore",
         tryAaravCta: "Try Demo Student: Aarav Patel",
+        aaravCase: {
+          badge: "Demo Case Walkthrough",
+          step1Title: "Aarav Patel (Class 4-A) Case Study",
+          step1Desc: "Meet Aarav Patel, diagnosed with foundational division hurdles after scoring 35% on baseline diagnostic assessments.",
+          step2Title: "Automatic Learning Gap Flag",
+          step2Desc: "Because 35% is strictly below the 60% mastery threshold, StudySaathi AI flagged an active gap requiring targeted intervention.",
+          step3Title: "Student Roster & Search",
+          step3Desc: "Teachers can quickly filter by class or search by name to track individual progress without paperwork.",
+          step4Title: "Inspect 3D Remedial Profile",
+          step4Desc: "Click to explore Aarav's 5-step concrete bean-counting remedial plan, practice activities, and +50 percentage-point recovery.",
+          ctaText: "Open Aarav's Profile →",
+        },
         dashboard: {
           step1: {
             title: "Welcome to StudySaathi AI",
@@ -1276,6 +1288,18 @@ export const translations = {
         welcomeBadge: "StudySaathi માં સ્વાગત છે",
         finishBadge: "ઉપયોગ માટે તૈયાર",
         tryAaravCta: "ડેમો વિદ્યાર્થી જુઓ: આરવ પટેલ",
+        aaravCase: {
+          badge: "ડેમો કેસ માર્ગદર્શિકા",
+          step1Title: "આરવ પટેલ (ધોરણ ૪-અ) કેસ સ્ટડી",
+          step1Desc: "આરવ પટેલને બેઝલાઇન નિદાન મૂલ્યાંકનમાં ૩૫% ગુણ મળ્યા પછી ભાગાકારની પાયાની ત્રુટિ માટે ઓળખવામાં આવ્યો છે.",
+          step2Title: "આપોઆપ લર્નિંગ ગેપ ફ્લેગ",
+          step2Desc: "૩૫% ગુણ ૬૦% બેન્ચમાર્ક થ્રેશોલ્ડથી નીચે હોવાથી, સ્ટડીસાથી AI એ તાત્કાલિક સહાય માટે સક્રિય ગેપ ફ્લેગ કર્યો.",
+          step3Title: "વિદ્યાર્થી યાદી અને શોધ",
+          step3Desc: "શિક્ષકો વર્ગ મુજબ ફિલ્ટર કરી શકે છે અથવા કોઈપણ વિદ્યાર્થીને કાગળ વગર તુરંત શોધી શકે છે.",
+          step4Title: "૩D ઉપચારાત્મક પ્રોફાઇલ જુઓ",
+          step4Desc: "આરવની ૫-પગલાંની મૂર્ત મણકા ઉપચાર યોજના, પ્રવૃત્તિઓ અને +૫૦ પોઇન્ટનો પ્રગતિ ગેઇન જોવા અહીં ક્લિક કરો.",
+          ctaText: "આરવની પ્રોફાઇલ ખોલો →",
+        },
         dashboard: {
           step1: {
             title: "StudySaathi AI માં આપનું સ્વાગત છે",

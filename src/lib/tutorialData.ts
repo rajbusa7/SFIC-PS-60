@@ -105,6 +105,41 @@ export const dashboardTourSteps: TourStep[] = [
 ];
 
 // 2. Mini-Tour Steps for Other Key Pages
+export const aaravCaseTourSteps: TourStep[] = [
+  {
+    id: "aarav-card",
+    titleKey: "tutorial.tour.aaravCase.step1Title",
+    descKey: "tutorial.tour.aaravCase.step1Desc",
+    targetSelector: '[data-tour="aarav-card"]',
+    placement: "bottom",
+    badgeKey: "tutorial.tour.aaravCase.badge",
+  },
+  {
+    id: "aarav-gap-alert",
+    titleKey: "tutorial.tour.aaravCase.step2Title",
+    descKey: "tutorial.tour.aaravCase.step2Desc",
+    targetSelector: '[data-tour="aarav-gap-badge"]',
+    placement: "bottom",
+  },
+  {
+    id: "aarav-search-filter",
+    titleKey: "tutorial.tour.aaravCase.step3Title",
+    descKey: "tutorial.tour.aaravCase.step3Desc",
+    targetSelector: '[data-tour="students-search"]',
+    placement: "bottom",
+  },
+  {
+    id: "aarav-3d-profile",
+    titleKey: "tutorial.tour.aaravCase.step4Title",
+    descKey: "tutorial.tour.aaravCase.step4Desc",
+    targetSelector: '[data-tour="aarav-inspect-btn"]',
+    placement: "left",
+    ctaTextKey: "tutorial.tour.aaravCase.ctaText",
+    ctaAction: "/students/std-aarav",
+    badgeKey: "tutorial.tour.finishBadge",
+  },
+];
+
 export const studentsTourSteps: TourStep[] = [
   {
     id: "students-search",
@@ -232,14 +267,59 @@ export const reportsTourSteps: TourStep[] = [
   },
 ];
 
+export const tutorialTourSteps: TourStep[] = [
+  {
+    id: "tutorial-welcome",
+    titleKey: "tutorial.tour.welcomeBadge",
+    descKey: "tutorial.heroSubtitle",
+    placement: "center",
+    badgeKey: "tutorial.badge",
+  },
+  {
+    id: "tutorial-workflow",
+    titleKey: "tutorial.activeTabWorkflow",
+    descKey: "tutorial.tour.dashboard.step1.desc",
+    targetSelector: '[data-tour="tutorial-workflow"]',
+    placement: "bottom",
+  },
+  {
+    id: "tutorial-tabs",
+    titleKey: "tutorial.activeTabLessons",
+    descKey: "tutorial.tour.dashboard.step5.desc",
+    targetSelector: '[data-tour="tutorial-tabs"]',
+    placement: "bottom",
+  },
+  {
+    id: "tutorial-sandbox-btn",
+    titleKey: "tutorial.trySandbox",
+    descKey: "tutorial.tour.tryAaravCta",
+    targetSelector: '[data-tour="tutorial-sandbox-btn"]',
+    placement: "top",
+  },
+  {
+    id: "tutorial-finish",
+    titleKey: "tutorial.tour.finishBadge",
+    descKey: "tutorial.tour.dashboard.step8.desc",
+    placement: "center",
+    ctaTextKey: "tutorial.tour.tryAaravCta",
+    ctaAction: "/students/std-aarav",
+    badgeKey: "tutorial.tour.finishBadge",
+  },
+];
+
 // Map of page route to its tour steps
 export const PAGE_TOURS: Record<string, TourStep[]> = {
   dashboard: dashboardTourSteps,
-  students: studentsTourSteps,
+  full: dashboardTourSteps,
+  FULL_SITE_TOUR: dashboardTourSteps,
+  aarav: aaravCaseTourSteps,
+  AARAV_CASE_TOUR: aaravCaseTourSteps,
+  students: aaravCaseTourSteps,
   studentDetail: studentDetailTourSteps,
   learningGaps: learningGapsTourSteps,
   remedialPlans: remedialPlansTourSteps,
   reports: reportsTourSteps,
+  tutorial: tutorialTourSteps,
 };
 
 // 3. Offline FAQ Database (Section D & ShikshaBot Keyword Matcher)

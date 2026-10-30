@@ -1,4 +1,4 @@
-export type SubjectCode = "MATH" | "ENG" | "GUJ" | "EVS";
+export type SubjectCode = "MATH" | "ENG" | "GUJ" | "EVS" | "SCI" | "SST" | "HIN";
 
 export interface Subject {
   id: string;

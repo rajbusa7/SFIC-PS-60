@@ -9,6 +9,7 @@ export interface User {
   phoneVerified?: boolean;
   role: UserRole;
   schoolId: string;
+  has_seen_tutorial?: boolean;
   googleId?: string;
   avatarUrl?: string;
   provider?: "local" | "google" | "phone";

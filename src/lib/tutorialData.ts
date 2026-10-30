@@ -105,6 +105,41 @@ export const dashboardTourSteps: TourStep[] = [
 ];
 
 // 2. Mini-Tour Steps for Other Key Pages
+export const aaravCaseTourSteps: TourStep[] = [
+  {
+    id: "aarav-card",
+    titleKey: "tutorial.tour.aaravCase.step1Title",
+    descKey: "tutorial.tour.aaravCase.step1Desc",
+    targetSelector: '[data-tour="aarav-card"]',
+    placement: "bottom",
+    badgeKey: "tutorial.tour.aaravCase.badge",
+  },
+  {
+    id: "aarav-gap-alert",
+    titleKey: "tutorial.tour.aaravCase.step2Title",
+    descKey: "tutorial.tour.aaravCase.step2Desc",
+    targetSelector: '[data-tour="aarav-gap-badge"]',
+    placement: "bottom",
+  },
+  {
+    id: "aarav-search-filter",
+    titleKey: "tutorial.tour.aaravCase.step3Title",
+    descKey: "tutorial.tour.aaravCase.step3Desc",
+    targetSelector: '[data-tour="students-search"]',
+    placement: "bottom",
+  },
+  {
+    id: "aarav-3d-profile",
+    titleKey: "tutorial.tour.aaravCase.step4Title",
+    descKey: "tutorial.tour.aaravCase.step4Desc",
+    targetSelector: '[data-tour="aarav-inspect-btn"]',
+    placement: "left",
+    ctaTextKey: "tutorial.tour.aaravCase.ctaText",
+    ctaAction: "/students/std-aarav",
+    badgeKey: "tutorial.tour.finishBadge",
+  },
+];
+
 export const studentsTourSteps: TourStep[] = [
   {
     id: "students-search",
@@ -275,12 +310,16 @@ export const tutorialTourSteps: TourStep[] = [
 // Map of page route to its tour steps
 export const PAGE_TOURS: Record<string, TourStep[]> = {
   dashboard: dashboardTourSteps,
-  tutorial: tutorialTourSteps,
-  students: studentsTourSteps,
+  full: dashboardTourSteps,
+  FULL_SITE_TOUR: dashboardTourSteps,
+  aarav: aaravCaseTourSteps,
+  AARAV_CASE_TOUR: aaravCaseTourSteps,
+  students: aaravCaseTourSteps,
   studentDetail: studentDetailTourSteps,
   learningGaps: learningGapsTourSteps,
   remedialPlans: remedialPlansTourSteps,
   reports: reportsTourSteps,
+  tutorial: tutorialTourSteps,
 };
 
 // 3. Offline FAQ Database (Section D & ShikshaBot Keyword Matcher)

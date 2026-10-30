@@ -340,11 +340,7 @@ export function AppHeader({
         <button
           type="button"
           onClick={() => {
-            const pageKey = getPageTourKey(pathname);
-            if (typeof window !== "undefined") {
-              localStorage.removeItem(`shikshasetu_tour_completed_${pageKey}`);
-            }
-            openTutorial();
+            router.push("/dashboard?tour=full");
           }}
           className="hidden 2xl:inline-flex h-9 items-center gap-1.5 px-2.5 rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/20 bg-white dark:bg-[#26201C] hover:bg-[#F2CAB3] dark:hover:bg-[#F2CAB3]/20 text-[#49352F] dark:text-[#F4F1E1] text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-95 whitespace-nowrap shrink-0"
           aria-label={t.tutorial?.replayTour || "Start Page Guided Tour"}

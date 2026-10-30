@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -78,9 +79,13 @@ const StudentFormModal = dynamic(
   { ssr: false }
 );
 
-export default function DashboardPage() {
+function DashboardContent() {
   const { t, language, formatSubject, formatClass, formatPriority } = useLanguage();
-  const { openTutorial } = useTutorial();
+  const { openTutorial, startTutorial } = useTutorial();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const tourParam = searchParams.get("tour");
+  const hasTriggeredFullTour = useRef(false);
 
   const [loading, setLoading] = useState(true);
   const [students, setStudents] = useState<any[]>([]);
@@ -98,6 +103,32 @@ export default function DashboardPage() {
   const [dashboardView, setDashboardView] = useState<"overview" | "ai">("overview");
   const [aiTab, setAiTab] = useState<AiTab>("tutor");
   const [hasCelebrated, setHasCelebrated] = useState(false);
+
+  useEffect(() => {
+    const isFullTourIntent = tourParam === "full" || tourParam === "FULL_SITE_TOUR";
+    if (!isFullTourIntent) {
+      hasTriggeredFullTour.current = false;
+      return;
+    }
+
+    // Wait until dashboard data is loaded from API
+    if (loading) {
+      return;
+    }
+
+    if (hasTriggeredFullTour.current) {
+      return;
+    }
+
+    hasTriggeredFullTour.current = true;
+
+    // Start full website tutorial from Step 1
+    startTutorial("FULL_SITE_TOUR");
+
+    // Consume and clear navigation intent from URL
+    router.replace("/dashboard", { scroll: false });
+  }, [tourParam, loading, startTutorial, router]);
+
 
   const fetchDashboardData = async () => {
     setLoading(true);
@@ -335,7 +366,7 @@ export default function DashboardPage() {
                   variant="primary"
                   size="sm"
                   onClick={() => {
-                    openTutorial();
+                    startTutorial("FULL_SITE_TOUR");
                   }}
                   className="rounded-xl text-xs font-bold shadow-xs flex-1 md:flex-initial cursor-pointer"
                 >
@@ -740,5 +771,14 @@ export default function DashboardPage() {
       {/* Onboarding Checklist Widget */}
       <ChecklistWidget />
     </AppLayout>
+  );
+}
+
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-[#7A6862]">Loading Dashboard...</div>}>
+      <DashboardContent />
+    </Suspense>
   );
 }

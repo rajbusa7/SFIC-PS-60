@@ -5,12 +5,15 @@ import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "./AuthContext";
 import { TourStep, PAGE_TOURS, dashboardTourSteps } from "@/lib/tutorialData";
 
+export type TutorialTourMode = "FULL_SITE_TOUR" | "AARAV_CASE_TOUR";
+
 export interface TutorialContextType {
   tutorialOpen: boolean;
   tutorialMode: "auto" | "manual";
   tutorialStep: number;
   activeTourPage: string;
   steps: TourStep[];
+  startTutorial: (mode: "FULL_SITE_TOUR" | "AARAV_CASE_TOUR" | string) => void;
   openTutorial: (options?: { step?: number; page?: string }) => void;
   closeTutorial: () => void;
   nextStep: () => void;
@@ -24,8 +27,9 @@ const TutorialContext = createContext<TutorialContextType>({
   tutorialOpen: false,
   tutorialMode: "manual",
   tutorialStep: 0,
-  activeTourPage: "tutorial",
+  activeTourPage: "FULL_SITE_TOUR",
   steps: dashboardTourSteps,
+  startTutorial: () => {},
   openTutorial: () => {},
   closeTutorial: () => {},
   nextStep: () => {},
@@ -43,7 +47,7 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [tutorialMode, setTutorialMode] = useState<"auto" | "manual">("manual");
   const [tutorialStep, setTutorialStepState] = useState(0);
-  const [activeTourPage, setActiveTourPage] = useState<string>("tutorial");
+  const [activeTourPage, setActiveTourPage] = useState<string>("FULL_SITE_TOUR");
 
   const steps: TourStep[] = PAGE_TOURS[activeTourPage] || dashboardTourSteps;
 
@@ -51,34 +55,29 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
     setTutorialStepState(step);
   }, []);
 
-  // Central manual tutorial opener - called by both "Replay Guided Tour" & "Open Tutorial →"
+  // Dedicated starter for the two decoupled tutorial flows: FULL_SITE_TOUR & AARAV_CASE_TOUR
+  const startTutorial = useCallback((mode: "FULL_SITE_TOUR" | "AARAV_CASE_TOUR" | string) => {
+    const isAarav = mode === "AARAV_CASE_TOUR" || mode === "aarav";
+    const targetPage = isAarav ? "AARAV_CASE_TOUR" : "FULL_SITE_TOUR";
+
+    setTutorialMode("manual");
+    setTutorialStepState(0);
+    setActiveTourPage(targetPage);
+    setTutorialOpen(true);
+  }, []);
+
+  // Central manual tutorial opener (supports options for backwards compatibility)
   const openTutorial = useCallback(
     (options?: { step?: number; page?: string }) => {
-      const targetPage = options?.page || "tutorial";
+      const targetPage = options?.page || "FULL_SITE_TOUR";
       const startStep = options?.step ?? 0;
 
       setTutorialMode("manual");
       setTutorialStepState(startStep);
       setActiveTourPage(targetPage);
       setTutorialOpen(true);
-
-      if (typeof window !== "undefined") {
-        sessionStorage.setItem(
-          "shikshasetu_pending_tutorial",
-          JSON.stringify({
-            mode: "manual",
-            step: startStep,
-            page: targetPage,
-          })
-        );
-      }
-
-      // Directly navigate to the dedicated Tutorial page /tutorial
-      if (pathname !== "/tutorial") {
-        router.push("/tutorial");
-      }
     },
-    [pathname, router]
+    []
   );
 
   // Close tutorial handler
@@ -120,6 +119,8 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
         "shikshasetu_tour_completed_learningGaps",
         "shikshasetu_tour_completed_remedialPlans",
         "shikshasetu_tour_completed_reports",
+        "shikshasetu_tour_completed_FULL_SITE_TOUR",
+        "shikshasetu_tour_completed_AARAV_CASE_TOUR",
         "shikshasetu_checklist_completed",
         "shikshasetu_checklist_steps",
         "shikshasetu_checklist_dismissed",
@@ -129,52 +130,34 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
     }
   }, [setHasSeenTutorial]);
 
-  // Handle route transitions & Pending / Automatic Onboarding checks
+  // Automatic onboarding logic:
+  // ONLY fires for brand new users (has_seen_tutorial === false) on first login!
+  // Experienced users (has_seen_tutorial === true) will NEVER trigger this.
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // 1. Check for pending manual tutorial request from navigation
-    const pending = sessionStorage.getItem("shikshasetu_pending_tutorial");
-    if (pending) {
-      try {
-        const parsed = JSON.parse(pending);
-        sessionStorage.removeItem("shikshasetu_pending_tutorial");
-        if (pathname === "/tutorial" || pathname === "/dashboard") {
-          setTutorialMode(parsed.mode || "manual");
-          setTutorialStepState(parsed.step || 0);
-          setActiveTourPage(parsed.page || "tutorial");
-          const timer = setTimeout(() => {
-            setTutorialOpen(true);
-          }, 100);
-          return () => clearTimeout(timer);
-        }
-      } catch {
-        sessionStorage.removeItem("shikshasetu_pending_tutorial");
-      }
-    }
-
-    // 2. Automatic onboarding logic:
-    // ONLY fires for brand new users (has_seen_tutorial === false) on first login!
-    // Experienced users (has_seen_tutorial === true) will NEVER trigger this.
     if (pathname === "/dashboard" && user && user.has_seen_tutorial === false && !tutorialOpen) {
       setTutorialMode("auto");
       setTutorialStepState(0);
-      setActiveTourPage("tutorial");
+      setActiveTourPage("FULL_SITE_TOUR");
       setTutorialOpen(true);
-      router.push("/tutorial");
     }
-  }, [pathname, user, tutorialOpen, router]);
+  }, [pathname, user, tutorialOpen]);
 
   // Support global custom event for backwards compatibility
   useEffect(() => {
     const handleReplay = (e: Event) => {
       const customEvent = e as CustomEvent;
-      const targetPage = customEvent.detail?.page || "tutorial";
-      openTutorial({ page: targetPage, step: 0 });
+      const targetPage = customEvent.detail?.page || "FULL_SITE_TOUR";
+      if (targetPage === "aarav" || targetPage === "AARAV_CASE_TOUR") {
+        startTutorial("AARAV_CASE_TOUR");
+      } else {
+        startTutorial("FULL_SITE_TOUR");
+      }
     };
     window.addEventListener("shikshasetu_start_tour", handleReplay);
     return () => window.removeEventListener("shikshasetu_start_tour", handleReplay);
-  }, [openTutorial]);
+  }, [startTutorial]);
 
   return (
     <TutorialContext.Provider
@@ -184,6 +167,7 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
         tutorialStep,
         activeTourPage,
         steps,
+        startTutorial,
         openTutorial,
         closeTutorial,
         nextStep,

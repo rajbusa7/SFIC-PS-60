@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { dashboardTourSteps, tutorialTourSteps, PAGE_TOURS } from "../src/lib/tutorialData";
+import { dashboardTourSteps, aaravCaseTourSteps, tutorialTourSteps, PAGE_TOURS } from "../src/lib/tutorialData";
 
 // Simulate mock localStorage and sessionStorage environment
 class MockStorage {
@@ -33,15 +33,23 @@ interface User {
   has_seen_tutorial?: boolean;
 }
 
-// Tutorial Engine state simulation matching src/context/TutorialContext.tsx
-class TutorialEngine {
+// Application Navigation and Tutorial Simulation
+class AppNavigationSimulator {
+  public currentUrl: string = "/dashboard";
   public tutorialOpen: boolean = false;
   public tutorialMode: "auto" | "manual" = "manual";
   public tutorialStep: number = 0;
-  public activeTourPage: string = "tutorial";
-  public currentPath: string = "/dashboard";
+  public activeTourPage: string = "FULL_SITE_TOUR";
   public user: User | null = null;
   public storage: MockStorage;
+
+  // Component readiness states
+  public dashboardReady: boolean = true;
+  public studentsReady: boolean = true;
+
+  // Intent guards
+  private hasTriggeredFullTourRef: boolean = false;
+  private hasTriggeredAaravTourRef: boolean = false;
 
   constructor(storage: MockStorage) {
     this.storage = storage;
@@ -77,33 +85,77 @@ class TutorialEngine {
     return newUser;
   }
 
-  // Automatic onboarding check (ran on /dashboard mount)
+  // Navigate to URL (mirrors router.push)
+  public navigate(url: string) {
+    this.currentUrl = url;
+    // Reset guards when intent is newly applied
+    if (url.includes("tour=full") || url.includes("tour=FULL_SITE_TOUR")) {
+      this.hasTriggeredFullTourRef = false;
+    }
+    if (url.includes("tour=aarav") || url.includes("tour=AARAV_CASE_TOUR")) {
+      this.hasTriggeredAaravTourRef = false;
+    }
+    this.processDestinationReadiness();
+  }
+
+  // Replace URL without reloading (mirrors router.replace)
+  public replace(url: string) {
+    this.currentUrl = url;
+  }
+
+  // startTutorial implementation matching src/context/TutorialContext.tsx
+  public startTutorial(mode: "FULL_SITE_TOUR" | "AARAV_CASE_TOUR" | string) {
+    const isAarav = mode === "AARAV_CASE_TOUR" || mode === "aarav";
+    const targetPage = isAarav ? "AARAV_CASE_TOUR" : "FULL_SITE_TOUR";
+
+    this.tutorialMode = "manual";
+    this.tutorialStep = 0;
+    this.activeTourPage = targetPage;
+    this.tutorialOpen = true;
+  }
+
+  // Check automatic onboarding for brand new users on first login
   public checkAutomaticOnboarding(pathname: string): boolean {
-    this.currentPath = pathname;
+    this.currentUrl = pathname;
     if (pathname === "/dashboard" && this.user && this.user.has_seen_tutorial === false && !this.tutorialOpen) {
       this.tutorialMode = "auto";
       this.tutorialStep = 0;
-      this.activeTourPage = "tutorial";
+      this.activeTourPage = "FULL_SITE_TOUR";
       this.tutorialOpen = true;
-      this.currentPath = "/tutorial"; // Automatically redirects to /tutorial
       return true;
     }
     return false;
   }
 
-  // Central tutorial engine open method - called by "Replay Guided Tour" & "Open Tutorial →"
-  public openTutorial(options?: { step?: number; page?: string }) {
-    const targetPage = options?.page || "tutorial";
-    const startStep = options?.step ?? 0;
+  // Mirrors destination page useEffect monitoring component readiness and query params
+  public processDestinationReadiness() {
+    const [path, queryString] = this.currentUrl.split("?");
+    const params = new URLSearchParams(queryString || "");
+    const tour = params.get("tour");
 
-    this.tutorialMode = "manual";
-    this.tutorialStep = startStep;
-    this.activeTourPage = targetPage;
-    this.tutorialOpen = true;
-    this.currentPath = "/tutorial"; // Immediately navigates to /tutorial
+    // Flow 1: Dashboard mounted & receives tour=full
+    if (path === "/dashboard") {
+      const isFullIntent = tour === "full" || tour === "FULL_SITE_TOUR";
+      if (isFullIntent && this.dashboardReady && !this.hasTriggeredFullTourRef) {
+        this.hasTriggeredFullTourRef = true;
+        this.startTutorial("FULL_SITE_TOUR");
+        // Clear / consume intent
+        this.replace("/dashboard");
+      }
+    }
+
+    // Flow 2: Students mounted & receives tour=aarav
+    if (path === "/students") {
+      const isAaravIntent = tour === "aarav" || tour === "AARAV_CASE_TOUR";
+      if (isAaravIntent && this.studentsReady && !this.hasTriggeredAaravTourRef) {
+        this.hasTriggeredAaravTourRef = true;
+        this.startTutorial("AARAV_CASE_TOUR");
+        // Clear / consume intent
+        this.replace("/students");
+      }
+    }
   }
 
-  // Finish or close tutorial
   public closeTutorial() {
     this.tutorialOpen = false;
     if (this.user) {
@@ -111,205 +163,170 @@ class TutorialEngine {
       this.storage.setItem("shikshasetu_user", JSON.stringify(this.user));
       this.storage.setItem(`shikshasetu_seen_tutorial_${this.user.email}`, "true");
     }
-    this.storage.setItem(`shikshasetu_tour_completed_${this.activeTourPage}`, "true");
   }
 
-  // Reset Tutorial & Onboarding
   public resetTutorial() {
     if (this.user) {
       this.user.has_seen_tutorial = false;
       this.storage.setItem("shikshasetu_user", JSON.stringify(this.user));
       this.storage.removeItem(`shikshasetu_seen_tutorial_${this.user.email}`);
     }
-    this.storage.removeItem("shikshasetu_tour_completed_dashboard");
-    this.storage.removeItem("shikshasetu_tour_completed_tutorial");
-    this.storage.removeItem("shikshasetu_checklist_completed");
   }
 }
 
-describe("ShikshaSetu AI Tutorial & Onboarding System Comprehensive Suite", () => {
-  it("Test A — New User: automatically redirects to /tutorial on first login", () => {
+describe("ShikshaSetu AI Tutorial Navigation & Automated Flows Suite", () => {
+  it("TEST 1 — Launch Aarav's Case: navigates to /students?tour=aarav, waits for Students ready, starts AARAV_CASE_TOUR from Step 1", () => {
     const storage = new MockStorage();
-    const engine = new TutorialEngine(storage);
+    const app = new AppNavigationSimulator(storage);
+    app.login("teacher@shikshasetu.edu.in", "teacher");
 
-    // Register / login new user
-    const newUser = engine.login("newteacher@gujarat.gov.in", "teacher");
-    assert.strictEqual(newUser.has_seen_tutorial, false, "New user has_seen_tutorial must be false");
+    // User is initially on dashboard with tutorial closed
+    app.currentUrl = "/dashboard";
+    assert.strictEqual(app.tutorialOpen, false);
 
-    // Visit dashboard on first login
-    const autoOpened = engine.checkAutomaticOnboarding("/dashboard");
-    assert.strictEqual(autoOpened, true, "Tutorial must automatically trigger for new user on dashboard");
-    assert.strictEqual(engine.currentPath, "/tutorial", "Must automatically navigate/redirect to /tutorial");
-    assert.strictEqual(engine.tutorialOpen, true, "Tutorial must be open");
-    assert.strictEqual(engine.tutorialMode, "auto", "Tutorial mode should be auto");
-    assert.strictEqual(engine.tutorialStep, 0, "Tutorial must start from step 1 (index 0)");
+    // User clicks 'Launch Aarav\'s Case →'
+    app.navigate("/students?tour=aarav");
+
+    // Automatically reaches Students page
+    assert.strictEqual(app.currentUrl, "/students", "Must have consumed and cleared ?tour=aarav intent");
+    assert.strictEqual(app.tutorialOpen, true, "Aarav tutorial overlay must open automatically");
+    assert.strictEqual(app.activeTourPage, "AARAV_CASE_TOUR", "Must activate AARAV_CASE_TOUR mode");
+    assert.strictEqual(app.tutorialStep, 0, "Tutorial must start strictly at Step 1 (index 0)");
+
+    // Verify steps belong to Aarav case tour targeting real Students DOM elements
+    const steps = PAGE_TOURS[app.activeTourPage];
+    assert.ok(steps.length >= 4, "Aarav case tour must have at least 4 steps");
+    assert.strictEqual(steps[0].targetSelector, '[data-tour="aarav-card"]');
+    assert.strictEqual(steps[1].targetSelector, '[data-tour="aarav-gap-badge"]');
   });
 
-  it("Test B — New User Manually Opens Tutorial: close tour, then click Replay Guided Tour", () => {
+  it("TEST 2 — Replay Guided Tour: navigates to /dashboard?tour=full, waits for Dashboard ready, starts FULL_SITE_TOUR from Step 1", () => {
     const storage = new MockStorage();
-    const engine = new TutorialEngine(storage);
+    const app = new AppNavigationSimulator(storage);
+    app.login("teacher@shikshasetu.edu.in", "teacher");
 
-    // New user logs in & tour auto-opens
-    engine.login("newteacher@gujarat.gov.in", "teacher");
-    engine.checkAutomaticOnboarding("/dashboard");
-    assert.strictEqual(engine.tutorialOpen, true);
+    // User is on /tutorial or /settings
+    app.currentUrl = "/tutorial";
+    assert.strictEqual(app.tutorialOpen, false);
 
-    // User closes the tutorial
-    engine.closeTutorial();
-    assert.strictEqual(engine.tutorialOpen, false, "Tutorial must be closed");
-    assert.strictEqual(engine.user?.has_seen_tutorial, true, "After closing, user.has_seen_tutorial must be true");
+    // User clicks 'Replay Guided Tour'
+    app.navigate("/dashboard?tour=full");
 
-    // User is on dashboard
-    engine.currentPath = "/dashboard";
+    // Automatically reaches Dashboard
+    assert.strictEqual(app.currentUrl, "/dashboard", "Must have consumed and cleared ?tour=full intent");
+    assert.strictEqual(app.tutorialOpen, true, "Full site tutorial must open automatically");
+    assert.strictEqual(app.activeTourPage, "FULL_SITE_TOUR", "Must activate FULL_SITE_TOUR mode");
+    assert.strictEqual(app.tutorialStep, 0, "Tutorial must start strictly at Step 1 (index 0)");
 
-    // Next dashboard visit should NOT auto-open
-    const autoOpenedAgain = engine.checkAutomaticOnboarding("/dashboard");
-    assert.strictEqual(autoOpenedAgain, false, "Experienced/completed user must NOT auto-open tutorial");
-
-    // User manually clicks 'Replay Guided Tour'
-    engine.openTutorial();
-    assert.strictEqual(engine.currentPath, "/tutorial", "Must navigate directly to /tutorial");
-    assert.strictEqual(engine.tutorialOpen, true, "Tutorial must open on manual trigger");
-    assert.strictEqual(engine.tutorialStep, 0, "Tutorial must restart from Step 1 (index 0)");
-    assert.strictEqual(engine.tutorialMode, "manual", "Tutorial mode must be manual");
+    // Verify steps belong to full website tour
+    const steps = PAGE_TOURS[app.activeTourPage];
+    assert.ok(steps.length >= 8, "Full site tour must have at least 8 steps");
+    assert.strictEqual(steps[1].targetSelector, '[data-tour="kpi-tiles"]');
+    assert.strictEqual(steps[2].targetSelector, '[data-tour="immediate-attention"]');
   });
 
-  it("Test C — Experienced User: existing account login shows normal website with no auto tutorial", () => {
+  it("TEST 3 — Experienced user: login has no automatic tutorial; clicking Replay Guided Tour starts full tutorial", () => {
     const storage = new MockStorage();
-    const engine = new TutorialEngine(storage);
+    const app = new AppNavigationSimulator(storage);
 
-    // Existing demo teacher
-    const experiencedUser = engine.login("teacher@shikshasetu.edu.in", "teacher");
-    assert.strictEqual(experiencedUser.has_seen_tutorial, true, "Experienced user must have has_seen_tutorial = true");
+    // Login as experienced user
+    const user = app.login("teacher@shikshasetu.edu.in", "teacher");
+    assert.strictEqual(user.has_seen_tutorial, true, "Experienced user must have has_seen_tutorial = true");
 
-    const autoOpened = engine.checkAutomaticOnboarding("/dashboard");
-    assert.strictEqual(autoOpened, false, "Automatic tutorial must NOT open for experienced user");
-    assert.strictEqual(engine.currentPath, "/dashboard", "Must remain on normal website (/dashboard)");
-    assert.strictEqual(engine.tutorialOpen, false, "Tutorial must remain closed");
-  });
-
-  it("Test D — Experienced User -> Replay Guided Tour: navigates immediately to /tutorial at Step 1", () => {
-    const storage = new MockStorage();
-    const engine = new TutorialEngine(storage);
-
-    engine.login("teacher@shikshasetu.edu.in", "teacher");
-    engine.currentPath = "/dashboard";
-    assert.strictEqual(engine.tutorialOpen, false);
+    // Standard visit to dashboard
+    const autoTriggered = app.checkAutomaticOnboarding("/dashboard");
+    assert.strictEqual(autoTriggered, false, "Ordinary login must NOT automatically trigger tutorial");
+    assert.strictEqual(app.tutorialOpen, false);
 
     // User clicks "Replay Guided Tour"
-    engine.openTutorial();
-    assert.strictEqual(engine.currentPath, "/tutorial", "Must immediately navigate to dedicated Tutorial page");
-    assert.strictEqual(engine.tutorialOpen, true, "Tutorial must immediately open");
-    assert.strictEqual(engine.tutorialStep, 0, "Tutorial must start from Step 1");
+    app.navigate("/dashboard?tour=full");
+    assert.strictEqual(app.tutorialOpen, true, "Manual click must start tutorial even for experienced user");
+    assert.strictEqual(app.activeTourPage, "FULL_SITE_TOUR");
+    assert.strictEqual(app.tutorialStep, 0);
   });
 
-  it("Test E — Experienced User -> Open Tutorial: clicks 'Open Tutorial →' in Teacher Tutorial card", () => {
+  it("TEST 4 — Experienced user + Aarav: clicking Launch Aarav's Case starts Aarav tutorial automatically", () => {
     const storage = new MockStorage();
-    const engine = new TutorialEngine(storage);
+    const app = new AppNavigationSimulator(storage);
 
-    engine.login("teacher@shikshasetu.edu.in", "teacher");
-    engine.currentPath = "/dashboard";
-    assert.strictEqual(engine.tutorialOpen, false);
+    // Experienced user with completed tutorial history
+    app.login("teacher@shikshasetu.edu.in", "teacher");
+    app.closeTutorial();
+    assert.strictEqual(app.user?.has_seen_tutorial, true);
 
-    // User goes to Teacher Tutorial card and clicks 'Open Tutorial →'
-    engine.openTutorial();
-    assert.strictEqual(engine.currentPath, "/tutorial", "Must immediately navigate to dedicated Tutorial page");
-    assert.strictEqual(engine.tutorialOpen, true, "Tutorial must immediately open");
-    assert.strictEqual(engine.tutorialStep, 0, "Tutorial must start from Step 1");
+    // User clicks 'Launch Aarav\'s Case →'
+    app.navigate("/students?tour=aarav");
+    assert.strictEqual(app.tutorialOpen, true, "Aarav tutorial must open automatically");
+    assert.strictEqual(app.activeTourPage, "AARAV_CASE_TOUR");
+    assert.strictEqual(app.tutorialStep, 0);
   });
 
-  it("Test F — Do NOT Reset: Experienced user clicks 'Replay Guided Tour' without clicking Reset", () => {
+  it("TEST 5 — No Reset: neither tutorial flow requires clicking Reset Tutorial & Onboarding", () => {
     const storage = new MockStorage();
-    storage.setItem("shikshasetu_tour_completed_dashboard", "true");
-    const engine = new TutorialEngine(storage);
+    storage.setItem("shikshasetu_tour_completed_FULL_SITE_TOUR", "true");
+    storage.setItem("shikshasetu_tour_completed_AARAV_CASE_TOUR", "true");
+    const app = new AppNavigationSimulator(storage);
+    app.login("teacher@shikshasetu.edu.in", "teacher");
 
-    engine.login("teacher@shikshasetu.edu.in", "teacher");
-    engine.currentPath = "/dashboard";
-    // Explicitly verify NO reset was called
-    assert.strictEqual(storage.getItem("shikshasetu_tour_completed_dashboard"), "true");
+    // Flow 1 without Reset
+    app.navigate("/students?tour=aarav");
+    assert.strictEqual(app.tutorialOpen, true, "Aarav tour works without Reset");
+    app.closeTutorial();
 
-    // Click "Replay Guided Tour"
-    engine.openTutorial();
-    assert.strictEqual(engine.currentPath, "/tutorial", "Must navigate to /tutorial without reset");
-    assert.strictEqual(engine.tutorialOpen, true, "Tutorial must open without needing Reset Tutorial & Onboarding");
-    assert.strictEqual(engine.tutorialStep, 0, "Tutorial must start at Step 1");
+    // Flow 2 without Reset
+    app.navigate("/dashboard?tour=full");
+    assert.strictEqual(app.tutorialOpen, true, "Full tour works without Reset");
   });
 
-  it("Test G — Do NOT Reset: Experienced user clicks 'Open Tutorial →' without clicking Reset", () => {
+  it("TEST 6 — Prevent Duplicate Tutorial Starts: intent is consumed once and re-renders do not double open", () => {
     const storage = new MockStorage();
-    storage.setItem("shikshasetu_tour_completed_dashboard", "true");
-    const engine = new TutorialEngine(storage);
+    const app = new AppNavigationSimulator(storage);
+    app.login("teacher@shikshasetu.edu.in", "teacher");
 
-    engine.login("teacher@shikshasetu.edu.in", "teacher");
-    engine.currentPath = "/dashboard";
-    assert.strictEqual(storage.getItem("shikshasetu_tour_completed_dashboard"), "true");
+    // Navigate to students with tour=aarav
+    app.navigate("/students?tour=aarav");
+    assert.strictEqual(app.tutorialOpen, true);
+    assert.strictEqual(app.currentUrl, "/students", "Intent must be replaced/consumed");
 
-    // Click "Open Tutorial →"
-    engine.openTutorial();
-    assert.strictEqual(engine.currentPath, "/tutorial", "Must navigate to /tutorial without reset");
-    assert.strictEqual(engine.tutorialOpen, true, "Tutorial must open without needing Reset Tutorial & Onboarding");
-    assert.strictEqual(engine.tutorialStep, 0, "Tutorial must start at Step 1");
+    // Close tour
+    app.closeTutorial();
+    assert.strictEqual(app.tutorialOpen, false);
+
+    // Simulate React re-render of Students page
+    app.processDestinationReadiness();
+    assert.strictEqual(app.tutorialOpen, false, "Tutorial must NOT re-open on plain re-render");
   });
 
-  it("Reset Tutorial & Onboarding: available for explicit testing but not part of normal manual flow", () => {
+  it("TEST 7 — Two Distinct Tutorial Modes in Central Engine", () => {
+    assert.ok(PAGE_TOURS["FULL_SITE_TOUR"], "FULL_SITE_TOUR must be registered in PAGE_TOURS");
+    assert.ok(PAGE_TOURS["AARAV_CASE_TOUR"], "AARAV_CASE_TOUR must be registered in PAGE_TOURS");
+
+    assert.notStrictEqual(PAGE_TOURS["FULL_SITE_TOUR"], PAGE_TOURS["AARAV_CASE_TOUR"], "Modes must have different step definitions");
+
+    const fullSteps = PAGE_TOURS["FULL_SITE_TOUR"];
+    const aaravSteps = PAGE_TOURS["AARAV_CASE_TOUR"];
+
+    // Aarav case specifically highlights Students / Aarav elements
+    assert.ok(aaravSteps.some((s) => s.targetSelector === '[data-tour="aarav-card"]'));
+    assert.ok(aaravSteps.some((s) => s.targetSelector === '[data-tour="aarav-gap-badge"]'));
+
+    // Full site highlights Dashboard overview elements
+    assert.ok(fullSteps.some((s) => s.targetSelector === '[data-tour="kpi-tiles"]'));
+    assert.ok(fullSteps.some((s) => s.targetSelector === '[data-tour="immediate-attention"]'));
+  });
+
+  it("TEST 8 — New User Automatic Onboarding preserved on first login", () => {
     const storage = new MockStorage();
-    const engine = new TutorialEngine(storage);
+    const app = new AppNavigationSimulator(storage);
 
-    const user = engine.login("teacher@shikshasetu.edu.in", "teacher");
-    assert.strictEqual(user.has_seen_tutorial, true);
+    // Register brand new user
+    const newUser = app.login("brandnewteacher@gujarat.gov.in", "teacher");
+    assert.strictEqual(newUser.has_seen_tutorial, false);
 
-    // Explicitly click Reset Tutorial & Onboarding in Settings
-    engine.resetTutorial();
-    assert.strictEqual(engine.user?.has_seen_tutorial, false, "Reset must set has_seen_tutorial to false");
-    assert.strictEqual(storage.getItem("shikshasetu_tour_completed_dashboard"), null, "Completed flags must be cleared");
-
-    // Subsequent dashboard visit will auto-open as if new user
-    const autoOpened = engine.checkAutomaticOnboarding("/dashboard");
-    assert.strictEqual(autoOpened, true, "After reset, automatic onboarding triggers on dashboard visit");
-    assert.strictEqual(engine.currentPath, "/tutorial", "After reset, auto-onboarding routes to /tutorial");
-  });
-
-  it("One Shared Tutorial Engine: covers required website sections with real DOM elements", () => {
-    // Verify steps defined in the central dashboard tour
-    assert.ok(dashboardTourSteps.length >= 8, "Dashboard tour should have at least 8 steps");
-    assert.ok(tutorialTourSteps.length >= 5, "Tutorial page tour should have at least 5 steps");
-
-    // Check key DOM target selectors
-    const stepIds = dashboardTourSteps.map((s) => s.id);
-    assert.ok(stepIds.includes("welcome"), "Must include welcome step");
-    assert.ok(stepIds.includes("kpi-tiles"), "Must include KPI stat tiles");
-    assert.ok(stepIds.includes("immediate-attention"), "Must include immediate attention list");
-    assert.ok(stepIds.includes("curriculum-chart"), "Must include curriculum competency chart");
-    assert.ok(stepIds.includes("sidebar-nav"), "Must include sidebar navigation");
-    assert.ok(stepIds.includes("language-toggle"), "Must include bilingual language switcher");
-    assert.ok(stepIds.includes("shikshabot-trigger"), "Must include ShikshaBot AI assistant");
-    assert.ok(stepIds.includes("finish"), "Must include completion/CTA step");
-
-    // Check selectors
-    const kpiStep = dashboardTourSteps.find((s) => s.id === "kpi-tiles");
-    assert.strictEqual(kpiStep?.targetSelector, '[data-tour="kpi-tiles"]');
-
-    const attnStep = dashboardTourSteps.find((s) => s.id === "immediate-attention");
-    assert.strictEqual(attnStep?.targetSelector, '[data-tour="immediate-attention"]');
-
-    const currStep = dashboardTourSteps.find((s) => s.id === "curriculum-chart");
-    assert.strictEqual(currStep?.targetSelector, '[data-tour="curriculum-chart"]');
-
-    const navStep = dashboardTourSteps.find((s) => s.id === "sidebar-nav");
-    assert.strictEqual(navStep?.targetSelector, '[data-tour="sidebar-nav"]');
-
-    const langStep = dashboardTourSteps.find((s) => s.id === "language-toggle");
-    assert.strictEqual(langStep?.targetSelector, '[data-tour="language-toggle"]');
-
-    const botStep = dashboardTourSteps.find((s) => s.id === "shikshabot-trigger");
-    assert.strictEqual(botStep?.targetSelector, '[data-tour="shikshabot-trigger"]');
-
-    // Check tutorial page tour selectors
-    const tutStepIds = tutorialTourSteps.map((s) => s.id);
-    assert.ok(tutStepIds.includes("tutorial-welcome"), "Tutorial tour must include welcome");
-    assert.ok(tutStepIds.includes("tutorial-workflow"), "Tutorial tour must include workflow");
-    assert.ok(tutStepIds.includes("tutorial-tabs"), "Tutorial tour must include tabs");
-    assert.ok(tutStepIds.includes("tutorial-sandbox-btn"), "Tutorial tour must include sandbox button");
-    assert.ok(tutStepIds.includes("tutorial-finish"), "Tutorial tour must include finish");
+    const autoOpened = app.checkAutomaticOnboarding("/dashboard");
+    assert.strictEqual(autoOpened, true, "Brand new user must get automatic tour");
+    assert.strictEqual(app.tutorialOpen, true);
+    assert.strictEqual(app.tutorialMode, "auto");
+    assert.strictEqual(app.tutorialStep, 0);
   });
 });

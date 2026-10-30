@@ -147,7 +147,7 @@ export function AppSidebar() {
               type="button"
               onClick={() => {
                 setIsMobileOpen(false);
-                openTutorial();
+                router.push("/dashboard?tour=full");
               }}
               className="flex-1 py-1.5 text-center bg-[#F2CAB3] dark:bg-[#F2CAB3]/20 hover:bg-white dark:hover:bg-[#26201C] text-[#49352F] dark:text-[#F4F1E1] border border-[#49352F]/15 dark:border-[#F2CAB3]/20 rounded-xl text-[11px] font-bold transition-all shadow-xs cursor-pointer"
             >
@@ -157,7 +157,7 @@ export function AppSidebar() {
               type="button"
               onClick={() => {
                 setIsMobileOpen(false);
-                openTutorial();
+                router.push("/dashboard?tour=full");
               }}
               className="px-2 py-1.5 rounded-xl border border-[#49352F]/20 dark:border-[#F2CAB3]/20 hover:bg-white dark:hover:bg-[#26201C] text-[#49352F] dark:text-[#F4F1E1] text-[11px] font-semibold cursor-pointer transition-colors"
               title={t.sidebar?.startTour || "Start Guided Tour"}
@@ -178,7 +178,7 @@ export function AppSidebar() {
             {t.sidebar?.demoDesc || "Evaluate Aarav's division gap remediation in 2 minutes."}
           </p>
           <Link
-            href="/students/std-aarav"
+            href="/students?tour=aarav"
             onClick={() => setIsMobileOpen(false)}
             className="mt-2 block w-full py-1 text-center bg-white dark:bg-[#26201C] hover:bg-[#F2CAB3] dark:hover:bg-[#F2CAB3]/20 text-[#49352F] dark:text-[#F4F1E1] border border-[#49352F]/15 dark:border-[#F2CAB3]/20 rounded-lg text-[11px] font-semibold transition-all shadow-xs"
           >

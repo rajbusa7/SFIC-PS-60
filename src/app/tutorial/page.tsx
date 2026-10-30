@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -47,6 +48,7 @@ import {
 } from "lucide-react";
 
 export default function TutorialPage() {
+  const router = useRouter();
   const { t, language } = useLanguage();
   const { openTutorial, setTutorialStep } = useTutorial();
 
@@ -141,13 +143,8 @@ export default function TutorialPage() {
     setSandboxReassessed(false);
   };
 
-    const handleReplayTour = () => {
-    setActiveTab("workflow");
-    setSandboxStep(1);
-    setSandboxScore(35);
-    setSandboxPlanGenerated(false);
-    setSandboxReassessed(false);
-    openTutorial({ step: 0, page: "tutorial" });
+  const handleReplayTour = () => {
+    router.push("/dashboard?tour=full");
   };
 
   const handlePrintGuide = () => {

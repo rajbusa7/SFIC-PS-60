@@ -1438,12 +1438,18 @@ export function formatSubjectName(codeOrName: string, lang: Language): string {
     if (norm.includes("ENG") || norm.includes("અંગ્રેજી")) return "અંગ્રેજી";
     if (norm.includes("GUJ") || norm.includes("ગુજરાતી")) return "ગુજરાતી";
     if (norm.includes("EVS") || norm.includes("પર્યાવરણ") || norm.includes("ENVIRONMENT")) return "પર્યાવરણ (આસપાસ)";
+    if (norm.includes("SCI") || norm.includes("વિજ્ઞાન") || norm.includes("SCIENCE")) return "વિજ્ઞાન";
+    if (norm.includes("SST") || norm.includes("સામાજિક") || norm.includes("SOCIAL")) return "સામાજિક વિજ્ઞાન";
+    if (norm.includes("HIN") || norm.includes("હિન્દી") || norm.includes("HINDI")) return "હિન્દી";
     return codeOrName;
   }
   if (norm.includes("MATH") || norm.includes("ગણિત")) return "Mathematics";
   if (norm.includes("ENG") || norm.includes("અંગ્રેજી")) return "English";
   if (norm.includes("GUJ") || norm.includes("ગુજરાતી")) return "Gujarati";
   if (norm.includes("EVS") || norm.includes("પર્યાવરણ") || norm.includes("ENVIRONMENT")) return "Environmental Studies";
+  if (norm.includes("SCI") || norm.includes("વિજ્ઞાન") || norm.includes("SCIENCE")) return "Science";
+  if (norm.includes("SST") || norm.includes("સામાજિક") || norm.includes("SOCIAL")) return "Social Science";
+  if (norm.includes("HIN") || norm.includes("હિન્દી") || norm.includes("HINDI")) return "Hindi";
   return codeOrName;
 }
 

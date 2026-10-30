@@ -181,6 +181,9 @@ function loadStore(): DataStore {
           if (!memoryStore.users) {
             memoryStore.users = JSON.parse(JSON.stringify(SEED_USERS));
           }
+          if (!memoryStore.activities || memoryStore.activities.length < SEED_ACTIVITIES.length) {
+            memoryStore.activities = JSON.parse(JSON.stringify(SEED_ACTIVITIES));
+          }
           lastLoadedMtime = stat.mtimeMs;
           lastLoadedPath = candidate;
           return memoryStore;

@@ -84,7 +84,7 @@ export default function StudentDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const { t, language, formatSubject, formatPriority, formatStatus } = useLanguage();
+  const { t, language, formatSubject, formatPriority, formatStatus, formatClass } = useLanguage();
 
   const [student, setStudent] = useState<any>(null);
   const [results, setResults] = useState<any[]>([]);
@@ -346,9 +346,11 @@ export default function StudentDetailPage({
                 <h1 className="font-heading text-2xl sm:text-3xl font-extrabold text-[#49352F] tracking-tight">
                   {student.displayName}
                 </h1>
-                <Badge variant="outline" size="sm">
-                  {language === "gu" ? `ધોરણ ${student.grade}-${student.section}` : `Class ${student.grade}-${student.section}`}
-                </Badge>
+                {formatClass(student.grade, student.section) && (
+                  <Badge variant="outline" size="sm">
+                    {formatClass(student.grade, student.section)}
+                  </Badge>
+                )}
                 {student.id === "std-aarav" && (
                   <Badge variant="saffron" size="sm" pulse>
                     {language === "gu" ? "SFIC ગુજરાત કી ડેમો" : "SFIC Gujarat Key Demo"}
@@ -594,7 +596,7 @@ export default function StudentDetailPage({
                           size="sm"
                           dot
                         >
-                          {formatPriority(gap.priority)} {language === "gu" ? "અગ્રતા" : "Priority"}
+                          {formatPriority(gap.priority)}
                         </Badge>
                         <Badge
                           variant={gap.status === "Resolved" ? "completed" : "inProgress"}
@@ -604,7 +606,10 @@ export default function StudentDetailPage({
                         </Badge>
                       </div>
                       <p className="text-xs text-[#B26A1B] font-medium">
-                        {language === "gu" ? "વિષય:" : "Subject:"} {formatSubject(gap.subjectName || "Mathematics")}
+                        {language === "gu" ? "વિષય:" : "Subject:"}{" "}
+                        {formatSubject(
+                          gap.subjectCode || gap.subjectName || gap.conceptId || gap.conceptName
+                        )}
                       </p>
                     </div>
 

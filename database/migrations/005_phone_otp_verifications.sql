@@ -30,3 +30,4 @@ CREATE TABLE IF NOT EXISTS phone_verifications (
 
 CREATE INDEX IF NOT EXISTS idx_phone_verifications_phone ON phone_verifications(phone);
 CREATE INDEX IF NOT EXISTS idx_phone_verifications_status ON phone_verifications(status);
+

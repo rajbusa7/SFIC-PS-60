@@ -16,7 +16,7 @@ interface LanguageContextType {
   formatSubject: (codeOrName: string) => string;
   formatStatus: (status: string) => string;
   formatPriority: (priority: string) => string;
-  formatClass: (cls: string | number) => string;
+  formatClass: (cls: any, section?: any) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType>({
@@ -26,7 +26,7 @@ const LanguageContext = createContext<LanguageContextType>({
   formatSubject: (s) => s,
   formatStatus: (s) => s,
   formatPriority: (p) => p,
-  formatClass: (c) => String(c),
+  formatClass: (c, sec) => formatClassName(c, "en", sec),
 });
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
@@ -96,7 +96,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   );
 
   const formatClass = useCallback(
-    (cls: string | number) => formatClassName(cls, language),
+    (cls: any, section?: any) => formatClassName(cls, language, section),
     [language]
   );
 

@@ -519,6 +519,28 @@ export const db = {
     const studentIds = new Set<string>();
 
     for (const r of resultsData) {
+      // Guard against accidental duplicate submissions within a short window (e.g. repeated click or refresh)
+      const existingDuplicate = store.results.find((existing) => {
+        if (r.assessmentId && existing.assessmentId === r.assessmentId) return true;
+        if (
+          existing.studentId === r.studentId &&
+          existing.conceptId === r.conceptId &&
+          existing.marksObtained === Number(r.marksObtained) &&
+          existing.maximumMarks === Number(r.maximumMarks)
+        ) {
+          const existingTime = new Date(existing.recordedAt).getTime();
+          const newTime = new Date(r.recordedAt || Date.now()).getTime();
+          if (Math.abs(newTime - existingTime) < 3000) return true;
+        }
+        return false;
+      });
+
+      if (existingDuplicate) {
+        created.push(existingDuplicate);
+        studentIds.add(r.studentId);
+        continue;
+      }
+
       const pct = calculatePercentage(r.marksObtained, r.maximumMarks);
       const newResult: AssessmentResult = {
         ...r,
@@ -549,8 +571,28 @@ export const db = {
 
   getLearningGaps(studentId?: string): LearningGap[] {
     const store = loadStore();
-    if (!studentId) return store.learningGaps;
-    return store.learningGaps.filter((g) => g.studentId === studentId);
+    const gaps = !studentId ? store.learningGaps : store.learningGaps.filter((g) => g.studentId === studentId);
+    return gaps.map((g) => {
+      if (g.remedialPlanId) {
+        const plan = store.remedialPlans?.find((p) => p.id === g.remedialPlanId);
+        if (plan) {
+          const isCompleted =
+            plan.status === "Completed" ||
+            (Array.isArray(plan.completedSteps) && Array.isArray(plan.steps) && plan.completedSteps.length >= plan.steps.length);
+          return {
+            ...g,
+            remedialPlanStatus: plan.status,
+            reassessmentDue: (isCompleted || (plan as any).reassessmentDue === true) && !plan.reassessmentResult,
+          };
+        }
+      }
+      return g;
+    });
+  },
+
+  getLearningGapById(id: string): LearningGap | null {
+    const store = loadStore();
+    return store.learningGaps.find((g) => g.id === id) || null;
   },
 
   recalculateLearningGapsForStudent(studentId: string): LearningGap[] {
@@ -594,11 +636,15 @@ export const db = {
           priority: detection.priority,
           masteryStatus: detection.masteryStatus,
           reason: detection.reason,
+          suggestedAction: detection.suggestedAction,
+          diagnosisType: detection.diagnosisType,
           status: detection.masteryStatus === "Mastered" ? "Resolved" : existing.status,
           attemptsCount: detection.attemptsCount,
           latestPercentage: detection.latestPercentage,
           previousPercentage: detection.previousPercentage,
           deltaPercentagePoints: detection.deltaPercentagePoints,
+          trend: detection.trend ?? undefined,
+          trendLabel: detection.trendLabel,
           updatedAt: new Date().toISOString(),
         };
 
@@ -623,11 +669,15 @@ export const db = {
           priority: detection.priority,
           masteryStatus: detection.masteryStatus,
           reason: detection.reason,
+          suggestedAction: detection.suggestedAction,
+          diagnosisType: detection.diagnosisType,
           status: "Active",
           attemptsCount: detection.attemptsCount,
           latestPercentage: detection.latestPercentage,
           previousPercentage: detection.previousPercentage,
           deltaPercentagePoints: detection.deltaPercentagePoints,
+          trend: detection.trend ?? undefined,
+          trendLabel: detection.trendLabel,
           updatedAt: new Date().toISOString(),
         };
         store.learningGaps.push(newGap);
@@ -662,6 +712,11 @@ export const db = {
     const store = loadStore();
     const gap = store.learningGaps.find((g) => g.id === gapId);
     if (!gap) return null;
+
+    // Mastered competencies do not require a remedial plan (Phase 4 requirement)
+    if (gap.masteryStatus === "Mastered" || gap.status === "Resolved") {
+      return null;
+    }
 
     const student = store.students.find((s) => s.id === gap.studentId);
     const concept = store.concepts.find((c) => c.id === gap.conceptId);

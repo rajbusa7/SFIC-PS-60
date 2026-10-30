@@ -95,6 +95,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: "gapId or full plan object is required" }, { status: 400 });
     }
 
+    const targetGap = db.getLearningGapById(gapId);
+    if (targetGap && (targetGap.masteryStatus === "Mastered" || targetGap.status === "Resolved")) {
+      return NextResponse.json(
+        { success: false, error: "Remedial plan not needed: Competency is already mastered. Periodic maintenance practice is recommended." },
+        { status: 400 }
+      );
+    }
+
     const createdPlan = db.createRemedialPlanForGap(gapId, customNotes);
     if (!createdPlan) {
       return NextResponse.json(

@@ -698,7 +698,7 @@ export default function DashboardPage() {
                         size="sm"
                         dot
                       >
-                        {formatPriority(item.priority)} {language === "gu" ? "અગ્રતા" : "Priority"}
+                        {formatPriority(item.priority)}
                       </Badge>
                     </div>
 

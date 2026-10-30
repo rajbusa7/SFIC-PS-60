@@ -4,6 +4,7 @@ import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { BridgeProgress } from "../ui/BridgeProgress";
 import { calculatePercentage, calculatePercentagePointDelta } from "@/lib/engine/calculations";
+import { evaluateReassessmentOutcome } from "@/lib/engine/reassessmentEngine";
 import { broadcastDataUpdate } from "@/lib/events";
 import { useLanguage } from "@/context/LanguageContext";
 import { TrendingUp, CheckCircle, AlertCircle, Sparkles } from "lucide-react";
@@ -16,6 +17,8 @@ interface ReassessmentModalProps {
   conceptId: string;
   conceptName: string;
   previousPercentage?: number;
+  supportThreshold?: number;
+  masteryThreshold?: number;
   onSuccess?: () => void;
 }
 
@@ -27,6 +30,8 @@ export function ReassessmentModal({
   conceptId,
   conceptName,
   previousPercentage = 35,
+  supportThreshold = 60,
+  masteryThreshold = 80,
   onSuccess,
 }: ReassessmentModalProps) {
   const { language } = useLanguage();
@@ -54,20 +59,16 @@ export function ReassessmentModal({
   const currentPct = calculatePercentage(obtainedNum, maxNum);
   const deltaPp = calculatePercentagePointDelta(currentPct, previousPercentage);
 
-  const newStatus =
-    currentPct >= 80 ? "Mastered" : currentPct >= 60 ? "Developing" : "Needs Support";
-  const newStatusLabel =
-    newStatus === "Mastered"
-      ? language === "gu"
-        ? "પ્રવીણ (Mastered)"
-        : "Mastered"
-      : newStatus === "Developing"
-      ? language === "gu"
-        ? "વિકાસશીલ (Developing)"
-        : "Developing"
-      : language === "gu"
-      ? "સહાય જરૂરી (Needs Support)"
-      : "Needs Support";
+  const outcome = evaluateReassessmentOutcome({
+    previousScore: previousPercentage,
+    currentScore: currentPct,
+    supportThreshold,
+    masteryThreshold,
+    language,
+  });
+
+  const newStatus = outcome.status;
+  const newStatusLabel = language === "gu" ? outcome.outcomeLabelGu : outcome.outcomeLabel;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -140,13 +141,7 @@ export function ReassessmentModal({
               {language === "gu" ? "સેતુ વૃદ્ધિ તફાવત" : "The Bridge Delta"}
             </span>
             <Badge
-              variant={
-                newStatus === "Mastered"
-                  ? "mastered"
-                  : newStatus === "Developing"
-                  ? "developing"
-                  : "needsSupport"
-              }
+              variant={outcome.outcomeBadgeVariant}
               size="sm"
               dot
             >
@@ -179,9 +174,13 @@ export function ReassessmentModal({
                 {language === "gu" ? "વૃદ્ધિ તફાવત" : "Delta Gain"}
               </span>
               <span className="text-base font-black text-[#2E7D5E]">
-                {deltaPp >= 0 ? `+${deltaPp}` : deltaPp} pp
+                {outcome.scoreDeltaFormatted}
               </span>
             </div>
+          </div>
+
+          <div className="text-[11px] text-[#49352F] bg-white/90 p-2.5 rounded-xl border border-[#49352F]/10 font-medium leading-relaxed">
+            {language === "gu" ? outcome.explanationGu : outcome.explanation}
           </div>
         </div>
 

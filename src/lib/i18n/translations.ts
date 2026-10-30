@@ -1406,33 +1406,39 @@ export const translations = {
 };
 
 // --- DYNAMIC FORMATTING HELPERS ---
+import {
+  formatClassLabel,
+  formatPriorityLabel,
+  formatGapStatusLabel,
+  formatSubjectLabel,
+} from "../learningGapFormatters";
+
+export { formatClassLabel, formatPriorityLabel, formatGapStatusLabel, formatSubjectLabel };
 
 export function formatSubjectName(codeOrName: string, lang: Language): string {
-  const norm = (codeOrName || "").toUpperCase();
-  if (lang === "gu") {
-    if (norm.includes("MATH") || norm.includes("ગણિત")) return "ગણિત";
-    if (norm.includes("ENG") || norm.includes("અંગ્રેજી")) return "અંગ્રેજી";
-    if (norm.includes("GUJ") || norm.includes("ગુજરાતી")) return "ગુજરાતી";
-    if (norm.includes("EVS") || norm.includes("પર્યાવરણ") || norm.includes("ENVIRONMENT")) return "પર્યાવરણ (આસપાસ)";
-    return codeOrName;
-  }
-  if (norm.includes("MATH") || norm.includes("ગણિત")) return "Mathematics";
-  if (norm.includes("ENG") || norm.includes("અંગ્રેજી")) return "English";
-  if (norm.includes("GUJ") || norm.includes("ગુજરાતી")) return "Gujarati";
-  if (norm.includes("EVS") || norm.includes("પર્યાવરણ") || norm.includes("ENVIRONMENT")) return "Environmental Studies";
-  return codeOrName;
+  return formatSubjectLabel(codeOrName, lang);
 }
 
 export function formatStatusLabel(status: string, lang: Language): string {
   const norm = (status || "").toLowerCase().trim();
+  // If priority input, format with duplicate protection
+  if (norm.includes("high") || norm.includes("medium") || norm.includes("low")) {
+    return formatPriorityLabel(status, lang);
+  }
+  // If standard learning gap status, format with standardized tiers
+  if (
+    norm.includes("needs support") ||
+    norm.includes("need support") ||
+    norm.includes("developing") ||
+    norm.includes("mastered") ||
+    norm.includes("mastery")
+  ) {
+    return formatGapStatusLabel(status, lang);
+  }
+
+  // Legacy status support for non-gap entities (notices, etc.)
   if (lang === "gu") {
-    if (norm.includes("needs support") || norm.includes("need support")) return "સહાયની જરૂર છે";
-    if (norm.includes("developing")) return "વિકાસશીલ";
-    if (norm.includes("mastered") || norm.includes("mastery")) return "નિપુણ";
     if (norm.includes("critical") || norm.includes("urgent")) return "તાકીદનું";
-    if (norm.includes("high")) return "ઉચ્ચ અગ્રતા";
-    if (norm.includes("medium")) return "મધ્યમ અગ્રતા";
-    if (norm.includes("low")) return "સામાન્ય અગ્રતા";
     if (norm.includes("suggested")) return "સૂચવેલ";
     if (norm.includes("approved")) return "મંજૂર થયેલ";
     if (norm.includes("in progress")) return "પ્રગતિમાં";
@@ -1442,13 +1448,7 @@ export function formatStatusLabel(status: string, lang: Language): string {
     if (norm.includes("on track")) return "યોગ્ય પ્રગતિ";
     return status;
   }
-  if (norm.includes("needs support") || norm.includes("need support")) return "Needs Support";
-  if (norm.includes("developing")) return "Developing";
-  if (norm.includes("mastered") || norm.includes("mastery")) return "Mastered";
   if (norm.includes("critical") || norm.includes("urgent")) return "Critical Attention";
-  if (norm.includes("high")) return "High Priority";
-  if (norm.includes("medium")) return "Medium Priority";
-  if (norm.includes("low")) return "Low Priority";
   if (norm.includes("suggested")) return "Suggested";
   if (norm.includes("approved")) return "Approved";
   if (norm.includes("in progress")) return "In Progress";
@@ -1459,22 +1459,6 @@ export function formatStatusLabel(status: string, lang: Language): string {
   return status;
 }
 
-export function formatClassName(clsOrGrade: string | number, lang: Language): string {
-  const str = String(clsOrGrade || "").trim();
-  if (str === "all") return lang === "gu" ? "બધા વર્ગ" : "All Classes";
-  
-  // Extract number and section if available
-  const match = str.match(/(?:cls-|class\s*)?(\d+)(?:-?([a-zA-Z]))?/i);
-  if (match) {
-    const num = match[1];
-    const sec = match[2] ? match[2].toUpperCase() : "";
-    if (lang === "gu") {
-      const gujDigits: Record<string, string> = { "1": "૧", "2": "૨", "3": "૩", "4": "૪", "5": "૫", "6": "૬", "7": "૭", "8": "૮", "9": "૯", "0": "૦" };
-      const gujNum = num.split("").map((d) => gujDigits[d] || d).join("");
-      const gujSec = sec === "A" ? "અ" : sec === "B" ? "બ" : sec === "C" ? "ક" : sec;
-      return gujSec ? `ધોરણ ${gujNum}-${gujSec}` : `ધોરણ ${gujNum}`;
-    }
-    return sec ? `Class ${num}-${sec}` : `Class ${num}`;
-  }
-  return str;
+export function formatClassName(clsOrGrade: any, lang: Language, section?: any): string {
+  return formatClassLabel(clsOrGrade, section, lang);
 }

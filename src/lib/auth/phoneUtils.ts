@@ -124,3 +124,4 @@ export function maskPhoneNumber(e164: string): string {
   const visibleEnd = e164.slice(e164.length - 3);
   return `${visibleStart}****${visibleEnd}`;
 }
+

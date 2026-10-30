@@ -303,7 +303,13 @@ export default function ReportsPage() {
                             <span className="font-bold text-[#49352F] text-sm">
                               {g.conceptName}
                             </span>
-                            <span className="text-[#7A6862] ml-2">({formatSubject(g.subjectName || "Mathematics")})</span>
+                            <span className="text-[#7A6862] ml-2">
+                              (
+                              {formatSubject(
+                                g.subjectCode || g.subjectName || g.conceptId || g.conceptName
+                              )}
+                              )
+                            </span>
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="font-black text-[#49352F]">{g.latestPercentage}%</span>

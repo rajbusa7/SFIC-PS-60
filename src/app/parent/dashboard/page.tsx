@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { BridgeProgress } from "@/components/ui/BridgeProgress";
 import { useLanguage } from "@/context/LanguageContext";
+import { normalizePriority } from "@/lib/learningGapFormatters";
 import {
   Users,
   GraduationCap,
@@ -47,7 +48,7 @@ import {
 function ParentDashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { language } = useLanguage();
+  const { language, formatClass, formatPriority, formatSubject, formatStatus } = useLanguage();
 
   // Navigation tab state (can also be synced with ?tab=)
   const initialTab = searchParams.get("tab") || "overview";
@@ -444,7 +445,7 @@ function ParentDashboardContent() {
                     <GraduationCap className={`w-3.5 h-3.5 ${isSelected ? "text-[#F2CAB3]" : "text-[#B26A1B]"}`} />
                     <span>{child.displayName}</span>
                     <span className="text-[10px] opacity-75">
-                      ({child.grade ? `Class ${child.grade}-${child.section}` : "Student"})
+                      ({formatClass(child.grade, child.section) || "Student"})
                     </span>
                   </button>
                 );
@@ -571,8 +572,12 @@ function ParentDashboardContent() {
                           )}
                         </div>
                         <p className="text-xs text-[#7A6862] flex flex-wrap items-center gap-2 mt-0.5">
-                          <span>Class {activeStudent?.grade}-{activeStudent?.section}</span>
-                          <span>&bull;</span>
+                          {formatClass(activeStudent?.grade, activeStudent?.section) && (
+                            <>
+                              <span>{formatClass(activeStudent?.grade, activeStudent?.section)}</span>
+                              <span>&bull;</span>
+                            </>
+                          )}
                           <span>Code: {activeStudent?.studentCode}</span>
                           <span>&bull;</span>
                           <span className="flex items-center gap-1">
@@ -818,8 +823,17 @@ function ParentDashboardContent() {
                               <span className="text-xs font-bold text-[#49352F]">
                                 {gap.conceptName || "Foundational Concept"}
                               </span>
-                              <Badge variant={gap.priority === "High" ? "high" : "medium"} size="sm">
-                                {gap.priority || "Medium"} Priority
+                              <Badge
+                                variant={
+                                  normalizePriority(gap.priority) === "High Priority"
+                                    ? "high"
+                                    : normalizePriority(gap.priority) === "Medium Priority"
+                                    ? "medium"
+                                    : "low"
+                                }
+                                size="sm"
+                              >
+                                {formatPriority(gap.priority)}
                               </Badge>
                             </div>
                             <p className="text-xs text-[#7A6862] leading-relaxed">
@@ -1008,8 +1022,17 @@ function ParentDashboardContent() {
                                 <Badge variant="needsSupport" size="sm">
                                   Score: {gap.latestPercentage || gap.scoreRecorded || 35}% (&lt;60% threshold)
                                 </Badge>
-                                <Badge variant={gap.priority === "High" ? "high" : "medium"} size="sm">
-                                  {gap.priority || "Medium"} Priority
+                                <Badge
+                                  variant={
+                                    normalizePriority(gap.priority) === "High Priority"
+                                      ? "high"
+                                      : normalizePriority(gap.priority) === "Medium Priority"
+                                      ? "medium"
+                                      : "low"
+                                  }
+                                  size="sm"
+                                >
+                                  {formatPriority(gap.priority)}
                                 </Badge>
                               </div>
                             </div>
@@ -1241,7 +1264,7 @@ function ParentDashboardContent() {
                             <div>
                               <h3 className="font-heading text-base font-extrabold text-[#49352F]">{ch.displayName}</h3>
                               <p className="text-xs text-[#7A6862]">
-                                Class {ch.grade}-{ch.section} &bull; Code: {ch.studentCode}
+                                {formatClass(ch.grade, ch.section)} &bull; Code: {ch.studentCode}
                               </p>
                             </div>
                           </div>

@@ -3616,7 +3616,83 @@
       "createdAt": "2026-09-01T10:00:00Z"
     }
   ],
-  "attempts": [],
+  "attempts": [
+    {
+      "id": "att-01",
+      "activityId": "act-math-4-div-beg",
+      "studentId": "std-aarav",
+      "score": 2,
+      "percentage": 67,
+      "answers": {
+        "q1": "3",
+        "q2": "4"
+      },
+      "timeSpentSeconds": 140,
+      "completedAt": "2026-09-25T14:30:00Z",
+      "xpEarned": 35,
+      "mastered": false
+    },
+    {
+      "id": "att-02",
+      "activityId": "act-evs-4-water-beg",
+      "studentId": "std-aarav",
+      "score": 3,
+      "percentage": 100,
+      "answers": {
+        "q1": "Evaporation",
+        "q2": "Rain"
+      },
+      "timeSpentSeconds": 95,
+      "completedAt": "2026-10-09T15:00:00Z",
+      "xpEarned": 50,
+      "mastered": true
+    },
+    {
+      "id": "att-03",
+      "activityId": "act-math-4-div-beg",
+      "studentId": "std-meera",
+      "score": 3,
+      "percentage": 100,
+      "answers": {
+        "q1": "3",
+        "q2": "4",
+        "q3": "6"
+      },
+      "timeSpentSeconds": 110,
+      "completedAt": "2026-09-12T10:15:00Z",
+      "xpEarned": 50,
+      "mastered": true
+    },
+    {
+      "id": "att-04",
+      "activityId": "act-math-4-mult-beg",
+      "studentId": "std-riya",
+      "score": 3,
+      "percentage": 100,
+      "answers": {
+        "q1": "24",
+        "q2": "35"
+      },
+      "timeSpentSeconds": 80,
+      "completedAt": "2026-09-11T09:00:00Z",
+      "xpEarned": 50,
+      "mastered": true
+    },
+    {
+      "id": "att-05",
+      "activityId": "act-eng-4-vocab-beg",
+      "studentId": "std-dev",
+      "score": 2,
+      "percentage": 67,
+      "answers": {
+        "q1": "Joyful"
+      },
+      "timeSpentSeconds": 120,
+      "completedAt": "2026-10-03T11:00:00Z",
+      "xpEarned": 35,
+      "mastered": false
+    }
+  ],
   "parents": [
     {
       "id": "par-aarav",
@@ -3684,17 +3760,17 @@
       "id": "plc-demo-aarav",
       "studentId": "std-aarav",
       "code": "PAR-4892",
-      "expiresAt": "2026-11-07T18:20:17.041Z",
+      "expiresAt": "2026-11-07T18:43:11.998Z",
       "status": "active",
-      "createdAt": "2026-10-31T18:20:17.041Z"
+      "createdAt": "2026-10-31T18:43:11.998Z"
     },
     {
       "id": "plc-demo-diya",
       "studentId": "std-diya",
       "code": "PAR-5219",
-      "expiresAt": "2026-11-07T18:20:17.041Z",
+      "expiresAt": "2026-11-07T18:43:11.998Z",
       "status": "active",
-      "createdAt": "2026-10-31T18:20:17.041Z"
+      "createdAt": "2026-10-31T18:43:11.998Z"
     }
   ],
   "parentMessages": [],

@@ -53,12 +53,16 @@ export const SEED_SUBJECTS: Subject[] = [
 
 export const SEED_CONCEPTS: Concept[] = [
   // ─── Mathematics ───
-  { id: "c-math-count-1", subjectId: "sub-math", subjectCode: "MATH", grade: 1,
+  {
+    id: "c-math-count-1", subjectId: "sub-math", subjectCode: "MATH", grade: 1,
     name: "Number Recognition & Counting (1–100)", nameGujarati: "સંખ્યા ઓળખ અને ગણતરી (૧–૧૦૦)",
-    description: "Recognise, read, write and count numbers from 1 to 100." },
-  { id: "c-math-addsub-2", subjectId: "sub-math", subjectCode: "MATH", grade: 2,
+    description: "Recognise, read, write and count numbers from 1 to 100."
+  },
+  {
+    id: "c-math-addsub-2", subjectId: "sub-math", subjectCode: "MATH", grade: 2,
     name: "Addition & Subtraction (2-Digit)", nameGujarati: "બે અંકનો સરવાળો અને બાદબાકી",
-    description: "Add and subtract 2-digit numbers with and without regrouping." },
+    description: "Add and subtract 2-digit numbers with and without regrouping."
+  },
   {
     id: "c-mult-01", subjectId: "sub-math", subjectCode: "MATH", grade: 3,
     name: "Multiplication Tables (2 to 9)", nameGujarati: "ગુણાકારના ઘડિયા (૨ થી ૯)",
@@ -80,34 +84,48 @@ export const SEED_CONCEPTS: Concept[] = [
     name: "Fractions Introduction (Half, Quarter)", nameGujarati: "અપૂર્ણાંક પરિચય (અડધો, પા)",
     description: "Identify and represent unit fractions of whole shapes and sets.",
   },
-  { id: "c-math-dec-5", subjectId: "sub-math", subjectCode: "MATH", grade: 5,
+  {
+    id: "c-math-dec-5", subjectId: "sub-math", subjectCode: "MATH", grade: 5,
     name: "Decimals & Word Problems", nameGujarati: "દશાંશ સંખ્યા અને શાબ્દિક દાખલા",
-    description: "Understand decimal notation, place value up to hundredths, and solve real-life word problems." },
-  { id: "c-math-int-6", subjectId: "sub-math", subjectCode: "MATH", grade: 6,
+    description: "Understand decimal notation, place value up to hundredths, and solve real-life word problems."
+  },
+  {
+    id: "c-math-int-6", subjectId: "sub-math", subjectCode: "MATH", grade: 6,
     name: "Integers & Number Line", nameGujarati: "પૂર્ણ સંખ્યાઓ અને સંખ્યા રેખા",
-    description: "Understand positive and negative integers; operations on a number line." },
-  { id: "c-math-alg-7", subjectId: "sub-math", subjectCode: "MATH", grade: 7,
+    description: "Understand positive and negative integers; operations on a number line."
+  },
+  {
+    id: "c-math-alg-7", subjectId: "sub-math", subjectCode: "MATH", grade: 7,
     name: "Simple Equations & Algebra", nameGujarati: "સાદા સમીકરણ અને બીજગણિત",
-    description: "Form and solve one-variable linear equations from real-life situations." },
-  { id: "c-math-geo-8", subjectId: "sub-math", subjectCode: "MATH", grade: 8,
+    description: "Form and solve one-variable linear equations from real-life situations."
+  },
+  {
+    id: "c-math-geo-8", subjectId: "sub-math", subjectCode: "MATH", grade: 8,
     name: "Geometry: Lines, Angles & Triangles", nameGujarati: "ભૂમિતિ: રેખા, ખૂણો અને ત્રિકોણ",
-    description: "Properties of lines, angles (acute/obtuse/right), and types of triangles; angle-sum property." },
+    description: "Properties of lines, angles (acute/obtuse/right), and types of triangles; angle-sum property."
+  },
 
   // ─── English ───
-  { id: "c-eng-alpha-1", subjectId: "sub-eng", subjectCode: "ENG", grade: 1,
+  {
+    id: "c-eng-alpha-1", subjectId: "sub-eng", subjectCode: "ENG", grade: 1,
     name: "Alphabet & Phonics (A–Z)", nameGujarati: "અક્ષરમાળા અને ઉચ્ચારણ",
-    description: "Recognise upper- and lower-case letters; produce the initial sound of each letter." },
-  { id: "c-eng-word-2", subjectId: "sub-eng", subjectCode: "ENG", grade: 2,
+    description: "Recognise upper- and lower-case letters; produce the initial sound of each letter."
+  },
+  {
+    id: "c-eng-word-2", subjectId: "sub-eng", subjectCode: "ENG", grade: 2,
     name: "Word Formation & Simple Sentences", nameGujarati: "શબ્દ રચના અને સરળ વાક્યો",
-    description: "Build 3-letter CVC words and construct simple subject-verb sentences." },
+    description: "Build 3-letter CVC words and construct simple subject-verb sentences."
+  },
   {
     id: "c-eng-blend-01", subjectId: "sub-eng", subjectCode: "ENG", grade: 2,
     name: "Phonetic Blends (ch, sh, th, wh)", nameGujarati: "ફોનેટિક સંયુક્ત અવાજો (ch, sh, th, wh)",
     description: "Identify and articulate consonant digraphs in spoken and written words.",
   },
-  { id: "c-eng-gram-3", subjectId: "sub-eng", subjectCode: "ENG", grade: 3,
+  {
+    id: "c-eng-gram-3", subjectId: "sub-eng", subjectCode: "ENG", grade: 3,
     name: "Basic Grammar: Nouns & Pronouns", nameGujarati: "મૂળ વ્યાકરણ: સંજ્ઞા અને સર્વનામ",
-    description: "Identify common/proper nouns and use pronouns correctly in sentences." },
+    description: "Identify common/proper nouns and use pronouns correctly in sentences."
+  },
   {
     id: "c-eng-comp-01", subjectId: "sub-eng", subjectCode: "ENG", grade: 4,
     name: "Short Passage Reading Comprehension", nameGujarati: "ટૂંકા ફકરાનું વાંચન અને અર્થગ્રહણ",
@@ -118,23 +136,33 @@ export const SEED_CONCEPTS: Concept[] = [
     name: "Subject-Verb Agreement", nameGujarati: "કર્તા અને ક્રિયાપદ સુસંગતતા",
     description: "Apply correct singular and plural verb forms with pronouns (he/she/it vs they/we).",
   },
-  { id: "c-eng-tense-5", subjectId: "sub-eng", subjectCode: "ENG", grade: 5,
+  {
+    id: "c-eng-tense-5", subjectId: "sub-eng", subjectCode: "ENG", grade: 5,
     name: "Tenses: Present, Past & Future", nameGujarati: "ક્રિયાપદ કાળ: વર્તમાન, ભૂત અને ભવિષ્ય",
-    description: "Identify and use simple present, simple past, and simple future tenses correctly." },
-  { id: "c-eng-comp-6", subjectId: "sub-eng", subjectCode: "ENG", grade: 6,
+    description: "Identify and use simple present, simple past, and simple future tenses correctly."
+  },
+  {
+    id: "c-eng-comp-6", subjectId: "sub-eng", subjectCode: "ENG", grade: 6,
     name: "Comprehension & Paragraph Writing", nameGujarati: "વાંચન સમજ અને ફકરો લેખન",
-    description: "Read unseen passages and write well-structured paragraphs with topic sentences." },
+    description: "Read unseen passages and write well-structured paragraphs with topic sentences."
+  },
 
   // ─── Gujarati ───
-  { id: "c-guj-svar-1", subjectId: "sub-guj", subjectCode: "GUJ", grade: 1,
+  {
+    id: "c-guj-svar-1", subjectId: "sub-guj", subjectCode: "GUJ", grade: 1,
     name: "સ્વર ઓળખ (અ થી અ:)", nameGujarati: "સ્વર ઓળખ (અ થી અ:)",
-    description: "ગુજરાતી ૧૩ સ્વરો ઓળખો, ઉચ્ચારો અને લખો." },
-  { id: "c-guj-vyanj-1", subjectId: "sub-guj", subjectCode: "GUJ", grade: 1,
+    description: "ગુજરાતી ૧૩ સ્વરો ઓળખો, ઉચ્ચારો અને લખો."
+  },
+  {
+    id: "c-guj-vyanj-1", subjectId: "sub-guj", subjectCode: "GUJ", grade: 1,
     name: "વ્યંજન ઓળખ (ક થી ળ)", nameGujarati: "વ્યંજન ઓળખ (ક થી ળ)",
-    description: "ગુજરાતી ૩૪ વ્યંજનો ઓળખો, ઉચ્ચારો અને લખો." },
-  { id: "c-guj-matra2-2", subjectId: "sub-guj", subjectCode: "GUJ", grade: 2,
+    description: "ગુજરાતી ૩૪ વ્યંજનો ઓળખો, ઉચ્ચારો અને લખો."
+  },
+  {
+    id: "c-guj-matra2-2", subjectId: "sub-guj", subjectCode: "GUJ", grade: 2,
     name: "માત્રા અને સરળ શબ્દ", nameGujarati: "માત્રા અને સરળ શબ્દ",
-    description: "ઇ, ઈ, ઉ, ઊ, એ, ઐ, ઓ, ઔ ની માત્રા ઓળખો અને શબ્દ બનાવો." },
+    description: "ઇ, ઈ, ઉ, ઊ, એ, ઐ, ઓ, ઔ ની માત્રા ઓળખો અને શબ્દ બનાવો."
+  },
   {
     id: "c-guj-matra-01", subjectId: "sub-guj", subjectCode: "GUJ", grade: 3,
     name: "કાનો-માત્રા અને દીર્ઘ-હ્રસ્વ સ્વર ચિહ્નો (Gujarati Matras)", nameGujarati: "કાનો-માત્રા અને દીર્ઘ-હ્રસ્વ સ્વર ચિહ્નો",
@@ -145,9 +173,11 @@ export const SEED_CONCEPTS: Concept[] = [
     name: "જોડાક્ષર શબ્દોનું વાંચન-લેખન (Gujarati Conjuncts)", nameGujarati: "જોડાક્ષર શબ્દોનું વાંચન-લેખન",
     description: "બે વ્યંજનોના જોડાણવાળા શબ્દો (જેમ કે સત્ય, પપ્પા, ચિઠ્ઠી) ઓળખવા.",
   },
-  { id: "c-guj-vyak-5", subjectId: "sub-guj", subjectCode: "GUJ", grade: 5,
+  {
+    id: "c-guj-vyak-5", subjectId: "sub-guj", subjectCode: "GUJ", grade: 5,
     name: "ગુજરાતી વ્યાકરણ: સંજ્ઞા, સર્વનામ, ક્રિયાપદ", nameGujarati: "ગુજરાતી વ્યાકરણ: સંજ્ઞા, સર્વનામ, ક્રિયાપદ",
-    description: "સંજ્ઞા, સર્વનામ, વિશેષણ અને ક્રિયાપદ ઓળખો અને ઉપયોગ કરો." },
+    description: "સંજ્ઞા, સર્વનામ, વિશેષણ અને ક્રિયાપદ ઓળખો અને ઉપયોગ કરો."
+  },
 
   // ─── EVS ───
   {
@@ -165,15 +195,21 @@ export const SEED_CONCEPTS: Concept[] = [
     name: "Water Cycle & Conservation", nameGujarati: "જળચક્ર અને જળસંચય",
     description: "Understand evaporation, condensation, precipitation, and identify 3 daily water-saving habits.",
   },
-  { id: "c-evs-food-4", subjectId: "sub-evs", subjectCode: "EVS", grade: 4,
+  {
+    id: "c-evs-food-4", subjectId: "sub-evs", subjectCode: "EVS", grade: 4,
     name: "Food & Nutrition", nameGujarati: "ખોરાક અને પોષણ",
-    description: "Identify food groups, nutrients, and healthy eating habits for a balanced diet." },
-  { id: "c-evs-env-5", subjectId: "sub-evs", subjectCode: "EVS", grade: 5,
+    description: "Identify food groups, nutrients, and healthy eating habits for a balanced diet."
+  },
+  {
+    id: "c-evs-env-5", subjectId: "sub-evs", subjectCode: "EVS", grade: 5,
     name: "Environment & Pollution", nameGujarati: "પર્યાવરણ અને પ્રદૂષણ",
-    description: "Types of pollution (air, water, soil), causes, effects, and prevention measures." },
-  { id: "c-evs-animal-3", subjectId: "sub-evs", subjectCode: "EVS", grade: 3,
+    description: "Types of pollution (air, water, soil), causes, effects, and prevention measures."
+  },
+  {
+    id: "c-evs-animal-3", subjectId: "sub-evs", subjectCode: "EVS", grade: 3,
     name: "Animals & Their Habitats", nameGujarati: "પ્રાણીઓ અને તેમનો રહેઠાણ",
-    description: "Identify domestic and wild animals, classify by habitat (land/water/air)." },
+    description: "Identify domestic and wild animals, classify by habitat (land/water/air)."
+  },
 ];
 
 export const SEED_STUDENTS: Student[] = [

@@ -99,3 +99,4 @@ test("Learning Activities - Bilingual Translation Helpers", () => {
   assert.equal(formatSubjectName("MATH", "en"), "Mathematics");
   assert.equal(formatSubjectName("SCI", "en"), "Science");
 });
+

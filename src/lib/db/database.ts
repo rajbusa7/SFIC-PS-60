@@ -56,6 +56,7 @@ import type {
   AiProviderConfig,
   AiUsageMetric,
   User,
+  GmailConnection,
 } from "../types";
 
 interface DataStore {
@@ -82,6 +83,7 @@ interface DataStore {
   aiConfigs: AiProviderConfig[];
   users?: User[];
   feedback?: { id: string; email: string; message?: string; submittedAt: string }[];
+  gmailConnection?: GmailConnection;
 }
 
 const DEFAULT_DATA_DIR = path.join(process.cwd(), "data");
@@ -1973,6 +1975,33 @@ export const db = {
       return postgresUserDb.upsertUser(userData);
     }
     return this.upsertUser(userData);
+  },
+
+  getGmailConnection(): GmailConnection | null {
+    const store = loadStore();
+    return store.gmailConnection || null;
+  },
+
+  saveGmailConnection(connection: GmailConnection): void {
+    const store = loadStore();
+    store.gmailConnection = connection;
+    saveStore(store);
+  },
+
+  updateGmailConnectionStatus(status: GmailConnection["status"]): void {
+    const store = loadStore();
+    if (store.gmailConnection) {
+      store.gmailConnection.status = status;
+      saveStore(store);
+    }
+  },
+
+  disconnectGmail(): boolean {
+    const store = loadStore();
+    if (!store.gmailConnection) return false;
+    delete store.gmailConnection;
+    saveStore(store);
+    return true;
   },
 
   resetToDemoData(): void {

@@ -1010,7 +1010,7 @@ export default function UnifiedParentBridgeAndNoticesPage() {
                         {/* Audio speech synthesis */}
                         <AudioPlayer
                           text={selectedNotice.simplifiedContent || selectedNotice.originalContent}
-                          language={selectedNotice.originalLanguage}
+                          language={selectedNotice.originalLanguage ?? "en"}
                           buttonLabel={language === "gu" ? "સૂચના સાંભળો" : "Listen Notice"}
                         />
                       </div>

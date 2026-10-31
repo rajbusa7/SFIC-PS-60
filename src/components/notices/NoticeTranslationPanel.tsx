@@ -228,11 +228,11 @@ export function NoticeTranslationPanel({
           <div>
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold text-[#49352F] uppercase tracking-wider">
-                Source Reference ({notice.originalLanguage.toUpperCase()})
+                Source Reference ({(notice.originalLanguage ?? "en").toUpperCase()})
               </span>
               <AudioPlayer
                 text={notice.simplifiedContent || notice.originalContent}
-                language={notice.originalLanguage}
+                language={notice.originalLanguage ?? "en"}
                 buttonLabel="Listen Original"
               />
             </div>

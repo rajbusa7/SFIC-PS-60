@@ -43,9 +43,7 @@ import {
   Square,
   Home,
   FileText,
-  Mail,
 } from "lucide-react";
-import { ParentCommunicationHistoryList } from "@/components/parent-bridge/ParentCommunicationHistoryList";
 
 function ParentDashboardContent() {
   const router = useRouter();
@@ -355,9 +353,6 @@ function ParentDashboardContent() {
   const remedialPlans = studentDetail?.remedialPlans || [];
   const homeActivities = studentDetail?.homeActivities || [];
   const notices = studentDetail?.notices || [];
-  const attendance = studentDetail?.attendance;
-  const attendanceRate = attendance?.attendanceRate ?? 94.5;
-  const communications = studentDetail?.communications || [];
 
   const averageScore = results.length > 0
     ? Math.round(results.reduce((acc: number, r: any) => acc + (r.percentage || 0), 0) / results.length)
@@ -607,26 +602,14 @@ function ParentDashboardContent() {
                     </div>
                   </div>
 
-                  {/* 5 Quick Stat Counters from Real Database */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-3 border-t border-[#49352F]/10">
+                  {/* 4 Quick Stat Counters from Real Database */}
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-3 border-t border-[#49352F]/10">
                     <div className="p-3.5 rounded-2xl bg-white border border-[#49352F]/10 text-center shadow-xs">
                       <span className="text-[11px] font-semibold text-[#7A6862] block">
                         {language === "gu" ? "સરેરાશ ગુણ" : "Average Score"}
                       </span>
                       <span className="text-2xl font-black text-[#B26A1B]">{averageScore}%</span>
                       <span className="text-[10px] text-[#7A6862] block mt-0.5">{results.length} Assessments</span>
-                    </div>
-
-                    <div className="p-3.5 rounded-2xl bg-white border border-[#49352F]/10 text-center shadow-xs">
-                      <span className="text-[11px] font-semibold text-[#7A6862] block">
-                        {language === "gu" ? "હાજરી દર" : "Attendance Rate"}
-                      </span>
-                      <span className={`text-2xl font-black ${attendanceRate < 85 ? "text-[#C54738]" : "text-[#2E7D5E]"}`}>
-                        {attendanceRate}%
-                      </span>
-                      <span className="text-[10px] text-[#7A6862] block mt-0.5">
-                        {attendance ? `${attendance.presentDays}/${attendance.totalDays} Days` : "Active"}
-                      </span>
                     </div>
 
                     <div className="p-3.5 rounded-2xl bg-white border border-[#49352F]/10 text-center shadow-xs">
@@ -658,37 +641,6 @@ function ParentDashboardContent() {
                     </div>
                   </div>
                 </div>
-
-                {/* Attendance Alert Banner if Attendance < 85% */}
-                {attendanceRate < 85 && (
-                  <div className="p-4 sm:p-5 rounded-3xl bg-rose-50 border border-rose-300 shadow-xs space-y-2 text-rose-950">
-                    <div className="flex items-center gap-2 font-black text-rose-900 text-sm">
-                      <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
-                      <span>
-                        {language === "gu"
-                          ? `હાજરી ચેતવણી: ${attendanceRate}% (નિયત ૮૫% મર્યાદા કરતાં ઓછી)`
-                          : `Attendance Alert: ${attendanceRate}% (Below 85% Recommended Threshold)`}
-                      </span>
-                    </div>
-                    <p className="text-xs leading-relaxed text-rose-900/90">
-                      {language === "gu"
-                        ? `${activeStudent?.displayName} ની હાજરી હાલમાં ${attendanceRate}% છે (${attendance?.absentDays || 0} દિવસ ગેરહાજર). પાયાના શૈક્ષણિક વિષયોમાં પ્રગતિ માટે શાળામાં નિયમિત હાજરી અનિવાર્ય છે.`
-                        : `${activeStudent?.displayName}'s attendance is currently at ${attendanceRate}%, with ${attendance?.absentDays || 0} absences recorded. Consistent school attendance is essential for mastering remedial learning plans.`}
-                    </p>
-                    {attendance?.recentAbsences && attendance.recentAbsences.length > 0 && (
-                      <div className="pt-2 border-t border-rose-200 text-[11px] space-y-1">
-                        <span className="font-bold block">Recent Recorded Absences:</span>
-                        <div className="flex flex-wrap gap-2">
-                          {attendance.recentAbsences.map((abs: any, idx: number) => (
-                            <span key={idx} className="px-2 py-0.5 rounded-lg bg-white border border-rose-200 text-rose-900">
-                              {abs.date}: {abs.reason || "Unexcused"}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
 
                 {/* Home Learning Activities Priority Section */}
                 {homeActivities.length > 0 && (
@@ -1458,15 +1410,6 @@ function ParentDashboardContent() {
                       )}
                     </div>
                   </div>
-                </div>
-
-                {/* Official Gmail Communications & Dispatched Reports */}
-                <div className="p-5 sm:p-6 rounded-3xl bg-white border border-[#49352F]/15 shadow-sm space-y-4">
-                  <ParentCommunicationHistoryList
-                    communications={communications}
-                    title={language === "gu" ? "શાળા અને શિક્ષક તરફથી મોકલેલા સત્તાવાર Gmail સંદેશાઓ" : "Official Gmail Communications & Reports from School"}
-                    isParentView={true}
-                  />
                 </div>
               </div>
             )}

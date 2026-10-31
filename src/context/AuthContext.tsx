@@ -9,7 +9,7 @@ interface AuthContextType {
   isDemoMode: boolean;
   isLoading: boolean;
   login: (email: string, password?: string, role?: UserRole) => Promise<boolean>;
-  registerTeacher: (name: string, email: string, password?: string, schoolId?: string, otp?: string) => Promise<{ success: boolean; error?: string }>;
+  registerTeacher: (name: string, email: string, password?: string, schoolId?: string) => Promise<{ success: boolean; error?: string }>;
   loginAsDemoTeacher: () => Promise<void>;
   loginAsDemoAdmin: () => Promise<void>;
   loginAsDemoParent: () => Promise<void>;
@@ -174,14 +174,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     name: string,
     email: string,
     password?: string,
-    schoolId = "sch-gn-01",
-    otp?: string
+    schoolId = "sch-gn-01"
   ): Promise<{ success: boolean; error?: string }> => {
     try {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, schoolId, otp }),
+        body: JSON.stringify({ name, email, password, schoolId }),
       });
       const data = await res.json();
       if (!res.ok || !data.success) {

@@ -7,14 +7,12 @@ export interface User {
   email: string;
   phone?: string;
   phoneVerified?: boolean;
-  emailVerified?: boolean;
-  emailVerifiedAt?: string;
   role: UserRole;
   schoolId: string;
   has_seen_tutorial?: boolean;
   googleId?: string;
   avatarUrl?: string;
-  provider?: "local" | "google" | "phone" | "email";
+  provider?: "local" | "google" | "phone";
   passwordHash?: string;
   status?: "active" | "pending" | "disabled";
   createdAt?: string;

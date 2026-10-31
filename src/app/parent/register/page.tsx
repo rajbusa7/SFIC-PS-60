@@ -22,7 +22,6 @@ import {
   GraduationCap,
   ArrowLeft,
   Info,
-  RotateCcw,
 } from "lucide-react";
 
 export default function ParentRegisterPage() {
@@ -40,24 +39,8 @@ export default function ParentRegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  // 2-Step Email Verification states
-  const [step, setStep] = useState<"details" | "verify">("details");
-  const [otpCode, setOtpCode] = useState("");
-  const [otpSending, setOtpSending] = useState(false);
-  const [otpCooldown, setOtpCooldown] = useState(0);
-
-  // Countdown timer for resend
-  React.useEffect(() => {
-    if (otpCooldown <= 0) return;
-    const timer = setInterval(() => {
-      setOtpCooldown((prev) => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [otpCooldown]);
-
-  // Step 1: Validate input details and send 6-digit verification code
-  const handleSendOtp = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
     setError(null);
     setSuccessMsg(null);
 
@@ -66,8 +49,7 @@ export default function ParentRegisterPage() {
       return;
     }
 
-    const cleanEmail = email.trim().toLowerCase();
-    if (!cleanEmail || !cleanEmail.includes("@")) {
+    if (!email.trim() || !email.includes("@")) {
       setError(language === "gu" ? "કૃપા કરીને માન્ય ઇમેઇલ દાખલ કરો." : "Please enter a valid email address.");
       return;
     }
@@ -90,54 +72,6 @@ export default function ParentRegisterPage() {
       return;
     }
 
-    setOtpSending(true);
-
-    try {
-      const res = await fetch("/api/auth/otp/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: cleanEmail,
-          role: "parent",
-          purpose: "registration",
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || "Failed to deliver verification email.");
-      }
-
-      setStep("verify");
-      setOtpCooldown(60);
-      setSuccessMsg(
-        language === "gu"
-          ? `૬-અંકનો ચકાસણી કોડ ${data.maskedEmail || cleanEmail} પર મોકલવામાં આવ્યો છે.`
-          : `A 6-digit verification code has been dispatched to ${data.maskedEmail || cleanEmail}.`
-      );
-    } catch (err: any) {
-      setError(err.message || "Failed to send verification email. Please try again.");
-    } finally {
-      setOtpSending(false);
-    }
-  };
-
-  // Step 2: Verify OTP and finalize parent account registration
-  const handleRegisterWithOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-
-    const cleanOtp = otpCode.trim();
-    if (!cleanOtp || cleanOtp.length !== 6) {
-      setError(
-        language === "gu"
-          ? "કૃપા કરીને ૬-અંકનો ચકાસણી કોડ દાખલ કરો."
-          : "Please enter the 6-digit verification code."
-      );
-      return;
-    }
-
     setLoading(true);
 
     try {
@@ -146,13 +80,12 @@ export default function ParentRegisterPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: name.trim(),
-          email: email.trim().toLowerCase(),
+          email: email.trim(),
           phone: phone.trim() || undefined,
           password,
           confirmPassword,
           linkingCode: linkingCode.trim() || undefined,
           preferredLanguage: language === "gu" ? "gu" : "en",
-          otp: cleanOtp,
         }),
       });
 
@@ -244,232 +177,142 @@ export default function ParentRegisterPage() {
               </div>
             )}
 
-            {/* Registration Form: Step 1 vs Step 2 */}
-            {step === "details" ? (
-              <form onSubmit={handleSendOtp} className="space-y-3.5">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-[#49352F] block">
-                    {language === "gu" ? "વાલીનું પૂરું નામ *" : "Parent's Full Name *"}
-                  </label>
-                  <div className="relative">
-                    <User className="w-4 h-4 text-[#7A6862] absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      required
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder={language === "gu" ? "દા.ત. દિનેશભાઈ પટેલ" : "e.g. Dineshbhai Patel"}
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#49352F]/20 bg-[#FAF6E9]/60 text-xs font-medium text-[#49352F] placeholder:text-[#7A6862]/60 focus:outline-none focus:border-[#B26A1B] focus:ring-2 focus:ring-[#B26A1B]/20 transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-[#49352F] block">
-                    {language === "gu" ? "ઇમેઇલ સરનામું (ચકાસણી માટે) *" : "Email Address (For Verification) *"}
-                  </label>
-                  <div className="relative">
-                    <Mail className="w-4 h-4 text-[#7A6862] absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="parent@example.com"
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#49352F]/20 bg-[#FAF6E9]/60 text-xs font-medium text-[#49352F] placeholder:text-[#7A6862]/60 focus:outline-none focus:border-[#B26A1B] focus:ring-2 focus:ring-[#B26A1B]/20 transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-[#49352F] block">
-                    {language === "gu" ? "મોબાઇલ નંબર (વૈકલ્પિક)" : "Phone Number (Optional)"}
-                  </label>
-                  <div className="relative">
-                    <Phone className="w-4 h-4 text-[#7A6862] absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="+91 98765 43210"
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#49352F]/20 bg-[#FAF6E9]/60 text-xs font-medium text-[#49352F] placeholder:text-[#7A6862]/60 focus:outline-none focus:border-[#B26A1B] focus:ring-2 focus:ring-[#B26A1B]/20 transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-[#49352F] block">
-                      {language === "gu" ? "પાસવર્ડ *" : "Password *"}
-                    </label>
-                    <div className="relative">
-                      <Lock className="w-4 h-4 text-[#7A6862] absolute left-3 top-1/2 -translate-y-1/2" />
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        required
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Min 6 chars"
-                        className="w-full pl-9 pr-8 py-2.5 rounded-xl border border-[#49352F]/20 bg-[#FAF6E9]/60 text-xs font-medium text-[#49352F] placeholder:text-[#7A6862]/60 focus:outline-none focus:border-[#B26A1B] focus:ring-2 focus:ring-[#B26A1B]/20 transition-all"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7A6862] hover:text-[#49352F] cursor-pointer"
-                      >
-                        {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-[#49352F] block">
-                      {language === "gu" ? "પુષ્ટિ કરો *" : "Confirm *"}
-                    </label>
-                    <div className="relative">
-                      <Lock className="w-4 h-4 text-[#7A6862] absolute left-3 top-1/2 -translate-y-1/2" />
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        required
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        placeholder="Re-enter password"
-                        className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[#49352F]/20 bg-[#FAF6E9]/60 text-xs font-medium text-[#49352F] placeholder:text-[#7A6862]/60 focus:outline-none focus:border-[#B26A1B] focus:ring-2 focus:ring-[#B26A1B]/20 transition-all"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Optional Child Linking Code */}
-                <div className="p-3 rounded-2xl bg-[#FAF6E9]/80 border border-[#49352F]/15 space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-[#49352F] flex items-center gap-1.5">
-                      <KeyRound className="w-3.5 h-3.5 text-[#B26A1B]" />
-                      <span>{language === "gu" ? "બાળક જોડાણ કોડ (વૈકલ્પિક)" : "Child Linking Code (Optional)"}</span>
-                    </label>
-                    <span className="text-[10px] text-[#7A6862]">e.g. PAR-4892</span>
-                  </div>
+            {/* Registration Form */}
+            <form onSubmit={handleRegister} className="space-y-3.5">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[#49352F] block">
+                  {language === "gu" ? "વાલીનું પૂરું નામ *" : "Parent's Full Name *"}
+                </label>
+                <div className="relative">
+                  <User className="w-4 h-4 text-[#7A6862] absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
-                    value={linkingCode}
-                    onChange={(e) => setLinkingCode(e.target.value.toUpperCase())}
-                    placeholder="PAR-XXXX"
-                    className="w-full px-3 py-2 rounded-xl border border-[#49352F]/20 bg-white font-mono text-xs font-bold text-[#B26A1B] tracking-wider uppercase placeholder:normal-case placeholder:font-sans placeholder:text-[#7A6862]/50 focus:outline-none focus:border-[#B26A1B]"
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder={language === "gu" ? "દા.ત. દિનેશભાઈ પટેલ" : "e.g. Dineshbhai Patel"}
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#49352F]/20 bg-[#FAF6E9]/60 text-xs font-medium text-[#49352F] placeholder:text-[#7A6862]/60 focus:outline-none focus:border-[#B26A1B] focus:ring-2 focus:ring-[#B26A1B]/20 transition-all"
                   />
-                  <p className="text-[10px] text-[#7A6862] leading-tight">
-                    {language === "gu"
-                      ? "શાળાના શિક્ષક દ્વારા આપવામાં આવેલ ૬-અંકનો કોડ દાખલ કરીને બાળકને તરત જોડો. (તમે પછીથી પણ જોડી શકો છો)."
-                      : "Enter the verification code given by your child's teacher to link records instantly (can also be linked later)."}
-                  </p>
                 </div>
+              </div>
 
-                <button
-                  type="submit"
-                  disabled={otpSending}
-                  className="w-full py-3 px-4 rounded-xl font-bold text-xs bg-gradient-to-r from-[#F2CAB3] to-[#F2DCB5] hover:brightness-95 active:scale-[0.99] text-[#49352F] border border-[#49352F]/20 shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-2"
-                >
-                  {otpSending ? (
-                    <span className="flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 animate-spin text-[#B26A1B]" />
-                      <span>{language === "gu" ? "ચકાસણી ઈમેલ મોકલી રહ્યા છીએ..." : "Sending Verification Email..."}</span>
-                    </span>
-                  ) : (
-                    <>
-                      <span>{language === "gu" ? "આગળ વધો (ઈમેલ ચકાસો)" : "Continue to Email Verification"}</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
-              </form>
-            ) : (
-              <form onSubmit={handleRegisterWithOtp} className="space-y-4">
-                <div className="p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/25 text-xs text-blue-950 space-y-1">
-                  <div className="font-bold flex items-center gap-1.5">
-                    <Mail className="w-4 h-4 text-[#B26A1B]" />
-                    <span>{language === "gu" ? "ઈમેલ ચકાસણી કોડ દાખલ કરો" : "Enter Email Verification Code"}</span>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[#49352F] block">
+                  {language === "gu" ? "ઇમેઇલ સરનામું *" : "Email Address *"}
+                </label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-[#7A6862] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="parent@example.com"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#49352F]/20 bg-[#FAF6E9]/60 text-xs font-medium text-[#49352F] placeholder:text-[#7A6862]/60 focus:outline-none focus:border-[#B26A1B] focus:ring-2 focus:ring-[#B26A1B]/20 transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[#49352F] block">
+                  {language === "gu" ? "મોબાઇલ નંબર (વૈકલ્પિક)" : "Phone Number (Optional)"}
+                </label>
+                <div className="relative">
+                  <Phone className="w-4 h-4 text-[#7A6862] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="+91 98765 43210"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#49352F]/20 bg-[#FAF6E9]/60 text-xs font-medium text-[#49352F] placeholder:text-[#7A6862]/60 focus:outline-none focus:border-[#B26A1B] focus:ring-2 focus:ring-[#B26A1B]/20 transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-[#49352F] block">
+                    {language === "gu" ? "પાસવર્ડ *" : "Password *"}
+                  </label>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-[#7A6862] absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Min 6 chars"
+                      className="w-full pl-9 pr-8 py-2.5 rounded-xl border border-[#49352F]/20 bg-[#FAF6E9]/60 text-xs font-medium text-[#49352F] placeholder:text-[#7A6862]/60 focus:outline-none focus:border-[#B26A1B] focus:ring-2 focus:ring-[#B26A1B]/20 transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7A6862] hover:text-[#49352F] cursor-pointer"
+                    >
+                      {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
                   </div>
-                  <p className="text-[11px] leading-relaxed">
-                    {language === "gu"
-                      ? `અમે ${email} પર ૬-અંકનો ચકાસણી કોડ મોકલ્યો છે. વાલી એકાઉન્ટ સક્રિય કરવા માટે નીચે કોડ દાખલ કરો.`
-                      : `We have sent a 6-digit verification code to ${email}. Enter the code below to finalize and activate your parent account.`}
-                  </p>
                 </div>
 
                 <div className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-[#49352F] block">
-                      {language === "gu" ? "૬-અંકનો ચકાસણી કોડ *" : "6-Digit Verification Code *"}
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setStep("details");
-                        setError(null);
-                      }}
-                      className="text-[11px] text-[#B26A1B] hover:underline font-semibold cursor-pointer"
-                    >
-                      {language === "gu" ? "માહિતી બદલો" : "Back to Edit Details"}
-                    </button>
-                  </div>
+                  <label className="text-xs font-bold text-[#49352F] block">
+                    {language === "gu" ? "પુષ્ટિ કરો *" : "Confirm *"}
+                  </label>
                   <div className="relative">
-                    <KeyRound className="w-4 h-4 text-[#7A6862] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <Lock className="w-4 h-4 text-[#7A6862] absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
-                      type="text"
-                      inputMode="numeric"
-                      maxLength={6}
-                      value={otpCode}
-                      onChange={(e) => setOtpCode(e.target.value.replace(/[^\d]/g, "").slice(0, 6))}
-                      placeholder="5 8 4 9 2 0"
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#49352F]/20 bg-white text-xs font-mono font-bold tracking-widest text-[#49352F] placeholder:text-[#7A6862]/50 placeholder:font-sans placeholder:tracking-normal focus:outline-none focus:border-[#B26A1B] focus:ring-2 focus:ring-[#B26A1B]/20 transition-all"
+                      type={showPassword ? "text" : "password"}
+                      required
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Re-enter password"
+                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[#49352F]/20 bg-[#FAF6E9]/60 text-xs font-medium text-[#49352F] placeholder:text-[#7A6862]/60 focus:outline-none focus:border-[#B26A1B] focus:ring-2 focus:ring-[#B26A1B]/20 transition-all"
                     />
                   </div>
-                  <p className="text-[10px] text-[#7A6862] mt-0.5">
-                    {language === "gu" ? "૫ મિનિટ માટે માન્ય (એક વખત ઉપયોગી)" : "Valid for 5 minutes (Single-use code)"}
-                  </p>
                 </div>
+              </div>
 
-                <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-[#7A6862]">
-                    {otpCooldown > 0 ? (
-                      language === "gu"
-                        ? `ફરીથી મોકલવા માટે: ${otpCooldown} સેકન્ડ`
-                        : `Resend available in ${otpCooldown}s`
-                    ) : (
-                      language === "gu" ? "કોડ મળ્યો નથી?" : "Didn't receive email?"
-                    )}
+              {/* Optional Child Linking Code */}
+              <div className="p-3 rounded-2xl bg-[#FAF6E9]/80 border border-[#49352F]/15 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-[#49352F] flex items-center gap-1.5">
+                    <KeyRound className="w-3.5 h-3.5 text-[#B26A1B]" />
+                    <span>{language === "gu" ? "બાળક જોડાણ કોડ (વૈકલ્પિક)" : "Child Linking Code (Optional)"}</span>
+                  </label>
+                  <span className="text-[10px] text-[#7A6862]">e.g. PAR-4892</span>
+                </div>
+                <input
+                  type="text"
+                  value={linkingCode}
+                  onChange={(e) => setLinkingCode(e.target.value.toUpperCase())}
+                  placeholder="PAR-XXXX"
+                  className="w-full px-3 py-2 rounded-xl border border-[#49352F]/20 bg-white font-mono text-xs font-bold text-[#B26A1B] tracking-wider uppercase placeholder:normal-case placeholder:font-sans placeholder:text-[#7A6862]/50 focus:outline-none focus:border-[#B26A1B]"
+                />
+                <p className="text-[10px] text-[#7A6862] leading-tight">
+                  {language === "gu"
+                    ? "શાળાના શિક્ષક દ્વારા આપવામાં આવેલ ૬-અંકનો કોડ દાખલ કરીને બાળકને તરત જોડો. (તમે પછીથી પણ જોડી શકો છો)."
+                    : "Enter the verification code given by your child's teacher to link records instantly (can also be linked later)."}
+                </p>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 px-4 rounded-xl font-bold text-xs bg-gradient-to-r from-[#F2CAB3] to-[#F2DCB5] hover:brightness-95 active:scale-[0.99] text-[#49352F] border border-[#49352F]/20 shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-2"
+              >
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 animate-spin text-[#B26A1B]" />
+                    <span>{language === "gu" ? "એકાઉન્ટ બની રહ્યું છે..." : "Creating Account..."}</span>
                   </span>
-                  {otpCooldown === 0 && (
-                    <button
-                      type="button"
-                      onClick={() => handleSendOtp()}
-                      disabled={otpSending}
-                      className="text-[#B26A1B] font-bold hover:underline flex items-center gap-1 cursor-pointer disabled:opacity-50"
-                    >
-                      <RotateCcw className="w-3 h-3" />
-                      <span>{language === "gu" ? "ફરીથી મોકલો" : "Resend Code"}</span>
-                    </button>
-                  )}
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading || otpCode.trim().length !== 6}
-                  className="w-full py-3 px-4 rounded-xl font-bold text-xs bg-gradient-to-r from-[#F2CAB3] to-[#F2DCB5] hover:brightness-95 active:scale-[0.99] text-[#49352F] border border-[#49352F]/20 shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-2"
-                >
-                  {loading ? (
-                    <span className="flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 animate-spin text-[#B26A1B]" />
-                      <span>{language === "gu" ? "ચકાસણી અને ખાતું બની રહ્યું છે..." : "Verifying & Creating Account..."}</span>
-                    </span>
-                  ) : (
-                    <>
-                      <span>{language === "gu" ? "ચકાસો અને વાલી એકાઉન્ટ બનાવો" : "Verify & Create Parent Account"}</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
-              </form>
-            )}
+                ) : (
+                  <>
+                    <span>{language === "gu" ? "વાલી એકાઉન્ટ રજીસ્ટર કરો" : "Register Parent Account"}</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </form>
 
             {/* Back to Parent Login */}
             <div className="pt-2 border-t border-[#49352F]/10 text-center">

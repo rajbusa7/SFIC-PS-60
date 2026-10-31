@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db/database";
 import { hashPassword } from "@/lib/auth/password";
-import { emailOtpService } from "@/lib/auth/emailOtpService";
 import {
   SESSION_COOKIE_NAME,
   signSession,
@@ -11,7 +10,7 @@ import {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, email, phone, password, confirmPassword, linkingCode, preferredLanguage, otp, code, otpCode } = body;
+    const { name, email, phone, password, confirmPassword, linkingCode, preferredLanguage } = body;
 
     // 1. Input Validation
     if (!name || typeof name !== "string" || !name.trim()) {
@@ -57,28 +56,13 @@ export async function POST(request: Request) {
       );
     }
 
-    // Verify OTP if submitted during registration or check if pre-verified
-    const submittedOtp = otp || code || otpCode;
-    const pendingVer = emailOtpService.getPendingVerification(normalizedEmail);
-    let isEmailVerified = pendingVer?.status === "verified" || Boolean(body.emailVerified);
-
-    if (submittedOtp && typeof submittedOtp === "string") {
-      await emailOtpService.verifyOtp(normalizedEmail, submittedOtp.trim(), "parent");
-      isEmailVerified = true;
-    }
-
     // 3. Hash password securely (PBKDF2-SHA256)
     const passwordHash = hashPassword(password);
-    const now = new Date().toISOString();
 
-    // 4. Create User with enforced 'parent' role
+    // 4. Create User with enforced 'parent' role (never allow client-chosen role)
     const newUser = await db.createUserAsync({
       name: name.trim(),
       email: normalizedEmail,
-      phone: phone ? String(phone).trim() : undefined,
-      phoneVerified: false,
-      emailVerified: isEmailVerified,
-      emailVerifiedAt: isEmailVerified ? now : undefined,
       role: "parent",
       schoolId: "sch-gn-01",
       provider: "local",
@@ -116,47 +100,44 @@ export async function POST(request: Request) {
       id: newUser.id,
       name: newUser.name,
       email: newUser.email,
-      phone: newUser.phone,
-      phoneVerified: false,
-      emailVerified: isEmailVerified,
       role: "parent",
-      schoolId: "sch-gn-01",
+      schoolId: newUser.schoolId,
       provider: "local",
     });
 
+    const sanitizedUser = {
+      id: newUser.id,
+      name: newUser.name,
+      email: newUser.email,
+      role: "parent" as const,
+      schoolId: newUser.schoolId,
+      provider: "local" as const,
+      status: "active" as const,
+      createdAt: newUser.createdAt,
+      updatedAt: newUser.updatedAt,
+    };
+
     const response = NextResponse.json({
       success: true,
-      message: "Parent account created successfully.",
-      user: {
-        id: newUser.id,
-        name: newUser.name,
-        email: newUser.email,
-        phone: newUser.phone,
-        emailVerified: isEmailVerified,
-        emailVerifiedAt: isEmailVerified ? now : undefined,
-        role: newUser.role,
-        schoolId: newUser.schoolId,
-        provider: newUser.provider,
-        status: newUser.status,
-      },
-      parentProfile: {
-        id: parentProfile.id,
-        name: parentProfile.name,
-        email: parentProfile.email,
-        linkedStudentId,
-        studentIds: parentProfile.studentIds,
-      },
-      redirectUrl: "/parent/dashboard",
+      message: "Parent account registered successfully.",
+      user: sanitizedUser,
+      parentProfile,
+      linkedStudentId,
     });
 
-    response.cookies.set(SESSION_COOKIE_NAME, sessionToken, getSessionCookieOptions());
+    response.cookies.set(
+      SESSION_COOKIE_NAME,
+      sessionToken,
+      getSessionCookieOptions()
+    );
 
     return response;
   } catch (err: any) {
-    console.error("[Parent Register Error]:", err);
+    console.error("[Register Parent Error]:", err);
     return NextResponse.json(
-      { success: false, error: err.message || "Failed to create parent account." },
+      { success: false, error: err.message || "Failed to register parent account." },
       { status: 500 }
     );
   }
 }
+

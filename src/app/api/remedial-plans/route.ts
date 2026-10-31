@@ -9,7 +9,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const studentId = searchParams.get("studentId") || undefined;
     const status = searchParams.get("status") || undefined;
-    const id = searchParams.get("id") || searchParams.get("planId") || undefined;
+    const id = searchParams.get("id") || undefined;
 
     if (id) {
       const plan = db.getRemedialPlanById(id);
@@ -96,39 +96,18 @@ export async function POST(request: Request) {
     }
 
     const targetGap = db.getLearningGapById(gapId);
-    if (!targetGap) {
-      return NextResponse.json(
-        { success: false, error: "Could not create plan: Learning gap record not found" },
-        { status: 404 }
-      );
-    }
-
-    if (targetGap.masteryStatus === "Mastered" || targetGap.status === "Resolved") {
+    if (targetGap && (targetGap.masteryStatus === "Mastered" || targetGap.status === "Resolved")) {
       return NextResponse.json(
         { success: false, error: "Remedial plan not needed: Competency is already mastered. Periodic maintenance practice is recommended." },
         { status: 400 }
       );
     }
 
-    const createdPlan = db.createRemedialPlanForGap(gapId, customNotes, {
-      language: language === "gu" ? "gu" : "en",
-      forceRegenerate: Boolean(body.forceRegenerate),
-      diagnosisType: body.diagnosisType,
-      pedagogicalPrescription: body.pedagogicalPrescription,
-      trend: body.trend,
-    });
-
+    const createdPlan = db.createRemedialPlanForGap(gapId, customNotes);
     if (!createdPlan) {
       return NextResponse.json(
-        { success: false, error: "Could not create plan: Student or concept not found" },
+        { success: false, error: "Could not create plan: Gap or student not found" },
         { status: 404 }
-      );
-    }
-
-    if (!Array.isArray(createdPlan.steps) || createdPlan.steps.length !== 5) {
-      return NextResponse.json(
-        { success: false, error: "Plan generation failed: Exactly 5 teaching steps required." },
-        { status: 500 }
       );
     }
 

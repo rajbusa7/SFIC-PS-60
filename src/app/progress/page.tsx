@@ -64,7 +64,10 @@ export default function ProgressTrackingPage() {
   const fetchProgress = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/progress");
+      const res = await fetch(`/api/progress?_t=${Date.now()}`, {
+        cache: "no-store",
+        headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
+      });
       const data = await res.json();
       if (data.success) {
         setProgressData(data);

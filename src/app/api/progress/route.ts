@@ -402,20 +402,29 @@ export async function GET(request: Request) {
       filteredStudentRecords = filteredStudentRecords.filter((s) => s.trend === trendParam);
     }
 
-    return NextResponse.json({
-      success: true,
-      kpis,
-      progressItems: filteredProgressItems,
-      studentRecords: filteredStudentRecords,
-      subjectAverages,
-      teacherAlerts,
-      // Backward compatibility fields
-      improvingCount: kpis.studentsShowingGrowth,
-      totalGaps: allGaps.length,
-      activeGapsCount: kpis.activeInterventions,
-      resolvedGapsCount: kpis.gapsResolved,
-      completedPlansCount: kpis.interventionsCompleted,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        kpis,
+        progressItems: filteredProgressItems,
+        studentRecords: filteredStudentRecords,
+        subjectAverages,
+        teacherAlerts,
+        // Backward compatibility fields
+        improvingCount: kpis.studentsShowingGrowth,
+        totalGaps: allGaps.length,
+        activeGapsCount: kpis.activeInterventions,
+        resolvedGapsCount: kpis.gapsResolved,
+        completedPlansCount: kpis.interventionsCompleted,
+      },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
+      }
+    );
   } catch (error) {
     console.error("API GET /api/progress error:", error);
     return NextResponse.json(

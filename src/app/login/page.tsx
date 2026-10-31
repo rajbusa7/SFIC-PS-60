@@ -52,17 +52,25 @@ function LoginCardContent() {
   // Login method: "password" or "otp"
   const [loginMethod, setLoginMethod] = useState<"password" | "otp">("password");
 
-  // Real SMS OTP states
-  const [otpPhone, setOtpPhone] = useState("");
+  // Real Email OTP states
+  const [otpEmail, setOtpEmail] = useState(searchParams.get("email") || "teacher@studysaathi.edu.in");
   const [otpCode, setOtpCode] = useState("");
-  const [otpStep, setOtpStep] = useState<"phone" | "code">("phone");
+  const [otpStep, setOtpStep] = useState<"email" | "code">("email");
   const [otpSending, setOtpSending] = useState(false);
   const [otpVerifying, setOtpVerifying] = useState(false);
   const [otpCooldown, setOtpCooldown] = useState(0);
   const [otpError, setOtpError] = useState<string | null>(null);
   const [otpSuccess, setOtpSuccess] = useState<string | null>(null);
-  const [smsProviderConfigured, setSmsProviderConfigured] = useState<boolean | null>(null);
-  const [smsProviderName, setSmsProviderName] = useState<string>("Twilio Verify / MSG91");
+  const [emailProviderConfigured, setEmailProviderConfigured] = useState<boolean | null>(null);
+  const [emailProviderName, setEmailProviderName] = useState<string>("Resend / SMTP");
+
+  // Registration Email Verification states
+  const [regStep, setRegStep] = useState<"details" | "verify">("details");
+  const [regOtpCode, setRegOtpCode] = useState("");
+  const [regOtpSending, setRegOtpSending] = useState(false);
+  const [regOtpCooldown, setRegOtpCooldown] = useState(0);
+  const [regOtpError, setRegOtpError] = useState<string | null>(null);
+  const [regOtpSuccess, setRegOtpSuccess] = useState<string | null>(null);
 
   // Login form state
   const [email, setEmail] = useState(searchParams.get("email") || "teacher@studysaathi.edu.in");
@@ -150,10 +158,10 @@ function LoginCardContent() {
       .then((data) => {
         if (data.success) {
           setGoogleConfigured(Boolean(data.googleConfigured));
-          if (typeof data.smsProviderConfigured === "boolean") {
-            setSmsProviderConfigured(data.smsProviderConfigured);
-            if (data.smsProviderName) {
-              setSmsProviderName(data.smsProviderName);
+          if (typeof data.emailProviderConfigured === "boolean" || typeof data.emailConfigured === "boolean") {
+            setEmailProviderConfigured(Boolean(data.emailProviderConfigured || data.emailConfigured));
+            if (data.emailProviderName) {
+              setEmailProviderName(data.emailProviderName);
             }
           }
         }
@@ -161,7 +169,7 @@ function LoginCardContent() {
       .catch(() => setGoogleConfigured(false));
   }, [searchParams, language]);
 
-  // Real SMS OTP resend countdown timer
+  // Email OTP resend countdown timers
   useEffect(() => {
     if (otpCooldown <= 0) return;
     const timer = setInterval(() => {
@@ -170,17 +178,25 @@ function LoginCardContent() {
     return () => clearInterval(timer);
   }, [otpCooldown]);
 
+  useEffect(() => {
+    if (regOtpCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setRegOtpCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [regOtpCooldown]);
+
   const handleSendTeacherOtp = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setOtpError(null);
     setOtpSuccess(null);
 
-    const cleanPhone = otpPhone.trim();
-    if (!cleanPhone || cleanPhone.replace(/\D/g, "").length < 10) {
+    const cleanEmail = otpEmail.trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes("@")) {
       setOtpError(
         language === "gu"
-          ? "કૃપા કરીને માન્ય 10-અંકનો ભારતીય મોબાઇલ નંબર દાખલ કરો."
-          : "Please enter a valid 10-digit Indian mobile phone number."
+          ? "કૃપા કરીને માન્ય ઈમેલ સરનામું દાખલ કરો."
+          : "Please enter a valid email address."
       );
       return;
     }
@@ -190,7 +206,7 @@ function LoginCardContent() {
       const res = await fetch("/api/auth/otp/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: cleanPhone, role: "teacher" }),
+        body: JSON.stringify({ email: cleanEmail, role: "teacher", purpose: "login" }),
       });
       const data = await res.json();
 
@@ -198,8 +214,8 @@ function LoginCardContent() {
         if (res.status === 404) {
           throw new Error(
             language === "gu"
-              ? "આ મોબાઇલ નંબર શાળાના સ્ટાફ / શિક્ષક તરીકે નોંધાયેલ નથી. કૃપા કરીને શાળા વહીવટકર્તાનો સંપર્ક કરો અથવા તમારા ઈમેલ દ્વારા પ્રવેશ કરો."
-              : "This phone number is not registered as an authorized school teacher or staff member. Please use your registered phone or sign in with email."
+              ? "આ ઈમેલ સરનામું શાળાના સ્ટાફ / શિક્ષક તરીકે નોંધાયેલ નથી. કૃપા કરીને તમારું એકાઉન્ટ બનાવો અથવા પાસવર્ડ દ્વારા પ્રવેશ કરો."
+              : "This email address is not registered as an authorized school teacher. Please create an account or sign in with your password."
           );
         }
         if (res.status === 429) {
@@ -210,18 +226,18 @@ function LoginCardContent() {
                 : "Rate limit reached. Please wait before requesting another OTP.")
           );
         }
-        throw new Error(data.error || "Failed to send SMS OTP.");
+        throw new Error(data.error || "Failed to deliver verification email.");
       }
 
       setOtpStep("code");
       setOtpCooldown(60);
       setOtpSuccess(
         language === "gu"
-          ? `6-અંકનો ચકાસણી કોડ ${data.maskedPhone || cleanPhone} પર SMS દ્વારા મોકલવામાં આવ્યો છે.`
-          : `A 6-digit OTP code has been sent via SMS to ${data.maskedPhone || cleanPhone}.`
+          ? `૬-અંકનો ચકાસણી કોડ ${data.maskedEmail || cleanEmail} પર ઈમેલ દ્વારા મોકલવામાં આવ્યો છે.`
+          : `A 6-digit OTP code has been sent to ${data.maskedEmail || cleanEmail}.`
       );
     } catch (err: any) {
-      setOtpError(err.message || "Failed to send SMS OTP.");
+      setOtpError(err.message || "Failed to deliver verification email.");
     } finally {
       setOtpSending(false);
     }
@@ -235,7 +251,7 @@ function LoginCardContent() {
     if (!cleanCode || cleanCode.length !== 6) {
       setOtpError(
         language === "gu"
-          ? "કૃપા કરીને 6-અંકનો ચકાસણી કોડ દાખલ કરો."
+          ? "કૃપા કરીને ૬-અંકનો ચકાસણી કોડ દાખલ કરો."
           : "Please enter the 6-digit verification code."
       );
       return;
@@ -247,7 +263,7 @@ function LoginCardContent() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          phone: otpPhone.trim(),
+          email: otpEmail.trim().toLowerCase(),
           code: cleanCode,
           role: "teacher",
         }),
@@ -266,6 +282,95 @@ function LoginCardContent() {
       setOtpError(err.message || "OTP verification failed.");
     } finally {
       setOtpVerifying(false);
+    }
+  };
+
+  // Handler for sending registration verification code
+  const handleSendRegisterOtp = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setRegError(null);
+    setRegOtpError(null);
+    setRegOtpSuccess(null);
+
+    if (!regName.trim()) {
+      setRegError(language === "gu" ? "કૃપા કરીને તમારું પૂરું નામ દાખલ કરો." : "Please enter your full name.");
+      return;
+    }
+    if (!regEmail.trim() || !regEmail.includes("@")) {
+      setRegError(language === "gu" ? "કૃપા કરીને માન્ય ઈમેલ સરનામું દાખલ કરો." : "Please enter a valid email address.");
+      return;
+    }
+    if (!regPassword || regPassword.length < 6) {
+      setRegError(
+        language === "gu"
+          ? "પાસવર્ડ ઓછામાં ઓછો ૬ અક્ષરનો હોવો જોઈએ."
+          : "Password must be at least 6 characters long."
+      );
+      return;
+    }
+    if (regPassword !== regConfirmPassword) {
+      setRegError(language === "gu" ? "પાસવર્ડ મેળ ખાતા નથી." : "Passwords do not match.");
+      return;
+    }
+
+    setRegOtpSending(true);
+    try {
+      const res = await fetch("/api/auth/otp/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: regEmail.trim().toLowerCase(),
+          role: "teacher",
+          purpose: "registration",
+        }),
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to send verification email.");
+      }
+
+      setRegStep("verify");
+      setRegOtpCooldown(60);
+      setRegOtpSuccess(
+        language === "gu"
+          ? `૬-અંકનો ચકાસણી કોડ ${data.maskedEmail || regEmail} પર મોકલવામાં આવ્યો છે.`
+          : `A 6-digit verification code has been sent to ${data.maskedEmail || regEmail}.`
+      );
+    } catch (err: any) {
+      setRegError(err.message || "Failed to send verification email.");
+    } finally {
+      setRegOtpSending(false);
+    }
+  };
+
+  // Handler for completing teacher registration with verified OTP
+  const handleCompleteRegisterWithOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setRegOtpError(null);
+
+    const cleanCode = regOtpCode.trim();
+    if (!cleanCode || cleanCode.length !== 6) {
+      setRegOtpError(
+        language === "gu"
+          ? "કૃપા કરીને ૬-અંકનો ચકાસણી કોડ દાખલ કરો."
+          : "Please enter the 6-digit verification code."
+      );
+      return;
+    }
+
+    setRegLoading(true);
+    try {
+      const result = await registerTeacher(regName, regEmail, regPassword, regSchoolId, cleanCode);
+      if (result.success) {
+        router.push("/dashboard");
+      } else {
+        setRegOtpError(result.error || (language === "gu" ? "એકાઉન્ટ બનાવવામાં નિષ્ફળ." : "Failed to create account."));
+        setRegLoading(false);
+      }
+    } catch (err: any) {
+      setRegOtpError(err.message || "Registration failed.");
+      setRegLoading(false);
     }
   };
 
@@ -548,8 +653,8 @@ function LoginCardContent() {
                     : "text-[#7A6862] dark:text-[#FAF6E9]/70 hover:text-[#49352F] dark:hover:text-[#F4F1E1]"
                 }`}
               >
-                <Smartphone className="w-3.5 h-3.5 text-[#B26A1B] dark:text-[#F2CAB3]" />
-                <span>{language === "gu" ? "મોબાઈલ SMS OTP" : "Mobile SMS OTP"}</span>
+                <KeyRound className="w-3.5 h-3.5 text-[#B26A1B] dark:text-[#F2CAB3]" />
+                <span>{language === "gu" ? "ઈમેલ OTP પ્રવેશ" : "Email OTP Login"}</span>
               </button>
             </div>
 
@@ -621,53 +726,51 @@ function LoginCardContent() {
               </form>
             )}
 
-            {/* Sub-flow B: Real SMS OTP Form */}
+            {/* Sub-flow B: Real Email OTP Form */}
             {loginMethod === "otp" && (
               <div className="space-y-3.5">
                 {/* Information / Provider guidance banner */}
                 <div className="p-3 rounded-2xl bg-[#FAF6E9] dark:bg-[#26201C] border border-[#49352F]/12 dark:border-[#F2CAB3]/20 text-xs space-y-1.5">
                   <div className="flex items-center justify-between">
                     <span className="font-bold flex items-center gap-1.5 text-[#49352F] dark:text-[#F4F1E1]">
-                      <Phone className="w-3.5 h-3.5 text-[#B26A1B] dark:text-[#F2CAB3]" />
-                      <span>{language === "gu" ? "વાસ્તવિક SMS OTP પ્રવેશ" : "Verified Carrier SMS Authentication"}</span>
+                      <Mail className="w-3.5 h-3.5 text-[#B26A1B] dark:text-[#F2CAB3]" />
+                      <span>{language === "gu" ? "વાસ્તવિક ઈમેલ OTP પ્રવેશ" : "Verified Email OTP Authentication"}</span>
                     </span>
-                    <Badge variant={smsProviderConfigured ? "mint" : "outline"} size="sm">
-                      {smsProviderConfigured ? (smsProviderName || "Twilio / MSG91") : "Carrier Gateway"}
+                    <Badge variant={emailProviderConfigured ? "mint" : "outline"} size="sm">
+                      {emailProviderConfigured ? (emailProviderName || "Resend / SMTP") : "Email Gateway"}
                     </Badge>
                   </div>
                   <p className="text-[11px] text-[#7A6862] dark:text-[#FAF6E9]/70 leading-relaxed">
                     {language === "gu"
-                      ? "તમારા નોંધાયેલ શાળા ફોન નંબર પર વાસ્તવિક SMS OTP મોકલવામાં આવશે. ફક્ત માન્ય શિક્ષક એકાઉન્ટ જ પ્રવેશી શકે છે."
-                      : "A real carrier SMS OTP is delivered to your registered mobile phone. Only verified school teachers in the roster can sign in."}
+                      ? "તમારા નોંધાયેલ શાળા ઈમેલ સરનામા પર ૬-અંકનો સુરક્ષિત OTP મોકલવામાં આવશે. ફક્ત માન્ય શિક્ષક એકાઉન્ટ જ પ્રવેશી શકે છે."
+                      : "A secure 6-digit OTP is delivered to your registered official school email address. Only verified teachers can sign in."}
                   </p>
                 </div>
 
-                {otpStep === "phone" ? (
+                {otpStep === "email" ? (
                   <form onSubmit={handleSendTeacherOtp} className="space-y-3">
                     <div>
                       <label className="block text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] mb-1">
-                        {language === "gu" ? "નોંધાયેલ મોબાઇલ નંબર" : "Registered Mobile Phone Number"}
+                        {language === "gu" ? "નોંધાયેલ શાળા ઈમેલ સરનામું" : "Registered School Email Address"}
                       </label>
-                      <div className="relative flex rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/25 bg-[#FAF6E9] dark:bg-[#26201C] overflow-hidden focus-within:border-[#F2CAB3] focus-within:bg-white dark:focus-within:bg-[#201A16]">
-                        <span className="inline-flex items-center px-3 text-xs font-bold text-[#7A6862] dark:text-[#FAF6E9]/70 bg-[#49352F]/5 dark:bg-[#F2CAB3]/10 border-r border-[#49352F]/10 dark:border-[#F2CAB3]/20">
-                          +91
-                        </span>
+                      <div className="relative">
+                        <Mail className="absolute left-3.5 top-3 h-4 w-4 text-[#7A6862]" />
                         <input
-                          type="tel"
-                          inputMode="numeric"
-                          value={otpPhone}
-                          onChange={(e) => setOtpPhone(e.target.value.replace(/[^\d]/g, "").slice(0, 10))}
-                          placeholder="98765 43210"
-                          className="w-full py-2.5 px-3 text-xs text-[#49352F] dark:text-[#F4F1E1] placeholder-[#7A6862] outline-hidden bg-transparent"
+                          type="email"
+                          required
+                          value={otpEmail}
+                          onChange={(e) => setOtpEmail(e.target.value)}
+                          placeholder="teacher@studysaathi.edu.in"
+                          className="w-full rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/25 bg-[#FAF6E9] dark:bg-[#26201C] py-2.5 pl-10 pr-3 text-xs text-[#49352F] dark:text-[#F4F1E1] placeholder-[#7A6862] focus:border-[#F2CAB3] focus:bg-white dark:focus:bg-[#201A16] outline-hidden"
                         />
                       </div>
                     </div>
 
-                    {/* Pre-fill Demo Teacher Phone Shortcut */}
+                    {/* Pre-fill Demo Teacher Email Shortcut */}
                     <button
                       type="button"
                       onClick={() => {
-                        setOtpPhone("9876543210");
+                        setOtpEmail("teacher@studysaathi.edu.in");
                         setOtpError(null);
                       }}
                       className="w-full text-left p-2 rounded-xl border border-[#49352F]/10 dark:border-[#F2CAB3]/15 bg-white/60 dark:bg-[#1E1916]/60 text-[11px] hover:border-[#B26A1B] text-[#7A6862] dark:text-[#FAF6E9]/80 transition-all flex items-center justify-between cursor-pointer"
@@ -676,7 +779,7 @@ function LoginCardContent() {
                         <UserCheck className="w-3.5 h-3.5 text-[#B26A1B]" />
                         <span>Pooja Sharma (Class 4-A Teacher)</span>
                       </span>
-                      <span className="font-mono text-[10px] text-[#B26A1B] dark:text-[#F2CAB3] font-bold">+91 98765 43210</span>
+                      <span className="font-mono text-[10px] text-[#B26A1B] dark:text-[#F2CAB3] font-bold">teacher@studysaathi.edu.in</span>
                     </button>
 
                     {otpError && (
@@ -689,17 +792,17 @@ function LoginCardContent() {
                       type="submit"
                       variant="saffron"
                       size="md"
-                      disabled={otpSending || otpPhone.replace(/\D/g, "").length < 10}
+                      disabled={otpSending || !otpEmail.trim() || !otpEmail.includes("@")}
                       className="w-full rounded-full text-xs font-black shadow-xs cursor-pointer"
                     >
                       <span>
                         {otpSending
                           ? language === "gu"
-                            ? "SMS OTP મોકલી રહ્યા છીએ..."
-                            : "Sending Carrier SMS OTP..."
+                            ? "ઈમેલ મોકલી રહ્યા છીએ..."
+                            : "Sending Verification Email..."
                           : language === "gu"
-                          ? "SMS OTP મોકલો"
-                          : "Send SMS OTP"}
+                          ? "ચકાસણી કોડ મોકલો"
+                          : "Send Verification Code"}
                       </span>
                       <ArrowRight className="w-4 h-4 ml-1.5" />
                     </Button>
@@ -715,18 +818,18 @@ function LoginCardContent() {
                     <div>
                       <div className="flex items-center justify-between mb-1">
                         <label className="text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1]">
-                          {language === "gu" ? "૬-અંકનો SMS ચકાસણી કોડ" : "6-Digit SMS Verification Code"}
+                          {language === "gu" ? "૬-અંકનો ઈમેલ ચકાસણી કોડ" : "6-Digit Email Verification Code"}
                         </label>
                         <button
                           type="button"
                           onClick={() => {
-                            setOtpStep("phone");
+                            setOtpStep("email");
                             setOtpCode("");
                             setOtpError(null);
                           }}
                           className="text-[11px] text-[#B26A1B] dark:text-[#F2CAB3] hover:underline cursor-pointer"
                         >
-                          {language === "gu" ? "નંબર બદલો" : "Change Number"}
+                          {language === "gu" ? "ઈમેલ બદલો" : "Change Email"}
                         </button>
                       </div>
                       <div className="relative">
@@ -737,20 +840,23 @@ function LoginCardContent() {
                           maxLength={6}
                           value={otpCode}
                           onChange={(e) => setOtpCode(e.target.value.replace(/[^\d]/g, "").slice(0, 6))}
-                          placeholder="6 8 2 9 1 4"
+                          placeholder="5 8 4 9 2 0"
                           className="w-full rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/25 bg-[#FAF6E9] dark:bg-[#26201C] py-2.5 pl-10 pr-3 text-xs tracking-widest font-mono font-bold text-[#49352F] dark:text-[#F4F1E1] placeholder-[#7A6862] focus:border-[#F2CAB3] focus:bg-white dark:focus:bg-[#201A16] outline-hidden"
                         />
                       </div>
+                      <p className="text-[11px] text-[#7A6862] dark:text-[#FAF6E9]/60 mt-1">
+                        {language === "gu" ? "૫ મિનિટ માટે માન્ય (એક વખત ઉપયોગી)" : "Valid for 5 minutes (Single-use code)"}
+                      </p>
                     </div>
 
                     <div className="flex items-center justify-between text-[11px]">
                       <span className="text-[#7A6862] dark:text-[#FAF6E9]/70">
                         {otpCooldown > 0 ? (
                           language === "gu"
-                            ? `ફરીથી OTP મોકલવા માટે: ${otpCooldown} સેકન્ડ`
+                            ? `ફરીથી કોડ મોકલવા માટે: ${otpCooldown} સેકન્ડ`
                             : `Resend available in ${otpCooldown}s`
                         ) : (
-                          language === "gu" ? "OTP મળ્યો નથી?" : "Didn't receive SMS?"
+                          language === "gu" ? "કોડ મળ્યો નથી?" : "Didn't receive code?"
                         )}
                       </span>
                       {otpCooldown === 0 && (
@@ -761,7 +867,7 @@ function LoginCardContent() {
                           className="text-[#B26A1B] dark:text-[#F2CAB3] font-bold hover:underline flex items-center gap-1 cursor-pointer disabled:opacity-50"
                         >
                           <RotateCcw className="w-3 h-3" />
-                          <span>{language === "gu" ? "ફરીથી મોકલો" : "Resend SMS"}</span>
+                          <span>{language === "gu" ? "ફરીથી મોકલો" : "Resend Code"}</span>
                         </button>
                       )}
                     </div>
@@ -783,7 +889,7 @@ function LoginCardContent() {
                         {otpVerifying
                           ? language === "gu"
                             ? "ચકાસણી ચાલુ છે..."
-                            : "Verifying Carrier OTP..."
+                            : "Verifying Code..."
                           : language === "gu"
                           ? "ચકાસો અને પ્રવેશ કરો"
                           : "Verify & Sign In"}
@@ -859,126 +965,226 @@ function LoginCardContent() {
         {/* ============================================================== */}
         {authMode === "register" && (
           <div className="space-y-4">
-            <form onSubmit={handleRegisterSubmit} className="space-y-3.5">
-              <div>
-                <label className="block text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] mb-1">
-                  {language === "gu" ? "શિક્ષકનું પૂરું નામ" : "Teacher Full Name"}
-                </label>
-                <div className="relative">
-                  <UserIcon className="absolute left-3.5 top-3 h-4 w-4 text-[#7A6862]" />
-                  <input
-                    type="text"
-                    required
-                    value={regName}
-                    onChange={(e) => setRegName(e.target.value)}
-                    placeholder="e.g. Pooja Sharma"
-                    className="w-full rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/25 bg-[#FAF6E9] dark:bg-[#26201C] py-2.5 pl-10 pr-3 text-xs text-[#49352F] dark:text-[#F4F1E1] placeholder-[#7A6862] focus:border-[#F2CAB3] focus:bg-white dark:focus:bg-[#201A16] outline-hidden"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] mb-1">
-                  {language === "gu" ? "સત્તાવાર ઈમેલ સરનામું" : "Official Email Address"}
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3.5 top-3 h-4 w-4 text-[#7A6862]" />
-                  <input
-                    type="email"
-                    required
-                    value={regEmail}
-                    onChange={(e) => setRegEmail(e.target.value)}
-                    placeholder="teacher@studysaathi.edu.in"
-                    className="w-full rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/25 bg-[#FAF6E9] dark:bg-[#26201C] py-2.5 pl-10 pr-3 text-xs text-[#49352F] dark:text-[#F4F1E1] placeholder-[#7A6862] focus:border-[#F2CAB3] focus:bg-white dark:focus:bg-[#201A16] outline-hidden"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] mb-1">
-                  {language === "gu" ? "શાળા સંલગ્નતા (School ID)" : "School Association"}
-                </label>
-                <div className="relative">
-                  <Building2 className="absolute left-3.5 top-3 h-4 w-4 text-[#7A6862]" />
-                  <select
-                    value={regSchoolId}
-                    onChange={(e) => setRegSchoolId(e.target.value)}
-                    className="w-full rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/25 bg-[#FAF6E9] dark:bg-[#26201C] py-2.5 pl-10 pr-3 text-xs text-[#49352F] dark:text-[#F4F1E1] focus:border-[#F2CAB3] focus:bg-white dark:focus:bg-[#201A16] outline-hidden cursor-pointer"
-                  >
-                    <option value="sch-gn-01">
-                      Model Primary School, Gandhinagar (sch-gn-01)
-                    </option>
-                    <option value="sch-ah-02">
-                      Sardar Patel Primary Vidyalaya, Ahmedabad (sch-ah-02)
-                    </option>
-                    <option value="sch-br-03">
-                      Sayajirao Primary School, Vadodara (sch-br-03)
-                    </option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {regStep === "details" ? (
+              <form onSubmit={handleSendRegisterOtp} className="space-y-3.5">
                 <div>
                   <label className="block text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] mb-1">
-                    {language === "gu" ? "પાસવર્ડ" : "Password"}
+                    {language === "gu" ? "શિક્ષકનું પૂરું નામ" : "Teacher Full Name"}
                   </label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-3.5 w-3.5 text-[#7A6862]" />
+                    <UserIcon className="absolute left-3.5 top-3 h-4 w-4 text-[#7A6862]" />
                     <input
-                      type="password"
+                      type="text"
                       required
-                      value={regPassword}
-                      onChange={(e) => setRegPassword(e.target.value)}
-                      placeholder="Min. 6 chars"
-                      className="w-full rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/25 bg-[#FAF6E9] dark:bg-[#26201C] py-2.5 pl-9 pr-3 text-xs text-[#49352F] dark:text-[#F4F1E1] placeholder-[#7A6862] focus:border-[#F2CAB3] focus:bg-white dark:focus:bg-[#201A16] outline-hidden"
+                      value={regName}
+                      onChange={(e) => setRegName(e.target.value)}
+                      placeholder="e.g. Pooja Sharma"
+                      className="w-full rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/25 bg-[#FAF6E9] dark:bg-[#26201C] py-2.5 pl-10 pr-3 text-xs text-[#49352F] dark:text-[#F4F1E1] placeholder-[#7A6862] focus:border-[#F2CAB3] focus:bg-white dark:focus:bg-[#201A16] outline-hidden"
                     />
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] mb-1">
-                    {language === "gu" ? "પાસવર્ડ પુષ્ટિ" : "Confirm"}
+                    {language === "gu" ? "સત્તાવાર ઈમેલ સરનામું (ચકાસણી માટે)" : "Official Email Address (For Verification)"}
                   </label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-3.5 w-3.5 text-[#7A6862]" />
+                    <Mail className="absolute left-3.5 top-3 h-4 w-4 text-[#7A6862]" />
                     <input
-                      type="password"
+                      type="email"
                       required
-                      value={regConfirmPassword}
-                      onChange={(e) => setRegConfirmPassword(e.target.value)}
-                      placeholder="Repeat password"
-                      className="w-full rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/25 bg-[#FAF6E9] dark:bg-[#26201C] py-2.5 pl-9 pr-3 text-xs text-[#49352F] dark:text-[#F4F1E1] placeholder-[#7A6862] focus:border-[#F2CAB3] focus:bg-white dark:focus:bg-[#201A16] outline-hidden"
+                      value={regEmail}
+                      onChange={(e) => setRegEmail(e.target.value)}
+                      placeholder="teacher@studysaathi.edu.in"
+                      className="w-full rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/25 bg-[#FAF6E9] dark:bg-[#26201C] py-2.5 pl-10 pr-3 text-xs text-[#49352F] dark:text-[#F4F1E1] placeholder-[#7A6862] focus:border-[#F2CAB3] focus:bg-white dark:focus:bg-[#201A16] outline-hidden"
                     />
                   </div>
                 </div>
-              </div>
 
-              {regError && (
-                <div className="p-2.5 rounded-xl bg-[#C54738]/10 border border-[#C54738]/20 text-xs text-[#C54738] dark:text-[#FA8C7C]">
-                  {regError}
+                <div>
+                  <label className="block text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] mb-1">
+                    {language === "gu" ? "શાળા સંલગ્નતા (School ID)" : "School Association"}
+                  </label>
+                  <div className="relative">
+                    <Building2 className="absolute left-3.5 top-3 h-4 w-4 text-[#7A6862]" />
+                    <select
+                      value={regSchoolId}
+                      onChange={(e) => setRegSchoolId(e.target.value)}
+                      className="w-full rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/25 bg-[#FAF6E9] dark:bg-[#26201C] py-2.5 pl-10 pr-3 text-xs text-[#49352F] dark:text-[#F4F1E1] focus:border-[#F2CAB3] focus:bg-white dark:focus:bg-[#201A16] outline-hidden cursor-pointer"
+                    >
+                      <option value="sch-gn-01">
+                        Model Primary School, Gandhinagar (sch-gn-01)
+                      </option>
+                      <option value="sch-ah-02">
+                        Sardar Patel Primary Vidyalaya, Ahmedabad (sch-ah-02)
+                      </option>
+                      <option value="sch-br-03">
+                        Sayajirao Primary School, Vadodara (sch-br-03)
+                      </option>
+                    </select>
+                  </div>
                 </div>
-              )}
 
-              <Button
-                type="submit"
-                variant="saffron"
-                size="md"
-                disabled={regLoading}
-                className="w-full rounded-full text-xs font-black shadow-xs cursor-pointer"
-              >
-                <span>
-                  {regLoading
-                    ? language === "gu"
-                      ? "ખાતું બની રહ્યું છે..."
-                      : "Creating Teacher Account..."
-                    : language === "gu"
-                    ? "નવું શિક્ષક ખાતું બનાવો"
-                    : "Create Teacher Account"}
-                </span>
-                <ArrowRight className="w-4 h-4 ml-1.5" />
-              </Button>
-            </form>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] mb-1">
+                      {language === "gu" ? "પાસવર્ડ" : "Password"}
+                    </label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-3 h-3.5 w-3.5 text-[#7A6862]" />
+                      <input
+                        type="password"
+                        required
+                        value={regPassword}
+                        onChange={(e) => setRegPassword(e.target.value)}
+                        placeholder="Min. 6 chars"
+                        className="w-full rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/25 bg-[#FAF6E9] dark:bg-[#26201C] py-2.5 pl-9 pr-3 text-xs text-[#49352F] dark:text-[#F4F1E1] placeholder-[#7A6862] focus:border-[#F2CAB3] focus:bg-white dark:focus:bg-[#201A16] outline-hidden"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] mb-1">
+                      {language === "gu" ? "પાસવર્ડ પુષ્ટિ" : "Confirm"}
+                    </label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-3 h-3.5 w-3.5 text-[#7A6862]" />
+                      <input
+                        type="password"
+                        required
+                        value={regConfirmPassword}
+                        onChange={(e) => setRegConfirmPassword(e.target.value)}
+                        placeholder="Repeat password"
+                        className="w-full rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/25 bg-[#FAF6E9] dark:bg-[#26201C] py-2.5 pl-9 pr-3 text-xs text-[#49352F] dark:text-[#F4F1E1] placeholder-[#7A6862] focus:border-[#F2CAB3] focus:bg-white dark:focus:bg-[#201A16] outline-hidden"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {regError && (
+                  <div className="p-2.5 rounded-xl bg-[#C54738]/10 border border-[#C54738]/20 text-xs text-[#C54738] dark:text-[#FA8C7C]">
+                    {regError}
+                  </div>
+                )}
+
+                <Button
+                  type="submit"
+                  variant="saffron"
+                  size="md"
+                  disabled={regOtpSending}
+                  className="w-full rounded-full text-xs font-black shadow-xs cursor-pointer"
+                >
+                  <span>
+                    {regOtpSending
+                      ? language === "gu"
+                        ? "ચકાસણી ઈમેલ મોકલી રહ્યા છીએ..."
+                        : "Sending Verification Email..."
+                      : language === "gu"
+                      ? "આગળ વધો (ઈમેલ ચકાસો)"
+                      : "Continue to Email Verification"}
+                  </span>
+                  <ArrowRight className="w-4 h-4 ml-1.5" />
+                </Button>
+              </form>
+            ) : (
+              <form onSubmit={handleCompleteRegisterWithOtp} className="space-y-3.5">
+                <div className="p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/25 text-xs text-blue-950 dark:text-blue-200 space-y-1">
+                  <div className="font-bold flex items-center gap-1.5">
+                    <Mail className="w-4 h-4 text-[#B26A1B]" />
+                    <span>{language === "gu" ? "ઈમેલ ચકાસણી કોડ દાખલ કરો" : "Enter Email Verification Code"}</span>
+                  </div>
+                  <p className="text-[11px] leading-relaxed">
+                    {language === "gu"
+                      ? `અમે ${regEmail} પર ૬-અંકનો ચકાસણી કોડ મોકલ્યો છે. એકાઉન્ટ પૂર્ણ કરવા માટે નીચે કોડ દાખલ કરો.`
+                      : `We have dispatched a 6-digit verification code to ${regEmail}. Enter the code below to finalize your teacher account.`}
+                  </p>
+                </div>
+
+                {regOtpSuccess && (
+                  <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-xs text-emerald-900 dark:text-emerald-200">
+                    {regOtpSuccess}
+                  </div>
+                )}
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1]">
+                      {language === "gu" ? "૬-અંકનો ચકાસણી કોડ" : "6-Digit Verification Code"}
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRegStep("details");
+                        setRegOtpError(null);
+                      }}
+                      className="text-[11px] text-[#B26A1B] dark:text-[#F2CAB3] hover:underline cursor-pointer"
+                    >
+                      {language === "gu" ? "માહિતી બદલો" : "Back to Edit Details"}
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <KeyRound className="absolute left-3.5 top-3 h-4 w-4 text-[#7A6862]" />
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={6}
+                      value={regOtpCode}
+                      onChange={(e) => setRegOtpCode(e.target.value.replace(/[^\d]/g, "").slice(0, 6))}
+                      placeholder="5 8 4 9 2 0"
+                      className="w-full rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/25 bg-[#FAF6E9] dark:bg-[#26201C] py-2.5 pl-10 pr-3 text-xs tracking-widest font-mono font-bold text-[#49352F] dark:text-[#F4F1E1] placeholder-[#7A6862] focus:border-[#F2CAB3] focus:bg-white dark:focus:bg-[#201A16] outline-hidden"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-[#7A6862] dark:text-[#FAF6E9]/70">
+                    {regOtpCooldown > 0 ? (
+                      language === "gu"
+                        ? `ફરીથી મોકલવા માટે: ${regOtpCooldown} સેકન્ડ`
+                        : `Resend available in ${regOtpCooldown}s`
+                    ) : (
+                      language === "gu" ? "કોડ મળ્યો નથી?" : "Didn't receive email?"
+                    )}
+                  </span>
+                  {regOtpCooldown === 0 && (
+                    <button
+                      type="button"
+                      onClick={() => handleSendRegisterOtp()}
+                      disabled={regOtpSending}
+                      className="text-[#B26A1B] dark:text-[#F2CAB3] font-bold hover:underline flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      <span>{language === "gu" ? "ફરીથી મોકલો" : "Resend Code"}</span>
+                    </button>
+                  )}
+                </div>
+
+                {regOtpError && (
+                  <div className="p-2.5 rounded-xl bg-[#C54738]/10 border border-[#C54738]/20 text-xs text-[#C54738] dark:text-[#FA8C7C]">
+                    {regOtpError}
+                  </div>
+                )}
+
+                <Button
+                  type="submit"
+                  variant="saffron"
+                  size="md"
+                  disabled={regLoading || regOtpCode.trim().length !== 6}
+                  className="w-full rounded-full text-xs font-black shadow-xs cursor-pointer"
+                >
+                  <span>
+                    {regLoading
+                      ? language === "gu"
+                        ? "ચકાસણી અને નોંધણી ચાલુ છે..."
+                        : "Verifying & Registering..."
+                      : language === "gu"
+                      ? "ચકાસો અને શિક્ષક ખાતું બનાવો"
+                      : "Verify & Create Teacher Account"}
+                  </span>
+                  <ArrowRight className="w-4 h-4 ml-1.5" />
+                </Button>
+              </form>
+            )}
 
             {/* Subtle Divider: OR SIGN UP WITH */}
             <div className="relative my-4 text-center">

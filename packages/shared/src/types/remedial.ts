@@ -52,6 +52,7 @@ export interface RemedialPlan {
   conceptId: string;
   conceptName?: string;
   subjectCode?: SubjectCode;
+  subject?: string;
   learningObjective: string;
   recommendationReason: string;
   status: PlanStatus;

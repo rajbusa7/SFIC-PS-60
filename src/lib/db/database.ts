@@ -56,6 +56,10 @@ import type {
   AiProviderConfig,
   AiUsageMetric,
   User,
+  GmailConnection,
+  ParentCommunication,
+  StudentAttendanceSummary,
+  ParentNotificationPreferences,
 } from "../types";
 
 interface DataStore {
@@ -82,12 +86,156 @@ interface DataStore {
   aiConfigs: AiProviderConfig[];
   users?: User[];
   feedback?: { id: string; email: string; message?: string; submittedAt: string }[];
+  gmailConnection?: GmailConnection;
+  parentCommunications?: ParentCommunication[];
+  studentAttendance?: Record<string, StudentAttendanceSummary>;
+  parentPreferences?: Record<string, ParentNotificationPreferences>;
 }
 
 const DEFAULT_DATA_DIR = path.join(process.cwd(), "data");
 const DEFAULT_STORE_FILE = path.join(DEFAULT_DATA_DIR, "shikshasetu_store.json");
 const TMP_DATA_DIR = path.join(os.tmpdir(), "shikshasetu_data");
 const TMP_STORE_FILE = path.join(TMP_DATA_DIR, "shikshasetu_store.json");
+
+
+function getInitialAttendanceRecords(): Record<string, StudentAttendanceSummary> {
+  const now = new Date().toISOString();
+  return {
+    "std-aarav": {
+      studentId: "std-aarav",
+      attendanceRate: 94.5,
+      totalDays: 110,
+      presentDays: 104,
+      absentDays: 6,
+      lastUpdated: now,
+      recentAbsences: [
+        {
+          date: "2026-10-24",
+          reason: "Mild fever (Leave note submitted)",
+          isExcused: true,
+          notifiedParent: true,
+        },
+      ],
+    },
+    "std-diya": {
+      studentId: "std-diya",
+      attendanceRate: 98.2,
+      totalDays: 110,
+      presentDays: 108,
+      absentDays: 2,
+      lastUpdated: now,
+      recentAbsences: [
+        {
+          date: "2026-09-18",
+          reason: "Family visit to native village",
+          isExcused: true,
+          notifiedParent: true,
+        },
+      ],
+    },
+    "std-pooja": {
+      studentId: "std-pooja",
+      attendanceRate: 81.8,
+      totalDays: 110,
+      presentDays: 90,
+      absentDays: 20,
+      lastUpdated: now,
+      recentAbsences: [
+        {
+          date: "2026-10-27",
+          reason: "Family function in village",
+          isExcused: true,
+          notifiedParent: true,
+        },
+        {
+          date: "2026-10-28",
+          reason: "Unreported absence",
+          isExcused: false,
+          notifiedParent: false,
+        },
+      ],
+    },
+    "std-karan": {
+      studentId: "std-karan",
+      attendanceRate: 90.9,
+      totalDays: 110,
+      presentDays: 100,
+      absentDays: 10,
+      lastUpdated: now,
+      recentAbsences: [
+        {
+          date: "2026-10-12",
+          reason: "Dental checkup appointment",
+          isExcused: true,
+          notifiedParent: true,
+        },
+      ],
+    },
+    "std-dev": {
+      studentId: "std-dev",
+      attendanceRate: 93.6,
+      totalDays: 110,
+      presentDays: 103,
+      absentDays: 7,
+      lastUpdated: now,
+      recentAbsences: [
+        {
+          date: "2026-10-15",
+          reason: "Seasonal allergy recovery",
+          isExcused: true,
+          notifiedParent: true,
+        },
+      ],
+    },
+  };
+}
+
+function getInitialCommunications(): ParentCommunication[] {
+  return [
+    {
+      id: "comm-seed-01",
+      type: "notice",
+      title: "Quarterly Parent-Teacher Meeting (PTM)",
+      subject: "Invitation: Parent-Teacher Meeting on Saturday, Nov 7",
+      content: "All parents of Class 4-A are warmly invited to review first-term learning progress and holistic growth.",
+      senderId: "usr-teacher-01",
+      senderName: "Pooja Sharma",
+      senderRole: "teacher",
+      studentId: "std-aarav",
+      studentName: "Aarav Patel",
+      studentGrade: 4,
+      studentSection: "A",
+      parentId: "par-aarav",
+      parentName: "Rajeshbhai Patel",
+      parentEmail: "rajesh.patel@gmail.com",
+      channel: "gmail",
+      deliveryStatus: "delivered",
+      emailMessageId: "gmail-msg-ptm-seed-01",
+      sentAt: "2026-10-25T10:30:00Z",
+    },
+    {
+      id: "comm-seed-02",
+      type: "learning_gap",
+      title: "Learning Support for Math Division",
+      subject: "Learning Progress Update: Division Practice for Aarav",
+      content: "Aarav has shown enthusiasm in Math. We have initiated a 5-step concrete practice for 2-digit division.",
+      senderId: "usr-teacher-01",
+      senderName: "Pooja Sharma",
+      senderRole: "teacher",
+      studentId: "std-aarav",
+      studentName: "Aarav Patel",
+      studentGrade: 4,
+      studentSection: "A",
+      parentId: "par-aarav",
+      parentName: "Rajeshbhai Patel",
+      parentEmail: "rajesh.patel@gmail.com",
+      channel: "gmail",
+      deliveryStatus: "delivered",
+      emailMessageId: "gmail-msg-gap-seed-02",
+      sentAt: "2026-10-26T14:15:00Z",
+    },
+  ];
+}
 
 function getInitialStore(): DataStore {
   return {
@@ -130,6 +278,9 @@ function getInitialStore(): DataStore {
     aiConfigs: JSON.parse(JSON.stringify(SEED_AI_CONFIGS)),
     users: JSON.parse(JSON.stringify(SEED_USERS)),
     feedback: [],
+    parentCommunications: getInitialCommunications(),
+    studentAttendance: getInitialAttendanceRecords(),
+    parentPreferences: {},
   };
 }
 
@@ -522,9 +673,37 @@ export const db = {
     const studentIds = new Set<string>();
 
     for (const r of resultsData) {
-      // Guard against accidental duplicate submissions within a short window (e.g. repeated click or refresh)
-      const existingDuplicate = store.results.find((existing) => {
-        if (r.assessmentId && existing.assessmentId === r.assessmentId) return true;
+      // Check if an existing assessment record exists for this assessment and student
+      const existingRecord = store.results.find(
+        (existing) =>
+          r.assessmentId &&
+          existing.assessmentId === r.assessmentId &&
+          (!r.studentId || existing.studentId === r.studentId)
+      );
+
+      if (existingRecord) {
+        // If identical marks, it is an idempotent duplicate
+        if (
+          existingRecord.marksObtained === Number(r.marksObtained) &&
+          existingRecord.maximumMarks === Number(r.maximumMarks)
+        ) {
+          created.push(existingRecord);
+          studentIds.add(r.studentId);
+          continue;
+        }
+
+        // Otherwise update the assessment result
+        existingRecord.marksObtained = Number(r.marksObtained);
+        existingRecord.maximumMarks = Number(r.maximumMarks);
+        existingRecord.percentage = calculatePercentage(r.marksObtained, r.maximumMarks);
+        existingRecord.recordedAt = r.recordedAt || new Date().toISOString();
+        created.push(existingRecord);
+        studentIds.add(r.studentId);
+        continue;
+      }
+
+      // Guard against rapid duplicate submissions without assessmentId
+      const rapidDuplicate = store.results.find((existing) => {
         if (
           existing.studentId === r.studentId &&
           existing.conceptId === r.conceptId &&
@@ -538,8 +717,8 @@ export const db = {
         return false;
       });
 
-      if (existingDuplicate) {
-        created.push(existingDuplicate);
+      if (rapidDuplicate) {
+        created.push(rapidDuplicate);
         studentIds.add(r.studentId);
         continue;
       }
@@ -596,6 +775,21 @@ export const db = {
   getLearningGapById(id: string): LearningGap | null {
     const store = loadStore();
     return store.learningGaps.find((g) => g.id === id) || null;
+  },
+  updateLearningGap(id: string, updates: Partial<LearningGap>): LearningGap | null {
+    const store = loadStore();
+    const gapIndex = store.learningGaps.findIndex((g) => g.id === id);
+    if (gapIndex === -1) return null;
+    store.learningGaps[gapIndex] = {
+      ...store.learningGaps[gapIndex],
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    };
+    saveStore(store);
+    return store.learningGaps[gapIndex];
+  },
+  updateLearningGapStatus(id: string, status: any): LearningGap | null {
+    return this.updateLearningGap(id, { status });
   },
 
   recalculateLearningGapsForStudent(studentId: string): LearningGap[] {
@@ -708,10 +902,20 @@ export const db = {
   },
 
   getRemedialPlanById(id: string): RemedialPlan | undefined {
-    return loadStore().remedialPlans.find((p) => p.id === id);
+    return (loadStore().remedialPlans || []).find((p) => p.id === id);
   },
 
-  createRemedialPlanForGap(gapId: string, customNotes?: string): RemedialPlan | null {
+  createRemedialPlanForGap(
+    gapId: string,
+    customNotes?: string,
+    options?: {
+      language?: "en" | "gu";
+      forceRegenerate?: boolean;
+      diagnosisType?: string;
+      pedagogicalPrescription?: any;
+      trend?: string;
+    }
+  ): RemedialPlan | null {
     const store = loadStore();
     const gap = store.learningGaps.find((g) => g.id === gapId);
     if (!gap) return null;
@@ -724,6 +928,29 @@ export const db = {
     const student = store.students.find((s) => s.id === gap.studentId);
     const concept = store.concepts.find((c) => c.id === gap.conceptId);
     if (!student || !concept) return null;
+
+    if (!store.remedialPlans) {
+      store.remedialPlans = [];
+    }
+
+    // Check if an active plan already exists for this gap or student+concept (prevent duplicate plans on repeated clicks)
+    const existingPlan = store.remedialPlans.find(
+      (p) => (gap.remedialPlanId && p.id === gap.remedialPlanId) ||
+             (p.studentId === student.id && p.conceptId === concept.id)
+    );
+
+    // If an existing plan is found and forceRegenerate is not requested, return the existing plan
+    if (existingPlan && !options?.forceRegenerate) {
+      if (gap.remedialPlanId !== existingPlan.id || gap.status === "Active") {
+        gap.remedialPlanId = existingPlan.id;
+        if (gap.status === "Active") {
+          gap.status = existingPlan.status === "Completed" ? "Resolved" : "Under Intervention";
+        }
+        gap.updatedAt = new Date().toISOString();
+        saveStore(store);
+      }
+      return existingPlan;
+    }
 
     const studentResults = store.results
       .filter((r) => r.studentId === gap.studentId && r.conceptId === gap.conceptId)
@@ -768,11 +995,17 @@ export const db = {
         knownMisconceptions: detection.reason,
         confirmedOrInferred,
         masteryBenchmark: store.settings.masteryThreshold || 80,
+        language: options?.language || "en",
+        diagnosisType: options?.diagnosisType || (gap as any).diagnosisType,
+        pedagogicalPrescription: options?.pedagogicalPrescription,
+        trend: options?.trend || (gap as any).trend,
+        forceRegenerate: options?.forceRegenerate,
       }
     );
 
     const existingPlanIndex = store.remedialPlans.findIndex(
-      (p) => p.studentId === student.id && p.conceptId === concept.id
+      (p) => (gap.remedialPlanId && p.id === gap.remedialPlanId) ||
+             (p.studentId === student.id && p.conceptId === concept.id)
     );
     if (existingPlanIndex !== -1) {
       store.remedialPlans[existingPlanIndex] = plan;
@@ -1555,6 +1788,10 @@ export const db = {
     return notice;
   },
 
+  createNotice(noticeData: Omit<SchoolNotice, "id" | "createdAt" | "updatedAt">): SchoolNotice {
+    return this.saveNotice(noticeData);
+  },
+
   updateNotice(id: string, updates: Partial<SchoolNotice>): SchoolNotice | null {
     const store = loadStore();
     if (!store.notices) store.notices = [];
@@ -1817,6 +2054,10 @@ export const db = {
       id: userData.id || `usr-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       name: userData.name,
       email: userData.email.trim().toLowerCase(),
+      phone: userData.phone,
+      phoneVerified: userData.phoneVerified,
+      emailVerified: userData.emailVerified ?? false,
+      emailVerifiedAt: userData.emailVerifiedAt,
       role: userData.role || "teacher",
       schoolId: userData.schoolId || "sch-gn-01",
       googleId: userData.googleId,
@@ -1973,6 +2214,198 @@ export const db = {
       return postgresUserDb.upsertUser(userData);
     }
     return this.upsertUser(userData);
+  },
+
+  verifyUserEmail(email: string): User | null {
+    const store = loadStore();
+    const usersList = store.users || JSON.parse(JSON.stringify(SEED_USERS));
+    store.users = usersList;
+    const normalized = email.trim().toLowerCase();
+    const index = usersList.findIndex((u: User) => u.email.toLowerCase() === normalized);
+    if (index === -1) return null;
+    const now = new Date().toISOString();
+    usersList[index] = {
+      ...usersList[index],
+      emailVerified: true,
+      emailVerifiedAt: now,
+      updatedAt: now,
+    };
+    saveStore(store);
+    return usersList[index];
+  },
+
+  async verifyUserEmailAsync(email: string): Promise<User | null> {
+    const verified = this.verifyUserEmail(email);
+    if (isPostgresConfigured() && verified) {
+      postgresUserDb.updateUser(verified.id, {
+        emailVerified: true,
+        emailVerifiedAt: verified.emailVerifiedAt,
+      }).catch((e) => console.error("[PostgreSQL verifyUserEmail sync error]:", e));
+    }
+    return verified;
+  },
+
+
+  // ==========================================
+  // GMAIL OAUTH CONNECTION & SETTINGS
+  // ==========================================
+  getGmailConnection(): GmailConnection | null {
+    const store = loadStore();
+    return store.gmailConnection || null;
+  },
+
+  saveGmailConnection(conn: GmailConnection): void {
+    const store = loadStore();
+    store.gmailConnection = conn;
+    saveStore(store);
+  },
+
+  updateGmailConnectionStatus(status: "connected" | "expired" | "revoked"): void {
+    const store = loadStore();
+    if (store.gmailConnection) {
+      store.gmailConnection.status = status;
+      saveStore(store);
+    }
+  },
+
+  disconnectGmail(): boolean {
+    const store = loadStore();
+    if (store.gmailConnection) {
+      delete store.gmailConnection;
+      saveStore(store);
+      return true;
+    }
+    return false;
+  },
+
+  // ==========================================
+  // PARENT COMMUNICATIONS & GMAIL DISPATCH LOGS
+  // ==========================================
+  createParentCommunication(
+    comm: Omit<ParentCommunication, "id" | "sentAt"> & { id?: string; sentAt?: string }
+  ): ParentCommunication {
+    const store = loadStore();
+    if (!store.parentCommunications) {
+      store.parentCommunications = getInitialCommunications();
+    }
+    const fullComm: ParentCommunication = {
+      ...comm,
+      id: comm.id || `comm-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      sentAt: comm.sentAt || new Date().toISOString(),
+    };
+    store.parentCommunications.unshift(fullComm);
+    saveStore(store);
+    return fullComm;
+  },
+
+  getParentCommunications(filter?: {
+    parentId?: string;
+    studentId?: string;
+    type?: string;
+    status?: string;
+  }): ParentCommunication[] {
+    const store = loadStore();
+    let comms = store.parentCommunications || getInitialCommunications();
+
+    if (filter?.parentId) {
+      comms = comms.filter((c) => c.parentId === filter.parentId);
+    }
+    if (filter?.studentId) {
+      comms = comms.filter((c) => c.studentId === filter.studentId);
+    }
+    if (filter?.type && filter.type !== "all") {
+      comms = comms.filter((c) => c.type === filter.type);
+    }
+    if (filter?.status && filter.status !== "all") {
+      comms = comms.filter((c) => c.deliveryStatus === filter.status);
+    }
+    return comms;
+  },
+
+  getCommunicationById(id: string): ParentCommunication | null {
+    const store = loadStore();
+    const comms = store.parentCommunications || getInitialCommunications();
+    return comms.find((c) => c.id === id) || null;
+  },
+
+  // ==========================================
+  // STUDENT ATTENDANCE RECORDS
+  // ==========================================
+  getStudentAttendance(studentId: string): StudentAttendanceSummary {
+    const store = loadStore();
+    if (!store.studentAttendance) {
+      store.studentAttendance = getInitialAttendanceRecords();
+    }
+    if (store.studentAttendance[studentId]) {
+      return store.studentAttendance[studentId];
+    }
+
+    // Default fallback calculation for any student
+    const defaultRecord: StudentAttendanceSummary = {
+      studentId,
+      attendanceRate: 92.0,
+      totalDays: 110,
+      presentDays: 101,
+      absentDays: 9,
+      lastUpdated: new Date().toISOString(),
+      recentAbsences: [],
+    };
+    store.studentAttendance[studentId] = defaultRecord;
+    saveStore(store);
+    return defaultRecord;
+  },
+
+  updateStudentAttendance(
+    studentId: string,
+    update: Partial<StudentAttendanceSummary>
+  ): StudentAttendanceSummary {
+    const store = loadStore();
+    if (!store.studentAttendance) {
+      store.studentAttendance = getInitialAttendanceRecords();
+    }
+    const current = this.getStudentAttendance(studentId);
+    const updated: StudentAttendanceSummary = {
+      ...current,
+      ...update,
+      lastUpdated: new Date().toISOString(),
+    };
+    store.studentAttendance[studentId] = updated;
+    saveStore(store);
+    return updated;
+  },
+
+  // ==========================================
+  // PARENT NOTIFICATION PREFERENCES
+  // ==========================================
+  getParentPreferences(parentId: string): ParentNotificationPreferences {
+    const store = loadStore();
+    if (!store.parentPreferences) {
+      store.parentPreferences = {};
+    }
+    if (store.parentPreferences[parentId]) {
+      return store.parentPreferences[parentId];
+    }
+    const defaultPrefs: ParentNotificationPreferences = {
+      parentId,
+      emailNotices: true,
+      emailAttendance: true,
+      emailAcademic: true,
+      emailLearningGaps: true,
+      emailRemedialPlans: true,
+      preferredLanguage: "gu",
+    };
+    store.parentPreferences[parentId] = defaultPrefs;
+    saveStore(store);
+    return defaultPrefs;
+  },
+
+  saveParentPreferences(prefs: ParentNotificationPreferences): void {
+    const store = loadStore();
+    if (!store.parentPreferences) {
+      store.parentPreferences = {};
+    }
+    store.parentPreferences[prefs.parentId] = prefs;
+    saveStore(store);
   },
 
   resetToDemoData(): void {

@@ -45,15 +45,15 @@ function ParentLoginContent() {
   // Method toggle: "password" vs "otp"
   const [loginMethod, setLoginMethod] = useState<"password" | "otp">("password");
 
-  // Real SMS OTP states for parent
-  const [otpPhone, setOtpPhone] = useState("");
+  // Real Email OTP states for parent
+  const [otpEmail, setOtpEmail] = useState("dinesh.patel@example.com");
   const [otpCode, setOtpCode] = useState("");
-  const [otpStep, setOtpStep] = useState<"phone" | "code">("phone");
+  const [otpStep, setOtpStep] = useState<"email" | "code">("email");
   const [otpSending, setOtpSending] = useState(false);
   const [otpVerifying, setOtpVerifying] = useState(false);
   const [otpCooldown, setOtpCooldown] = useState(0);
-  const [smsProviderConfigured, setSmsProviderConfigured] = useState<boolean | null>(null);
-  const [smsProviderName, setSmsProviderName] = useState<string>("Twilio Verify / MSG91");
+  const [emailProviderConfigured, setEmailProviderConfigured] = useState<boolean | null>(null);
+  const [emailProviderName, setEmailProviderName] = useState<string>("Resend / SMTP");
 
   useEffect(() => {
     const errorParam = searchParams.get("error");
@@ -80,10 +80,10 @@ function ParentLoginContent() {
     fetch("/api/auth/config")
       .then((res) => res.json())
       .then((data) => {
-        if (data.success && typeof data.smsProviderConfigured === "boolean") {
-          setSmsProviderConfigured(data.smsProviderConfigured);
-          if (data.smsProviderName) {
-            setSmsProviderName(data.smsProviderName);
+        if (data.success && (typeof data.emailProviderConfigured === "boolean" || typeof data.emailConfigured === "boolean")) {
+          setEmailProviderConfigured(Boolean(data.emailProviderConfigured || data.emailConfigured));
+          if (data.emailProviderName) {
+            setEmailProviderName(data.emailProviderName);
           }
         }
       })
@@ -104,12 +104,12 @@ function ParentLoginContent() {
     setError(null);
     setSuccessMsg(null);
 
-    const cleanPhone = otpPhone.trim();
-    if (!cleanPhone || cleanPhone.replace(/\D/g, "").length < 10) {
+    const cleanEmail = otpEmail.trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes("@")) {
       setError(
         language === "gu"
-          ? "કૃપા કરીને માન્ય 10-અંકનો ભારતીય મોબાઇલ નંબર દાખલ કરો."
-          : "Please enter a valid 10-digit Indian mobile phone number."
+          ? "કૃપા કરીને માન્ય ઈમેલ સરનામું દાખલ કરો."
+          : "Please enter a valid email address."
       );
       return;
     }
@@ -119,11 +119,18 @@ function ParentLoginContent() {
       const res = await fetch("/api/auth/otp/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: cleanPhone, role: "parent" }),
+        body: JSON.stringify({ email: cleanEmail, role: "parent", purpose: "login" }),
       });
       const data = await res.json();
 
       if (!res.ok || !data.success) {
+        if (res.status === 404) {
+          throw new Error(
+            language === "gu"
+              ? "આ ઈમેલ સરનામું વાલી તરીકે નોંધાયેલ નથી. કૃપા કરીને નવું એકાઉન્ટ બનાવો અથવા પાસવર્ડ દ્વારા પ્રવેશ કરો."
+              : "This email address is not registered as a parent account. Please create an account or sign in with your password."
+          );
+        }
         if (res.status === 429) {
           throw new Error(
             data.error ||
@@ -132,18 +139,18 @@ function ParentLoginContent() {
                 : "Rate limit reached. Please wait before requesting another OTP.")
           );
         }
-        throw new Error(data.error || "Failed to send SMS OTP.");
+        throw new Error(data.error || "Failed to deliver verification email.");
       }
 
       setOtpStep("code");
       setOtpCooldown(60);
       setSuccessMsg(
         language === "gu"
-          ? `6-અંકનો ચકાસણી કોડ ${data.maskedPhone || cleanPhone} પર SMS દ્વારા મોકલવામાં આવ્યો છે.`
-          : `A 6-digit OTP code has been sent via SMS to ${data.maskedPhone || cleanPhone}.`
+          ? `૬-અંકનો ચકાસણી કોડ ${data.maskedEmail || cleanEmail} પર ઈમેલ દ્વારા મોકલવામાં આવ્યો છે.`
+          : `A 6-digit OTP code has been sent to ${data.maskedEmail || cleanEmail}.`
       );
     } catch (err: any) {
-      setError(err.message || "Failed to send SMS OTP.");
+      setError(err.message || "Failed to deliver verification email.");
     } finally {
       setOtpSending(false);
     }
@@ -158,7 +165,7 @@ function ParentLoginContent() {
     if (!cleanCode || cleanCode.length !== 6) {
       setError(
         language === "gu"
-          ? "કૃપા કરીને 6-અંકનો ચકાસણી કોડ દાખલ કરો."
+          ? "કૃપા કરીને ૬-અંકનો ચકાસણી કોડ દાખલ કરો."
           : "Please enter the 6-digit verification code."
       );
       return;
@@ -170,7 +177,7 @@ function ParentLoginContent() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          phone: otpPhone.trim(),
+          email: otpEmail.trim().toLowerCase(),
           code: cleanCode,
           role: "parent",
         }),
@@ -394,8 +401,8 @@ function ParentLoginContent() {
                     : "text-[#7A6862] hover:text-[#49352F]"
                 }`}
               >
-                <Smartphone className="w-3.5 h-3.5 text-[#B26A1B]" />
-                <span>{language === "gu" ? "મોબાઈલ SMS OTP" : "Mobile SMS OTP"}</span>
+                <KeyRound className="w-3.5 h-3.5 text-[#B26A1B]" />
+                <span>{language === "gu" ? "ઈમેલ OTP પ્રવેશ" : "Email OTP Login"}</span>
               </button>
             </div>
 
@@ -483,52 +490,50 @@ function ParentLoginContent() {
               </form>
             )}
 
-            {/* Sub-flow B: Real SMS OTP Form */}
+            {/* Sub-flow B: Real Email OTP Form */}
             {loginMethod === "otp" && (
               <div className="space-y-4">
                 <div className="p-3 rounded-2xl bg-[#FAF6E9] border border-[#49352F]/12 text-xs space-y-1.5">
                   <div className="flex items-center justify-between">
                     <span className="font-bold flex items-center gap-1.5 text-[#49352F]">
-                      <Phone className="w-3.5 h-3.5 text-[#B26A1B]" />
-                      <span>{language === "gu" ? "વાસ્તવિક SMS OTP પ્રવેશ" : "Verified Carrier SMS Authentication"}</span>
+                      <Mail className="w-3.5 h-3.5 text-[#B26A1B]" />
+                      <span>{language === "gu" ? "વાસ્તવિક ઈમેલ OTP પ્રવેશ" : "Verified Email OTP Authentication"}</span>
                     </span>
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#2E7D5E]/15 text-[#2E7D5E] border border-[#2E7D5E]/30">
-                      {smsProviderConfigured ? (smsProviderName || "Twilio / MSG91") : "Carrier Gateway"}
+                      {emailProviderConfigured ? (emailProviderName || "Resend / SMTP") : "Email Gateway"}
                     </span>
                   </div>
                   <p className="text-[11px] text-[#7A6862] leading-relaxed">
                     {language === "gu"
-                      ? "તમારા નોંધાયેલ મોબાઇલ નંબર પર વાસ્તવિક SMS OTP મોકલવામાં આવશે. કોઈ પાસવર્ડની જરૂર નથી."
-                      : "A real carrier SMS verification code will be delivered to your registered mobile phone."}
+                      ? "તમારા નોંધાયેલ વાલી ઈમેલ સરનામા પર ૬-અંકનો સુરક્ષિત OTP મોકલવામાં આવશે. કોઈ પાસવર્ડની જરૂર નથી."
+                      : "A secure 6-digit OTP will be delivered to your registered parent email address. No password required."}
                   </p>
                 </div>
 
-                {otpStep === "phone" ? (
+                {otpStep === "email" ? (
                   <form onSubmit={handleSendParentOtp} className="space-y-3">
                     <div>
                       <label className="block text-xs font-semibold text-[#49352F] mb-1">
-                        {language === "gu" ? "મોબાઇલ નંબર" : "Mobile Phone Number"}
+                        {language === "gu" ? "નોંધાયેલ ઈમેલ સરનામું" : "Registered Email Address"}
                       </label>
-                      <div className="relative flex rounded-xl border border-[#49352F]/20 bg-[#FAF6E9]/60 overflow-hidden focus-within:border-[#B26A1B] focus-within:bg-white transition-all">
-                        <span className="inline-flex items-center px-3 text-xs font-bold text-[#7A6862] bg-[#49352F]/5 border-r border-[#49352F]/15">
-                          +91
-                        </span>
+                      <div className="relative">
+                        <Mail className="w-4 h-4 text-[#7A6862] absolute left-3.5 top-1/2 -translate-y-1/2" />
                         <input
-                          type="tel"
-                          inputMode="numeric"
-                          value={otpPhone}
-                          onChange={(e) => setOtpPhone(e.target.value.replace(/[^\d]/g, "").slice(0, 10))}
-                          placeholder="98250 12345"
-                          className="w-full py-2.5 px-3 text-xs text-[#49352F] placeholder-[#7A6862] outline-hidden bg-transparent"
+                          type="email"
+                          required
+                          value={otpEmail}
+                          onChange={(e) => setOtpEmail(e.target.value)}
+                          placeholder="parent@example.com"
+                          className="w-full pl-10 pr-3 py-2.5 rounded-xl border border-[#49352F]/20 bg-[#FAF6E9]/60 text-xs font-medium text-[#49352F] placeholder:text-[#7A6862]/60 focus:outline-none focus:border-[#B26A1B] focus:ring-2 focus:ring-[#B26A1B]/20 transition-all"
                         />
                       </div>
                     </div>
 
-                    {/* Pre-fill Demo Parent Shortcut */}
+                    {/* Pre-fill Demo Parent Email Shortcut */}
                     <button
                       type="button"
                       onClick={() => {
-                        setOtpPhone("9825012345");
+                        setOtpEmail("dinesh.patel@example.com");
                         setError(null);
                       }}
                       className="w-full text-left p-2 rounded-xl border border-[#49352F]/15 bg-white/70 text-[11px] hover:border-[#B26A1B] text-[#7A6862] transition-all flex items-center justify-between cursor-pointer"
@@ -537,22 +542,22 @@ function ParentLoginContent() {
                         <Users className="w-3.5 h-3.5 text-[#B26A1B]" />
                         <span>Dineshbhai Patel (Father of Aarav)</span>
                       </span>
-                      <span className="font-mono text-[10px] text-[#B26A1B] font-bold">+91 98250 12345</span>
+                      <span className="font-mono text-[10px] text-[#B26A1B] font-bold">dinesh.patel@example.com</span>
                     </button>
 
                     <button
                       type="submit"
-                      disabled={otpSending || otpPhone.replace(/\D/g, "").length < 10}
+                      disabled={otpSending || !otpEmail.trim() || !otpEmail.includes("@")}
                       className="w-full py-3 px-4 rounded-xl font-bold text-xs bg-gradient-to-r from-[#F2CAB3] to-[#F2DCB5] hover:brightness-95 active:scale-[0.99] text-[#49352F] border border-[#49352F]/20 shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                     >
                       {otpSending ? (
                         <span className="flex items-center gap-2">
                           <Sparkles className="w-4 h-4 animate-spin text-[#B26A1B]" />
-                          <span>{language === "gu" ? "SMS મોકલી રહ્યા છીએ..." : "Sending SMS OTP..."}</span>
+                          <span>{language === "gu" ? "ઈમેલ મોકલી રહ્યા છીએ..." : "Sending Verification Email..."}</span>
                         </span>
                       ) : (
                         <>
-                          <span>{language === "gu" ? "SMS OTP મોકલો" : "Send SMS OTP"}</span>
+                          <span>{language === "gu" ? "ચકાસણી કોડ મોકલો" : "Send Verification Code"}</span>
                           <ArrowRight className="w-4 h-4" />
                         </>
                       )}
@@ -563,18 +568,18 @@ function ParentLoginContent() {
                     <div>
                       <div className="flex items-center justify-between mb-1">
                         <label className="text-xs font-semibold text-[#49352F]">
-                          {language === "gu" ? "૬-અંકનો SMS ચકાસણી કોડ" : "6-Digit SMS Verification Code"}
+                          {language === "gu" ? "૬-અંકનો ઈમેલ ચકાસણી કોડ" : "6-Digit Email Verification Code"}
                         </label>
                         <button
                           type="button"
                           onClick={() => {
-                            setOtpStep("phone");
+                            setOtpStep("email");
                             setOtpCode("");
                             setError(null);
                           }}
                           className="text-[11px] text-[#B26A1B] hover:underline cursor-pointer"
                         >
-                          {language === "gu" ? "નંબર બદલો" : "Change Number"}
+                          {language === "gu" ? "ઈમેલ બદલો" : "Change Email"}
                         </button>
                       </div>
                       <div className="relative">
@@ -585,20 +590,23 @@ function ParentLoginContent() {
                           maxLength={6}
                           value={otpCode}
                           onChange={(e) => setOtpCode(e.target.value.replace(/[^\d]/g, "").slice(0, 6))}
-                          placeholder="6 8 2 9 1 4"
+                          placeholder="5 8 4 9 2 0"
                           className="w-full pl-10 pr-3 py-2.5 rounded-xl border border-[#49352F]/20 bg-[#FAF6E9]/60 text-xs tracking-widest font-mono font-bold text-[#49352F] placeholder-[#7A6862] focus:outline-none focus:border-[#B26A1B] focus:ring-2 focus:ring-[#B26A1B]/20"
                         />
                       </div>
+                      <p className="text-[10px] text-[#7A6862] mt-0.5">
+                        {language === "gu" ? "૫ મિનિટ માટે માન્ય (એક વખત ઉપયોગી)" : "Valid for 5 minutes (Single-use code)"}
+                      </p>
                     </div>
 
                     <div className="flex items-center justify-between text-[11px]">
                       <span className="text-[#7A6862]">
                         {otpCooldown > 0 ? (
                           language === "gu"
-                            ? `ફરીથી OTP મોકલવા માટે: ${otpCooldown} સેકન્ડ`
+                            ? `ફરીથી મોકલવા માટે: ${otpCooldown} સેકન્ડ`
                             : `Resend available in ${otpCooldown}s`
                         ) : (
-                          language === "gu" ? "OTP મળ્યો નથી?" : "Didn't receive SMS?"
+                          language === "gu" ? "કોડ મળ્યો નથી?" : "Didn't receive email?"
                         )}
                       </span>
                       {otpCooldown === 0 && (
@@ -609,7 +617,7 @@ function ParentLoginContent() {
                           className="text-[#B26A1B] font-bold hover:underline flex items-center gap-1 cursor-pointer disabled:opacity-50"
                         >
                           <RotateCcw className="w-3 h-3" />
-                          <span>{language === "gu" ? "ફરીથી મોકલો" : "Resend SMS"}</span>
+                          <span>{language === "gu" ? "ફરીથી મોકલો" : "Resend Code"}</span>
                         </button>
                       )}
                     </div>
@@ -622,7 +630,7 @@ function ParentLoginContent() {
                       {otpVerifying ? (
                         <span className="flex items-center gap-2">
                           <Sparkles className="w-4 h-4 animate-spin text-[#B26A1B]" />
-                          <span>{language === "gu" ? "ચકાસણી ચાલુ છે..." : "Verifying OTP..."}</span>
+                          <span>{language === "gu" ? "ચકાસણી ચાલુ છે..." : "Verifying Code..."}</span>
                         </span>
                       ) : (
                         <>

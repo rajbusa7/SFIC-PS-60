@@ -53,6 +53,10 @@ export interface RemedialPlanGenerationOptions {
   startDate?: string;
   targetDate?: string;
   reviewDate?: string;
+  diagnosisType?: string;
+  pedagogicalPrescription?: any;
+  trend?: string;
+  forceRegenerate?: boolean;
 }
 
 // Built-in deterministic pedagogical templates aligned with Gujarat primary curriculum
@@ -954,6 +958,323 @@ export const CURRICULUM_TEMPLATES: Record<string, ConceptCurriculumTemplate> = {
     ],
   },
 
+  "c-eng-verb-01": {
+    conceptId: "c-eng-verb-01",
+    conceptName: "Subject-Verb Agreement",
+    subjectCode: "ENG",
+    grade: 4,
+    learningObjective:
+      "The student will correctly identify singular vs plural subjects and apply matching singular (-s/-es) and plural verbs in sentences with at least 80% accuracy.",
+    expectedSkill:
+      "Select and write correct verbs for singular (he/she/it/noun) and plural (they/we/plural nouns) subjects without teacher assistance.",
+    likelyMisconception:
+      "Assuming verbs ending in -s are plural (confusing noun plurals with verb third-person singulars) or mismatching verbs with compound subjects.",
+    materials: [
+      "Color-coded subject and verb flashcards (Blue for Singular, Green for Plural)",
+      "Sentence strip display chart",
+      "Subject-Verb Agreement guided practice worksheet",
+      "Notebook and pencil",
+    ],
+    difficulty: "Intermediate",
+    estimatedMinutes: 20,
+    masteryBenchmark: 80,
+    steps: [
+      {
+        stepNumber: 1,
+        title: "STEP 1 — Concept Review: Singular vs Plural Subjects",
+        description: "Review pronoun and noun subjects, clearly distinguishing between singular (one person/thing) and plural (more than one).",
+        learningObjective: "Accurately classify subjects as singular or plural before selecting a verb.",
+        teacherInstructions: "Write 'A boy' and 'Two boys' on the board. Ask: 'How many boys are in each?' Emphasize that finding the subject's number is step 1.",
+        studentInstructions: "Read each subject card aloud (e.g. 'He', 'The children', 'She', 'They') and place it under the Singular or Plural column.",
+        requiredMaterials: ["Subject flashcards (He, She, It, They, We, The student, The children)"],
+        durationMinutes: 4,
+        activityType: "discussion",
+        questionsOrExercises: ["Is 'The bird' singular or plural?", "Is 'The birds' singular or plural?"],
+        expectedResult: "Student correctly categorizes singular vs plural subjects 100% of the time.",
+        completed: false,
+      },
+      {
+        stepNumber: 2,
+        title: "STEP 2 — Concrete Demonstration: The Color-Coded Agreement Rule",
+        description: "Demonstrate that singular subjects pair with singular verbs ending in '-s' or '-es', while plural subjects pair with base verbs.",
+        learningObjective: "Understand the visual connection between singular subjects and verbs ending in '-s'.",
+        teacherInstructions: "Hold up blue singular card 'He' and pair it with blue verb card 'runs'. Contrast with green plural card 'They' and green base verb 'run'.",
+        studentInstructions: "Watch the pairing demonstration, repeat aloud: 'Singular subject adds -s to the verb; plural subject keeps the base verb.'",
+        requiredMaterials: ["Color-coded subject/verb cards", "Chalkboard"],
+        durationMinutes: 5,
+        activityType: "hands_on",
+        questionsOrExercises: ["Pair 'The girl' with 'plays / play'", "Pair 'The girls' with 'plays / play'"],
+        expectedResult: "Student accurately pairs singular subjects with '-s' verbs and plural subjects with base verbs.",
+        completed: false,
+      },
+      {
+        stepNumber: 3,
+        title: "STEP 3 — Guided Practice: Step-by-Step Co-Solving",
+        description: "Teacher and student work through 3 sentence strips, identifying the subject first and applying the agreement rule with immediate feedback.",
+        learningObjective: "Apply the two-step strategy (Find Subject -> Choose Verb Form) on structured sentences.",
+        teacherInstructions: "Guide student: 'First circle the subject. Is it one or many? Which verb form matches?' Provide immediate encouraging corrections.",
+        studentInstructions: "Circle the subject in each sentence strip, declare whether it is singular or plural, and select the correct verb.",
+        requiredMaterials: ["3 sentence strip cards", "Notebook"],
+        durationMinutes: 4,
+        activityType: "guided_practice",
+        questionsOrExercises: [
+          "The bird (sings / sing) in the tree.",
+          "The cows (eats / eat) green grass.",
+          "Aarav (likes / like) reading stories.",
+        ],
+        expectedResult: "Student correctly solves all 3 guided sentences explaining the reason.",
+        completed: false,
+      },
+      {
+        stepNumber: 4,
+        title: "STEP 4 — Independent Targeted Practice: 5 Graded Sentences",
+        description: "Student independently completes 5 fill-in-the-blank sentences calibrated to verify procedural fluency.",
+        learningObjective: "Independently write correct verb forms for diverse singular and plural subjects.",
+        teacherInstructions: "Hand the student the exercise sheet. Observe without interrupting to assess independent problem-solving.",
+        studentInstructions: "Read each sentence carefully, check the subject, and choose the correct verb from the parentheses.",
+        requiredMaterials: ["Targeted exercise worksheet"],
+        durationMinutes: 4,
+        activityType: "independent_practice",
+        questionsOrExercises: [
+          "1. Meera (reads / read) a storybook.",
+          "2. The dogs (barks / bark) at night.",
+          "3. She (cooks / cook) delicious food.",
+          "4. We (plays / play) football in the evening.",
+          "5. The sun (shines / shine) in the morning sky.",
+        ],
+        expectedResult: "Student completes at least 4 out of 5 sentences accurately without teacher assistance.",
+        completed: false,
+      },
+      {
+        stepNumber: 5,
+        title: "STEP 5 — Reassessment & Mastery Verification",
+        description: "5-question parallel assessment evaluating subject-verb agreement accuracy against the 80% benchmark.",
+        learningObjective: "Demonstrate ≥80% consistent mastery on a parallel diagnostic evaluation.",
+        teacherInstructions: "Administer the 5-question evaluation slip, record the student's score, and verify achievement against the 80% benchmark.",
+        studentInstructions: "Answer all 5 reassessment questions carefully.",
+        requiredMaterials: ["5-question reassessment slip", "Scoring rubric"],
+        durationMinutes: 3,
+        activityType: "reassessment",
+        questionsOrExercises: [
+          "Question 1: Choose the correct verb: 'A lion (roars / roar) loudly.'",
+          "Question 2: Choose the correct verb: 'Birds (flies / fly) high.'",
+          "Question 3: Choose the correct verb: 'He (writes / write) neatly.'",
+          "Question 4: Choose the correct verb: 'They (speaks / speak) Gujarati.'",
+          "Question 5: Identify the error: 'The children plays in the park.'",
+        ],
+        expectedResult: "Student achieves ≥ 80% score (at least 4/5 marks) confirming mastery.",
+        completed: false,
+      },
+    ],
+    teacherInstructions:
+      "Focus on the subject-verb agreement rule: singular subjects take verbs with -s (except I/you), while plural subjects take the base form. Rebuild student confidence using visual flashcards.",
+    reassessmentCriteria:
+      "Student scores at least 80% on a 5-question parallel reassessment evaluating singular and plural agreement.",
+    reassessmentQuestions: [
+      {
+        questionNumber: 1,
+        question: "Choose the correct verb: 'The lion ___ loudly.'",
+        options: ["roars", "roar", "roaring", "roared"],
+        correctAnswer: "roars",
+        explanation: "'The lion' is singular, so it takes the singular verb 'roars'.",
+        marks: 1,
+        skillTarget: "Singular noun subject agreement",
+      },
+      {
+        questionNumber: 2,
+        question: "Choose the correct verb: 'The birds ___ in the sky.'",
+        options: ["flies", "fly", "flying", "flew"],
+        correctAnswer: "fly",
+        explanation: "'The birds' is plural, so it takes the base plural verb 'fly'.",
+        marks: 1,
+        skillTarget: "Plural noun subject agreement",
+      },
+      {
+        questionNumber: 3,
+        question: "Choose the correct verb: 'She ___ her homework daily.'",
+        options: ["does", "do", "doing", "done"],
+        correctAnswer: "does",
+        explanation: "'She' is third-person singular, requiring 'does'.",
+        marks: 1,
+        skillTarget: "Singular pronoun subject agreement",
+      },
+      {
+        questionNumber: 4,
+        question: "Choose the correct verb: 'They ___ in the village.'",
+        options: ["lives", "live", "living", "lived"],
+        correctAnswer: "live",
+        explanation: "'They' is plural pronoun, requiring base verb 'live'.",
+        marks: 1,
+        skillTarget: "Plural pronoun subject agreement",
+      },
+      {
+        questionNumber: 5,
+        question: "Which sentence is grammatically correct?",
+        options: [
+          "The boy runs to school.",
+          "The boy run to school.",
+          "The boys runs to school.",
+          "They runs together.",
+        ],
+        correctAnswer: "The boy runs to school.",
+        explanation: "'The boy' (singular) correctly pairs with 'runs' (singular verb with -s).",
+        marks: 1,
+        skillTarget: "Sentence-level agreement identification",
+      },
+    ],
+    gujarati: {
+      conceptName: "સબ્જેક્ટ-વર્બ એગ્રીમેન્ટ (કર્તા અને ક્રિયાપદ સુસંગતતા)",
+      learningObjective:
+        "વિદ્યાર્થી એકવચન અને બહુવચન કર્તા ઓળખી શકે અને તેના આધારે ક્રિયાપદનું સાચું રૂપ (એકવચનમાં -s/-es અને બહુવચનમાં મૂળ ક્રિયાપદ) ૮૦%+ શુદ્ધતા સાથે વાપરી શકે.",
+      expectedSkill:
+        "એકવચન અને બહુવચન કર્તા સાથે સાચા ક્રિયાપદની પસંદગી અને લેખન ક્ષમતા.",
+      likelyMisconception:
+        "ક્રિયાપદના અંતે -s હોય તેને બહુવચન સમજી લેવું અથવા કર્તા મુજબ ક્રિયાપદ બદલવાનું ભૂલી જવું.",
+      materials: [
+        "રંગબેરંગી કર્તા અને ક્રિયાપદ ફ્લેશકાર્ડ્સ",
+        "વાક્યપટ્ટી ચાર્ટ",
+        "માર્ગદર્શિત કાર્યપત્રક",
+        "નોટબુક અને પેન્સિલ",
+      ],
+      teacherInstructions:
+        "એકવચન કર્તા (He, She, It, એકવચન નામ) સાથે ક્રિયાપદને -s/-es લાગે છે, જ્યારે બહુવચન કર્તા (They, We, બહુવચન નામ) સાથે મૂળ ક્રિયાપદ આવે છે તેનો પ્રત્યક્ષ મહાવરો કરાવો.",
+      reassessmentCriteria:
+        "વિદ્યાર્થી ૫ પ્રશ્નોની પુનઃમૂલ્યાંકન કસોટીમાં ઓછામાં ઓછા ૮૦% ગુણ મેળવે.",
+      steps: [
+        {
+          stepNumber: 1,
+          title: "પગલું ૧ — સંકલ્પના પુનરાવર્તન: એકવચન અને બહુવચન કર્તા ઓળખ",
+          description: "વાક્યમાં કર્તા એકવચન (એક વ્યક્તિ/વસ્તુ) છે કે બહુવચન (એકથી વધુ) તે ઓળખવાનું સ્પષ્ટ કરવું.",
+          learningObjective: "ક્રિયાપદ પસંદ કરતા પહેલા કર્તાનું વચન યોગ્ય રીતે ઓળખવું.",
+          teacherInstructions: "બોર્ડ પર 'A boy' અને 'Two boys' લખી એકવચન અને બહુવચનનો તફાવત પૂછો.",
+          studentInstructions: "ફ્લેશકાર્ડ્સ વાંચી તેને એકવચન અથવા બહુવચન ખાનામાં ગોઠવો.",
+          requiredMaterials: ["કર્તા ફ્લેશકાર્ડ્સ"],
+          durationMinutes: 4,
+          activityType: "discussion",
+          questionsOrExercises: ["'The dog' એકવચન છે કે બહુવચન?", "'The birds' એકવચન છે કે બહુવચન?"],
+          expectedResult: "વિદ્યાર્થી કર્તાનું વચન ૧૦૦% સાચું ઓળખે.",
+          completed: false,
+        },
+        {
+          stepNumber: 2,
+          title: "પગલું ૨ — પ્રત્યક્ષ નિદર્શન: રંગ-કોડેડ સુસંગતતા નિયમ",
+          description: "વાદળી એકવચન કાર્ડ સાથે -s વાળું ક્રિયાપદ અને લીલા બહુવચન કાર્ડ સાથે મૂળ ક્રિયાપદની જોડી બતાવવી.",
+          learningObjective: "એકવચન કર્તા સાથે -s ક્રિયાપદ જોડાણ પ્રત્યક્ષ સમજવું.",
+          teacherInstructions: "'He' સાથે 'runs' અને 'They' સાથે 'run' ની રંગબેરંગી જોડી બનાવી નિયમ સ્પષ્ટ કરો.",
+          studentInstructions: "શિક્ષક સાથે નિયમ મોટેથી બોલો: 'એકવચન કર્તા આવે તો ક્રિયાપદને -s લાગે; બહુવચનમાં મૂળ રૂપ રહે.'",
+          requiredMaterials: ["રંગબેરંગી ફ્લેશકાર્ડ્સ"],
+          durationMinutes: 5,
+          activityType: "hands_on",
+          questionsOrExercises: ["'The girl' સાથે 'plays / play' ની જોડી બનાવો."],
+          expectedResult: "વિદ્યાર્થી યોગ્ય કાર્ડ્સની જોડી પ્રત્યક્ષ બનાવે.",
+          completed: false,
+        },
+        {
+          stepNumber: 3,
+          title: "પગલું ૩ — માર્ગદર્શિત મહાવરો: સહિયારું વાક્ય નિર્માણ",
+          description: "શિક્ષક અને વિદ્યાર્થી મળીને ૩ વાક્યોમાં સાચું ક્રિયાપદ પસંદ કરે.",
+          learningObjective: "વાક્યમાં પ્રથમ કર્તા શોધી યોગ્ય ક્રિયાપદ પસંદ કરવાનો ક્રમ શીખવો.",
+          teacherInstructions: "વિદ્યાર્થીને પૂછો: 'પ્રથમ કર્તા શોધો. તે એક છે કે ઘણા? હવે કયું ક્રિયાપદ આવશે?'",
+          studentInstructions: "વાક્યમાં કર્તા નીચે લીટી દોરો અને ખાલી જગ્યામાં સાચું ક્રિયાપદ લખો.",
+          requiredMaterials: ["વાક્યપટ્ટીઓ", "નોટબુક"],
+          durationMinutes: 4,
+          activityType: "guided_practice",
+          questionsOrExercises: [
+            "The bird (sings / sing) in the tree.",
+            "The cows (eats / eat) green grass.",
+          ],
+          expectedResult: "વિદ્યાર્થી માર્ગદર્શન સાથે સાચો ઉત્તર આપે.",
+          completed: false,
+        },
+        {
+          stepNumber: 4,
+          title: "પગલું ૪ — સ્વતંત્ર લક્ષિત મહાવરો: ૫ અભ્યાસ વાક્યો",
+          description: "વિદ્યાર્થી જાતે ૫ ખાલી જગ્યાઓ પૂરીને નિયમનો સ્વતંત્ર ઉપયોગ કરે.",
+          learningObjective: "સહાય વગર વિવિધ કર્તાઓ સાથે સાચું ક્રિયાપદ વાપરવાની ક્ષમતા.",
+          teacherInstructions: "વિદ્યાર્થીને જાતે પ્રયાસ કરવા દો અને ભૂલ ન થાય તે રીતે નિરીક્ષણ કરો.",
+          studentInstructions: "દરેક વાક્ય ધ્યાનથી વાંચી કૌંસમાંથી સાચો વિકલ્પ પસંદ કરો.",
+          requiredMaterials: ["કાર્યપત્રક"],
+          durationMinutes: 4,
+          activityType: "independent_practice",
+          questionsOrExercises: [
+            "1. Meera (reads / read) a book.",
+            "2. The dogs (barks / bark) loudly.",
+            "3. She (cooks / cook) food.",
+            "4. We (plays / play) games.",
+            "5. The sun (shines / shine) brightly.",
+          ],
+          expectedResult: "વિદ્યાર્થી ઓછામાં ઓછા ૪ વાક્યો સાચા લખે.",
+          completed: false,
+        },
+        {
+          stepNumber: 5,
+          title: "પગલું ૫ — પુનઃમૂલ્યાંકન અને સિદ્ધિ પ્રમાણીકરણ",
+          description: "૫ પ્રશ્નોની રચનાત્મક કસોટી દ્વારા ૮૦% નિપુણતા બેન્ચમાર્કની ચકાસણી.",
+          learningObjective: "સ્વતંત્ર નિપુણતા સ્તર પ્રમાણિત કરવું.",
+          teacherInstructions: "૫ પ્રશ્નો ચકાસી સ્કોર નોંધી સુધારો પ્રમાણિત કરો.",
+          studentInstructions: "બધા ૫ પ્રશ્નોના જવાબો આપો.",
+          requiredMaterials: ["કસોટી પત્રિકા"],
+          durationMinutes: 3,
+          activityType: "reassessment",
+          questionsOrExercises: ["૫ પુનઃમૂલ્યાંકન પ્રશ્નો"],
+          expectedResult: "વિદ્યાર્થી ૮૦%+ ગુણ મેળવે.",
+          completed: false,
+        },
+      ],
+      reassessmentQuestions: [
+        {
+          questionNumber: 1,
+          question: "સાચું ક્રિયાપદ પસંદ કરો: 'The lion ___ loudly.'",
+          options: ["roars", "roar", "roaring", "roared"],
+          correctAnswer: "roars",
+          explanation: "'The lion' એકવચન હોવાથી 'roars' આવશે.",
+          marks: 1,
+          skillTarget: "એકવચન કર્તા સુસંગતતા",
+        },
+        {
+          questionNumber: 2,
+          question: "સાચું ક્રિયાપદ પસંદ કરો: 'The birds ___ in the sky.'",
+          options: ["flies", "fly", "flying", "flew"],
+          correctAnswer: "fly",
+          explanation: "'The birds' બહુવચન હોવાથી 'fly' આવશે.",
+          marks: 1,
+          skillTarget: "બહુવચન કર્તા સુસંગતતા",
+        },
+        {
+          questionNumber: 3,
+          question: "સાચું ક્રિયાપદ પસંદ કરો: 'She ___ her homework.'",
+          options: ["does", "do", "doing", "done"],
+          correctAnswer: "does",
+          explanation: "'She' એકવચન હોવાથી 'does' આવશે.",
+          marks: 1,
+          skillTarget: "સર્વનામ એકવચન",
+        },
+        {
+          questionNumber: 4,
+          question: "સાચું ક્રિયાપદ પસંદ કરો: 'They ___ in the village.'",
+          options: ["lives", "live", "living", "lived"],
+          correctAnswer: "live",
+          explanation: "'They' બહુવચન હોવાથી 'live' આવશે.",
+          marks: 1,
+          skillTarget: "સર્વનામ બહુવચન",
+        },
+        {
+          questionNumber: 5,
+          question: "કયું વાક્ય સાચું છે?",
+          options: [
+            "The boy runs to school.",
+            "The boy run to school.",
+            "The boys runs to school.",
+            "They runs together.",
+          ],
+          correctAnswer: "The boy runs to school.",
+          explanation: "'The boy' (એકવચન) સાથે 'runs' સાચું છે.",
+          marks: 1,
+          skillTarget: "વાક્ય સ્તરે સાચી પસંદગી",
+        },
+      ],
+    },
+  },
   "c-guj-matra-01": {
     conceptId: "c-guj-matra-01",
     conceptName: "ગુજરાતી કાનો-માત્રા અને દીર્ઘ-હ્રસ્વ સ્વર ચિહ્નો (Gujarati Matras)",
@@ -1604,7 +1925,19 @@ export function generateRemedialPlan(
       expectedResult: s.expectedResult || "Demonstrated evidence of learning",
       completed: false,
     };
-  });
+  });  // Adapt steps based on Phase 2 Cognitive Obstacle Diagnosis
+  const diagnosisType = options?.diagnosisType;
+  if (diagnosisType === "CONCEPTUAL_GAP") {
+    steps[0].teacherInstructions = `[Concrete Representation Focus] ${steps[0].teacherInstructions}. Utilize visual anchor charts and concrete manipulatives to ground the underlying core concept before symbolic work.`;
+  } else if (diagnosisType === "PROCEDURAL_ERROR") {
+    steps[1].teacherInstructions = `[Explicit Procedural Steps] ${steps[1].teacherInstructions}. Model explicit step-by-step sequencing algorithms and caution the student against skipping intermediate calculations or steps.`;
+  } else if (diagnosisType === "PREREQUISITE_WEAKNESS") {
+    steps[0].teacherInstructions = `[Foundational Prerequisite Review] ${steps[0].teacherInstructions}. Explicitly verify and reinforce foundational prerequisite competencies before progressing to the target skill.`;
+  } else if (diagnosisType === "CARELESS_ERROR") {
+    steps[3].teacherInstructions = `[Self-Checking Checklist] ${steps[3].teacherInstructions}. Mandate a 3-point verification checklist before final submission (check signs, units, and re-read problem statements).`;
+  }
+
+
 
   // If this is a follow-up plan for a student who previously struggled, adapt step 2 & 3 teaching methods!
   if (options?.isFollowUp) {
@@ -1666,6 +1999,7 @@ export function generateRemedialPlan(
     conceptId,
     conceptName: template.conceptName,
     subjectCode,
+    subject: String(subjectCode),
     learningObjective: template.learningObjective,
     recommendationReason: gapDetection.reason || `Assessment performance (${baselineScore}%) indicates foundational support required.`,
     status: "Suggested",

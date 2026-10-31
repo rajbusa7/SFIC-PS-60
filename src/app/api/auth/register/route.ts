@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db/database";
 import { hashPassword } from "@/lib/auth/password";
+import { emailOtpService } from "@/lib/auth/emailOtpService";
 import {
   SESSION_COOKIE_NAME,
   signSession,
@@ -10,7 +11,7 @@ import {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, email, password, schoolId } = body;
+    const { name, email, password, schoolId, otp, code, otpCode } = body;
 
     if (!name || typeof name !== "string" || !name.trim()) {
       return NextResponse.json(
@@ -46,7 +47,18 @@ export async function POST(request: Request) {
       );
     }
 
+    // Verify OTP if submitted during registration or check if pre-verified
+    const submittedOtp = otp || code || otpCode;
+    const pendingVer = emailOtpService.getPendingVerification(normalizedEmail);
+    let isEmailVerified = pendingVer?.status === "verified" || Boolean(body.emailVerified);
+
+    if (submittedOtp && typeof submittedOtp === "string") {
+      await emailOtpService.verifyOtp(normalizedEmail, submittedOtp.trim(), "teacher");
+      isEmailVerified = true;
+    }
+
     const passwordHash = hashPassword(password);
+    const now = new Date().toISOString();
 
     const newUser = await db.createUserAsync({
       name: name.trim(),
@@ -56,6 +68,8 @@ export async function POST(request: Request) {
       provider: "local",
       passwordHash,
       status: "active",
+      emailVerified: isEmailVerified,
+      emailVerifiedAt: isEmailVerified ? now : undefined,
     });
 
     const sessionToken = await signSession({
@@ -65,6 +79,7 @@ export async function POST(request: Request) {
       role: newUser.role,
       schoolId: newUser.schoolId,
       provider: "local",
+      emailVerified: isEmailVerified,
     });
 
     const sanitizedUser = {
@@ -76,6 +91,8 @@ export async function POST(request: Request) {
       avatarUrl: newUser.avatarUrl,
       provider: newUser.provider || "local",
       status: newUser.status || "active",
+      emailVerified: isEmailVerified,
+      emailVerifiedAt: isEmailVerified ? now : undefined,
       createdAt: newUser.createdAt,
       updatedAt: newUser.updatedAt,
     };

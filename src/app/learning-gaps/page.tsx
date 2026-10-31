@@ -32,12 +32,21 @@ import {
   RotateCcw,
   Layers,
   HelpCircle,
+  Loader2,
+  ChevronUp,
+  AlertCircle,
+  X,
+  Clock,
 } from "lucide-react";
 
 export default function LearningGapsPage() {
   const { t, language, formatSubject, formatPriority, formatStatus, formatClass } = useLanguage();
 
   const [gaps, setGaps] = useState<any[]>([]);
+  const [plans, setPlans] = useState<Record<string, any>>({});
+  const [expandedPlanGapIds, setExpandedPlanGapIds] = useState<Record<string, boolean>>({});
+  const [actionError, setActionError] = useState<{ gapId: string; message: string } | null>(null);
+  const [actionSuccess, setActionSuccess] = useState<{ gapId: string; message: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -56,13 +65,27 @@ export default function LearningGapsPage() {
   const fetchGaps = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/learning-gaps");
-      const data = await res.json();
-      if (data.success) {
-        setGaps(data.gaps || []);
+      const [gapsRes, plansRes] = await Promise.all([
+        fetch("/api/learning-gaps"),
+        fetch("/api/remedial-plans"),
+      ]);
+      const gapsData = await gapsRes.json();
+      const plansData = await plansRes.json();
+
+      if (gapsData.success) {
+        setGaps(gapsData.gaps || []);
+      }
+
+      if (plansData.success && Array.isArray(plansData.plans)) {
+        const planMap: Record<string, any> = {};
+        for (const p of plansData.plans) {
+          planMap[p.id] = p;
+          planMap[`${p.studentId}_${p.conceptId}`] = p;
+        }
+        setPlans(planMap);
       }
     } catch (e) {
-      console.error("Failed to load learning gaps", e);
+      console.error("Failed to load learning gaps or remedial plans", e);
     } finally {
       setLoading(false);
     }
@@ -76,22 +99,98 @@ export default function LearningGapsPage() {
     return () => unsubscribe();
   }, []);
 
-  const handleGeneratePlan = async (gapId: string) => {
-    setGeneratingPlanId(gapId);
+  const handleGeneratePlan = async (gap: any, forceRegenerate = false) => {
+    if (!gap || !gap.id) {
+      setActionError({
+        gapId: "unknown",
+        message: language === "gu" ? "અમાન્ય રેકોર્ડ." : "Invalid learning gap record.",
+      });
+      return;
+    }
+
+    const existingPlan = plans[gap.remedialPlanId] || plans[`${gap.studentId}_${gap.conceptId}`];
+
+    // If active plan already exists and forceRegenerate is not requested, toggle view smoothly
+    if (existingPlan && !forceRegenerate) {
+      setExpandedPlanGapIds((prev) => ({
+        ...prev,
+        [gap.id]: !prev[gap.id],
+      }));
+      return;
+    }
+
+    setGeneratingPlanId(gap.id);
+    setActionError(null);
+    setActionSuccess(null);
+
     try {
       const res = await fetch("/api/remedial-plans", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ gapId }),
+        body: JSON.stringify({
+          gapId: gap.id,
+          language,
+          forceRegenerate,
+          diagnosisType: gap.diagnosisType,
+          trend: gap.trend,
+        }),
       });
+
       const data = await res.json();
-      if (data.success) {
+
+      if (res.ok && data.success && data.plan) {
+        if (!Array.isArray(data.plan.steps) || data.plan.steps.length !== 5) {
+          throw new Error(
+            language === "gu"
+              ? "અમાન્ય ૫-પગલાં યોજના: બરાબર ૫ ક્રમબદ્ધ પગલાં જરૂરી છે."
+              : "Plan generation error: Exactly 5 teaching steps required."
+          );
+        }
+
+        // Cache plan in local state
+        setPlans((prev) => ({
+          ...prev,
+          [data.plan.id]: data.plan,
+          [`${data.plan.studentId}_${data.plan.conceptId}`]: data.plan,
+        }));
+
+        // Auto-expand generated plan
+        setExpandedPlanGapIds((prev) => ({
+          ...prev,
+          [gap.id]: true,
+        }));
+
+        setActionSuccess({
+          gapId: gap.id,
+          message:
+            language === "gu"
+              ? "૫-પગલાં ઉપચાર યોજના સફળતાપૂર્વક તૈયાર થઈ ગઈ છે!"
+              : "5-Step remedial teaching plan generated successfully!",
+        });
+
         broadcastDataUpdate("plans", "create", data.plan?.id);
-        broadcastDataUpdate("gaps", "update", gapId);
+        broadcastDataUpdate("gaps", "update", gap.id);
         fetchGaps();
+      } else {
+        setActionError({
+          gapId: gap.id,
+          message:
+            data.error ||
+            (language === "gu"
+              ? "ઉપચાર યોજના બનાવવામાં નિષ્ફળતા."
+              : "Failed to generate 5-step remedial plan."),
+        });
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error("Error creating plan", e);
+      setActionError({
+        gapId: gap.id,
+        message:
+          e.message ||
+          (language === "gu"
+            ? "સર્વર ક્ષતિ: ઉપચાર યોજના બનાવી શકાઈ નથી."
+            : "Server error while generating remedial plan."),
+      });
     } finally {
       setGeneratingPlanId(null);
     }
@@ -554,6 +653,9 @@ export default function LearningGapsPage() {
               trend: gap.trend,
               language,
             });
+            const activePlan = plans[gap.remedialPlanId] || plans[`${gap.studentId}_${gap.conceptId}`];
+            const isPlanExpanded = !!expandedPlanGapIds[gap.id];
+            const isGenerating = generatingPlanId === gap.id;
 
             const displayedReason =
               gap.reason && !gap.reason.includes("is below the operational mastery threshold")
@@ -633,19 +735,31 @@ export default function LearningGapsPage() {
                   {/* Actions */}
                   <div className="flex items-center gap-2">
                     <Button
-                      variant="saffron"
+                      variant={activePlan ? "outline" : "saffron"}
                       size="sm"
-                      onClick={() => handleGeneratePlan(gap.id)}
-                      disabled={generatingPlanId === gap.id || !prescription.remedialPlanEligible}
-                      className={`rounded-full text-xs font-bold ${
+                      onClick={() => handleGeneratePlan(gap)}
+                      disabled={isGenerating || !prescription.remedialPlanEligible}
+                      className={`rounded-full text-xs font-bold transition-all ${
                         !prescription.remedialPlanEligible
                           ? "opacity-60 cursor-not-allowed bg-stone-100 text-stone-500 hover:bg-stone-100 border border-stone-200"
+                          : activePlan
+                          ? "bg-white hover:bg-[#FAF6E9] text-[#B26A1B] border-[#B26A1B] shadow-xs"
                           : ""
                       }`}
                     >
-                      <Layers className="w-3.5 h-3.5 mr-1" />
+                      {isGenerating ? (
+                        <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin text-current" />
+                      ) : activePlan ? (
+                        isPlanExpanded ? (
+                          <ChevronUp className="w-3.5 h-3.5 mr-1" />
+                        ) : (
+                          <Layers className="w-3.5 h-3.5 mr-1" />
+                        )
+                      ) : (
+                        <Layers className="w-3.5 h-3.5 mr-1" />
+                      )}
                       <span>
-                        {generatingPlanId === gap.id
+                        {isGenerating
                           ? language === "gu"
                             ? "બનાવી રહ્યું છે..."
                             : "Generating..."
@@ -653,12 +767,33 @@ export default function LearningGapsPage() {
                           ? language === "gu"
                             ? "નિપુણતા જાળવણી"
                             : "Mastery Maintained"
+                          : activePlan
+                          ? isPlanExpanded
+                            ? language === "gu"
+                              ? "યોજના છુપાવો"
+                              : "Hide 5-Step Plan"
+                            : language === "gu"
+                            ? "૫-પગલાં યોજના જુઓ"
+                            : "View 5-Step Plan"
                           : language === "gu"
                           ? "૫-પગલાં યોજના બનાવો"
                           : "Generate 5-Step Plan"}
                       </span>
                     </Button>
 
+                    {/* Quick Regenerate option if a plan already exists */}
+                    {activePlan && prescription.remedialPlanEligible && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleGeneratePlan(gap, true)}
+                        disabled={isGenerating}
+                        className="rounded-full h-8 w-8 p-0 text-[#7A6862] hover:text-[#B26A1B] hover:bg-[#FAF6E9] border border-[#49352F]/10 cursor-pointer"
+                        title={language === "gu" ? "યોજના ફરીથી બનાવો" : "Regenerate 5-Step Plan"}
+                      >
+                        <RotateCcw className={`w-3.5 h-3.5 ${isGenerating ? "animate-spin" : ""}`} />
+                      </Button>
+                    )}
                     <Button
                       variant="outline"
                       size="sm"
@@ -770,7 +905,190 @@ export default function LearningGapsPage() {
                           <span>{language === "gu" ? prescription.planStatusLabelGu : prescription.planStatusLabel}</span>
                         </div>
                       </div>
+                                    </div>
+
+                {/* Error Banner */}
+                {actionError && actionError.gapId === gap.id && (
+                  <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center justify-between transition-all">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                      <span>{actionError.message}</span>
                     </div>
+                    <button
+                      onClick={() => setActionError(null)}
+                      className="p-1 text-rose-500 hover:text-rose-700 rounded-md cursor-pointer"
+                      aria-label="Dismiss error"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Success Banner */}
+                {actionSuccess && actionSuccess.gapId === gap.id && (
+                  <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center justify-between transition-all">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>{actionSuccess.message}</span>
+                    </div>
+                    <button
+                      onClick={() => setActionSuccess(null)}
+                      className="p-1 text-emerald-500 hover:text-emerald-700 rounded-md cursor-pointer"
+                      aria-label="Dismiss success"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Render the Generated 5-Step Plan when Expanded */}
+                {isPlanExpanded && activePlan && (
+                  <div className="p-4 rounded-2xl bg-[#FAF6E9] border border-[#49352F]/15 space-y-3.5 text-[#49352F] shadow-xs animate-in fade-in-50 duration-200">
+                    {/* Header */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#49352F]/10 pb-2.5">
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-[#B26A1B] flex items-center gap-1">
+                            <Layers className="w-3.5 h-3.5" />
+                            <span>
+                              {language === "gu"
+                                ? "૫-પગલાં પદ્ધતિસરનો ઉપચાર ક્રમ"
+                                : "5-Step Remedial Instructional Plan"}
+                            </span>
+                          </span>
+                          <Badge variant={activePlan.status === "Completed" ? "completed" : "inProgress"} size="sm">
+                            {formatStatus(activePlan.status || "In Progress")}
+                          </Badge>
+                        </div>
+                        <h4 className="font-heading text-sm font-bold text-[#49352F]">
+                          {activePlan.conceptName || gap.conceptName}
+                        </h4>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs">
+                        <span className="text-[11px] text-[#7A6862] font-mono flex items-center gap-1 bg-white/80 px-2 py-0.5 rounded-full border border-[#49352F]/10">
+                          <Clock className="w-3 h-3 text-[#7A6862]" />
+                          <span>
+                            {activePlan.estimatedMinutes || 20} {language === "gu" ? "મિનિટ" : "mins"}
+                          </span>
+                        </span>
+                        <Link
+                          href="/remedial-plans"
+                          className="text-xs font-bold text-[#B26A1B] hover:underline flex items-center gap-1 ml-1"
+                        >
+                          <span>{language === "gu" ? "વર્કસ્પેસ →" : "Workspace →"}</span>
+                        </Link>
+                      </div>
+                    </div>
+
+                    {/* Learning Objective */}
+                    {activePlan.learningObjective && (
+                      <div className="text-xs text-[#49352F] bg-white p-2.5 rounded-xl border border-[#49352F]/10 leading-relaxed">
+                        <strong className="text-[#B26A1B] font-bold block mb-0.5">
+                          {language === "gu" ? "લક્ષિત સંકલ્પનાત્મક ઉદ્દેશ્ય:" : "Target Learning Objective:"}
+                        </strong>
+                        {activePlan.learningObjective}
+                      </div>
+                    )}
+
+                    {/* Materials Required */}
+                    {Array.isArray(activePlan.requiredMaterials) && activePlan.requiredMaterials.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+                        <span className="font-bold text-[#7A6862]">
+                          {language === "gu" ? "જરૂરી સાધનો:" : "Materials Required:"}
+                        </span>
+                        {activePlan.requiredMaterials.map((mat: string, mIdx: number) => (
+                          <span
+                            key={mIdx}
+                            className="px-2 py-0.5 rounded-md bg-white border border-[#49352F]/10 text-[#49352F] text-[10px] font-medium"
+                          >
+                            {mat}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* The 5 Sequential Steps */}
+                    <div className="space-y-2.5 pt-1">
+                      {Array.isArray(activePlan.steps) &&
+                        activePlan.steps.map((st: any, idx: number) => (
+                          <div
+                            key={st.stepNumber || idx + 1}
+                            className="p-3.5 rounded-xl bg-white border border-[#49352F]/12 space-y-2 shadow-2xs"
+                          >
+                            {/* Step Title & Duration */}
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-2">
+                                <span className="w-5 h-5 rounded-full bg-[#B26A1B] text-white flex items-center justify-center font-bold text-[10px] shrink-0">
+                                  {st.stepNumber || idx + 1}
+                                </span>
+                                <h5 className="font-bold text-xs text-[#49352F]">
+                                  {st.title}
+                                </h5>
+                              </div>
+                              <span className="text-[10px] font-mono text-[#7A6862] bg-[#FAF6E9] px-2 py-0.5 rounded-full border border-[#49352F]/10 shrink-0">
+                                {st.durationMinutes || 4}m
+                              </span>
+                            </div>
+
+                            {/* Step Learning Objective */}
+                            {st.learningObjective && (
+                              <p className="text-[11px] text-[#7A6862] leading-normal pl-7">
+                                <strong className="text-[#49352F] font-semibold">
+                                  {language === "gu" ? "ઉદ્દેશ્ય: " : "Objective: "}
+                                </strong>
+                                {st.learningObjective}
+                              </p>
+                            )}
+
+                            {/* Teacher Instructions & Student Activity */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pl-7 pt-1">
+                              {st.teacherInstructions && (
+                                <div className="p-2 rounded-lg bg-[#FAF6E9]/60 border border-[#49352F]/8 text-[11px]">
+                                  <strong className="text-[#B26A1B] text-[10px] uppercase tracking-wider block mb-0.5 font-bold">
+                                    {language === "gu" ? "શિક્ષક માટે સૂચના:" : "Teacher Instructions:"}
+                                  </strong>
+                                  <span className="text-[#49352F] leading-relaxed">
+                                    {st.teacherInstructions}
+                                  </span>
+                                </div>
+                              )}
+                              {st.studentInstructions && (
+                                <div className="p-2 rounded-lg bg-emerald-50/50 border border-emerald-600/15 text-[11px]">
+                                  <strong className="text-[#2E7D5E] text-[10px] uppercase tracking-wider block mb-0.5 font-bold">
+                                    {language === "gu" ? "વિદ્યાર્થી પ્રવૃત્તિ:" : "Student Activity:"}
+                                  </strong>
+                                  <span className="text-[#49352F] leading-relaxed">
+                                    {st.studentInstructions}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Materials & Success Criteria */}
+                            <div className="flex flex-wrap items-center justify-between gap-2 pl-7 pt-1 border-t border-[#49352F]/6 text-[10px]">
+                              {Array.isArray(st.requiredMaterials) && st.requiredMaterials.length > 0 && (
+                                <div className="text-[#7A6862] flex items-center gap-1">
+                                  <strong className="text-[#49352F]">
+                                    {language === "gu" ? "સાધનો:" : "Materials:"}
+                                  </strong>
+                                  <span>{st.requiredMaterials.join(", ")}</span>
+                                </div>
+                              )}
+                              {st.expectedResult && (
+                                <div className="text-[#2E7D5E] font-medium flex items-center gap-1 ml-auto">
+                                  <CheckCircle2 className="w-3 h-3 text-[#2E7D5E] shrink-0" />
+                                  <span>
+                                    <strong>{language === "gu" ? "સફળતા માપદંડ:" : "Success Criteria:"}</strong>{" "}
+                                    {st.expectedResult}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
               </Card>
             );
           })}

@@ -64,9 +64,66 @@
       "nameGujarati": "પર્યાવરણ",
       "code": "EVS",
       "languageCode": "en"
+    },
+    {
+      "id": "sub-sci",
+      "name": "Science",
+      "nameGujarati": "વિજ્ઞાન",
+      "code": "SCI",
+      "languageCode": "en"
+    },
+    {
+      "id": "sub-sst",
+      "name": "Social Science",
+      "nameGujarati": "સામાજિક વિજ્ઞાન",
+      "code": "SST",
+      "languageCode": "en"
+    },
+    {
+      "id": "sub-hin",
+      "name": "Hindi",
+      "nameGujarati": "હિન્દી",
+      "code": "HIN",
+      "languageCode": "en"
     }
   ],
   "concepts": [
+    {
+      "id": "c-math-count-1",
+      "subjectId": "sub-math",
+      "subjectCode": "MATH",
+      "grade": 1,
+      "name": "Number Recognition & Counting (1–100)",
+      "nameGujarati": "સંખ્યા ઓળખ અને ગણતરી (૧–૧૦૦)",
+      "description": "Recognise, read, write and count numbers from 1 to 100."
+    },
+    {
+      "id": "c-math-addsub-2",
+      "subjectId": "sub-math",
+      "subjectCode": "MATH",
+      "grade": 2,
+      "name": "Addition & Subtraction (2-Digit)",
+      "nameGujarati": "બે અંકનો સરવાળો અને બાદબાકી",
+      "description": "Add and subtract 2-digit numbers with and without regrouping."
+    },
+    {
+      "id": "c-mult-01",
+      "subjectId": "sub-math",
+      "subjectCode": "MATH",
+      "grade": 3,
+      "name": "Multiplication Tables (2 to 9)",
+      "nameGujarati": "ગુણાકારના ઘડિયા (૨ થી ૯)",
+      "description": "Recall multiplication facts accurately and recognise multiplication as repeated addition."
+    },
+    {
+      "id": "c-place-01",
+      "subjectId": "sub-math",
+      "subjectCode": "MATH",
+      "grade": 3,
+      "name": "Place Value & 3-Digit Addition",
+      "nameGujarati": "સ્થાનકિંમત અને ૩-અંકનો સરવાળો",
+      "description": "Decompose 3-digit numbers into Hundreds, Tens, and Ones, and execute addition with regrouping."
+    },
     {
       "id": "c-div-01",
       "subjectId": "sub-math",
@@ -80,24 +137,6 @@
       ]
     },
     {
-      "id": "c-mult-01",
-      "subjectId": "sub-math",
-      "subjectCode": "MATH",
-      "grade": 3,
-      "name": "Multiplication Tables (2 to 9)",
-      "nameGujarati": "ગુણાકારના ઘડિયા (૨ થી ૯)",
-      "description": "Recall multiplication facts accurately and recognize multiplication as repeated addition."
-    },
-    {
-      "id": "c-place-01",
-      "subjectId": "sub-math",
-      "subjectCode": "MATH",
-      "grade": 3,
-      "name": "Place Value & 3-Digit Addition",
-      "nameGujarati": "સ્થાનકિંમત અને ૩-અંકનો સરવાળો",
-      "description": "Decompose 3-digit numbers into Hundreds, Tens, and Ones, and execute addition with regrouping."
-    },
-    {
       "id": "c-frac-01",
       "subjectId": "sub-math",
       "subjectCode": "MATH",
@@ -107,6 +146,60 @@
       "description": "Identify and represent unit fractions of whole shapes and sets."
     },
     {
+      "id": "c-math-dec-5",
+      "subjectId": "sub-math",
+      "subjectCode": "MATH",
+      "grade": 5,
+      "name": "Decimals & Word Problems",
+      "nameGujarati": "દશાંશ સંખ્યા અને શાબ્દિક દાખલા",
+      "description": "Understand decimal notation, place value up to hundredths, and solve real-life word problems."
+    },
+    {
+      "id": "c-math-int-6",
+      "subjectId": "sub-math",
+      "subjectCode": "MATH",
+      "grade": 6,
+      "name": "Integers & Number Line",
+      "nameGujarati": "પૂર્ણ સંખ્યાઓ અને સંખ્યા રેખા",
+      "description": "Understand positive and negative integers; operations on a number line."
+    },
+    {
+      "id": "c-math-alg-7",
+      "subjectId": "sub-math",
+      "subjectCode": "MATH",
+      "grade": 7,
+      "name": "Simple Equations & Algebra",
+      "nameGujarati": "સાદા સમીકરણ અને બીજગણિત",
+      "description": "Form and solve one-variable linear equations from real-life situations."
+    },
+    {
+      "id": "c-math-geo-8",
+      "subjectId": "sub-math",
+      "subjectCode": "MATH",
+      "grade": 8,
+      "name": "Geometry: Lines, Angles & Triangles",
+      "nameGujarati": "ભૂમિતિ: રેખા, ખૂણો અને ત્રિકોણ",
+      "description": "Properties of lines, angles (acute/obtuse/right), and types of triangles; angle-sum property."
+    },
+    {
+      "id": "c-eng-alpha-1",
+      "subjectId": "sub-eng",
+      "subjectCode": "ENG",
+      "grade": 1,
+      "name": "Alphabet & Phonics (A–Z)",
+      "nameGujarati": "અક્ષરમાળા અને ઉચ્ચારણ",
+      "description": "Recognise upper- and lower-case letters; produce the initial sound of each letter."
+    },
+    {
+      "id": "c-eng-word-2",
+      "subjectId": "sub-eng",
+      "subjectCode": "ENG",
+      "grade": 2,
+      "name": "Word Formation & Simple Sentences",
+      "nameGujarati": "શબ્દ રચના અને સરળ વાક્યો",
+      "description": "Build 3-letter CVC words and construct simple subject-verb sentences."
+    },
+    {
       "id": "c-eng-blend-01",
       "subjectId": "sub-eng",
       "subjectCode": "ENG",
@@ -114,6 +207,15 @@
       "name": "Phonetic Blends (ch, sh, th, wh)",
       "nameGujarati": "ફોનેટિક સંયુક્ત અવાજો (ch, sh, th, wh)",
       "description": "Identify and articulate consonant digraphs in spoken and written words."
+    },
+    {
+      "id": "c-eng-gram-3",
+      "subjectId": "sub-eng",
+      "subjectCode": "ENG",
+      "grade": 3,
+      "name": "Basic Grammar: Nouns & Pronouns",
+      "nameGujarati": "મૂળ વ્યાકરણ: સંજ્ઞા અને સર્વનામ",
+      "description": "Identify common/proper nouns and use pronouns correctly in sentences."
     },
     {
       "id": "c-eng-comp-01",
@@ -134,6 +236,51 @@
       "description": "Apply correct singular and plural verb forms with pronouns (he/she/it vs they/we)."
     },
     {
+      "id": "c-eng-tense-5",
+      "subjectId": "sub-eng",
+      "subjectCode": "ENG",
+      "grade": 5,
+      "name": "Tenses: Present, Past & Future",
+      "nameGujarati": "ક્રિયાપદ કાળ: વર્તમાન, ભૂત અને ભવિષ્ય",
+      "description": "Identify and use simple present, simple past, and simple future tenses correctly."
+    },
+    {
+      "id": "c-eng-comp-6",
+      "subjectId": "sub-eng",
+      "subjectCode": "ENG",
+      "grade": 6,
+      "name": "Comprehension & Paragraph Writing",
+      "nameGujarati": "વાંચન સમજ અને ફકરો લેખન",
+      "description": "Read unseen passages and write well-structured paragraphs with topic sentences."
+    },
+    {
+      "id": "c-guj-svar-1",
+      "subjectId": "sub-guj",
+      "subjectCode": "GUJ",
+      "grade": 1,
+      "name": "સ્વર ઓળખ (અ થી અ:)",
+      "nameGujarati": "સ્વર ઓળખ (અ થી અ:)",
+      "description": "ગુજરાતી ૧૩ સ્વરો ઓળખો, ઉચ્ચારો અને લખો."
+    },
+    {
+      "id": "c-guj-vyanj-1",
+      "subjectId": "sub-guj",
+      "subjectCode": "GUJ",
+      "grade": 1,
+      "name": "વ્યંજન ઓળખ (ક થી ળ)",
+      "nameGujarati": "વ્યંજન ઓળખ (ક થી ળ)",
+      "description": "ગુજરાતી ૩૪ વ્યંજનો ઓળખો, ઉચ્ચારો અને લખો."
+    },
+    {
+      "id": "c-guj-matra2-2",
+      "subjectId": "sub-guj",
+      "subjectCode": "GUJ",
+      "grade": 2,
+      "name": "માત્રા અને સરળ શબ્દ",
+      "nameGujarati": "માત્રા અને સરળ શબ્દ",
+      "description": "ઇ, ઈ, ઉ, ઊ, એ, ઐ, ઓ, ઔ ની માત્રા ઓળખો અને શબ્દ બનાવો."
+    },
+    {
       "id": "c-guj-matra-01",
       "subjectId": "sub-guj",
       "subjectCode": "GUJ",
@@ -152,13 +299,13 @@
       "description": "બે વ્યંજનોના જોડાણવાળા શબ્દો (જેમ કે સત્ય, પપ્પા, ચિઠ્ઠી) ઓળખવા."
     },
     {
-      "id": "c-evs-water-01",
-      "subjectId": "sub-evs",
-      "subjectCode": "EVS",
-      "grade": 4,
-      "name": "Water Cycle & Conservation",
-      "nameGujarati": "જળચક્ર અને જળસંચય",
-      "description": "Understand evaporation, condensation, precipitation, and identify 3 daily water-saving habits."
+      "id": "c-guj-vyak-5",
+      "subjectId": "sub-guj",
+      "subjectCode": "GUJ",
+      "grade": 5,
+      "name": "ગુજરાતી વ્યાકરણ: સંજ્ઞા, સર્વનામ, ક્રિયાપદ",
+      "nameGujarati": "ગુજરાતી વ્યાકરણ: સંજ્ઞા, સર્વનામ, ક્રિયાપદ",
+      "description": "સંજ્ઞા, સર્વનામ, વિશેષણ અને ક્રિયાપદ ઓળખો અને ઉપયોગ કરો."
     },
     {
       "id": "c-evs-plant-01",
@@ -176,7 +323,43 @@
       "grade": 3,
       "name": "Community Helpers & Sanitation",
       "nameGujarati": "આપણા સેવકો અને સ્વચ્છતા",
-      "description": "Appreciate roles of doctors, teachers, sanitation workers, and practice basic hand hygiene."
+      "description": "Appreciate roles of doctors, teachers, sanitation workers, and practise basic hand hygiene."
+    },
+    {
+      "id": "c-evs-water-01",
+      "subjectId": "sub-evs",
+      "subjectCode": "EVS",
+      "grade": 4,
+      "name": "Water Cycle & Conservation",
+      "nameGujarati": "જળચક્ર અને જળસંચય",
+      "description": "Understand evaporation, condensation, precipitation, and identify 3 daily water-saving habits."
+    },
+    {
+      "id": "c-evs-food-4",
+      "subjectId": "sub-evs",
+      "subjectCode": "EVS",
+      "grade": 4,
+      "name": "Food & Nutrition",
+      "nameGujarati": "ખોરાક અને પોષણ",
+      "description": "Identify food groups, nutrients, and healthy eating habits for a balanced diet."
+    },
+    {
+      "id": "c-evs-env-5",
+      "subjectId": "sub-evs",
+      "subjectCode": "EVS",
+      "grade": 5,
+      "name": "Environment & Pollution",
+      "nameGujarati": "પર્યાવરણ અને પ્રદૂષણ",
+      "description": "Types of pollution (air, water, soil), causes, effects, and prevention measures."
+    },
+    {
+      "id": "c-evs-animal-3",
+      "subjectId": "sub-evs",
+      "subjectCode": "EVS",
+      "grade": 3,
+      "name": "Animals & Their Habitats",
+      "nameGujarati": "પ્રાણીઓ અને તેમનો રહેઠાણ",
+      "description": "Identify domestic and wild animals, classify by habitat (land/water/air)."
     }
   ],
   "students": [
@@ -696,7 +879,7 @@
       "baselineScore": 35,
       "masteryBenchmark": 80,
       "recommendationReason": "Recent assessment performance (35%) is below the configured support threshold (60%), and previous result (40%) also showed persistent difficulty.",
-      "status": "Completed",
+      "status": "Approved",
       "estimatedMinutes": 20,
       "difficulty": "Beginner",
       "requiredMaterials": [
@@ -3433,24 +3616,7 @@
       "createdAt": "2026-09-01T10:00:00Z"
     }
   ],
-  "attempts": [
-    {
-      "studentId": "std-aarav",
-      "activityId": "act-div-01",
-      "score": 4,
-      "maximumScore": 4,
-      "percentage": 100,
-      "answers": {
-        "q-div-1": "4 laddus",
-        "q-div-2": "5 × 4 = 20",
-        "q-div-3": "True",
-        "q-div-4": "3 boxes"
-      },
-      "incorrectQuestions": [],
-      "id": "att-1793388800374",
-      "completedAt": "2026-10-30T19:33:20.374Z"
-    }
-  ],
+  "attempts": [],
   "parents": [
     {
       "id": "par-aarav",
@@ -3518,17 +3684,17 @@
       "id": "plc-demo-aarav",
       "studentId": "std-aarav",
       "code": "PAR-4892",
-      "expiresAt": "2026-11-06T18:32:46.675Z",
+      "expiresAt": "2026-11-07T14:11:39.173Z",
       "status": "active",
-      "createdAt": "2026-10-30T18:32:46.675Z"
+      "createdAt": "2026-10-31T14:11:39.173Z"
     },
     {
       "id": "plc-demo-diya",
       "studentId": "std-diya",
       "code": "PAR-5219",
-      "expiresAt": "2026-11-06T18:32:46.675Z",
+      "expiresAt": "2026-11-07T14:11:39.173Z",
       "status": "active",
-      "createdAt": "2026-10-30T18:32:46.675Z"
+      "createdAt": "2026-10-31T14:11:39.173Z"
     }
   ],
   "parentMessages": [],
@@ -3795,6 +3961,8 @@
       "email": "teacher@studysaathi.edu.in",
       "phone": "+919876543210",
       "phoneVerified": true,
+      "emailVerified": true,
+      "emailVerifiedAt": "2026-01-01T00:00:00Z",
       "role": "teacher",
       "schoolId": "sch-gn-01",
       "provider": "local",
@@ -3809,6 +3977,8 @@
       "email": "principal@studysaathi.edu.in",
       "phone": "+919876543211",
       "phoneVerified": true,
+      "emailVerified": true,
+      "emailVerifiedAt": "2026-01-01T00:00:00Z",
       "role": "admin",
       "schoolId": "sch-gn-01",
       "provider": "local",
@@ -3823,6 +3993,8 @@
       "email": "dinesh.patel@example.com",
       "phone": "+919825012345",
       "phoneVerified": true,
+      "emailVerified": true,
+      "emailVerifiedAt": "2026-01-01T00:00:00Z",
       "role": "parent",
       "schoolId": "sch-gn-01",
       "provider": "local",
@@ -3831,5 +4003,138 @@
       "updatedAt": "2026-01-01T00:00:00Z"
     }
   ],
-  "feedback": []
+  "feedback": [],
+  "parentCommunications": [
+    {
+      "id": "comm-seed-01",
+      "type": "notice",
+      "title": "Quarterly Parent-Teacher Meeting (PTM)",
+      "subject": "Invitation: Parent-Teacher Meeting on Saturday, Nov 7",
+      "content": "All parents of Class 4-A are warmly invited to review first-term learning progress and holistic growth.",
+      "senderId": "usr-teacher-01",
+      "senderName": "Pooja Sharma",
+      "senderRole": "teacher",
+      "studentId": "std-aarav",
+      "studentName": "Aarav Patel",
+      "studentGrade": 4,
+      "studentSection": "A",
+      "parentId": "par-aarav",
+      "parentName": "Rajeshbhai Patel",
+      "parentEmail": "rajesh.patel@gmail.com",
+      "channel": "gmail",
+      "deliveryStatus": "delivered",
+      "emailMessageId": "gmail-msg-ptm-seed-01",
+      "sentAt": "2026-10-25T10:30:00Z"
+    },
+    {
+      "id": "comm-seed-02",
+      "type": "learning_gap",
+      "title": "Learning Support for Math Division",
+      "subject": "Learning Progress Update: Division Practice for Aarav",
+      "content": "Aarav has shown enthusiasm in Math. We have initiated a 5-step concrete practice for 2-digit division.",
+      "senderId": "usr-teacher-01",
+      "senderName": "Pooja Sharma",
+      "senderRole": "teacher",
+      "studentId": "std-aarav",
+      "studentName": "Aarav Patel",
+      "studentGrade": 4,
+      "studentSection": "A",
+      "parentId": "par-aarav",
+      "parentName": "Rajeshbhai Patel",
+      "parentEmail": "rajesh.patel@gmail.com",
+      "channel": "gmail",
+      "deliveryStatus": "delivered",
+      "emailMessageId": "gmail-msg-gap-seed-02",
+      "sentAt": "2026-10-26T14:15:00Z"
+    }
+  ],
+  "studentAttendance": {
+    "std-aarav": {
+      "studentId": "std-aarav",
+      "attendanceRate": 94.5,
+      "totalDays": 110,
+      "presentDays": 104,
+      "absentDays": 6,
+      "lastUpdated": "2026-10-31T14:11:39.173Z",
+      "recentAbsences": [
+        {
+          "date": "2026-10-24",
+          "reason": "Mild fever (Leave note submitted)",
+          "isExcused": true,
+          "notifiedParent": true
+        }
+      ]
+    },
+    "std-diya": {
+      "studentId": "std-diya",
+      "attendanceRate": 98.2,
+      "totalDays": 110,
+      "presentDays": 108,
+      "absentDays": 2,
+      "lastUpdated": "2026-10-31T14:11:39.173Z",
+      "recentAbsences": [
+        {
+          "date": "2026-09-18",
+          "reason": "Family visit to native village",
+          "isExcused": true,
+          "notifiedParent": true
+        }
+      ]
+    },
+    "std-pooja": {
+      "studentId": "std-pooja",
+      "attendanceRate": 81.8,
+      "totalDays": 110,
+      "presentDays": 90,
+      "absentDays": 20,
+      "lastUpdated": "2026-10-31T14:11:39.173Z",
+      "recentAbsences": [
+        {
+          "date": "2026-10-27",
+          "reason": "Family function in village",
+          "isExcused": true,
+          "notifiedParent": true
+        },
+        {
+          "date": "2026-10-28",
+          "reason": "Unreported absence",
+          "isExcused": false,
+          "notifiedParent": false
+        }
+      ]
+    },
+    "std-karan": {
+      "studentId": "std-karan",
+      "attendanceRate": 90.9,
+      "totalDays": 110,
+      "presentDays": 100,
+      "absentDays": 10,
+      "lastUpdated": "2026-10-31T14:11:39.173Z",
+      "recentAbsences": [
+        {
+          "date": "2026-10-12",
+          "reason": "Dental checkup appointment",
+          "isExcused": true,
+          "notifiedParent": true
+        }
+      ]
+    },
+    "std-dev": {
+      "studentId": "std-dev",
+      "attendanceRate": 93.6,
+      "totalDays": 110,
+      "presentDays": 103,
+      "absentDays": 7,
+      "lastUpdated": "2026-10-31T14:11:39.173Z",
+      "recentAbsences": [
+        {
+          "date": "2026-10-15",
+          "reason": "Seasonal allergy recovery",
+          "isExcused": true,
+          "notifiedParent": true
+        }
+      ]
+    }
+  },
+  "parentPreferences": {}
 }

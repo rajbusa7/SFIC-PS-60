@@ -379,7 +379,9 @@ export class EmailService {
 
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const nodemailerLib = require("nodemailer") as any;
+      let nodemailerLib: any = null;
+      try { const r = eval("require"); nodemailerLib = r("nodemailer"); } catch { nodemailerLib = null; }
+      if (!nodemailerLib) throw new Error("nodemailer is not installed");
       const transporter = nodemailerLib.createTransport({
         host: process.env.SMTP_HOST,
         port,
@@ -522,7 +524,9 @@ export class EmailService {
 
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const nodemailerLib2 = require("nodemailer") as any;
+      let nodemailerLib2: any = null;
+      try { const r = eval("require"); nodemailerLib2 = r("nodemailer"); } catch { nodemailerLib2 = null; }
+      if (!nodemailerLib2) throw new Error("nodemailer is not installed");
       const transporter = nodemailerLib2.createTransport({
         host: process.env.SMTP_HOST,
         port,

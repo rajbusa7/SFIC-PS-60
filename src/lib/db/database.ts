@@ -2162,7 +2162,11 @@ export const db = {
     const store = loadStore();
     if (!store.teacherAssignments) store.teacherAssignments = [];
     
-    const existingIndex = assignment.id ? store.teacherAssignments.findIndex((a) => a.id === assignment.id) : -1;
+    const existingIndex = assignment.id
+      ? store.teacherAssignments.findIndex((a) => a.id === assignment.id)
+      : store.teacherAssignments.findIndex(
+          (a) => a.teacherId === assignment.teacherId && a.subjectCode === assignment.subjectCode
+        );
     if (existingIndex >= 0) {
       const updated: TeacherAssignment = {
         ...store.teacherAssignments[existingIndex],
@@ -2176,15 +2180,36 @@ export const db = {
       const newAssignment: TeacherAssignment = {
         id: assignment.id || `asg-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
         teacherId: assignment.teacherId,
+        teacherName: assignment.teacherName,
+        teacherEmail: assignment.teacherEmail,
+        schoolId: assignment.schoolId,
         subjectCode: assignment.subjectCode,
         classroomIds: assignment.classroomIds || [],
         grades: assignment.grades || [],
+        classes: assignment.classes || (assignment.grades ? assignment.grades.map((g) => `Class ${g}`) : []),
+        isClassTeacher: assignment.isClassTeacher,
         assignedAt: new Date().toISOString(),
       };
       store.teacherAssignments.push(newAssignment);
       saveStore(store);
       return newAssignment;
     }
+  },
+
+  deleteTeacherAssignmentsByTeacherId(teacherId: string): number {
+    const store = loadStore();
+    if (!store.teacherAssignments) return 0;
+    const initialLen = store.teacherAssignments.length;
+    store.teacherAssignments = store.teacherAssignments.filter((a) => a.teacherId !== teacherId);
+    const count = initialLen - store.teacherAssignments.length;
+    if (count > 0) {
+      saveStore(store);
+    }
+    return count;
+  },
+
+  async deleteTeacherAssignmentsByTeacherIdAsync(teacherId: string): Promise<number> {
+    return this.deleteTeacherAssignmentsByTeacherId(teacherId);
   },
 
   deleteTeacherAssignment(id: string): boolean {

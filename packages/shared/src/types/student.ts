@@ -17,6 +17,8 @@ export interface User {
   provider?: "local" | "google" | "phone";
   passwordHash?: string;
   status?: "active" | "pending" | "disabled";
+  teacherType?: "subject" | "class";
+  isClassTeacher?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }

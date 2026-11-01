@@ -81,12 +81,25 @@ const StudentFormModal = dynamic(
   { ssr: false }
 );
 
+const TeacherManagementSection = dynamic(
+  () => import("@/components/admin/TeacherManagementSection").then((m) => m.TeacherManagementSection),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="p-8 text-center text-xs text-[#7A6862] bg-[#FAF6E9] rounded-2xl border border-[#49352F]/15">
+        Loading Teacher Management...
+      </div>
+    ),
+  }
+);
+
 function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t, language, formatSubject, formatClass, formatPriority } = useLanguage();
   const { user, role, assignments, selectedSubject: authSelectedSubject, setSelectedSubject: setAuthSelectedSubject } = useAuth();
   const isTeacher = user?.role === "teacher" || role === "teacher";
+  const isAdmin = user?.role === "admin" || role === "admin";
   const urlSubjectParam = searchParams.get("subject")?.toUpperCase() as SubjectCode | null;
   const teacherSubjectCodes = assignments.map((a) => a.subjectCode);
   const activeSubject: SubjectCode | "all" = isTeacher
@@ -133,7 +146,18 @@ function DashboardContent() {
   const { selectedClass, setSelectedClass } = useFilter();
   const [selectedSubject, setSelectedSubject] = useState("all");
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
-  const [dashboardView, setDashboardView] = useState<"overview" | "ai">("overview");
+  const [dashboardView, setDashboardView] = useState<"overview" | "ai" | "teachers">("overview");
+
+  const viewParam = searchParams.get("view") || searchParams.get("tab");
+  useEffect(() => {
+    if (viewParam === "teachers") {
+      setDashboardView("teachers");
+    } else if (viewParam === "ai") {
+      setDashboardView("ai");
+    } else if (viewParam === "overview") {
+      setDashboardView("overview");
+    }
+  }, [viewParam]);
   const [aiTab, setAiTab] = useState<AiTab>("tutor");
   const [hasCelebrated, setHasCelebrated] = useState(false);
 
@@ -535,7 +559,23 @@ function DashboardContent() {
           </div>
         </div>
 
-        {dashboardView === "ai" ? (
+        {dashboardView === "teachers" ? (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => setDashboardView("overview")}
+                className="text-xs font-bold text-[#49352F] hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                &larr; {language === "gu" ? "ડેશબોર્ડ પર પાછા જાઓ" : "Back to Classroom Overview"}
+              </button>
+              <Link href="/settings" className="text-xs text-[#7A6862] hover:text-[#49352F] font-medium">
+                {language === "gu" ? "સેટિંગ્સ પેજ ખોલો" : "Open Settings"} &rarr;
+              </Link>
+            </div>
+            <TeacherManagementSection />
+          </div>
+        ) : dashboardView === "ai" ? (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <button
@@ -553,6 +593,42 @@ function DashboardContent() {
           </div>
         ) : (
           <>
+            {isAdmin && (
+              <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-[#FAF6E9] via-[#F2CAB3]/40 to-[#FAF6E9] border border-[#B26A1B]/20 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4 text-[#49352F]">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-[#B26A1B]/10 border border-[#B26A1B]/20 text-[#B26A1B] flex items-center justify-center font-bold shrink-0">
+                    <Users className="w-5 h-5 text-[#B26A1B]" aria-hidden="true" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-heading text-sm font-bold text-[#49352F]">
+                        {language === "gu" ? "શાળા સંચાલક નિયંત્રણ કેન્દ્ર" : "School Administrator Control Center"}
+                      </h3>
+                      <Badge variant="saffron" size="sm">
+                        {language === "gu" ? "શિક્ષક વ્યવસ્થાપન" : "Teacher Management"}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-[#7A6862] mt-0.5">
+                      {language === "gu"
+                        ? "શિક્ષકો ઉમેરો, વિષયો અને વર્ગો ૧-૫ સોંપો, અને પરવાનગીઓ સંચાલિત કરો."
+                        : "Manage faculty members, assign subjects and classes 1-5, and update academic permissions."}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 w-full md:w-auto">
+                  <Button
+                    variant="saffron"
+                    size="sm"
+                    onClick={() => setDashboardView("teachers")}
+                    className="rounded-xl text-xs w-full md:w-auto cursor-pointer"
+                  >
+                    <Users className="w-3.5 h-3.5 mr-1.5" />
+                    <span>{language === "gu" ? "શિક્ષક વ્યવસ્થાપન ખોલો" : "Open Teacher Management"}</span>
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {/* New Teacher Onboarding & Tutorial Welcome Banner */}
             <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-[#F2DCB5]/90 via-[#FAF6E9] to-[#F2CAB3]/80 border border-[#49352F]/15 shadow-[0_8px_24px_rgba(73,53,47,0.06)] flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative overflow-hidden text-[#49352F]">
               <div className="flex items-start gap-3.5 z-10">

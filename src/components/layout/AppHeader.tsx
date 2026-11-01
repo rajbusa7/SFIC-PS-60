@@ -276,6 +276,8 @@ export function AppHeader({
             className="bg-transparent text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] outline-hidden cursor-pointer max-w-[65px] sm:max-w-[95px] xl:max-w-none truncate"
           >
             <option value="all">{t.header?.allClasses || t.dashboard.allClasses}</option>
+            <option value="cls-1a">{t.header?.class1A || "Class 1 - Section A"}</option>
+            <option value="cls-2a">{t.header?.class2A || "Class 2 - Section A"}</option>
             <option value="cls-3a">{t.header?.class3A || "Class 3 - Section A"}</option>
             <option value="cls-4a">{t.header?.class4A || "Class 4 - Section A"}</option>
             <option value="cls-5a">{t.header?.class5A || "Class 5 - Section A"}</option>

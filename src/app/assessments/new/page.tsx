@@ -227,6 +227,8 @@ export default function NewAssessmentPage() {
                 onChange={(e) => setClassroomId(e.target.value)}
                 className="w-full rounded-xl border border-[#49352F]/15 bg-white p-2.5 text-xs text-[#49352F] focus:border-[#B26A1B] focus:ring-1 focus:ring-[#B26A1B] outline-hidden cursor-pointer"
               >
+                <option value="cls-1a">{formatClass("Class 1 - Section A")}</option>
+                <option value="cls-2a">{formatClass("Class 2 - Section A")}</option>
                 <option value="cls-3a">{formatClass("Class 3 - Section A")}</option>
                 <option value="cls-4a">{formatClass("Class 4 - Section A")}</option>
                 <option value="cls-5a">{formatClass("Class 5 - Section A")}</option>

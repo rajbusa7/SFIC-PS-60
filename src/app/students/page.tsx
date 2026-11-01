@@ -350,6 +350,8 @@ function StudentsPageContent() {
               <option value="all">
                 {language === "gu" ? "બધા વર્ગો (૧-૫)" : "All Classes (1-5)"}
               </option>
+              <option value="1">{language === "gu" ? "ધોરણ ૧" : "Class 1"}</option>
+              <option value="2">{language === "gu" ? "ધોરણ ૨" : "Class 2"}</option>
               <option value="3">{language === "gu" ? "ધોરણ ૩" : "Class 3"}</option>
               <option value="4">{language === "gu" ? "ધોરણ ૪" : "Class 4"}</option>
               <option value="5">{language === "gu" ? "ધોરણ ૫" : "Class 5"}</option>

@@ -301,6 +301,8 @@ function DashboardContent() {
               className="rounded-xl border border-[#49352F]/15 bg-white px-3 py-1.5 text-xs font-semibold text-[#49352F] shadow-xs outline-hidden cursor-pointer"
             >
               <option value="all">{t.dashboard.allClasses}</option>
+              <option value="cls-1a">{formatClass("Class 1-A")}</option>
+              <option value="cls-2a">{formatClass("Class 2-A")}</option>
               <option value="cls-3a">{formatClass("Class 3-A")}</option>
               <option value="cls-4a">{formatClass("Class 4-A")}</option>
               <option value="cls-5a">{formatClass("Class 5-A")}</option>

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db/database";
+import { extractSessionToken, verifySession } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -22,6 +23,60 @@ export async function GET(
       return NextResponse.json(
         { success: false, error: "Student not found" },
         { status: 404, headers: noCacheHeaders }
+      );
+    }
+
+    const token = await extractSessionToken(request);
+    const session = token ? await verifySession(token) : null;
+
+    if (session && session.role === "teacher") {
+      const assignments = db.getTeacherAssignments(session.id);
+      if (!assignments || assignments.length === 0) {
+        return NextResponse.json(
+          { success: false, error: "No subjects have been assigned to your account. Please contact your administrator." },
+          { status: 403, headers: noCacheHeaders }
+        );
+      }
+
+      const assignedClassroomIds = assignments.flatMap((a) => a.classroomIds || []);
+      const assignedGrades = assignments.flatMap((a) => a.grades || []);
+      const assignedSubjectCodes = assignments.map((a) => a.subjectCode);
+
+      const isClassAuthorized =
+        assignedClassroomIds.includes(student.classroomId) || assignedGrades.includes(student.grade);
+
+      if (!isClassAuthorized) {
+        return NextResponse.json(
+          { success: false, error: "Forbidden: You are not authorized to view academic records for this student." },
+          { status: 403, headers: noCacheHeaders }
+        );
+      }
+
+      // Filter subject records for this teacher
+      const allResults = db.getResults(id);
+      const results = allResults.filter((r) => {
+        const cpt = db.getConceptById(r.conceptId);
+        return cpt && assignedSubjectCodes.includes(cpt.subjectCode);
+      });
+
+      const allGaps = db.getLearningGaps(id);
+      const gaps = allGaps.filter(
+        (g) => !g.subjectCode || assignedSubjectCodes.includes(g.subjectCode)
+      );
+
+      const remedialPlans = db.getRemedialPlans(id);
+      const attempts = db.getAttempts(id);
+
+      return NextResponse.json(
+        {
+          success: true,
+          student,
+          results,
+          gaps,
+          remedialPlans,
+          attempts,
+        },
+        { headers: noCacheHeaders }
       );
     }
 
@@ -56,6 +111,41 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
+    const existing = await db.getStudentByIdAsync(id);
+
+    if (!existing) {
+      return NextResponse.json(
+        { success: false, error: "Student not found" },
+        { status: 404, headers: noCacheHeaders }
+      );
+    }
+
+    const token = await extractSessionToken(request);
+    const session = token ? await verifySession(token) : null;
+
+    if (session && session.role === "teacher") {
+      const assignments = db.getTeacherAssignments(session.id);
+      if (!assignments || assignments.length === 0) {
+        return NextResponse.json(
+          { success: false, error: "No subjects have been assigned to your account. Please contact your administrator." },
+          { status: 403, headers: noCacheHeaders }
+        );
+      }
+
+      const assignedClassroomIds = assignments.flatMap((a) => a.classroomIds || []);
+      const assignedGrades = assignments.flatMap((a) => a.grades || []);
+
+      const isAuthorized =
+        assignedClassroomIds.includes(existing.classroomId) || assignedGrades.includes(existing.grade);
+
+      if (!isAuthorized) {
+        return NextResponse.json(
+          { success: false, error: "Forbidden: You are not authorized to edit records for this student." },
+          { status: 403, headers: noCacheHeaders }
+        );
+      }
+    }
+
     const updates = await request.json();
 
     // Check duplicate roll code if changed
@@ -78,12 +168,9 @@ export async function PUT(
     }
 
     if (updates.grade !== undefined || updates.section !== undefined) {
-      const existing = await db.getStudentByIdAsync(id);
-      if (existing) {
-        const g = updates.grade !== undefined ? Number(updates.grade) : existing.grade;
-        const s = updates.section !== undefined ? String(updates.section).trim().toUpperCase() : existing.section;
-        updates.classroomId = `cls-${g}${s.toLowerCase()}`;
-      }
+      const g = updates.grade !== undefined ? Number(updates.grade) : existing.grade;
+      const s = updates.section !== undefined ? String(updates.section).trim().toUpperCase() : existing.section;
+      updates.classroomId = `cls-${g}${s.toLowerCase()}`;
     }
 
     const updated = await db.updateStudentAsync(id, updates);
@@ -114,6 +201,17 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
+
+    const token = await extractSessionToken(request);
+    const session = token ? await verifySession(token) : null;
+
+    if (session && session.role === "teacher") {
+      return NextResponse.json(
+        { success: false, error: "Forbidden: Administrative privileges required to delete student records." },
+        { status: 403, headers: noCacheHeaders }
+      );
+    }
+
     const deleted = await db.deleteStudentAsync(id);
 
     if (!deleted) {

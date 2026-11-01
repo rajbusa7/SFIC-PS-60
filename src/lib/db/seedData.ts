@@ -17,6 +17,7 @@ import type {
   NoticeDelivery,
   ParentProfile,
   AiProviderConfig,
+  TeacherAssignment,
 } from "../types";
 
 export const SEED_SCHOOL: School = {
@@ -1528,6 +1529,34 @@ export const SEED_USERS: User[] = [
     updatedAt: "2026-01-01T00:00:00Z",
   },
   {
+    id: "usr-teacher-02",
+    name: "Priya Patel",
+    email: "priya.patel@studysaathi.edu.in",
+    phone: "+919876543212",
+    phoneVerified: true,
+    role: "teacher",
+    schoolId: "sch-gn-01",
+    provider: "local",
+    passwordHash: "afae7baea11c9a4fe0ab05d8f94036e8:497440fe3391736b01bd060b451e089afe389d3f6978216ab92040e7ae1396d26487a6e3d54e5426fc419d59d402e20199b97d595c3c88caeab18d84f8a31599",
+    status: "active",
+    createdAt: "2026-01-01T00:00:00Z",
+    updatedAt: "2026-01-01T00:00:00Z",
+  },
+  {
+    id: "usr-teacher-03",
+    name: "Amit Verma",
+    email: "amit.verma@studysaathi.edu.in",
+    phone: "+919876543213",
+    phoneVerified: true,
+    role: "teacher",
+    schoolId: "sch-gn-01",
+    provider: "local",
+    passwordHash: "afae7baea11c9a4fe0ab05d8f94036e8:497440fe3391736b01bd060b451e089afe389d3f6978216ab92040e7ae1396d26487a6e3d54e5426fc419d59d402e20199b97d595c3c88caeab18d84f8a31599",
+    status: "active",
+    createdAt: "2026-01-01T00:00:00Z",
+    updatedAt: "2026-01-01T00:00:00Z",
+  },
+  {
     id: "par-001",
     name: "Dineshbhai Patel",
     email: "dinesh.patel@example.com",
@@ -1539,5 +1568,32 @@ export const SEED_USERS: User[] = [
     status: "active",
     createdAt: "2026-01-01T00:00:00Z",
     updatedAt: "2026-01-01T00:00:00Z",
+  },
+];
+
+export const SEED_TEACHER_ASSIGNMENTS: TeacherAssignment[] = [
+  {
+    id: "asg-01",
+    teacherId: "usr-teacher-01",
+    subjectCode: "MATH",
+    classroomIds: ["cls-1a", "cls-2a", "cls-3a", "cls-4a"],
+    grades: [1, 2, 3, 4],
+    assignedAt: "2026-01-01T00:00:00Z",
+  },
+  {
+    id: "asg-02",
+    teacherId: "usr-teacher-01",
+    subjectCode: "GUJ",
+    classroomIds: ["cls-3a", "cls-4a"],
+    grades: [3, 4],
+    assignedAt: "2026-01-01T00:00:00Z",
+  },
+  {
+    id: "asg-03",
+    teacherId: "usr-teacher-02",
+    subjectCode: "ENG",
+    classroomIds: ["cls-1a"],
+    grades: [1],
+    assignedAt: "2026-01-01T00:00:00Z",
   },
 ];

@@ -5,6 +5,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import type { TeacherAssignment, SubjectCode } from "@/lib/types";
 import { useLanguage } from "@/context/LanguageContext";
 import { BrandLogo } from "@/components/shared/BrandLogo";
 import { LanguageSelector } from "@/components/shared/LanguageSelector";
@@ -42,7 +43,7 @@ const BridgeCanvas3D = dynamic(
 function LoginCardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login, registerTeacher, loginAsDemoTeacher, loginAsDemoAdmin, loginAsDemoParent, loginWithSessionUser } = useAuth();
+  const { login, registerTeacher, loginAsDemoTeacher, loginAsDemoAdmin, loginAsDemoParent, loginWithSessionUser, setSelectedSubject } = useAuth();
   const { language } = useLanguage();
 
   // Mode: "login" or "register"
@@ -79,6 +80,23 @@ function LoginCardContent() {
   const [regSchoolId, setRegSchoolId] = useState("sch-gn-01");
   const [regLoading, setRegLoading] = useState(false);
   const [regError, setRegError] = useState<string | null>(null);
+
+
+  // Subject selection modal states for teacher access control
+  const [showSubjectModal, setShowSubjectModal] = useState(false);
+  const [pendingAssignments, setPendingAssignments] = useState<TeacherAssignment[]>([]);
+  const [selectedModalSubject, setSelectedModalSubject] = useState<SubjectCode | null>(null);
+  const [subjectModalError, setSubjectModalError] = useState<string | null>(null);
+
+  const handleConfirmSubject = () => {
+    if (!selectedModalSubject) {
+      setSubjectModalError(language === "gu" ? "કૃપા કરીને આગળ વધવા માટે એક વિષય પસંદ કરો." : "Please select a subject to continue.");
+      return;
+    }
+    setSelectedSubject(selectedModalSubject);
+    setShowSubjectModal(false);
+    router.push(`/dashboard?subject=${selectedModalSubject}`);
+  };
 
   // Google OAuth flow state
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -283,8 +301,31 @@ function LoginCardContent() {
     setLoginLoading(true);
     setLoginError(null);
     try {
-      await login(email, password, "teacher");
-      router.push("/dashboard");
+      const result = await login(email, password, "teacher");
+      if (result.user.role === "admin") {
+        router.push("/dashboard");
+        return;
+      }
+
+      const asgs = result.assignments || [];
+      if (asgs.length === 0) {
+        setLoginError(
+          language === "gu"
+            ? "તમારા એકાઉન્ટને કોઈ વિષય સોંપવામાં આવ્યો નથી. કૃપા કરીને તમારા વહીવટકર્તાનો સંપર્ક કરો."
+            : "No subjects have been assigned to your account. Please contact your administrator."
+        );
+        return;
+      }
+
+      if (asgs.length === 1) {
+        setSelectedSubject(asgs[0].subjectCode);
+        router.push(`/dashboard?subject=${asgs[0].subjectCode}`);
+        return;
+      }
+
+      setPendingAssignments(asgs);
+      setSelectedModalSubject(asgs[0].subjectCode);
+      setShowSubjectModal(true);
     } catch (err: any) {
       setLoginError(
         language === "gu"
@@ -367,7 +408,22 @@ function LoginCardContent() {
   };
 
   const handleTeacherDemo = async () => {
-    await loginAsDemoTeacher();
+    try {
+      const result = await login("teacher@studysaathi.edu.in", "teacher123", "teacher");
+      if (result.assignments && result.assignments.length > 1) {
+        setPendingAssignments(result.assignments);
+        setSelectedModalSubject(result.assignments[0].subjectCode);
+        setShowSubjectModal(true);
+        return;
+      }
+      if (result.assignments && result.assignments.length === 1) {
+        setSelectedSubject(result.assignments[0].subjectCode);
+        router.push(`/dashboard?subject=${result.assignments[0].subjectCode}`);
+        return;
+      }
+    } catch {
+      await loginAsDemoTeacher();
+    }
     router.push("/dashboard");
   };
 
@@ -1053,6 +1109,103 @@ function LoginCardContent() {
           </p>
         </div>
       </div>
+
+      {/* Subject Selection Modal */}
+      {showSubjectModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="max-w-md w-full rounded-3xl bg-white dark:bg-[#1E1916] border border-[#49352F]/20 dark:border-[#F2CAB3]/30 p-6 shadow-2xl space-y-5 text-[#49352F] dark:text-[#F4F1E1]">
+            <div className="text-center space-y-1">
+              <span className="text-xs uppercase tracking-wider font-semibold text-[#B26A1B] dark:text-[#F2CAB3]">
+                ShikshaSetu AI
+              </span>
+              <h3 className="font-heading text-xl font-bold text-[#49352F] dark:text-[#F4F1E1]">
+                {language === "gu" ? "સ્વાગત છે, શિક્ષક!" : "Welcome, Teacher!"}
+              </h3>
+              <p className="text-xs text-[#7A6862] dark:text-[#FAF6E9]/80">
+                {language === "gu"
+                  ? "શિક્ષણ સત્ર શરૂ કરવા માટે તમારો સોંપેલ વિષય પસંદ કરો:"
+                  : "Select your assigned subject to begin your teaching session:"}
+              </p>
+            </div>
+
+            {subjectModalError && (
+              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 text-xs">
+                {subjectModalError}
+              </div>
+            )}
+
+            <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
+              {pendingAssignments.map((asg) => {
+                const subjectInfo = {
+                  MATH: { name: "Mathematics", gu: "ગણિત" },
+                  ENG: { name: "English", gu: "અંગ્રેજી" },
+                  GUJ: { name: "Gujarati", gu: "ગુજરાતી" },
+                  EVS: { name: "Environmental Studies", gu: "પર્યાવરણ" },
+                  SCI: { name: "Science", gu: "વિજ્ઞાન" },
+                  SST: { name: "Social Science", gu: "સામાજિક વિજ્ઞાન" },
+                  HIN: { name: "Hindi", gu: "હિન્દી" },
+                }[asg.subjectCode] || { name: asg.subjectCode, gu: asg.subjectCode };
+
+                const isSelected = selectedModalSubject === asg.subjectCode;
+                const classesText = asg.grades && asg.grades.length > 0
+                  ? (language === "gu"
+                      ? `વર્ગ: ${asg.grades.slice().sort().join(", ")}`
+                      : `Classes: ${asg.grades.slice().sort().join(", ")}`)
+                  : "";
+
+                return (
+                  <button
+                    key={asg.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedModalSubject(asg.subjectCode);
+                      setSubjectModalError(null);
+                    }}
+                    className={`w-full text-left p-3.5 rounded-2xl border transition-all flex items-center justify-between ${
+                      isSelected
+                        ? "bg-[#FFF8F0] dark:bg-[#2D241F] border-[#B26A1B] dark:border-[#F2CAB3] shadow-xs"
+                        : "bg-white dark:bg-[#26201C] border-[#49352F]/10 dark:border-[#F2CAB3]/20 hover:border-[#B26A1B]/40"
+                    }`}
+                  >
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-sm text-[#49352F] dark:text-[#F4F1E1]">
+                          {language === "gu" ? subjectInfo.gu : subjectInfo.name}
+                        </span>
+                        <span className="px-2 py-0.5 text-[10px] font-mono rounded-md bg-[#FAF6E9] dark:bg-[#1E1916] text-[#B26A1B] dark:text-[#F2CAB3] font-bold border border-[#49352F]/10">
+                          {asg.subjectCode}
+                        </span>
+                      </div>
+                      {classesText && (
+                        <p className="text-[11px] text-[#7A6862] dark:text-[#FAF6E9]/70">
+                          {classesText}
+                        </p>
+                      )}
+                    </div>
+                    <div
+                      className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                        isSelected
+                          ? "border-[#B26A1B] bg-[#B26A1B]"
+                          : "border-[#7A6862]/40"
+                      }`}
+                    >
+                      {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            <Button
+              type="button"
+              onClick={handleConfirmSubject}
+              className="w-full py-3 rounded-2xl bg-[#B26A1B] hover:bg-[#8F5213] text-white font-medium text-sm shadow-md transition-all cursor-pointer"
+            >
+              {language === "gu" ? "આગળ વધો (Continue)" : "Continue"}
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Google Cloud Configuration Modal (Shown when Client ID is missing in .env) */}
       {showSetupModal && (

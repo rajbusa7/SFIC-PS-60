@@ -13,6 +13,8 @@ import { BridgeProgress } from "@/components/ui/BridgeProgress";
 import type { StudentMasteryPoint } from "@/components/3d/ClassMasteryHeatmap3D";
 import { fireCelebrationConfetti } from "@/lib/confetti";
 import { useLanguage } from "@/context/LanguageContext";
+import { useAuth } from "@/context/AuthContext";
+import type { SubjectCode } from "@/lib/types";
 import { useFilter, parseGradeNumber } from "@/context/FilterContext";
 import { useTutorial } from "@/context/TutorialContext";
 import { ChecklistWidget } from "@/components/tutorial/ChecklistWidget";
@@ -80,10 +82,41 @@ const StudentFormModal = dynamic(
 );
 
 function DashboardContent() {
-  const { t, language, formatSubject, formatClass, formatPriority } = useLanguage();
-  const { openTutorial, startTutorial } = useTutorial();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t, language, formatSubject, formatClass, formatPriority } = useLanguage();
+  const { user, role, assignments, selectedSubject: authSelectedSubject, setSelectedSubject: setAuthSelectedSubject } = useAuth();
+  const isTeacher = user?.role === "teacher" || role === "teacher";
+  const urlSubjectParam = searchParams.get("subject")?.toUpperCase() as SubjectCode | null;
+  const teacherSubjectCodes = assignments.map((a) => a.subjectCode);
+  const activeSubject: SubjectCode | "all" = isTeacher
+    ? (urlSubjectParam && teacherSubjectCodes.includes(urlSubjectParam)
+        ? urlSubjectParam
+        : authSelectedSubject && teacherSubjectCodes.includes(authSelectedSubject)
+        ? authSelectedSubject
+        : teacherSubjectCodes.length > 0
+        ? teacherSubjectCodes[0]
+        : "MATH")
+    : (urlSubjectParam || (authSelectedSubject ?? "all"));
+
+  const [showSwitchSubjectModal, setShowSwitchSubjectModal] = useState(false);
+  const handleSelectNewSubject = (code: SubjectCode) => {
+    setAuthSelectedSubject(code);
+    setSelectedClass("all");
+    setShowSwitchSubjectModal(false);
+    router.replace(`/dashboard?subject=${code}`);
+  };
+
+  const activeAssignment = isTeacher
+    ? assignments.find((a) => a.subjectCode === activeSubject)
+    : null;
+
+  const permittedGrades = isTeacher
+    ? (activeAssignment?.grades && activeAssignment.grades.length > 0
+        ? activeAssignment.grades.slice().sort((a, b) => a - b)
+        : [1, 2, 3, 4, 5])
+    : [1, 2, 3, 4, 5];
+  const { openTutorial, startTutorial } = useTutorial();
   const tourParam = searchParams.get("tour");
   const hasTriggeredFullTour = useRef(false);
 
@@ -185,6 +218,123 @@ function DashboardContent() {
     setTimeout(() => setHasCelebrated(false), 5000);
   };
 
+
+  // Subject Marks Management States (Phase 5)
+  const [editingScores, setEditingScores] = useState<Record<string, { marks: number; maxMarks: number; notes: string; saving?: boolean; saved?: boolean; error?: string }>>({});
+
+  const handleScoreInputChange = (studentId: string, marksVal: string, maxMarks: number) => {
+    const val = parseFloat(marksVal);
+    setEditingScores((prev) => ({
+      ...prev,
+      [studentId]: {
+        ...prev[studentId],
+        marks: isNaN(val) ? 0 : val,
+        maxMarks: maxMarks,
+        notes: prev[studentId]?.notes || "",
+        error: val < 0 ? "Marks cannot be negative." : val > maxMarks ? `Marks cannot exceed ${maxMarks}.` : undefined,
+        saved: false,
+      },
+    }));
+  };
+
+  const handleNotesChange = (studentId: string, notesVal: string) => {
+    setEditingScores((prev) => ({
+      ...prev,
+      [studentId]: {
+        ...prev[studentId],
+        marks: prev[studentId]?.marks ?? 15,
+        maxMarks: prev[studentId]?.maxMarks ?? 20,
+        notes: notesVal,
+        saved: false,
+      },
+    }));
+  };
+
+  const handleSaveStudentMarks = async (studentId: string, conceptId: string, assessmentId: string, maxMarks: number) => {
+    const current = editingScores[studentId];
+    const scoreVal = current?.marks ?? 15;
+    const notesVal = current?.notes ?? "";
+
+    if (scoreVal < 0 || scoreVal > maxMarks) {
+      setEditingScores((prev) => ({
+        ...prev,
+        [studentId]: {
+          ...prev[studentId],
+          marks: scoreVal,
+          maxMarks,
+          notes: notesVal,
+          error: `Marks must be between 0 and ${maxMarks}.`,
+        },
+      }));
+      return;
+    }
+
+    setEditingScores((prev) => ({
+      ...prev,
+      [studentId]: {
+        ...prev[studentId],
+        marks: scoreVal,
+        maxMarks,
+        notes: notesVal,
+        saving: true,
+        error: undefined,
+      },
+    }));
+
+    try {
+      const res = await fetch("/api/assessments/results", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          results: [
+            {
+              assessmentId,
+              studentId,
+              conceptId,
+              marksObtained: scoreVal,
+              maximumMarks: maxMarks,
+              notes: notesVal,
+              subjectCode: activeSubject !== "all" ? activeSubject : "MATH",
+            },
+          ],
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to save marks.");
+      }
+
+      setEditingScores((prev) => ({
+        ...prev,
+        [studentId]: {
+          ...prev[studentId],
+          saving: false,
+          saved: true,
+          error: undefined,
+        },
+      }));
+
+      // Refresh data
+      fetchDashboardData();
+      setTimeout(() => {
+        setEditingScores((prev) => ({
+          ...prev,
+          [studentId]: { ...prev[studentId], saved: false },
+        }));
+      }, 3500);
+    } catch (err: any) {
+      setEditingScores((prev) => ({
+        ...prev,
+        [studentId]: {
+          ...prev[studentId],
+          saving: false,
+          error: err.message || "Failed to save marks.",
+        },
+      }));
+    }
+  };
+
   // Filtered lists based on unified selectedClass
   const selectedGrade = parseGradeNumber(selectedClass);
   const selectValue = selectedGrade !== null ? String(selectedGrade) : "all";
@@ -210,6 +360,7 @@ function DashboardContent() {
         return false;
       }
     }
+    if (activeSubject !== "all" && g.subjectCode !== activeSubject) return false;
     if (selectedSubject !== "all" && g.subjectCode !== selectedSubject) return false;
     return true;
   });
@@ -329,6 +480,27 @@ function DashboardContent() {
               </button>
             </div>
 
+            {/* Active Subject Pill & Switch Subject Control */}
+            {isTeacher && activeSubject !== "all" && (
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-[#49352F]/15 shadow-xs text-xs">
+                <span className="text-[#7A6862] font-medium">
+                  {language === "gu" ? "વિષય:" : "Subject:"}
+                </span>
+                <span className="font-bold text-[#B26A1B]">
+                  {formatSubject(activeSubject)}
+                </span>
+                {assignments.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowSwitchSubjectModal(true)}
+                    className="ml-1 text-[11px] font-bold text-[#B26A1B] hover:text-[#8F5213] underline cursor-pointer"
+                  >
+                    {language === "gu" ? "બદલો" : "Switch Subject"}
+                  </button>
+                )}
+              </div>
+            )}
+
             <select
               value={selectValue}
               aria-label="Filter dashboard by class"
@@ -336,13 +508,19 @@ function DashboardContent() {
               className="rounded-xl border border-[#49352F]/15 bg-white px-3 py-1.5 text-xs font-semibold text-[#49352F] shadow-xs outline-hidden cursor-pointer"
             >
               <option value="all">
-                {language === "gu" ? "બધા વર્ગો (૧-૫)" : "All Classes (1-5)"}
+                {language === "gu"
+                  ? isTeacher
+                    ? `સોંપેલ વર્ગો (${permittedGrades.join(", ")})`
+                    : "બધા વર્ગો (૧-૫)"
+                  : isTeacher
+                  ? `All Assigned Classes (${permittedGrades.join(", ")})`
+                  : "All Classes (1-5)"}
               </option>
-              <option value="1">{language === "gu" ? "ધોરણ ૧" : "Class 1"}</option>
-              <option value="2">{language === "gu" ? "ધોરણ ૨" : "Class 2"}</option>
-              <option value="3">{language === "gu" ? "ધોરણ ૩" : "Class 3"}</option>
-              <option value="4">{language === "gu" ? "ધોરણ ૪" : "Class 4"}</option>
-              <option value="5">{language === "gu" ? "ધોરણ ૫" : "Class 5"}</option>
+              {permittedGrades.map((g) => (
+                <option key={g} value={String(g)}>
+                  {language === "gu" ? `ધોરણ ${g}` : `Class ${g}`}
+                </option>
+              ))}
             </select>
 
             <Button
@@ -652,6 +830,134 @@ function DashboardContent() {
               </div>
             </div>
 
+
+            {/* 5. Subject-Wise Marks & Competency Management (Phase 5) */}
+            <Card variant="glass" className="p-5 sm:p-6 border-[#49352F]/15 text-[#49352F] space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#49352F]/10">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-heading text-base font-bold text-[#49352F]">
+                      {language === "gu"
+                        ? `વિષયવાર ગુણ અને મૂલ્યાંકન સંચાલન — ${formatSubject(activeSubject !== "all" ? activeSubject : "MATH")}`
+                        : `Subject-Wise Marks & Competency Management — ${formatSubject(activeSubject !== "all" ? activeSubject : "MATH")}`}
+                    </h3>
+                    <Badge variant="saffron" size="sm">
+                      {activeSubject !== "all" ? activeSubject : "MATH"}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-[#7A6862] mt-0.5">
+                    {language === "gu"
+                      ? "સોંપેલ વર્ગોના વિદ્યાર્થીઓના ગુણ દાખલ કરો, સંપાદિત કરો અને વાસ્તવિક સમયમાં ખામી શોધો."
+                      : "Directly enter or update assessment scores and remarks for authorized students in your assigned classes."}
+                  </p>
+                </div>
+                <div className="text-xs text-[#7A6862] font-medium">
+                  {filteredStudents.length} {language === "gu" ? "વિદ્યાર્થીઓ ઉપલબ્ધ" : "Students in view"}
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-[#49352F]/10 text-[#7A6862] font-semibold">
+                      <th className="py-2.5 px-3">{language === "gu" ? "વિદ્યાર્થી" : "Student"}</th>
+                      <th className="py-2.5 px-3">{language === "gu" ? "વર્ગ" : "Class"}</th>
+                      <th className="py-2.5 px-3">{language === "gu" ? "મૂલ્યાંકન સંકલ્પના" : "Assessment Concept"}</th>
+                      <th className="py-2.5 px-3 text-center">{language === "gu" ? "મેળવેલ ગુણ / કુલ ગુણ" : "Marks / Max"}</th>
+                      <th className="py-2.5 px-3 text-center">{language === "gu" ? "પ્રભુત્વ સ્થિતિ" : "Status"}</th>
+                      <th className="py-2.5 px-3">{language === "gu" ? "શિક્ષક નોંધ" : "Teacher Remarks"}</th>
+                      <th className="py-2.5 px-3 text-right">{language === "gu" ? "ક્રિયા" : "Action"}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#49352F]/8">
+                    {filteredStudents.slice(0, 8).map((st) => {
+                      const studentResult = results
+                        .filter((r) => r.studentId === st.id)
+                        .sort((a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime())[0];
+
+                      const currentScore = editingScores[st.id]?.marks ?? (studentResult?.marksObtained ?? 15);
+                      const maxScore = editingScores[st.id]?.maxMarks ?? (studentResult?.maximumMarks ?? 20);
+                      const pct = Math.round((currentScore / Math.max(1, maxScore)) * 100);
+                      const isSaving = editingScores[st.id]?.saving;
+                      const isSaved = editingScores[st.id]?.saved;
+                      const errorMsg = editingScores[st.id]?.error;
+                      const targetConcept = concepts.find((c) => !activeSubject || activeSubject === "all" || c.subjectCode === activeSubject) || concepts[0] || { id: "c-math-count-1", name: "Formative Benchmark" };
+                      const targetAssessment = assessments.find((a) => a.classroomId === st.classroomId) || assessments[0] || { id: "asm-unit-1" };
+
+                      return (
+                        <tr key={st.id} className="hover:bg-[#FAF6E9]/40 transition-colors">
+                          <td className="py-3 px-3">
+                            <div className="font-bold text-[#49352F]">{st.displayName}</div>
+                            <div className="text-[10px] font-mono text-[#7A6862]">{st.studentCode}</div>
+                          </td>
+                          <td className="py-3 px-3">
+                            <span className="font-medium text-[#49352F]">
+                              {formatClass(st.grade, st.section)}
+                            </span>
+                          </td>
+                          <td className="py-3 px-3">
+                            <div className="text-[#49352F] font-medium truncate max-w-[180px]">
+                              {targetConcept.name}
+                            </div>
+                          </td>
+                          <td className="py-3 px-3 text-center">
+                            <div className="inline-flex items-center gap-1.5">
+                              <input
+                                type="number"
+                                min={0}
+                                max={maxScore}
+                                value={currentScore}
+                                onChange={(e) => handleScoreInputChange(st.id, e.target.value, maxScore)}
+                                className="w-14 px-2 py-1 text-center font-bold font-mono rounded-lg border border-[#49352F]/20 bg-white text-xs text-[#49352F] focus:border-[#B26A1B] outline-hidden"
+                              />
+                              <span className="text-[#7A6862] font-mono">/ {maxScore}</span>
+                            </div>
+                            {errorMsg && (
+                              <div className="text-[10px] text-red-600 mt-0.5">{errorMsg}</div>
+                            )}
+                          </td>
+                          <td className="py-3 px-3 text-center">
+                            <Badge
+                              variant={pct >= 80 ? "mint" : pct >= 60 ? "saffron" : "coral"}
+                              size="sm"
+                            >
+                              {pct}% {pct >= 80 ? "Mastered" : pct >= 60 ? "Developing" : "Needs Support"}
+                            </Badge>
+                          </td>
+                          <td className="py-3 px-3">
+                            <input
+                              type="text"
+                              placeholder={language === "gu" ? "નોંધ લખો..." : "Add remark..."}
+                              value={editingScores[st.id]?.notes ?? (studentResult?.notes || "")}
+                              onChange={(e) => handleNotesChange(st.id, e.target.value)}
+                              className="w-full min-w-[130px] px-2.5 py-1 text-xs rounded-lg border border-[#49352F]/15 bg-white text-[#49352F] focus:border-[#B26A1B] outline-hidden placeholder:text-[#7A6862]/60"
+                            />
+                          </td>
+                          <td className="py-3 px-3 text-right">
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              disabled={isSaving}
+                              onClick={() => handleSaveStudentMarks(st.id, targetConcept.id, targetAssessment.id, maxScore)}
+                              className="rounded-xl text-xs px-3 h-7 font-bold shadow-xs cursor-pointer"
+                            >
+                              {isSaving ? (
+                                <span>Saving...</span>
+                              ) : isSaved ? (
+                                <span className="text-emerald-700 font-bold">Saved!</span>
+                              ) : (
+                                <span>Save</span>
+                              )}
+                            </Button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+
             {/* 4. Immediate Attention Student List */}
             <div data-tour="immediate-attention" className="space-y-3">
               <div className="flex items-center justify-between">
@@ -753,6 +1059,75 @@ function DashboardContent() {
           </>
         )}
       </div>
+
+
+      {/* Switch Subject Modal */}
+      {showSwitchSubjectModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="max-w-md w-full rounded-3xl bg-white p-6 shadow-2xl border border-[#49352F]/20 space-y-4 text-[#49352F]">
+            <div className="flex items-center justify-between pb-2 border-b border-[#49352F]/10">
+              <div>
+                <h3 className="font-heading text-lg font-bold text-[#49352F]">
+                  {language === "gu" ? "વિષય બદલો (Switch Subject)" : "Switch Assigned Subject"}
+                </h3>
+                <p className="text-xs text-[#7A6862]">
+                  {language === "gu"
+                    ? "તમારા સોંપેલ વિષયોમાંથી એક પસંદ કરો:"
+                    : "Select from your assigned teaching subjects:"}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowSwitchSubjectModal(false)}
+                className="text-[#7A6862] hover:text-[#49352F] p-1 font-bold text-base cursor-pointer"
+              >
+                &times;
+              </button>
+            </div>
+
+            <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1">
+              {assignments.map((asg) => {
+                const isSelected = activeSubject === asg.subjectCode;
+                const classesText = asg.grades && asg.grades.length > 0
+                  ? (language === "gu" ? `વર્ગો: ${asg.grades.slice().sort().join(", ")}` : `Classes: ${asg.grades.slice().sort().join(", ")}`)
+                  : "";
+
+                return (
+                  <button
+                    key={asg.id}
+                    type="button"
+                    onClick={() => handleSelectNewSubject(asg.subjectCode)}
+                    className={`w-full text-left p-3.5 rounded-2xl border transition-all flex items-center justify-between cursor-pointer ${
+                      isSelected
+                        ? "bg-[#FFF8F0] border-[#B26A1B] shadow-xs"
+                        : "bg-white border-[#49352F]/10 hover:border-[#B26A1B]/40"
+                    }`}
+                  >
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-sm text-[#49352F]">
+                          {formatSubject(asg.subjectCode)}
+                        </span>
+                        <span className="px-2 py-0.5 text-[10px] font-mono rounded-md bg-[#FAF6E9] text-[#B26A1B] font-bold border border-[#49352F]/10">
+                          {asg.subjectCode}
+                        </span>
+                      </div>
+                      {classesText && (
+                        <p className="text-[11px] text-[#7A6862]">
+                          {classesText}
+                        </p>
+                      )}
+                    </div>
+                    {isSelected && (
+                      <span className="text-xs font-bold text-[#B26A1B]">Active</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add Student Modal */}
       {showAddStudentModal && (

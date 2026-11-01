@@ -27,6 +27,11 @@ export async function GET(request: Request) {
   }
 
   const effectiveUser = liveUser || session;
+  const assignments = effectiveUser.role === "teacher"
+    ? db.getTeacherAssignments(effectiveUser.id)
+    : effectiveUser.role === "admin"
+    ? db.getTeacherAssignments()
+    : [];
 
   return NextResponse.json({
     authenticated: true,
@@ -43,5 +48,6 @@ export async function GET(request: Request) {
       createdAt: (effectiveUser as any).createdAt,
       updatedAt: (effectiveUser as any).updatedAt,
     },
+    assignments,
   });
 }

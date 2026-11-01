@@ -24,6 +24,8 @@ import {
   Compass,
   ExternalLink,
   Users,
+  ShieldCheck,
+  KeyRound,
 } from "lucide-react";
 
 export function LandingNavbar() {
@@ -36,6 +38,8 @@ export function LandingNavbar() {
   const [activeSection, setActiveSection] = useState("#hero");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isExploreOpen, setIsExploreOpen] = useState(false);
+  const [isDemoMenuOpen, setIsDemoMenuOpen] = useState(false);
+  const demoMenuRef = useRef<HTMLDivElement>(null);
 
   const exploreRef = useRef<HTMLDivElement>(null);
 
@@ -84,11 +88,15 @@ export function LandingNavbar() {
       if (exploreRef.current && !exploreRef.current.contains(e.target as Node)) {
         setIsExploreOpen(false);
       }
+      if (demoMenuRef.current && !demoMenuRef.current.contains(e.target as Node)) {
+        setIsDemoMenuOpen(false);
+      }
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setIsExploreOpen(false);
+        setIsDemoMenuOpen(false);
         setIsMobileMenuOpen(false);
       }
     };
@@ -356,6 +364,113 @@ export function LandingNavbar() {
             {/* Theme Toggle with Glass Style */}
             <ThemeToggle variant="glass" />
 
+            {/* Demo Roles Dropdown */}
+            <div className="relative" ref={demoMenuRef}>
+              <button
+                type="button"
+                onClick={() => setIsDemoMenuOpen(!isDemoMenuOpen)}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-inner ${
+                  isDemoMenuOpen
+                    ? "text-amber-300 bg-amber-500/20 border border-amber-400/50"
+                    : "text-slate-200 hover:text-white border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20"
+                }`}
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                <span>{language === "gu" ? "ડેમો રોલ્સ" : "Demo Roles"}</span>
+                <ChevronDown className={`w-3 h-3 transition-transform ${isDemoMenuOpen ? "rotate-180 text-amber-400" : "text-slate-400"}`} />
+              </button>
+
+              <AnimatePresence>
+                {isDemoMenuOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 6, scale: 0.96 }}
+                    className="absolute top-full right-0 mt-2.5 w-72 rounded-2xl bg-[#0c0a24]/95 backdrop-blur-2xl border border-white/15 p-2 shadow-2xl z-50 ring-1 ring-white/10"
+                  >
+                    <div className="px-3 py-2 border-b border-white/10 mb-1">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-amber-400">
+                        {language === "gu" ? "પ્રવેશ ભૂમિકાઓ (RBAC)" : "Select Demo Role (RBAC)"}
+                      </p>
+                      <p className="text-[11px] text-slate-300 mt-0.5">
+                        {language === "gu" ? "વિષય-મુજબ ઍક્સેસ નિયંત્રણ" : "Subject & Class Access Controls"}
+                      </p>
+                    </div>
+
+                    <div className="space-y-1">
+                      <Link
+                        href="/login?email=teacher@studysaathi.edu.in"
+                        onClick={() => setIsDemoMenuOpen(false)}
+                        className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-white/10 transition-colors group cursor-pointer"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 text-xs font-bold font-mono">
+                          T1
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-white group-hover:text-amber-300">Pooja Sharma</span>
+                            <span className="text-[9px] px-1 py-0.2 rounded-md bg-amber-500/20 text-amber-300 font-mono">Multi-Sub</span>
+                          </div>
+                          <p className="text-[10px] text-slate-400 line-clamp-1">Math (Cl. 1-4) & Guj (Cl. 3-4)</p>
+                        </div>
+                      </Link>
+
+                      <Link
+                        href="/login?email=priya.patel@studysaathi.edu.in"
+                        onClick={() => setIsDemoMenuOpen(false)}
+                        className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-white/10 transition-colors group cursor-pointer"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 text-xs font-bold font-mono">
+                          T2
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-white group-hover:text-emerald-300">Priya Patel</span>
+                            <span className="text-[9px] px-1 py-0.2 rounded-md bg-emerald-500/20 text-emerald-300 font-mono">Single-Sub</span>
+                          </div>
+                          <p className="text-[10px] text-slate-400 line-clamp-1">English (Class 1 Only)</p>
+                        </div>
+                      </Link>
+
+                      <Link
+                        href="/login?email=principal@studysaathi.edu.in"
+                        onClick={() => setIsDemoMenuOpen(false)}
+                        className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-white/10 transition-colors group cursor-pointer"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center shrink-0 text-xs font-bold font-mono">
+                          AD
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-white group-hover:text-sky-300">Principal Trivedi</span>
+                            <span className="text-[9px] px-1 py-0.2 rounded-md bg-sky-500/20 text-sky-300 font-mono">Admin</span>
+                          </div>
+                          <p className="text-[10px] text-slate-400 line-clamp-1">All Classes 1-5 & Assignments</p>
+                        </div>
+                      </Link>
+
+                      <Link
+                        href="/parent/login"
+                        onClick={() => setIsDemoMenuOpen(false)}
+                        className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-white/10 transition-colors group cursor-pointer"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0 text-xs font-bold font-mono">
+                          PA
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-white group-hover:text-rose-300">Dineshbhai Patel</span>
+                            <span className="text-[9px] px-1 py-0.2 rounded-md bg-rose-500/20 text-rose-300 font-mono">Parent</span>
+                          </div>
+                          <p className="text-[10px] text-slate-400 line-clamp-1">Parent Bridge (Aarav Patel)</p>
+                        </div>
+                      </Link>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
             {/* Sign In Button (Teacher) */}
             <Link
               href="/login"
@@ -506,6 +621,50 @@ export function LandingNavbar() {
                   </div>
                   <span>{language === "gu" ? "AI વર્કસ્પેસ" : "AI Suite"}</span>
                 </Link>
+              </div>
+
+              {/* Quick Demo Roles Section (Mobile) */}
+              <div className="p-3 rounded-2xl bg-white/5 border border-white/10 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-amber-400">
+                    {language === "gu" ? "૧-ક્લિક ડેમો પ્રવેશ" : "1-Click Demo Logins"}
+                  </span>
+                  <span className="text-[9px] px-1.5 py-0.2 rounded-md bg-amber-500/20 text-amber-300 font-mono">RBAC</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <Link
+                    href="/login?email=teacher@studysaathi.edu.in"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="p-2 rounded-xl bg-slate-900 border border-white/10 hover:border-amber-400 text-slate-200"
+                  >
+                    <div className="font-bold text-amber-300">Pooja Sharma</div>
+                    <div className="text-[10px] text-slate-400">Teacher (Math & Guj)</div>
+                  </Link>
+                  <Link
+                    href="/login?email=priya.patel@studysaathi.edu.in"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="p-2 rounded-xl bg-slate-900 border border-white/10 hover:border-emerald-400 text-slate-200"
+                  >
+                    <div className="font-bold text-emerald-300">Priya Patel</div>
+                    <div className="text-[10px] text-slate-400">Teacher (Eng Cl.1)</div>
+                  </Link>
+                  <Link
+                    href="/login?email=principal@studysaathi.edu.in"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="p-2 rounded-xl bg-slate-900 border border-white/10 hover:border-sky-400 text-slate-200"
+                  >
+                    <div className="font-bold text-sky-300">Principal Trivedi</div>
+                    <div className="text-[10px] text-slate-400">Admin (Cl. 1-5)</div>
+                  </Link>
+                  <Link
+                    href="/parent/login"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="p-2 rounded-xl bg-slate-900 border border-white/10 hover:border-rose-400 text-slate-200"
+                  >
+                    <div className="font-bold text-rose-300">Dineshbhai</div>
+                    <div className="text-[10px] text-slate-400">Parent (Aarav)</div>
+                  </Link>
+                </div>
               </div>
 
               {/* Preferences: Theme Toggle */}

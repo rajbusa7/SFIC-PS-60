@@ -6,6 +6,7 @@ import {
   signSession,
   getSessionCookieOptions,
 } from "@/lib/auth/session";
+import { db } from "@/lib/db/database";
 
 export async function POST(request: Request) {
   try {
@@ -44,7 +45,17 @@ export async function POST(request: Request) {
       updatedAt: user.updatedAt,
     };
 
-    const response = NextResponse.json({ success: true, user: sanitizedUser });
+    const assignments = user.role === "teacher"
+      ? db.getTeacherAssignments(user.id)
+      : user.role === "admin"
+      ? db.getTeacherAssignments()
+      : [];
+
+    const response = NextResponse.json({
+      success: true,
+      user: sanitizedUser,
+      assignments,
+    });
     response.cookies.set(SESSION_COOKIE_NAME, token, getSessionCookieOptions());
 
     return response;

@@ -1,19 +1,22 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import type { User, UserRole } from "@/lib/types";
+import type { User, UserRole, TeacherAssignment, SubjectCode } from "@/lib/types";
 
 interface AuthContextType {
   user: User | null;
   role: UserRole;
+  assignments: TeacherAssignment[];
+  selectedSubject: SubjectCode | null;
+  setSelectedSubject: (subject: SubjectCode | null) => void;
   isDemoMode: boolean;
   isLoading: boolean;
-  login: (email: string, password?: string, role?: UserRole) => Promise<boolean>;
+  login: (email: string, password?: string, role?: UserRole) => Promise<{ success: boolean; user: User; assignments: TeacherAssignment[] }>;
   registerTeacher: (name: string, email: string, password?: string, schoolId?: string) => Promise<{ success: boolean; error?: string }>;
   loginAsDemoTeacher: () => Promise<void>;
   loginAsDemoAdmin: () => Promise<void>;
   loginAsDemoParent: () => Promise<void>;
-  loginWithSessionUser: (user: User) => void;
+  loginWithSessionUser: (user: User, assignments?: TeacherAssignment[]) => void;
   refreshSession: () => Promise<User | null>;
   logout: () => Promise<void>;
   switchRole: (role: UserRole) => void;
@@ -53,9 +56,12 @@ const DEMO_PARENT: User = {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   role: "teacher",
+  assignments: [],
+  selectedSubject: null,
+  setSelectedSubject: () => {},
   isDemoMode: false,
   isLoading: true,
-  login: async () => true,
+  login: async () => ({ success: true, user: DEMO_TEACHER, assignments: [] }),
   registerTeacher: async () => ({ success: true }),
   loginAsDemoTeacher: async () => {},
   loginAsDemoAdmin: async () => {},
@@ -69,8 +75,21 @@ const AuthContext = createContext<AuthContextType>({
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [assignments, setAssignments] = useState<TeacherAssignment[]>([]);
+  const [selectedSubject, setSelectedSubjectState] = useState<SubjectCode | null>(null);
   const [isDemoMode, setIsDemoMode] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  const setSelectedSubject = useCallback((sub: SubjectCode | null) => {
+    setSelectedSubjectState(sub);
+    if (typeof window !== "undefined") {
+      if (sub) {
+        localStorage.setItem("shikshasetu_selected_subject", sub);
+      } else {
+        localStorage.removeItem("shikshasetu_selected_subject");
+      }
+    }
+  }, []);
 
   const saveUserStorage = useCallback((u: User | null) => {
     if (typeof window === "undefined") return;
@@ -81,6 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } else {
       localStorage.removeItem("studysaathi_user");
       localStorage.removeItem("shikshasetu_user");
+      localStorage.removeItem("shikshasetu_selected_subject");
     }
   }, []);
 
@@ -105,6 +125,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(resolvedUser);
             setIsDemoMode(false);
             saveUserStorage(resolvedUser);
+
+            if (data.assignments && Array.isArray(data.assignments)) {
+              setAssignments(data.assignments);
+              const storedSub = typeof window !== "undefined" ? (localStorage.getItem("shikshasetu_selected_subject") as SubjectCode) : null;
+              if (storedSub && data.assignments.some((a: TeacherAssignment) => a.subjectCode === storedSub)) {
+                setSelectedSubjectState(storedSub);
+              } else if (data.assignments.length === 1) {
+                setSelectedSubjectState(data.assignments[0].subjectCode);
+              }
+            }
+
             setIsLoading(false);
             return;
           }
@@ -148,8 +179,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     email: string,
     password?: string,
     role: UserRole = "teacher"
-  ): Promise<boolean> => {
-    const res = await fetch("/api/v1/auth/login", {
+  ): Promise<{ success: boolean; user: User; assignments: TeacherAssignment[] }> => {
+    const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password, role }),
@@ -161,13 +192,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     const realUser: User = data.user;
+    const realAssignments: TeacherAssignment[] = data.assignments || [];
+    setAssignments(realAssignments);
+
     const cleanEmail = realUser.email ? realUser.email.toLowerCase().trim() : realUser.id;
     const stored = typeof window !== "undefined" ? localStorage.getItem(`shikshasetu_seen_tutorial_${cleanEmail}`) : null;
     const resolvedUser = { ...realUser, has_seen_tutorial: stored !== null ? stored === "true" : (realUser.has_seen_tutorial ?? false) };
     setUser(resolvedUser);
     setIsDemoMode(false);
     saveUserStorage(resolvedUser);
-    return true;
+
+    if (realAssignments.length === 1) {
+      setSelectedSubject(realAssignments[0].subjectCode);
+    } else {
+      const storedSub = typeof window !== "undefined" ? (localStorage.getItem("shikshasetu_selected_subject") as SubjectCode) : null;
+      if (storedSub && realAssignments.some((a) => a.subjectCode === storedSub)) {
+        setSelectedSubjectState(storedSub);
+      }
+    }
+
+    return { success: true, user: resolvedUser, assignments: realAssignments };
   };
 
   const registerTeacher = async (
@@ -224,12 +268,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const loginWithSessionUser = useCallback(
-    (sessionUser: User) => {
+    (sessionUser: User, newAssignments?: TeacherAssignment[]) => {
       setUser(sessionUser);
       setIsDemoMode(false);
       saveUserStorage(sessionUser);
+      if (newAssignments) {
+        setAssignments(newAssignments);
+        if (newAssignments.length === 1) {
+          setSelectedSubject(newAssignments[0].subjectCode);
+        }
+      }
     },
-    [saveUserStorage]
+    [saveUserStorage, setSelectedSubject]
   );
 
   const refreshSession = useCallback(async (): Promise<User | null> => {
@@ -244,6 +294,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(data.user);
           setIsDemoMode(false);
           saveUserStorage(data.user);
+          if (data.assignments) {
+            setAssignments(data.assignments);
+          }
           return data.user;
         }
       }
@@ -263,6 +316,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.warn("[AuthContext] Logout request failed:", e);
     }
     setUser(null);
+    setAssignments([]);
+    setSelectedSubjectState(null);
     setIsDemoMode(false);
     saveUserStorage(null);
   };
@@ -292,6 +347,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       value={{
         user,
         role: user?.role || "teacher",
+        assignments,
+        selectedSubject,
+        setSelectedSubject,
         isDemoMode,
         isLoading,
         login,

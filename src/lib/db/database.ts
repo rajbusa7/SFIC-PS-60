@@ -19,6 +19,7 @@ import {
   SEED_NOTICE_DELIVERIES,
   SEED_AI_CONFIGS,
   SEED_USERS,
+  SEED_TEACHER_ASSIGNMENTS,
 } from "./seedData";
 import { detectLearningGap } from "../engine/gapDetection";
 import { generateRemedialPlan } from "../engine/remedialEngine";
@@ -57,6 +58,9 @@ import type {
   AiUsageMetric,
   User,
   GmailConnection,
+  TeacherAssignment,
+  AuditLogEntry,
+  SubjectCode,
 } from "../types";
 
 interface DataStore {
@@ -86,6 +90,8 @@ interface DataStore {
   gmailConnection?: GmailConnection;
   worksheets?: any[];
   worksheetSubmissions?: any[];
+  teacherAssignments?: TeacherAssignment[];
+  auditLogs?: AuditLogEntry[];
 }
 
 const DEFAULT_DATA_DIR = path.join(process.cwd(), "data");
@@ -134,6 +140,8 @@ function getInitialStore(): DataStore {
     aiConfigs: JSON.parse(JSON.stringify(SEED_AI_CONFIGS)),
     users: JSON.parse(JSON.stringify(SEED_USERS)),
     feedback: [],
+    teacherAssignments: JSON.parse(JSON.stringify(SEED_TEACHER_ASSIGNMENTS)),
+    auditLogs: [],
   };
 }
 
@@ -182,15 +190,33 @@ function loadStore(): DataStore {
           }
           const content = fs.readFileSync(/*turbopackIgnore: true*/ candidate, "utf-8");
           memoryStore = JSON.parse(content) as DataStore;
+          let storeNeedsSync = false;
+
+          if (!memoryStore.teacherAssignments) {
+            memoryStore.teacherAssignments = JSON.parse(JSON.stringify(SEED_TEACHER_ASSIGNMENTS));
+            storeNeedsSync = true;
+          }
+          if (!memoryStore.auditLogs) {
+            memoryStore.auditLogs = [];
+            storeNeedsSync = true;
+          }
           if (!memoryStore.users) {
             memoryStore.users = JSON.parse(JSON.stringify(SEED_USERS));
+            storeNeedsSync = true;
+          } else {
+            for (const user of SEED_USERS) {
+              if (!memoryStore.users.some((u) => u.id === user.id)) {
+                memoryStore.users.push(JSON.parse(JSON.stringify(user)));
+                storeNeedsSync = true;
+              }
+            }
           }
           if (!memoryStore.activities || memoryStore.activities.length < SEED_ACTIVITIES.length) {
             memoryStore.activities = JSON.parse(JSON.stringify(SEED_ACTIVITIES));
+            storeNeedsSync = true;
           }
 
           // Auto-sync seed classrooms if missing (e.g. cls-1a, cls-2a)
-          let storeNeedsSync = false;
           if (!memoryStore.classrooms) memoryStore.classrooms = [];
           for (const cls of SEED_CLASSROOMS) {
             if (!memoryStore.classrooms.some((c) => c.id === cls.id)) {
@@ -2117,6 +2143,106 @@ export const db = {
     if (worksheetId) subs = subs.filter((s: any) => s.worksheetId === worksheetId);
     if (studentId) subs = subs.filter((s: any) => s.studentId === studentId);
     return subs;
+  },
+
+
+  getTeacherAssignments(teacherId?: string): TeacherAssignment[] {
+    const store = loadStore();
+    const assignments = store.teacherAssignments || [];
+    if (!teacherId) return assignments;
+    return assignments.filter((a) => a.teacherId === teacherId);
+  },
+
+  getTeacherAssignmentById(id: string): TeacherAssignment | null {
+    const store = loadStore();
+    return (store.teacherAssignments || []).find((a) => a.id === id) || null;
+  },
+
+  setTeacherAssignment(assignment: Omit<TeacherAssignment, "id" | "assignedAt"> & { id?: string }): TeacherAssignment {
+    const store = loadStore();
+    if (!store.teacherAssignments) store.teacherAssignments = [];
+    
+    const existingIndex = assignment.id ? store.teacherAssignments.findIndex((a) => a.id === assignment.id) : -1;
+    if (existingIndex >= 0) {
+      const updated: TeacherAssignment = {
+        ...store.teacherAssignments[existingIndex],
+        ...assignment,
+        updatedAt: new Date().toISOString(),
+      };
+      store.teacherAssignments[existingIndex] = updated;
+      saveStore(store);
+      return updated;
+    } else {
+      const newAssignment: TeacherAssignment = {
+        id: assignment.id || `asg-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
+        teacherId: assignment.teacherId,
+        subjectCode: assignment.subjectCode,
+        classroomIds: assignment.classroomIds || [],
+        grades: assignment.grades || [],
+        assignedAt: new Date().toISOString(),
+      };
+      store.teacherAssignments.push(newAssignment);
+      saveStore(store);
+      return newAssignment;
+    }
+  },
+
+  deleteTeacherAssignment(id: string): boolean {
+    const store = loadStore();
+    if (!store.teacherAssignments) return false;
+    const initialLen = store.teacherAssignments.length;
+    store.teacherAssignments = store.teacherAssignments.filter((a) => a.id !== id);
+    if (store.teacherAssignments.length !== initialLen) {
+      saveStore(store);
+      return true;
+    }
+    return false;
+  },
+
+  recordAuditLog(entry: Omit<AuditLogEntry, "id" | "timestamp">): AuditLogEntry {
+    const store = loadStore();
+    if (!store.auditLogs) store.auditLogs = [];
+    const log: AuditLogEntry = {
+      ...entry,
+      id: `audit-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
+      timestamp: new Date().toISOString(),
+    };
+    store.auditLogs.unshift(log);
+    saveStore(store);
+    return log;
+  },
+
+  getAuditLogs(filter?: { teacherId?: string; studentId?: string; subjectCode?: SubjectCode }): AuditLogEntry[] {
+    const store = loadStore();
+    let logs = store.auditLogs || [];
+    if (filter?.teacherId) logs = logs.filter((l) => l.teacherId === filter.teacherId);
+    if (filter?.studentId) logs = logs.filter((l) => l.studentId === filter.studentId);
+    if (filter?.subjectCode) logs = logs.filter((l) => l.subjectCode === filter.subjectCode);
+    return logs;
+  },
+
+  async getTeacherAssignmentsAsync(teacherId?: string): Promise<TeacherAssignment[]> {
+    return this.getTeacherAssignments(teacherId);
+  },
+
+  async getTeacherAssignmentByIdAsync(id: string): Promise<TeacherAssignment | null> {
+    return this.getTeacherAssignmentById(id);
+  },
+
+  async setTeacherAssignmentAsync(assignment: Omit<TeacherAssignment, "id" | "assignedAt"> & { id?: string }): Promise<TeacherAssignment> {
+    return this.setTeacherAssignment(assignment);
+  },
+
+  async deleteTeacherAssignmentAsync(id: string): Promise<boolean> {
+    return this.deleteTeacherAssignment(id);
+  },
+
+  async recordAuditLogAsync(entry: Omit<AuditLogEntry, "id" | "timestamp">): Promise<AuditLogEntry> {
+    return this.recordAuditLog(entry);
+  },
+
+  async getAuditLogsAsync(filter?: { teacherId?: string; studentId?: string; subjectCode?: SubjectCode }): Promise<AuditLogEntry[]> {
+    return this.getAuditLogs(filter);
   },
 
   resetToDemoData(): void {

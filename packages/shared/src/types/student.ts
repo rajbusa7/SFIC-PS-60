@@ -1,3 +1,5 @@
+import type { SubjectCode } from "./assessment";
+
 export type UserRole = "teacher" | "admin" | "parent";
 export type UserStatus = "active" | "pending" | "disabled";
 
@@ -53,4 +55,34 @@ export interface SchoolSettings {
   developingThreshold: number; // default: 60%
   preferredLanguage: "en" | "gu";
   enableAiAssist: boolean;
+}
+
+export interface TeacherAssignment {
+  id: string;
+  teacherId: string;
+  teacherName?: string;
+  teacherEmail?: string;
+  schoolId?: string;
+  subjectCode: SubjectCode;
+  subjectName?: string;
+  classes?: string[];
+  isClassTeacher?: boolean;
+  classroomIds: string[];
+  grades: number[];
+  assignedAt: string;
+  updatedAt?: string;
+}
+
+export interface AuditLogEntry {
+  id: string;
+  teacherId: string;
+  teacherName: string;
+  studentId: string;
+  studentName: string;
+  subjectCode: SubjectCode;
+  assessmentId: string;
+  previousMarks: number;
+  updatedMarks: number;
+  action: string;
+  timestamp: string;
 }

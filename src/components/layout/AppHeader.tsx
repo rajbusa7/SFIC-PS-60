@@ -24,6 +24,7 @@ import {
   HelpCircle,
   X,
   Users,
+  Settings,
 } from "lucide-react";
 
 interface AppHeaderProps {
@@ -39,7 +40,7 @@ export function AppHeader({
 }: AppHeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, role, switchRole, logout } = useAuth();
+  const { user, role, assignments, selectedSubject, setSelectedSubject, logout } = useAuth();
   const { t, language } = useLanguage();
   const { openTutorial } = useTutorial();
 
@@ -51,6 +52,32 @@ export function AppHeader({
   const [showRoleMenu, setShowRoleMenu] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [urgentGaps, setUrgentGaps] = useState<any[]>([]);
+
+  const userInitials = React.useMemo(() => {
+    if (user?.name && user.name.trim()) {
+      const parts = user.name.trim().split(/\s+/);
+      if (parts.length === 1) {
+        return parts[0].slice(0, 2).toUpperCase();
+      }
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    if (role === "admin") return "A";
+    if (role === "parent") return "P";
+    return "T";
+  }, [user?.name, role]);
+
+  const roleBadgeText = React.useMemo(() => {
+    if (role === "admin") return t.app?.adminRole || "School Administrator";
+    if (role === "parent") return t.app?.parentRole || "Parent / Guardian";
+    if (role === "teacher") {
+      if (assignments && assignments.length > 0) {
+        const isClassTeacher = assignments.some((a) => a.isClassTeacher);
+        if (isClassTeacher) return "Class Teacher";
+      }
+      return t.app?.teacherRole || "Subject Teacher";
+    }
+    return "Staff Member";
+  }, [role, assignments, t.app]);
 
   // Viewport-safe coordinates for floating menus
   const [roleMenuCoords, setRoleMenuCoords] = useState<{
@@ -442,14 +469,14 @@ export function AppHeader({
         {/* Visual Divider Separating Controls from Account Center */}
         <div className="h-5 w-px bg-[#49352F]/15 dark:bg-[#F2CAB3]/20 mx-0.5 sm:mx-1 shrink-0" aria-hidden="true" />
 
-        {/* User Profile & Role Switcher (Account Center) */}
+        {/* User Profile (Account Center) */}
         <div ref={roleMenuRef} className="relative shrink-0">
           <button
             type="button"
             onClick={() => setShowRoleMenu(!showRoleMenu)}
             aria-expanded={showRoleMenu}
             aria-haspopup="true"
-            aria-label={t.header?.switchRole || "Account Center and Role Switcher"}
+            aria-label="User Profile and Account Menu"
             className="flex h-9 items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/20 bg-white dark:bg-[#26201C] hover:bg-[#FAF6E9] dark:hover:bg-[#1E1916] transition-colors cursor-pointer shadow-xs whitespace-nowrap shrink-0"
           >
             {user?.avatarUrl ? (
@@ -461,19 +488,15 @@ export function AppHeader({
               />
             ) : (
               <div className="w-6 h-6 rounded-full bg-[#F2CAB3] dark:bg-[#F2CAB3]/30 border border-[#49352F]/15 dark:border-[#F2CAB3]/30 text-[#49352F] dark:text-[#F4F1E1] flex items-center justify-center text-xs font-bold shrink-0">
-                {role === "admin" ? "A" : role === "parent" ? "P" : user?.name ? user.name.charAt(0).toUpperCase() : "T"}
+                {userInitials}
               </div>
             )}
             <div className="text-left hidden md:block shrink-0">
-              <div className="text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] leading-tight truncate max-w-[80px] xl:max-w-[110px] 2xl:max-w-none">
-                {user?.name || (role === "admin"
-                  ? (t.header?.principalName || "Principal R.K. Trivedi")
-                  : role === "parent"
-                  ? (t.header?.parentName || "Dineshbhai Patel")
-                  : (t.header?.teacherName || "Pooja Sharma"))}
+              <div className="text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] leading-tight truncate max-w-[90px] xl:max-w-[130px] 2xl:max-w-none">
+                {user?.name || "Authenticated User"}
               </div>
-              <div className="text-[10px] text-[#B26A1B] dark:text-[#F2CAB3] font-medium capitalize truncate max-w-[80px] xl:max-w-[110px] 2xl:max-w-none">
-                {role === "admin" ? t.app.adminRole : role === "parent" ? (t.app?.parentRole || "Guardian / Parent") : t.app.teacherRole}
+              <div className="text-[10px] text-[#B26A1B] dark:text-[#F2CAB3] font-medium capitalize truncate max-w-[90px] xl:max-w-[130px] 2xl:max-w-none">
+                {roleBadgeText}
               </div>
             </div>
             <ChevronDown className="w-3.5 h-3.5 text-[#7A6862] dark:text-[#FAF6E9]/70 shrink-0" />
@@ -491,97 +514,182 @@ export function AppHeader({
                 boxSizing: "border-box",
                 zIndex: 9999,
               }}
-              className="rounded-2xl bg-white dark:bg-[#26201C] p-2 shadow-2xl border border-[#49352F]/15 dark:border-[#F2CAB3]/20 animate-in fade-in-50 zoom-in-95 duration-100"
+              className="rounded-2xl bg-white dark:bg-[#26201C] p-2.5 shadow-2xl border border-[#49352F]/15 dark:border-[#F2CAB3]/20 animate-in fade-in-50 zoom-in-95 duration-100"
             >
-              {/* Profile summary header inside dropdown */}
-              <div className="px-3 py-2.5 border-b border-[#49352F]/10 dark:border-[#F2CAB3]/15 mb-1.5 flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-[#F2CAB3] dark:bg-[#F2CAB3]/30 border border-[#49352F]/15 dark:border-[#F2CAB3]/30 text-[#49352F] dark:text-[#F4F1E1] flex items-center justify-center text-xs font-bold shrink-0">
-                  {role === "admin" ? "A" : role === "parent" ? "P" : user?.name ? user.name.charAt(0).toUpperCase() : "T"}
-                </div>
+              {/* Authenticated user profile summary */}
+              <div className="px-3 py-2.5 border-b border-[#49352F]/10 dark:border-[#F2CAB3]/15 mb-2 flex items-center gap-3">
+                {user?.avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={user.avatarUrl}
+                    alt={user.name || "User Avatar"}
+                    className="w-10 h-10 rounded-full object-cover border border-[#49352F]/15 dark:border-[#F2CAB3]/30 shrink-0"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-[#F2CAB3] dark:bg-[#F2CAB3]/30 border border-[#49352F]/15 dark:border-[#F2CAB3]/30 text-[#49352F] dark:text-[#F4F1E1] flex items-center justify-center text-sm font-bold shrink-0">
+                    {userInitials}
+                  </div>
+                )}
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-bold text-[#49352F] dark:text-[#F4F1E1] truncate">
-                    {user?.name || (role === "admin"
-                      ? (t.header?.principalName || "Principal R.K. Trivedi")
-                      : role === "parent"
-                      ? (t.header?.parentName || "Dineshbhai Patel")
-                      : (t.header?.teacherName || "Pooja Sharma"))}
+                    {user?.name || "Authenticated User"}
                   </p>
-                  <p className="text-[11px] text-[#B26A1B] dark:text-[#F2CAB3] font-medium capitalize truncate">
-                    {role === "admin" ? t.app.adminRole : role === "parent" ? (t.app?.parentRole || "Guardian / Parent") : t.app.teacherRole}
+                  <p className="text-[11px] text-[#B26A1B] dark:text-[#F2CAB3] font-semibold truncate">
+                    {roleBadgeText}
                   </p>
+                  {user?.email && (
+                    <p className="text-[10px] text-[#7A6862] dark:text-[#FAF6E9]/70 truncate mt-0.5">
+                      {user.email}
+                    </p>
+                  )}
                 </div>
               </div>
 
-              <div className="px-3 py-1 mb-1">
-                <p className="text-[10px] font-bold text-[#7A6862] dark:text-[#FAF6E9]/60 uppercase tracking-wider">
-                  {t.header?.switchRole || "Switch Active Role"}
-                </p>
-                <p className="text-[11px] text-[#7A6862] dark:text-[#FAF6E9]/70 mt-0.5 leading-snug">
-                  {t.header?.explorePermissions || "Explore with different permissions"}
-                </p>
+              {/* Role-specific account information */}
+              {role === "teacher" && (
+                <div className="px-1 py-1 mb-1.5">
+                  <div className="flex items-center justify-between mb-1.5 px-2">
+                    <p className="text-[10px] font-bold text-[#7A6862] dark:text-[#FAF6E9]/60 uppercase tracking-wider">
+                      Assigned Subjects & Classes
+                    </p>
+                    <span className="text-[10px] font-semibold text-[#2E7D5E] bg-[#2E7D5E]/10 px-1.5 py-0.5 rounded-full">
+                      {assignments.length} {assignments.length === 1 ? "Subject" : "Subjects"}
+                    </span>
+                  </div>
+
+                  {assignments && assignments.length > 0 ? (
+                    <div className="space-y-1.5 max-h-40 overflow-y-auto pr-0.5">
+                      {assignments.map((assignment) => {
+                        const isSelected = selectedSubject === assignment.subjectCode;
+                        return (
+                          <button
+                            key={assignment.id || assignment.subjectCode}
+                            type="button"
+                            onClick={() => {
+                              setSelectedSubject(assignment.subjectCode);
+                            }}
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-colors cursor-pointer text-xs ${
+                              isSelected
+                                ? "bg-[#F2CAB3]/40 dark:bg-[#F2CAB3]/25 border border-[#B26A1B]/40 text-[#49352F] dark:text-[#F4F1E1]"
+                                : "bg-[#FAF6E9]/50 dark:bg-[#1E1916]/50 hover:bg-[#FAF6E9] dark:hover:bg-[#1E1916] text-[#49352F] dark:text-[#F4F1E1] border border-[#49352F]/10 dark:border-[#F2CAB3]/15"
+                            }`}
+                            title={isSelected ? "Currently active subject" : `Switch active subject to ${assignment.subjectName}`}
+                          >
+                            <div className="min-w-0 flex-1">
+                              <div className="font-semibold text-xs flex items-center gap-1.5">
+                                <span className="truncate">{assignment.subjectName}</span>
+                                {assignment.isClassTeacher && (
+                                  <span className="text-[9px] font-medium bg-[#B26A1B]/15 text-[#B26A1B] dark:text-[#F2CAB3] px-1 rounded shrink-0">
+                                    Class Teacher
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-[10px] text-[#7A6862] dark:text-[#FAF6E9]/70 mt-0.5 truncate">
+                                Classes: {assignment.classes?.join(", ") || "None"}
+                              </div>
+                            </div>
+                            {isSelected ? (
+                              <span className="shrink-0 text-[10px] font-bold text-[#B26A1B] dark:text-[#F2CAB3] bg-[#B26A1B]/15 dark:bg-[#F2CAB3]/20 px-1.5 py-0.5 rounded-md ml-1.5">
+                                Active
+                              </span>
+                            ) : (
+                              <span className="shrink-0 text-[10px] text-[#7A6862] dark:text-[#FAF6E9]/60 hover:text-[#49352F] dark:hover:text-[#F4F1E1] ml-1.5">
+                                Select
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="p-2.5 rounded-xl bg-[#FAF6E9]/50 dark:bg-[#1E1916]/50 border border-[#49352F]/10 dark:border-[#F2CAB3]/15 text-[11px] text-[#7A6862] dark:text-[#FAF6E9]/70">
+                      No subjects assigned yet. Contact School Administrator to configure your subject access.
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {role === "admin" && (
+                <div className="px-1 py-1 mb-1.5">
+                  <p className="text-[10px] font-bold text-[#7A6862] dark:text-[#FAF6E9]/60 uppercase tracking-wider px-2 mb-1.5">
+                    Administrative Scope
+                  </p>
+                  <div className="p-2.5 rounded-xl bg-[#FAF6E9]/50 dark:bg-[#1E1916]/50 border border-[#49352F]/10 dark:border-[#F2CAB3]/15">
+                    <div className="flex items-center gap-2">
+                      <ShieldAlert className="w-4 h-4 text-[#B26A1B] dark:text-[#F2CAB3] shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1]">
+                          School Administrator
+                        </div>
+                        <div className="text-[10px] text-[#7A6862] dark:text-[#FAF6E9]/70 mt-0.5">
+                          Full teacher assignment & audit log control
+                        </div>
+                      </div>
+                    </div>
+                    <Link
+                      href="/settings"
+                      onClick={() => setShowRoleMenu(false)}
+                      className="mt-2 block w-full text-center text-[11px] font-semibold text-[#B26A1B] dark:text-[#F2CAB3] bg-[#B26A1B]/10 hover:bg-[#B26A1B]/20 py-1.5 rounded-lg transition-colors"
+                    >
+                      Manage Teacher Assignments
+                    </Link>
+                  </div>
+                </div>
+              )}
+
+              {role === "parent" && (
+                <div className="px-1 py-1 mb-1.5">
+                  <p className="text-[10px] font-bold text-[#7A6862] dark:text-[#FAF6E9]/60 uppercase tracking-wider px-2 mb-1.5">
+                    Family Portal Scope
+                  </p>
+                  <div className="p-2.5 rounded-xl bg-[#FAF6E9]/50 dark:bg-[#1E1916]/50 border border-[#49352F]/10 dark:border-[#F2CAB3]/15">
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4 text-[#2E7D5E] shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1]">
+                          Parent / Guardian Access
+                        </div>
+                        <div className="text-[10px] text-[#7A6862] dark:text-[#FAF6E9]/70 mt-0.5">
+                          Child progress, report cards & notices
+                        </div>
+                      </div>
+                    </div>
+                    <Link
+                      href="/notices"
+                      onClick={() => setShowRoleMenu(false)}
+                      className="mt-2 block w-full text-center text-[11px] font-semibold text-[#2E7D5E] bg-[#2E7D5E]/10 hover:bg-[#2E7D5E]/20 py-1.5 rounded-lg transition-colors"
+                    >
+                      View Parent Bridge & Notices
+                    </Link>
+                  </div>
+                </div>
+              )}
+
+              {/* Navigation & Help Links */}
+              <div className="border-t border-[#49352F]/10 dark:border-[#F2CAB3]/15 pt-1 space-y-0.5">
+                <Link
+                  href="/settings"
+                  onClick={() => setShowRoleMenu(false)}
+                  className="w-full flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-[#49352F] dark:text-[#F4F1E1] hover:bg-[#FAF6E9] dark:hover:bg-[#1E1916] rounded-xl transition-colors"
+                >
+                  <Settings className="w-4 h-4 text-[#7A6862] dark:text-[#FAF6E9]/70 shrink-0" />
+                  <span>Profile & Preferences</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowRoleMenu(false);
+                    openTutorial();
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-[#49352F] dark:text-[#F4F1E1] hover:bg-[#FAF6E9] dark:hover:bg-[#1E1916] rounded-xl transition-colors cursor-pointer"
+                >
+                  <HelpCircle className="w-4 h-4 text-[#7A6862] dark:text-[#FAF6E9]/70 shrink-0" />
+                  <span>Help & Feature Guide</span>
+                </button>
               </div>
 
-              {/* Role: Teacher */}
-              <button
-                type="button"
-                onClick={() => {
-                  switchRole("teacher");
-                  setShowRoleMenu(false);
-                }}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-xl text-left transition-colors cursor-pointer min-w-0 ${
-                  role === "teacher"
-                    ? "bg-[#F2CAB3]/40 dark:bg-[#F2CAB3]/25 text-[#49352F] dark:text-[#F4F1E1] font-semibold ring-1 ring-[#B26A1B]/20"
-                    : "text-[#49352F] dark:text-[#F4F1E1] hover:bg-[#FAF6E9] dark:hover:bg-[#1E1916]"
-                }`}
-              >
-                <UserCheck className="w-4 h-4 text-[#2E7D5E] shrink-0" />
-                <div className="min-w-0 flex-1">
-                  <div className="font-semibold text-[#49352F] dark:text-[#F4F1E1] truncate">{t.header?.teacherName || "Pooja Sharma"}</div>
-                  <div className="text-[10px] text-[#7A6862] dark:text-[#FAF6E9]/70 truncate">{t.header?.teacherTitle || "Class Teacher (Class 4-A)"}</div>
-                </div>
-              </button>
-
-              {/* Role: Admin */}
-              <button
-                type="button"
-                onClick={() => {
-                  switchRole("admin");
-                  setShowRoleMenu(false);
-                }}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-xl text-left transition-colors mt-1 cursor-pointer min-w-0 ${
-                  role === "admin"
-                    ? "bg-[#F2CAB3]/40 dark:bg-[#F2CAB3]/25 text-[#49352F] dark:text-[#F4F1E1] font-semibold ring-1 ring-[#B26A1B]/20"
-                    : "text-[#49352F] dark:text-[#F4F1E1] hover:bg-[#FAF6E9] dark:hover:bg-[#1E1916]"
-                }`}
-              >
-                <ShieldAlert className="w-4 h-4 text-[#B26A1B] dark:text-[#F2CAB3] shrink-0" />
-                <div className="min-w-0 flex-1">
-                  <div className="font-semibold text-[#49352F] dark:text-[#F4F1E1] truncate">{t.header?.principalName || "Principal R.K. Trivedi"}</div>
-                  <div className="text-[10px] text-[#7A6862] dark:text-[#FAF6E9]/70 truncate">{t.header?.principalTitle || "School Administrator"}</div>
-                </div>
-              </button>
-
-              {/* Role: Parent */}
-              <button
-                type="button"
-                onClick={() => {
-                  switchRole("parent");
-                  setShowRoleMenu(false);
-                }}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-xl text-left transition-colors mt-1 cursor-pointer min-w-0 ${
-                  role === "parent"
-                    ? "bg-[#F2CAB3]/40 dark:bg-[#F2CAB3]/25 text-[#49352F] dark:text-[#F4F1E1] font-semibold ring-1 ring-[#B26A1B]/20"
-                    : "text-[#49352F] dark:text-[#F4F1E1] hover:bg-[#FAF6E9] dark:hover:bg-[#1E1916]"
-                }`}
-              >
-                <Users className="w-4 h-4 text-[#49352F] dark:text-[#F4F1E1] shrink-0" />
-                <div className="min-w-0 flex-1">
-                  <div className="font-semibold text-[#49352F] dark:text-[#F4F1E1] truncate">{t.header?.parentName || "Dineshbhai Patel"}</div>
-                  <div className="text-[10px] text-[#7A6862] dark:text-[#FAF6E9]/70 truncate">{t.header?.parentTitle || "Parent (Aarav Patel, Class 4-A)"}</div>
-                </div>
-              </button>
-
-              <div className="border-t border-[#49352F]/10 dark:border-[#F2CAB3]/15 my-1.5 pt-1">
+              {/* Sign Out */}
+              <div className="border-t border-[#49352F]/10 dark:border-[#F2CAB3]/15 mt-1 pt-1">
                 <button
                   type="button"
                   onClick={async () => {

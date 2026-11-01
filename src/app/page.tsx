@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import { LandingNavbar } from "@/components/landing/LandingNavbar";
 import { BridgeCanvas3D } from "@/components/3d/BridgeCanvas3D";
 import { Tilt3DCard } from "@/components/3d/Tilt3DCard";
@@ -885,29 +887,68 @@ export default function HomePage() {
               : "Empower primary school teachers with instant gap detection, actionable 5-step remedial pathways, and verifiable student progress today."}
           </p>
 
-          {/* Action Buttons */}
-          <div className="pt-4 flex flex-wrap items-center justify-center gap-4">
-            <Link href="/dashboard">
-              <Button
-                variant="saffron"
-                size="lg"
-                className="rounded-full shadow-[0_0_35px_rgba(255,138,61,0.5)] font-black text-base px-8 py-6 active:scale-95 transition-all"
-              >
-                <span>{language === "gu" ? "શરૂ કરો (ડેશબોર્ડ ખોલો)" : "Get Started (Dashboard)"}</span>
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-            </Link>
+          {/* Action Buttons & 1-Click Role Launchers */}
+          <div className="pt-4 space-y-4 max-w-4xl mx-auto">
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              <Link href="/dashboard">
+                <Button
+                  variant="saffron"
+                  size="lg"
+                  className="rounded-full shadow-[0_0_35px_rgba(255,138,61,0.5)] font-black text-base px-8 py-6 active:scale-95 transition-all cursor-pointer"
+                >
+                  <span>{language === "gu" ? "શરૂ કરો (ડેશબોર્ડ ખોલો)" : "Get Started (Dashboard)"}</span>
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
+              </Link>
 
-            <Link href="/login">
-              <Button
-                variant="outline"
-                size="lg"
-                className="rounded-full border-slate-700 bg-slate-900/80 text-white hover:border-amber-500/50 font-bold px-7 py-6 active:scale-95 transition-all"
-              >
-                <LogIn className="w-4 h-4 text-amber-400 mr-2" />
-                <span>{language === "gu" ? "૧-ક્લિક ડેમો સાઇન ઇન" : "Sign In (1-Click Demo)"}</span>
-              </Button>
-            </Link>
+              <Link href="/login">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="rounded-full border-slate-700 bg-slate-900/80 text-white hover:border-amber-500/50 font-bold px-7 py-6 active:scale-95 transition-all cursor-pointer"
+                >
+                  <LogIn className="w-4 h-4 text-amber-400 mr-2" />
+                  <span>{language === "gu" ? "સાઇન ઇન પોર્ટલ ખોલો" : "Open Sign In Portal"}</span>
+                </Button>
+              </Link>
+            </div>
+
+            {/* 1-Click Role Direct Launches */}
+            <div className="p-4 rounded-3xl bg-slate-900/70 border border-slate-800 backdrop-blur-md space-y-2.5">
+              <div className="text-xs uppercase font-bold tracking-wider text-amber-400">
+                {language === "gu" ? "૧-ક્લિક સીધો પ્રવેશ (ડેમો ભૂમિકાઓ):" : "Direct 1-Click Role Launchers:"}
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                <Link
+                  href="/login?demo=teacher"
+                  className="p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-amber-500/30 text-amber-300 font-bold text-left transition-colors block"
+                >
+                  <div>Pooja Sharma</div>
+                  <div className="text-[10px] text-slate-400 font-normal">Teacher (Math & Guj)</div>
+                </Link>
+                <Link
+                  href="/login?demo=priya"
+                  className="p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-emerald-500/30 text-emerald-300 font-bold text-left transition-colors block"
+                >
+                  <div>Priya Patel</div>
+                  <div className="text-[10px] text-slate-400 font-normal">Teacher (English Cl.1)</div>
+                </Link>
+                <Link
+                  href="/login?demo=admin"
+                  className="p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-sky-500/30 text-sky-300 font-bold text-left transition-colors block"
+                >
+                  <div>Principal Trivedi</div>
+                  <div className="text-[10px] text-slate-400 font-normal">Admin (All Cl. 1-5)</div>
+                </Link>
+                <Link
+                  href="/login?demo=parent"
+                  className="p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-rose-500/30 text-rose-300 font-bold text-left transition-colors block"
+                >
+                  <div>Dineshbhai Patel</div>
+                  <div className="text-[10px] text-slate-400 font-normal">Parent (Aarav Cl.4A)</div>
+                </Link>
+              </div>
+            </div>
           </div>
 
           {/* Quick Module Portal Shortcuts */}

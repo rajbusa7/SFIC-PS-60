@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db/database";
+import { extractSessionToken, verifySession } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -14,8 +15,50 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const classroomId = searchParams.get("classroomId") || undefined;
-    const grade = searchParams.get("grade") ? parseInt(searchParams.get("grade")!) : undefined;
+    const gradeParam = searchParams.get("grade");
+    const grade = gradeParam ? parseInt(gradeParam, 10) : undefined;
     const search = searchParams.get("search") || undefined;
+
+    const token = await extractSessionToken(request);
+    const session = token ? await verifySession(token) : null;
+
+    if (session && session.role === "teacher") {
+      const assignments = db.getTeacherAssignments(session.id);
+      if (!assignments || assignments.length === 0) {
+        return NextResponse.json(
+          { success: false, error: "No subjects have been assigned to your account. Please contact your administrator." },
+          { status: 403, headers: noCacheHeaders }
+        );
+      }
+
+      const assignedClassroomIds = assignments.flatMap((a) => a.classroomIds || []);
+      const assignedGrades = assignments.flatMap((a) => a.grades || []);
+
+      if (classroomId && classroomId !== "all" && !assignedClassroomIds.includes(classroomId)) {
+        return NextResponse.json(
+          { success: false, error: `Forbidden: You are not authorized to view class '${classroomId}'.` },
+          { status: 403, headers: noCacheHeaders }
+        );
+      }
+
+      if (typeof grade === "number" && !assignedGrades.includes(grade)) {
+        return NextResponse.json(
+          { success: false, error: `Forbidden: You are not authorized to view Grade ${grade}.` },
+          { status: 403, headers: noCacheHeaders }
+        );
+      }
+
+      let students = await db.getStudentsAsync({ classroomId, grade, search });
+      // Restrict to authorized classrooms/grades
+      students = students.filter(
+        (s) => assignedClassroomIds.includes(s.classroomId) || assignedGrades.includes(s.grade)
+      );
+
+      return NextResponse.json(
+        { success: true, count: students.length, students },
+        { headers: noCacheHeaders }
+      );
+    }
 
     const students = await db.getStudentsAsync({ classroomId, grade, search });
     return NextResponse.json(
@@ -78,6 +121,28 @@ export async function POST(request: Request) {
 
     const clsId = classroomId || `cls-${parsedGrade}${sec.toLowerCase()}`;
 
+    const token = await extractSessionToken(request);
+    const session = token ? await verifySession(token) : null;
+
+    if (session && session.role === "teacher") {
+      const assignments = db.getTeacherAssignments(session.id);
+      if (!assignments || assignments.length === 0) {
+        return NextResponse.json(
+          { success: false, error: "No subjects have been assigned to your account. Please contact your administrator." },
+          { status: 403, headers: noCacheHeaders }
+        );
+      }
+      const assignedClassroomIds = assignments.flatMap((a) => a.classroomIds || []);
+      const assignedGrades = assignments.flatMap((a) => a.grades || []);
+
+      if (!assignedClassroomIds.includes(clsId) && !assignedGrades.includes(parsedGrade)) {
+        return NextResponse.json(
+          { success: false, error: `Forbidden: You are not authorized to enroll students in Grade ${parsedGrade} (${clsId}).` },
+          { status: 403, headers: noCacheHeaders }
+        );
+      }
+    }
+
     // Duplicate check on roll / student code
     const existingStudents = await db.getStudentsAsync();
     const isDuplicate = existingStudents.some(
@@ -107,7 +172,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("API POST /api/students error:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to add student to database" },
+      { success: false, error: "Failed to add student" },
       { status: 500, headers: noCacheHeaders }
     );
   }

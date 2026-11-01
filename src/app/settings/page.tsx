@@ -3,8 +3,11 @@
 import React, { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { useLanguage } from "@/context/LanguageContext";
+import { useAuth } from "@/context/AuthContext";
+import type { SubjectCode, TeacherAssignment, AuditLogEntry } from "@/lib/types";
 import { useTheme } from "@/context/ThemeContext";
 import { useTutorial } from "@/context/TutorialContext";
 import { broadcastDataUpdate } from "@/lib/events";
@@ -42,6 +45,110 @@ export default function SettingsPage() {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [tutorialResetSuccess, setTutorialResetSuccess] = useState(false);
+
+
+  const { user, role } = useAuth();
+  const isAdmin = user?.role === "admin" || role === "admin";
+
+  const [teachersList, setTeachersList] = useState<any[]>([]);
+  const [adminAssignments, setAdminAssignments] = useState<TeacherAssignment[]>([]);
+  const [auditLogsList, setAuditLogsList] = useState<AuditLogEntry[]>([]);
+  const [assignTeacherId, setAssignTeacherId] = useState("");
+  const [assignSubject, setAssignSubject] = useState<SubjectCode>("MATH");
+  const [assignGrades, setAssignGrades] = useState<number[]>([1, 2, 3]);
+  const [assignSaving, setAssignSaving] = useState(false);
+  const [assignError, setAssignError] = useState<string | null>(null);
+  const [assignSuccess, setAssignSuccess] = useState<string | null>(null);
+
+  const fetchAdminData = async () => {
+    try {
+      const [uRes, aRes, logRes] = await Promise.all([
+        fetch("/api/admin/users", { cache: "no-store" }),
+        fetch("/api/admin/teachers/assignments", { cache: "no-store" }),
+        fetch("/api/admin/audit-logs", { cache: "no-store" }),
+      ]);
+      const [uData, aData, logData] = await Promise.all([uRes.json(), aRes.json(), logRes.json()]);
+      if (uData.success) {
+        const teachers = (uData.users || []).filter((u: any) => u.role === "teacher");
+        setTeachersList(teachers);
+        if (teachers.length > 0 && !assignTeacherId) {
+          setAssignTeacherId(teachers[0].id);
+        }
+      }
+      if (aData.success) {
+        setAdminAssignments(aData.assignments || []);
+      }
+      if (logData.success) {
+        setAuditLogsList(logData.auditLogs || []);
+      }
+    } catch (e) {
+      console.warn("Failed to fetch admin data", e);
+    }
+  };
+
+  useEffect(() => {
+    fetchAdminData();
+  }, []);
+
+  const handleToggleGrade = (gradeNum: number) => {
+    setAssignGrades((prev) =>
+      prev.includes(gradeNum) ? prev.filter((g) => g !== gradeNum) : [...prev, gradeNum].sort((a, b) => a - b)
+    );
+  };
+
+  const handleCreateAssignment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!assignTeacherId) {
+      setAssignError("Please select a teacher.");
+      return;
+    }
+    if (assignGrades.length === 0) {
+      setAssignError("Please select at least one class.");
+      return;
+    }
+    setAssignSaving(true);
+    setAssignError(null);
+    setAssignSuccess(null);
+
+    try {
+      const classroomIds = assignGrades.map((g) => `cls-${g}a`);
+      const res = await fetch("/api/admin/teachers/assignments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          teacherId: assignTeacherId,
+          subjectCode: assignSubject,
+          classroomIds,
+          grades: assignGrades,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to create assignment.");
+      }
+      setAssignSuccess("Teacher assignment saved successfully.");
+      fetchAdminData();
+      setTimeout(() => setAssignSuccess(null), 3500);
+    } catch (err: any) {
+      setAssignError(err.message || "Failed to save assignment.");
+    } finally {
+      setAssignSaving(false);
+    }
+  };
+
+  const handleDeleteAssignment = async (assignmentId: string) => {
+    try {
+      const res = await fetch(`/api/admin/teachers/assignments/${assignmentId}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (data.success) {
+        fetchAdminData();
+      }
+    } catch (e) {
+      console.error("Failed to delete assignment", e);
+    }
+  };
 
   const handleResetTutorial = () => {
     resetTutorial();
@@ -462,6 +569,255 @@ export default function SettingsPage() {
                   ? "શીખવાની ખામીઓ અને ઉપચાર યોજનાઓ સ્થાનિક શાળા સર્વર પર ચાલે છે, ત્રીજા પક્ષને બાળકોના રેકોર્ડ મોકલ્યા વિના."
                   : "All learning gaps and remedial plans run locally on the school server or device without transmitting children's records to third parties."}
               </p>
+            </div>
+          </Card>
+
+
+          {/* Admin Role-Based Access Control Card */}
+          <Card variant="glass" className="p-5 sm:p-6 border-[#49352F]/15 space-y-5 text-[#49352F]">
+            <div className="flex items-center justify-between pb-3 border-b border-[#49352F]/10">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-heading text-base font-bold text-[#49352F]">
+                    {language === "gu"
+                      ? "શિક્ષક વિષય અને વર્ગ સોંપણી સંચાલન (Admin RBAC)"
+                      : "Teacher Subject & Class Assignment Management (Admin RBAC)"}
+                  </h3>
+                  <Badge variant="saffron" size="sm">
+                    {language === "gu" ? "સંચાલક નિયંત્રણ" : "Administrator Control"}
+                  </Badge>
+                </div>
+                <p className="text-xs text-[#7A6862] mt-0.5">
+                  {language === "gu"
+                    ? "શિક્ષકો માટે વિષયો અને વર્ગો સોંપો, સંપાદિત કરો અથવા રદ કરો. તમામ ફેરફારો ડેટાબેઝમાં સાચવવામાં આવે છે."
+                    : "Assign, update, or remove subjects and classes for teachers. All assignments are enforced server-side."}
+                </p>
+              </div>
+            </div>
+
+            {/* Assignment Creation Form */}
+            <div className="p-4 rounded-2xl bg-[#FAF6E9] border border-[#49352F]/12 space-y-4">
+              <h4 className="font-bold text-xs uppercase tracking-wider text-[#B26A1B]">
+                {language === "gu" ? "નવી વિષય-વર્ગ સોંપણી ઉમેરો" : "Assign Subject & Classes to Teacher"}
+              </h4>
+
+              {assignError && (
+                <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 text-xs">
+                  {assignError}
+                </div>
+              )}
+              {assignSuccess && (
+                <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 text-xs font-semibold">
+                  {assignSuccess}
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-[11px] font-semibold text-[#7A6862] mb-1">
+                    {language === "gu" ? "શિક્ષક પસંદ કરો:" : "Select Teacher:"}
+                  </label>
+                  <select
+                    value={assignTeacherId}
+                    onChange={(e) => setAssignTeacherId(e.target.value)}
+                    className="w-full px-3 py-1.5 rounded-xl border border-[#49352F]/20 bg-white text-xs font-semibold text-[#49352F]"
+                  >
+                    {teachersList.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name} ({t.email})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-[#7A6862] mb-1">
+                    {language === "gu" ? "વિષય:" : "Subject:"}
+                  </label>
+                  <select
+                    value={assignSubject}
+                    onChange={(e) => setAssignSubject(e.target.value as SubjectCode)}
+                    className="w-full px-3 py-1.5 rounded-xl border border-[#49352F]/20 bg-white text-xs font-semibold text-[#49352F]"
+                  >
+                    <option value="MATH">Mathematics (ગણિત)</option>
+                    <option value="ENG">English (અંગ્રેજી)</option>
+                    <option value="GUJ">Gujarati (ગુજરાતી)</option>
+                    <option value="EVS">Environmental Studies (પર્યાવરણ)</option>
+                    <option value="SCI">Science (વિજ્ઞાન)</option>
+                    <option value="SST">Social Science (સામાજિક વિજ્ઞાન)</option>
+                    <option value="HIN">Hindi (હિન્દી)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-[#7A6862] mb-1">
+                    {language === "gu" ? "સોંપેલ વર્ગો પસંદ કરો:" : "Assigned Classes (1-5):"}
+                  </label>
+                  <div className="flex items-center gap-1.5 pt-1">
+                    {[1, 2, 3, 4, 5].map((g) => {
+                      const isChecked = assignGrades.includes(g);
+                      return (
+                        <button
+                          key={g}
+                          type="button"
+                          onClick={() => handleToggleGrade(g)}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
+                            isChecked
+                              ? "bg-[#B26A1B] text-white border-[#B26A1B]"
+                              : "bg-white text-[#7A6862] border-[#49352F]/15 hover:border-[#B26A1B]"
+                          }`}
+                        >
+                          C{g}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-1">
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  disabled={assignSaving}
+                  onClick={handleCreateAssignment}
+                  className="rounded-xl text-xs font-bold px-4 py-2 cursor-pointer"
+                >
+                  {assignSaving
+                    ? "Saving..."
+                    : language === "gu"
+                    ? "સોંપણી સાચવો"
+                    : "Save Assignment"}
+                </Button>
+              </div>
+            </div>
+
+            {/* Current Assignments Table */}
+            <div className="space-y-2">
+              <h4 className="font-bold text-xs uppercase tracking-wider text-[#7A6862]">
+                {language === "gu" ? "હાલની સક્રિય સોંપણીઓ" : "Current Teacher Assignments"}
+              </h4>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-[#49352F]/10 text-[#7A6862] font-semibold">
+                      <th className="py-2 px-3">{language === "gu" ? "શિક્ષક" : "Teacher"}</th>
+                      <th className="py-2 px-3">{language === "gu" ? "સોંપેલ વિષય" : "Subject"}</th>
+                      <th className="py-2 px-3">{language === "gu" ? "સોંપેલ વર્ગો" : "Assigned Classes"}</th>
+                      <th className="py-2 px-3 text-right">{language === "gu" ? "ક્રિયા" : "Action"}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#49352F]/8">
+                    {adminAssignments.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="py-4 text-center text-[#7A6862]">
+                          No assignments found.
+                        </td>
+                      </tr>
+                    ) : (
+                      adminAssignments.map((asg) => {
+                        const teacherObj = teachersList.find((t) => t.id === asg.teacherId);
+                        return (
+                          <tr key={asg.id} className="hover:bg-[#FAF6E9]/40">
+                            <td className="py-2.5 px-3">
+                              <span className="font-bold text-[#49352F]">{teacherObj?.name || asg.teacherId}</span>
+                              <span className="block text-[10px] text-[#7A6862] font-mono">{teacherObj?.email}</span>
+                            </td>
+                            <td className="py-2.5 px-3 font-semibold text-[#B26A1B]">
+                              {asg.subjectCode}
+                            </td>
+                            <td className="py-2.5 px-3 text-[#49352F]">
+                              {asg.grades && asg.grades.length > 0
+                                ? asg.grades.slice().sort().map((g) => `Class ${g}`).join(", ")
+                                : "None"}
+                            </td>
+                            <td className="py-2.5 px-3 text-right">
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteAssignment(asg.id)}
+                                className="px-2.5 py-1 text-xs text-rose-700 hover:bg-rose-50 rounded-lg border border-rose-200 font-bold transition-all cursor-pointer"
+                              >
+                                {language === "gu" ? "રદ કરો" : "Delete"}
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </Card>
+
+          {/* Academic Mark Change Audit Log Card */}
+          <Card variant="glass" className="p-5 sm:p-6 border-[#49352F]/15 space-y-4 text-[#49352F]">
+            <div className="flex items-center justify-between pb-2 border-b border-[#49352F]/10">
+              <div>
+                <h3 className="font-heading text-base font-bold text-[#49352F]">
+                  {language === "gu"
+                    ? "શિક્ષણ ગુણ પરિવર્તન ઓડિટ લોગ"
+                    : "Academic Mark Change Audit Log"}
+                </h3>
+                <p className="text-xs text-[#7A6862]">
+                  {language === "gu"
+                    ? "વિદ્યાર્થીઓના ગુણ સુધારણાનો સંપૂર્ણ સુરક્ષિત ઇતિહાસ."
+                    : "Cryptographically verified, immutable record of all student mark adjustments."}
+                </p>
+              </div>
+              <Badge variant="mint" size="sm">
+                {auditLogsList.length} {language === "gu" ? "નોંધો" : "Audit Entries"}
+              </Badge>
+            </div>
+
+            <div className="overflow-x-auto max-h-60 overflow-y-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-[#49352F]/10 text-[#7A6862] font-semibold">
+                    <th className="py-2 px-3">{language === "gu" ? "સમય" : "Timestamp"}</th>
+                    <th className="py-2 px-3">{language === "gu" ? "શિક્ષક" : "Teacher"}</th>
+                    <th className="py-2 px-3">{language === "gu" ? "વિદ્યાર્થી" : "Student"}</th>
+                    <th className="py-2 px-3">{language === "gu" ? "વિષય" : "Subject"}</th>
+                    <th className="py-2 px-3 text-center">{language === "gu" ? "ગુણ ફેરફાર" : "Score Delta"}</th>
+                    <th className="py-2 px-3">{language === "gu" ? "ક્રિયા" : "Action"}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#49352F]/8">
+                  {auditLogsList.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-4 text-center text-[#7A6862]">
+                        No mark adjustments recorded yet.
+                      </td>
+                    </tr>
+                  ) : (
+                    auditLogsList.slice(0, 15).map((log) => (
+                      <tr key={log.id} className="hover:bg-[#FAF6E9]/40">
+                        <td className="py-2 px-3 text-[11px] font-mono text-[#7A6862]">
+                          {new Date(log.timestamp).toLocaleString()}
+                        </td>
+                        <td className="py-2 px-3 font-medium text-[#49352F]">
+                          {log.teacherName}
+                        </td>
+                        <td className="py-2 px-3 font-medium text-[#49352F]">
+                          {log.studentName}
+                        </td>
+                        <td className="py-2 px-3 font-semibold text-[#B26A1B]">
+                          {log.subjectCode}
+                        </td>
+                        <td className="py-2 px-3 text-center font-mono font-bold">
+                          {log.previousMarks} &rarr; {log.updatedMarks}
+                        </td>
+                        <td className="py-2 px-3">
+                          <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#FAF6E9] border border-[#49352F]/10">
+                            {log.action}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
           </Card>
 

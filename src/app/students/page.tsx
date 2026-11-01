@@ -144,15 +144,14 @@ function StudentsPageContent() {
   const activeGrade = gradeNumber ? String(gradeNumber) : "all";
 
   const handleGradeFilterChange = (val: string) => {
-    if (val === "all") {
-      setSelectedClass("all");
-    } else {
-      setSelectedClass(`cls-${val}a`);
-    }
+    setSelectedClass(val);
   };
 
   const filteredStudents = students.filter((s) => {
-    if (activeGrade !== "all" && s.grade !== Number(activeGrade)) return false;
+    if (activeGrade !== "all") {
+      const gNum = Number(activeGrade);
+      if (s.grade !== gNum && s.classroomId !== `cls-${activeGrade}a`) return false;
+    }
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       return (

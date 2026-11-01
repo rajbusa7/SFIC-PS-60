@@ -13,7 +13,7 @@ import { BridgeProgress } from "@/components/ui/BridgeProgress";
 import type { StudentMasteryPoint } from "@/components/3d/ClassMasteryHeatmap3D";
 import { fireCelebrationConfetti } from "@/lib/confetti";
 import { useLanguage } from "@/context/LanguageContext";
-import { useFilter } from "@/context/FilterContext";
+import { useFilter, parseGradeNumber } from "@/context/FilterContext";
 import { useTutorial } from "@/context/TutorialContext";
 import { ChecklistWidget } from "@/components/tutorial/ChecklistWidget";
 import { ContextualHelp } from "@/components/shared/ContextualHelp";
@@ -185,14 +185,43 @@ function DashboardContent() {
     setTimeout(() => setHasCelebrated(false), 5000);
   };
 
-  // Filtered lists
+  // Filtered lists based on unified selectedClass
+  const selectedGrade = parseGradeNumber(selectedClass);
+  const selectValue = selectedGrade !== null ? String(selectedGrade) : "all";
+
   const filteredStudents = students.filter((s) => {
-    if (selectedClass !== "all" && s.classroomId !== selectedClass) return false;
+    if (selectedClass !== "all") {
+      if (selectedGrade !== null) {
+        if (s.grade !== selectedGrade && s.classroomId !== selectedClass) return false;
+      } else if (s.classroomId !== selectedClass) {
+        return false;
+      }
+    }
     return true;
   });
 
+  const studentIdsInClass = new Set(filteredStudents.map((s) => s.id));
+
   const filteredGaps = gaps.filter((g) => {
+    if (selectedClass !== "all") {
+      if (selectedGrade !== null) {
+        if (g.grade !== selectedGrade && !studentIdsInClass.has(g.studentId)) return false;
+      } else if (!studentIdsInClass.has(g.studentId)) {
+        return false;
+      }
+    }
     if (selectedSubject !== "all" && g.subjectCode !== selectedSubject) return false;
+    return true;
+  });
+
+  const filteredPlans = plans.filter((p) => {
+    if (selectedClass !== "all") {
+      if (selectedGrade !== null) {
+        if (p.studentClass !== selectedGrade && !studentIdsInClass.has(p.studentId)) return false;
+      } else if (!studentIdsInClass.has(p.studentId)) {
+        return false;
+      }
+    }
     return true;
   });
 
@@ -202,10 +231,16 @@ function DashboardContent() {
     (g) => g.status === "Active" || g.status === "Under Intervention"
   );
   const studentsWithGaps = Array.from(new Set(activeGaps.map((g) => g.studentId))).length;
-  const activePlansCount = plans.filter(
+  const activePlansCount = filteredPlans.filter(
     (p) => p.status === "In Progress" || p.status === "Active" || p.status === "Approved"
   ).length;
-  const completedPlansCount = plans.filter((p) => p.status === "Completed").length;
+  const completedPlansCount = filteredPlans.filter((p) => p.status === "Completed").length;
+
+  const immediateAttentionGaps = [...activeGaps].sort((a, b) => {
+    if (a.priority === "High" && b.priority !== "High") return -1;
+    if (b.priority === "High" && a.priority !== "High") return 1;
+    return (a.latestPercentage ?? 0) - (b.latestPercentage ?? 0);
+  });
 
   // Real Dynamic 3D Heatmap Dataset calculated from enrolled students and assessment results
   const targetHeatmapStudents = filteredStudents.slice(0, 8);
@@ -295,17 +330,19 @@ function DashboardContent() {
             </div>
 
             <select
-              value={selectedClass}
+              value={selectValue}
               aria-label="Filter dashboard by class"
               onChange={(e) => setSelectedClass(e.target.value)}
               className="rounded-xl border border-[#49352F]/15 bg-white px-3 py-1.5 text-xs font-semibold text-[#49352F] shadow-xs outline-hidden cursor-pointer"
             >
-              <option value="all">{t.dashboard.allClasses}</option>
-              <option value="cls-1a">{formatClass("Class 1-A")}</option>
-              <option value="cls-2a">{formatClass("Class 2-A")}</option>
-              <option value="cls-3a">{formatClass("Class 3-A")}</option>
-              <option value="cls-4a">{formatClass("Class 4-A")}</option>
-              <option value="cls-5a">{formatClass("Class 5-A")}</option>
+              <option value="all">
+                {language === "gu" ? "બધા વર્ગો (૧-૫)" : "All Classes (1-5)"}
+              </option>
+              <option value="1">{language === "gu" ? "ધોરણ ૧" : "Class 1"}</option>
+              <option value="2">{language === "gu" ? "ધોરણ ૨" : "Class 2"}</option>
+              <option value="3">{language === "gu" ? "ધોરણ ૩" : "Class 3"}</option>
+              <option value="4">{language === "gu" ? "ધોરણ ૪" : "Class 4"}</option>
+              <option value="5">{language === "gu" ? "ધોરણ ૫" : "Class 5"}</option>
             </select>
 
             <Button
@@ -408,7 +445,15 @@ function DashboardContent() {
                 value={totalStudents}
                 icon={Users}
                 variant="indigo"
-                description={language === "gu" ? "ધોરણ ૩, ૪ અને ૫" : "Classes 3, 4 & 5"}
+                description={
+                  selectedGrade !== null
+                    ? language === "gu"
+                      ? `ધોરણ ${selectedGrade}`
+                      : `Class ${selectedGrade}`
+                    : language === "gu"
+                    ? "ધોરણ ૧ થી ૫"
+                    : "Classes 1 to 5"
+                }
                 sparklineData={[12, 13, 14, 15, 15]}
               />
 
@@ -631,127 +676,78 @@ function DashboardContent() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 min-w-0">
-                {[
-                  {
-                    id: "std-pooja",
-                    name: "Pooja Sharma",
-                    class: "Class 3-A",
-                    subject: "Gujarati",
-                    concept: "Vowel Blends (જોડાક્ષર)",
-                    score: 42,
-                    priority: "High",
-                    reason:
-                      language === "gu"
-                        ? "શ્રુતલેખન દરમિયાન સતત જોડાક્ષરો ચૂકી જાય છે."
-                        : "Consistently misses consonant-vowel combinations during dictation.",
-                    suggestedAction:
-                      language === "gu"
-                        ? "પગલું ૨: સચિત્ર શબ્દ સાહચર્ય સાથે સ્પર્શક્ષમ ગુજરાતી મૂળાક્ષર કાર્ડ્સ."
-                        : "Step 2: Tactile Gujarati letter cards with pictorial word association.",
-                  },
-                  {
-                    id: "std-karan",
-                    name: "Karan Mehta",
-                    class: "Class 5-A",
-                    subject: "Mathematics",
-                    concept: "Fractions Addition",
-                    score: 48,
-                    priority: "High",
-                    reason:
-                      language === "gu"
-                        ? "સામાન્ય છેદ શોધ્યા વગર સીધા છેદનો સરવાળો (૧/૨ + ૧/૪ = ૨/૬) કરે છે."
-                        : "Directly adds denominators (1/2 + 1/4 = 2/6) without finding common base.",
-                    suggestedAction:
-                      language === "gu"
-                        ? "પગલું ૨: વાસ્તવિક સમાનતા માટે અપૂર્ણાંક પટ્ટીઓ અને વર્તુળ કટઆઉટ્સ."
-                        : "Step 2: Fraction strips and circle cutouts for physical equivalence.",
-                  },
-                  {
-                    id: "std-diya",
-                    name: "Diya Joshi",
-                    class: "Class 4-A",
-                    subject: "Gujarati",
-                    concept: "Reading Comprehension",
-                    score: 52,
-                    priority: "Medium",
-                    reason:
-                      language === "gu"
-                        ? "એકલા શબ્દો ચોકસાઈથી વાંચે છે પરંતુ સંયુક્ત વાક્યોમાં અર્થ ગુમાવે છે."
-                        : "Decodes single words accurately but loses context in compound sentences.",
-                    suggestedAction:
-                      language === "gu"
-                        ? "પગલું ૩: સમજણ પ્રશ્નો સાથે માર્ગદર્શિત જોડી વાંચન."
-                        : "Step 3: Guided paired reading with comprehension question prompts.",
-                  },
-                  {
-                    id: "std-dev",
-                    name: "Dev Solanki",
-                    class: "Class 3-A",
-                    subject: "Mathematics",
-                    concept: "Place Value 100s",
-                    score: 55,
-                    priority: "Medium",
-                    reason:
-                      language === "gu"
-                        ? "બાદબાકીમાં દસકો લેતી વખતે દશક અને એકમનું સ્થાન ઉલટાવે છે."
-                        : "Reverses tens and units column during borrowing in subtraction.",
-                    suggestedAction:
-                      language === "gu"
-                        ? "પગલું ૨: જૂથ પુનઃરચના માટે ડીનેસ બ્લોક્સ (૧૦ અને ૧૦૦ ના બંડલ)."
-                        : "Step 2: Dienes blocks (bundles of 10 and 100s) for regrouping.",
-                  },
-                ].map((item) => (
-                  <Card
-                    key={item.id}
-                    variant="glass"
-                    className="p-4 space-y-3 border-[#49352F]/12 hover:border-[#49352F]/25 transition-all text-[#49352F]"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-2xl bg-[#A93327]/12 border border-[#A93327]/25 text-[#A93327] font-heading font-black text-sm flex items-center justify-center shrink-0">
-                          {item.score}%
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h4 className="font-bold text-[#49352F] text-sm">{item.name}</h4>
-                            <span className="text-[11px] text-[#7A6862] font-medium">
-                              {formatClass(item.class)}
-                            </span>
-                          </div>
-                          <p className="text-xs text-[#8D4E10] font-medium mt-0.5">
-                            {formatSubject(item.subject)} • {item.concept}
-                          </p>
-                        </div>
-                      </div>
-
-                      <Badge
-                        variant={item.priority === "High" ? "high" : "medium"}
-                        size="sm"
-                        dot
+                {immediateAttentionGaps.length === 0 ? (
+                  <div className="col-span-full py-8 text-center bg-[#FAF6E9] rounded-2xl border border-[#49352F]/10 text-xs text-[#7A6862]">
+                    {language === "gu"
+                      ? "આ વર્ગ માટે કોઈ તાકીદની સહાયની જરૂર નથી. બધા વિદ્યાર્થીઓ પ્રગતિ પર છે."
+                      : "No immediate intervention required for this class. All students are on track."}
+                  </div>
+                ) : (
+                  immediateAttentionGaps.slice(0, 6).map((item) => {
+                    const std = students.find((s) => s.id === item.studentId);
+                    const classLabel = std
+                      ? formatClass(std.grade, std.section)
+                      : formatClass(item.grade);
+                    return (
+                      <Card
+                        key={item.id}
+                        variant="glass"
+                        className="p-4 space-y-3 border-[#49352F]/12 hover:border-[#49352F]/25 transition-all text-[#49352F]"
                       >
-                        {formatPriority(item.priority)}
-                      </Badge>
-                    </div>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-2xl bg-[#A93327]/12 border border-[#A93327]/25 text-[#A93327] font-heading font-black text-sm flex items-center justify-center shrink-0">
+                              {item.latestPercentage ?? 0}%
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-bold text-[#49352F] text-sm">
+                                  {item.studentName}
+                                </h4>
+                                <span className="text-[11px] text-[#7A6862] font-medium">
+                                  {classLabel}
+                                </span>
+                              </div>
+                              <p className="text-xs text-[#8D4E10] font-medium mt-0.5">
+                                {formatSubject(item.subjectCode)} • {item.conceptName}
+                              </p>
+                            </div>
+                          </div>
 
-                    <p className="text-xs text-[#49352F] leading-relaxed bg-[#FAF6E9] p-2.5 rounded-xl border border-[#49352F]/10">
-                      <span className="text-[#7A6862] font-semibold block text-[10px] uppercase">
-                        {language === "gu" ? "શા માટે ચિહ્નિત:" : "Why Flagged:"}
-                      </span>
-                      {item.reason}
-                    </p>
+                          <Badge
+                            variant={item.priority === "High" ? "high" : "medium"}
+                            size="sm"
+                            dot
+                          >
+                            {formatPriority(item.priority)}
+                          </Badge>
+                        </div>
 
-                    <div className="flex items-center justify-between pt-1 text-xs">
-                      <span className="text-[11px] text-[#7A6862] truncate max-w-[220px]">
-                        {item.suggestedAction}
-                      </span>
-                      <Link href="/remedial-plans">
-                        <Button variant="saffron" size="sm" className="rounded-full text-xs h-7 px-3">
-                          {language === "gu" ? "યોજના બનાવો →" : "Generate Plan →"}
-                        </Button>
-                      </Link>
-                    </div>
-                  </Card>
-                ))}
+                        <p className="text-xs text-[#49352F] leading-relaxed bg-[#FAF6E9] p-2.5 rounded-xl border border-[#49352F]/10">
+                          <span className="text-[#7A6862] font-semibold block text-[10px] uppercase">
+                            {language === "gu" ? "શા માટે ચિહ્નિત:" : "Why Flagged:"}
+                          </span>
+                          {item.reason}
+                        </p>
+
+                        <div className="flex items-center justify-between pt-1 text-xs">
+                          <span className="text-[11px] text-[#7A6862] truncate max-w-[220px]">
+                            {item.suggestedAction}
+                          </span>
+                          <Link href={`/remedial-plans?studentId=${item.studentId}&gapId=${item.id}`}>
+                            <Button
+                              variant="saffron"
+                              size="sm"
+                              className="rounded-full text-xs h-7 px-3 cursor-pointer"
+                            >
+                              {language === "gu" ? "યોજના બનાવો →" : "Generate Plan →"}
+                            </Button>
+                          </Link>
+                        </div>
+                      </Card>
+                    );
+                  })
+                )}
               </div>
             </div>
           </>

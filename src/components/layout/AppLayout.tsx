@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AppSidebar } from "./AppSidebar";
@@ -8,12 +8,12 @@ import { AppHeader } from "./AppHeader";
 import { HackathonDemoBanner } from "./HackathonDemoBanner";
 import { GlobalShikshaBot } from "@/components/shared/GlobalShikshaBot";
 import { SpotlightTour } from "@/components/tutorial/SpotlightTour";
+import { useFilter } from "@/context/FilterContext";
 import {
   LayoutDashboard,
   Users,
   AlertTriangle,
   ClipboardList,
-  FileText,
   BookOpen,
 } from "lucide-react";
 
@@ -24,8 +24,7 @@ interface AppLayoutProps {
 
 export function AppLayout({ children, showDemoBanner = true }: AppLayoutProps) {
   const pathname = usePathname();
-  const [currentClass, setCurrentClass] = useState("all");
-  const [searchTerm, setSearchTerm] = useState("");
+  const { selectedClass, setSelectedClass, searchTerm, setSearchTerm } = useFilter();
 
   const mobileNavItems = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -44,8 +43,8 @@ export function AppLayout({ children, showDemoBanner = true }: AppLayoutProps) {
       <div className="flex-1 flex flex-col min-w-0 w-full max-w-full lg:pl-64 transition-all">
         {/* Top header navigation */}
         <AppHeader
-          currentClass={currentClass}
-          onClassChange={setCurrentClass}
+          currentClass={selectedClass}
+          onClassChange={setSelectedClass}
           onSearchChange={setSearchTerm}
         />
 

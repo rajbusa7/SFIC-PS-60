@@ -84,6 +84,8 @@ interface DataStore {
   users?: User[];
   feedback?: { id: string; email: string; message?: string; submittedAt: string }[];
   gmailConnection?: GmailConnection;
+  worksheets?: any[];
+  worksheetSubmissions?: any[];
 }
 
 const DEFAULT_DATA_DIR = path.join(process.cwd(), "data");
@@ -2002,6 +2004,63 @@ export const db = {
     delete store.gmailConnection;
     saveStore(store);
     return true;
+  },
+
+
+  // --- Worksheet & Submission Management ---
+  getWorksheets(filters?: { grade?: number; subjectCode?: string; studentId?: string }): any[] {
+    const store = loadStore();
+    let items = store.worksheets || [];
+    if (filters?.grade) items = items.filter((w: any) => w.grade === filters.grade);
+    if (filters?.subjectCode) items = items.filter((w: any) => w.subjectCode === filters.subjectCode);
+    if (filters?.studentId) items = items.filter((w: any) => w.targetStudentId === filters.studentId);
+    return items;
+  },
+
+  getWorksheetById(id: string): any | undefined {
+    const store = loadStore();
+    return (store.worksheets || []).find((w: any) => w.id === id);
+  },
+
+  saveWorksheet(worksheet: any): any {
+    const store = loadStore();
+    if (!store.worksheets) store.worksheets = [];
+    const existingIdx = store.worksheets.findIndex((w: any) => w.id === worksheet.id);
+    if (existingIdx !== -1) {
+      store.worksheets[existingIdx] = worksheet;
+    } else {
+      store.worksheets.unshift(worksheet);
+    }
+    saveStore(store);
+    return worksheet;
+  },
+
+  deleteWorksheet(id: string): boolean {
+    const store = loadStore();
+    if (!store.worksheets) return false;
+    const initialLen = store.worksheets.length;
+    store.worksheets = store.worksheets.filter((w: any) => w.id !== id);
+    if (store.worksheets.length !== initialLen) {
+      saveStore(store);
+      return true;
+    }
+    return false;
+  },
+
+  recordWorksheetSubmission(submission: any): any {
+    const store = loadStore();
+    if (!store.worksheetSubmissions) store.worksheetSubmissions = [];
+    store.worksheetSubmissions.unshift(submission);
+    saveStore(store);
+    return submission;
+  },
+
+  getWorksheetSubmissions(worksheetId?: string, studentId?: string): any[] {
+    const store = loadStore();
+    let subs = store.worksheetSubmissions || [];
+    if (worksheetId) subs = subs.filter((s: any) => s.worksheetId === worksheetId);
+    if (studentId) subs = subs.filter((s: any) => s.studentId === studentId);
+    return subs;
   },
 
   resetToDemoData(): void {

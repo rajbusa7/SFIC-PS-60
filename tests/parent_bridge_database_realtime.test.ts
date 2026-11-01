@@ -1,4 +1,4 @@
-import { describe, it, before, after } from "node:test";
+import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { db } from "../src/lib/db/database";
 import { POST as registerParentHandler } from "../src/app/api/auth/register-parent/route";
@@ -7,13 +7,6 @@ import { GET as getParentStudentHandler } from "../src/app/api/parent/students/[
 import { POST as recordCompletionHandler } from "../src/app/api/parent/activities/complete/route";
 
 describe("Parent Bridge Database-Driven & Real-Time Verification Suite", () => {
-  before(() => {
-    db.resetToDemoData();
-  });
-
-  after(() => {
-    db.resetToDemoData();
-  });
   const ts = Date.now();
   const testParentEmail = `realtime.parent.${ts}@example.com`;
   const testPassword = "ParentPass2026!";

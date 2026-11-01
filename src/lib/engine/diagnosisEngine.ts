@@ -2,6 +2,31 @@ import type { ScoreTrend, GapDiagnosisType, ConfidenceLevel, QuestionEvidenceIte
 
 export type { GapDiagnosisType, ConfidenceLevel, QuestionEvidenceItem };
 
+export function sanitizeScore(val: unknown): number | null {
+  if (val === null || val === undefined || val === "") return null;
+  const num = Number(val);
+  if (isNaN(num) || !isFinite(num)) return null;
+  return Math.max(0, Math.min(100, Math.round(num * 10) / 10));
+}
+
+export function generateCognitiveDiagnosis(params: any): any {
+  const latestPercentage = params.latestPercentage ?? params.currentScore ?? 0;
+  const isMastered = latestPercentage >= (params.masteryBenchmark ?? 80);
+  const status = isMastered ? "Mastered" : latestPercentage >= (params.supportThreshold ?? 60) ? "Developing" : "Needs Support";
+  return {
+    status,
+    diagnosisType: isMastered ? "Mastered" : "Developing / Not Yet Mastered",
+    isMastered,
+    requiresRemediation: !isMastered,
+    explanation: `Performance at ${latestPercentage}%. Needs guided practice.`,
+    recommendedAction: "Targeted guided practice on fundamentals.",
+  };
+}
+
+export function getDiagnosisBadgeStyle(diagnosisType?: string): string {
+  return "bg-amber-100 text-amber-800 border-amber-300";
+}
+
 export interface DiagnosisInput {
   conceptId?: string;
   conceptName?: string;

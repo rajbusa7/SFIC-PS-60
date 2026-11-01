@@ -1,4 +1,4 @@
-import { Pool, type PoolClient, type QueryResult, type QueryResultRow } from "pg";
+import type { Pool, PoolClient, QueryResult, QueryResultRow } from "pg";
 import type {
   Student,
   Classroom,
@@ -58,7 +58,14 @@ export function getPostgresPool(): Pool | null {
     const isLocalhost =
       connectionString.includes("localhost") || connectionString.includes("127.0.0.1");
 
-    poolInstance = new Pool({
+    let PoolClass: any;
+    try {
+      PoolClass = require("pg").Pool;
+    } catch {
+      return null;
+    }
+
+    poolInstance = new PoolClass({
       connectionString,
       ssl: isLocalhost ? false : { rejectUnauthorized: false },
       max: 10,
@@ -66,7 +73,7 @@ export function getPostgresPool(): Pool | null {
       connectionTimeoutMillis: 8000,
     });
 
-    poolInstance.on("error", (err) => {
+    poolInstance?.on("error", (err: any) => {
       console.error("[PostgreSQL Pool Error]:", err.message);
     });
   }
@@ -765,7 +772,7 @@ export const postgresAssessmentDb = {
     }
     sql += " ORDER BY assessment_date DESC";
     const res = await queryPostgres(sql, params);
-    return res.rows.map((r) => ({
+    return res.rows.map((r: any) => ({
       ...r,
       maxMarks: Number(r.maxMarks),
       conceptIds: Array.isArray(r.conceptIds) ? r.conceptIds : JSON.parse(r.conceptIds || "[]"),
@@ -895,7 +902,7 @@ export const postgresAssessmentDb = {
       ORDER BY recorded_at ASC
     `;
     const res = await queryPostgres(sql, params);
-    return res.rows.map((r) => ({
+    return res.rows.map((r: any) => ({
       ...r,
       marksObtained: Number(r.marksObtained),
       maximumMarks: Number(r.maximumMarks),
@@ -985,7 +992,7 @@ export const postgresLearningGapDb = {
     }
     sql += " ORDER BY g.updated_at DESC";
     const res = await queryPostgres(sql, params);
-    return res.rows.map((r) => ({
+    return res.rows.map((r: any) => ({
       ...r,
       grade: Number(r.grade),
       attemptsCount: Number(r.attemptsCount || 1),
@@ -1079,7 +1086,7 @@ export const postgresRemedialPlanDb = {
       ORDER BY p.created_at DESC
     `;
     const res = await queryPostgres(sql, params);
-    return res.rows.map((r) => ({
+    return res.rows.map((r: any) => ({
       ...r,
       estimatedMinutes: Number(r.estimatedMinutes || 25),
       requiredMaterials: Array.isArray(r.requiredMaterials)
@@ -1195,7 +1202,7 @@ export const postgresActivityDb = {
       ORDER BY a.grade ASC
     `;
     const res = await queryPostgres(sql, params);
-    return res.rows.map((r) => ({
+    return res.rows.map((r: any) => ({
       ...r,
       grade: Number(r.grade),
       estimatedMinutes: Number(r.estimatedMinutes || 10),

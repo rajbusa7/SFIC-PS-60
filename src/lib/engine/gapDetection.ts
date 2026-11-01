@@ -84,6 +84,8 @@ export interface GapDetectionResult {
   totalDelta?: number;
   trend?: ScoreTrend;
   trendText?: string;
+  trendLabel?: string;
+  diagnosisType?: any;
   attemptCount?: number;
   attemptsCount: number;
   evidenceCount?: number;

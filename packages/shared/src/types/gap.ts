@@ -11,6 +11,7 @@ export type GapDiagnosisType =
   | "Language / Comprehension Barrier"
   | "Prerequisite Gap"
   | "Insufficient Evidence";
+export type DiagnosisCategory = GapDiagnosisType | string;
 export type ConfidenceLevel = "High" | "Medium" | "Low";
 
 export interface QuestionEvidenceItem {
@@ -88,4 +89,7 @@ export interface LearningGap {
 
   updatedAt: string;
   remedialPlanId?: string;
+  // Backwards compatibility legacy aliases
+  diagnosisType?: any;
+  trendLabel?: string;
 }

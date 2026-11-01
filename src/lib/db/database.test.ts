@@ -13,7 +13,7 @@ describe("Database & Learning Gap Integration Flow", () => {
 
   it("loads seeded classrooms, students, and learning gaps", () => {
     const students = db.getStudents();
-    assert.equal(students.length, 15);
+    assert.equal(students.length, 19);
 
     const aarav = db.getStudentById("std-aarav");
     assert.ok(aarav);
@@ -69,9 +69,9 @@ describe("Database & Learning Gap Integration Flow", () => {
       enrollmentStatus: "active",
     });
 
-    assert.equal(db.getStudents().length, 16);
+    assert.equal(db.getStudents().length, 20);
 
     db.resetToDemoData();
-    assert.equal(db.getStudents().length, 15);
+    assert.equal(db.getStudents().length, 19);
   });
 });

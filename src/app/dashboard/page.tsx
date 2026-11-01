@@ -13,7 +13,7 @@ import { BridgeProgress } from "@/components/ui/BridgeProgress";
 import type { StudentMasteryPoint } from "@/components/3d/ClassMasteryHeatmap3D";
 import { fireCelebrationConfetti } from "@/lib/confetti";
 import { useLanguage } from "@/context/LanguageContext";
-import { useFilter } from "@/context/FilterContext";
+import { useFilter, parseGradeNumber } from "@/context/FilterContext";
 import { useTutorial } from "@/context/TutorialContext";
 import { ChecklistWidget } from "@/components/tutorial/ChecklistWidget";
 import { ContextualHelp } from "@/components/shared/ContextualHelp";
@@ -186,12 +186,22 @@ function DashboardContent() {
   };
 
   // Filtered lists
+  const selectedGrade = parseGradeNumber(selectedClass);
   const filteredStudents = students.filter((s) => {
-    if (selectedClass !== "all" && s.classroomId !== selectedClass) return false;
+    if (selectedClass !== "all") {
+      if (selectedGrade !== null) {
+        if (s.grade !== selectedGrade && s.classroomId !== selectedClass) return false;
+      } else if (s.classroomId !== selectedClass) {
+        return false;
+      }
+    }
     return true;
   });
 
+  const studentIdsInClass = new Set(filteredStudents.map((s) => s.id));
+
   const filteredGaps = gaps.filter((g) => {
+    if (selectedClass !== "all" && !studentIdsInClass.has(g.studentId)) return false;
     if (selectedSubject !== "all" && g.subjectCode !== selectedSubject) return false;
     return true;
   });
@@ -203,9 +213,13 @@ function DashboardContent() {
   );
   const studentsWithGaps = Array.from(new Set(activeGaps.map((g) => g.studentId))).length;
   const activePlansCount = plans.filter(
-    (p) => p.status === "In Progress" || p.status === "Active" || p.status === "Approved"
+    (p) =>
+      (selectedClass === "all" || studentIdsInClass.has(p.studentId)) &&
+      (p.status === "In Progress" || p.status === "Active" || p.status === "Approved")
   ).length;
-  const completedPlansCount = plans.filter((p) => p.status === "Completed").length;
+  const completedPlansCount = plans.filter(
+    (p) => (selectedClass === "all" || studentIdsInClass.has(p.studentId)) && p.status === "Completed"
+  ).length;
 
   // Real Dynamic 3D Heatmap Dataset calculated from enrolled students and assessment results
   const targetHeatmapStudents = filteredStudents.slice(0, 8);

@@ -31,6 +31,8 @@ import {
   AlertCircle,
   Clock,
   Building,
+  ChevronDown,
+  Check,
 } from "lucide-react";
 
 function StudentsPageContent() {
@@ -52,6 +54,38 @@ function StudentsPageContent() {
   const [showCsvModal, setShowCsvModal] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Class and Show filter controls
+  const [showFilter, setShowFilter] = useState<"all" | "gaps" | "on_track">("all");
+  const [isClassDropdownOpen, setIsClassDropdownOpen] = useState(false);
+  const [isShowDropdownOpen, setIsShowDropdownOpen] = useState(false);
+  const classDropdownRef = useRef<HTMLDivElement>(null);
+  const showDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close floating menus on click outside or Escape
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (classDropdownRef.current && !classDropdownRef.current.contains(target)) {
+        setIsClassDropdownOpen(false);
+      }
+      if (showDropdownRef.current && !showDropdownRef.current.contains(target)) {
+        setIsShowDropdownOpen(false);
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsClassDropdownOpen(false);
+        setIsShowDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -141,7 +175,7 @@ function StudentsPageContent() {
     };
   }, []);
 
-  const activeGrade = gradeNumber ? String(gradeNumber) : "all";
+  const activeGrade = gradeNumber !== null ? String(gradeNumber) : "all";
 
   const handleGradeFilterChange = (val: string) => {
     if (val === "all") {
@@ -151,14 +185,43 @@ function StudentsPageContent() {
     }
   };
 
+  const classOptions = [
+    { value: "all", label: language === "gu" ? "બધા વર્ગો (૧-૫)" : "All Classes (1-5)" },
+    { value: "1", label: language === "gu" ? "ધોરણ ૧" : "Class 1" },
+    { value: "2", label: language === "gu" ? "ધોરણ ૨" : "Class 2" },
+    { value: "3", label: language === "gu" ? "ધોરણ ૩" : "Class 3" },
+    { value: "4", label: language === "gu" ? "ધોરણ ૪" : "Class 4" },
+    { value: "5", label: language === "gu" ? "ધોરણ ૫" : "Class 5" },
+  ];
+
+  const showOptions = [
+    { value: "all", label: language === "gu" ? "બધા વિદ્યાર્થીઓ" : "All Students" },
+    { value: "gaps", label: language === "gu" ? "ત્રુટિઓ વાળા" : "With Active Gaps" },
+    { value: "on_track", label: language === "gu" ? "પ્રગતિ પર" : "On Track" },
+  ];
+
+  const currentClassLabel =
+    classOptions.find((opt) => opt.value === activeGrade)?.label || classOptions[0].label;
+  const currentShowLabel =
+    showOptions.find((opt) => opt.value === showFilter)?.label || showOptions[0].label;
+
   const filteredStudents = students.filter((s) => {
+    // 1. Class / Standard filter
     if (activeGrade !== "all" && s.grade !== Number(activeGrade)) return false;
+    // 2. Search query filter
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      return (
-        s.displayName.toLowerCase().includes(term) ||
-        s.studentCode.toLowerCase().includes(term)
-      );
+      const matchName = s.displayName.toLowerCase().includes(term);
+      const matchCode = s.studentCode.toLowerCase().includes(term);
+      if (!matchName && !matchCode) return false;
+    }
+    // 3. Status 'Show' filter
+    if (showFilter === "gaps") {
+      const gapCount = getStudentGapCount(s.id);
+      if (gapCount === 0) return false;
+    } else if (showFilter === "on_track") {
+      const gapCount = getStudentGapCount(s.id);
+      if (gapCount > 0) return false;
     }
     return true;
   });
@@ -338,25 +401,126 @@ function StudentsPageContent() {
           </div>
 
           <div data-tour="students-filter" className="flex items-center gap-3 shrink-0 flex-wrap">
-            <span className="text-xs font-bold text-[#49352F]">
-              {language === "gu" ? "વર્ગ:" : "Class:"}
-            </span>
-            <select
-              value={activeGrade}
-              aria-label="Filter students by class"
-              onChange={(e) => handleGradeFilterChange(e.target.value)}
-              className="rounded-xl border border-[#49352F]/15 bg-[#FAF6E9] px-3.5 py-2 text-xs font-bold text-[#49352F] outline-hidden cursor-pointer"
-            >
-              <option value="all">
-                {language === "gu" ? "બધા વર્ગો (૧-૫)" : "All Classes (1-5)"}
-              </option>
-              <option value="1">{language === "gu" ? "ધોરણ ૧" : "Class 1"}</option>
-              <option value="2">{language === "gu" ? "ધોરણ ૨" : "Class 2"}</option>
-              <option value="3">{language === "gu" ? "ધોરણ ૩" : "Class 3"}</option>
-              <option value="4">{language === "gu" ? "ધોરણ ૪" : "Class 4"}</option>
-              <option value="5">{language === "gu" ? "ધોરણ ૫" : "Class 5"}</option>
-            </select>
-            <span className="text-xs font-semibold text-[#7A6862] ml-1">
+            {/* 1. Class Selection Dropdown */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-bold text-[#49352F] dark:text-[#F4F1E1]">
+                {language === "gu" ? "વર્ગ:" : "Class:"}
+              </span>
+              <div ref={classDropdownRef} className="relative inline-block">
+                <button
+                  type="button"
+                  id="class-selection-dropdown-btn"
+                  aria-label="Class Selection Filter"
+                  aria-haspopup="listbox"
+                  aria-expanded={isClassDropdownOpen}
+                  onClick={() => {
+                    setIsClassDropdownOpen(!isClassDropdownOpen);
+                    setIsShowDropdownOpen(false);
+                  }}
+                  className="rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/20 bg-[#FAF6E9] dark:bg-[#26201C] px-3.5 py-2 text-xs font-bold text-[#49352F] dark:text-[#F4F1E1] outline-hidden cursor-pointer flex items-center justify-between gap-2 shadow-xs transition-all hover:bg-white dark:hover:bg-[#332A24] focus:border-[#B26A1B] focus:ring-2 focus:ring-[#F2CAB3]/40 min-w-[145px]"
+                >
+                  <span className="truncate">{currentClassLabel}</span>
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 text-[#7A6862] transition-transform duration-200 ${
+                      isClassDropdownOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+
+                {isClassDropdownOpen && (
+                  <div
+                    role="listbox"
+                    aria-label="Select Class"
+                    className="absolute top-full left-0 mt-1 min-w-[170px] w-full z-50 rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/20 bg-[#FAF6E9] dark:bg-[#26201C] shadow-lg py-1 backdrop-blur-md overflow-hidden animate-in fade-in zoom-in-95 duration-100"
+                  >
+                    {classOptions.map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        role="option"
+                        aria-selected={activeGrade === opt.value}
+                        onClick={() => {
+                          handleGradeFilterChange(opt.value);
+                          setIsClassDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-3.5 py-2 text-xs flex items-center justify-between cursor-pointer transition-colors ${
+                          activeGrade === opt.value
+                            ? "bg-[#F2CAB3]/40 dark:bg-[#F2CAB3]/20 font-extrabold text-[#B26A1B]"
+                            : "text-[#49352F] dark:text-[#F4F1E1] hover:bg-[#F2CAB3]/20 font-medium"
+                        }`}
+                      >
+                        <span>{opt.label}</span>
+                        {activeGrade === opt.value && (
+                          <Check className="w-3.5 h-3.5 text-[#B26A1B]" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* 2. Show Filter */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-bold text-[#49352F] dark:text-[#F4F1E1]">
+                {language === "gu" ? "દર્શાવો:" : "Show:"}
+              </span>
+              <div ref={showDropdownRef} className="relative inline-block">
+                <button
+                  type="button"
+                  id="show-selection-dropdown-btn"
+                  aria-label="Show Filter"
+                  aria-haspopup="listbox"
+                  aria-expanded={isShowDropdownOpen}
+                  onClick={() => {
+                    setIsShowDropdownOpen(!isShowDropdownOpen);
+                    setIsClassDropdownOpen(false);
+                  }}
+                  className="rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/20 bg-[#FAF6E9] dark:bg-[#26201C] px-3.5 py-2 text-xs font-bold text-[#49352F] dark:text-[#F4F1E1] outline-hidden cursor-pointer flex items-center justify-between gap-2 shadow-xs transition-all hover:bg-white dark:hover:bg-[#332A24] focus:border-[#B26A1B] focus:ring-2 focus:ring-[#F2CAB3]/40 min-w-[130px]"
+                >
+                  <span className="truncate">{currentShowLabel}</span>
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 text-[#7A6862] transition-transform duration-200 ${
+                      isShowDropdownOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+
+                {isShowDropdownOpen && (
+                  <div
+                    role="listbox"
+                    aria-label="Filter by Status"
+                    className="absolute top-full right-0 mt-1 min-w-[160px] z-50 rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/20 bg-[#FAF6E9] dark:bg-[#26201C] shadow-lg py-1 backdrop-blur-md overflow-hidden animate-in fade-in zoom-in-95 duration-100"
+                  >
+                    {showOptions.map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        role="option"
+                        aria-selected={showFilter === opt.value}
+                        onClick={() => {
+                          setShowFilter(opt.value as any);
+                          setIsShowDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-3.5 py-2 text-xs flex items-center justify-between cursor-pointer transition-colors ${
+                          showFilter === opt.value
+                            ? "bg-[#F2CAB3]/40 dark:bg-[#F2CAB3]/20 font-extrabold text-[#B26A1B]"
+                            : "text-[#49352F] dark:text-[#F4F1E1] hover:bg-[#F2CAB3]/20 font-medium"
+                        }`}
+                      >
+                        <span>{opt.label}</span>
+                        {showFilter === opt.value && (
+                          <Check className="w-3.5 h-3.5 text-[#B26A1B]" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* 3. Live Dynamic Student Count */}
+            <span className="text-xs font-semibold text-[#7A6862] dark:text-[#FAF6E9]/70 ml-1">
               {language === "gu"
                 ? `${filteredStudents.length} વિદ્યાર્થીઓ દર્શાવે છે`
                 : `Showing ${filteredStudents.length} students`}

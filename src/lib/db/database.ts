@@ -188,6 +188,55 @@ function loadStore(): DataStore {
           if (!memoryStore.activities || memoryStore.activities.length < SEED_ACTIVITIES.length) {
             memoryStore.activities = JSON.parse(JSON.stringify(SEED_ACTIVITIES));
           }
+
+          // Auto-sync seed classrooms if missing (e.g. cls-1a, cls-2a)
+          let storeNeedsSync = false;
+          if (!memoryStore.classrooms) memoryStore.classrooms = [];
+          for (const cls of SEED_CLASSROOMS) {
+            if (!memoryStore.classrooms.some((c) => c.id === cls.id)) {
+              memoryStore.classrooms.push(JSON.parse(JSON.stringify(cls)));
+              storeNeedsSync = true;
+            }
+          }
+          // Auto-sync seed students if missing (e.g. Grade 1 and Grade 2 students)
+          if (!memoryStore.students) memoryStore.students = [];
+          for (const std of SEED_STUDENTS) {
+            if (!memoryStore.students.some((s) => s.id === std.id)) {
+              memoryStore.students.push(JSON.parse(JSON.stringify(std)));
+              storeNeedsSync = true;
+            }
+          }
+          // Auto-sync seed assessments if missing
+          if (!memoryStore.assessments) memoryStore.assessments = [];
+          for (const asm of SEED_ASSESSMENTS) {
+            if (!memoryStore.assessments.some((a) => a.id === asm.id)) {
+              memoryStore.assessments.push(JSON.parse(JSON.stringify(asm)));
+              storeNeedsSync = true;
+            }
+          }
+          // Auto-sync seed results if missing
+          if (!memoryStore.results) memoryStore.results = [];
+          for (const res of SEED_RESULTS) {
+            if (!memoryStore.results.some((r) => r.id === res.id)) {
+              memoryStore.results.push(JSON.parse(JSON.stringify(res)));
+              storeNeedsSync = true;
+            }
+          }
+          // Auto-sync seed learning gaps if missing
+          if (!memoryStore.learningGaps) memoryStore.learningGaps = [];
+          for (const gap of SEED_LEARNING_GAPS) {
+            if (!memoryStore.learningGaps.some((g) => g.id === gap.id)) {
+              memoryStore.learningGaps.push(JSON.parse(JSON.stringify(gap)));
+              storeNeedsSync = true;
+            }
+          }
+          if (storeNeedsSync) {
+            try {
+              saveStore(memoryStore);
+            } catch (err) {
+              console.warn("Could not persist auto-synced seed records:", err);
+            }
+          }
           lastLoadedMtime = stat.mtimeMs;
           lastLoadedPath = candidate;
           return memoryStore;
@@ -526,9 +575,16 @@ export const db = {
     const studentIds = new Set<string>();
 
     for (const r of resultsData) {
-      // Guard against accidental duplicate submissions within a short window (e.g. repeated click or refresh)
-      const existingDuplicate = store.results.find((existing) => {
-        if (r.assessmentId && existing.assessmentId === r.assessmentId) return true;
+      // Guard against accidental duplicate submissions or update existing record for same assessment + student + concept
+      const existingRecordIndex = store.results.findIndex((existing) => {
+        if (
+          r.assessmentId &&
+          existing.assessmentId === r.assessmentId &&
+          existing.studentId === r.studentId &&
+          (!r.conceptId || existing.conceptId === r.conceptId)
+        ) {
+          return true;
+        }
         if (
           existing.studentId === r.studentId &&
           existing.conceptId === r.conceptId &&
@@ -542,13 +598,23 @@ export const db = {
         return false;
       });
 
-      if (existingDuplicate) {
-        created.push(existingDuplicate);
+      const pct = calculatePercentage(r.marksObtained, r.maximumMarks);
+
+      if (existingRecordIndex !== -1) {
+        const existing = store.results[existingRecordIndex];
+        // If it is an update to marks or notes
+        if (existing.marksObtained !== Number(r.marksObtained) || existing.maximumMarks !== Number(r.maximumMarks)) {
+          existing.marksObtained = Number(r.marksObtained);
+          existing.maximumMarks = Number(r.maximumMarks);
+          existing.percentage = pct;
+          existing.recordedAt = r.recordedAt || new Date().toISOString();
+          if (r.notes !== undefined) existing.notes = r.notes;
+        }
+        created.push(existing);
         studentIds.add(r.studentId);
         continue;
       }
 
-      const pct = calculatePercentage(r.marksObtained, r.maximumMarks);
       const newResult: AssessmentResult = {
         ...r,
         id: `res-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,

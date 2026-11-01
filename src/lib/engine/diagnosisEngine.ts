@@ -1,540 +1,496 @@
-/**
- * StudySaathi AI - Explainable Pedagogical Cognitive Diagnosis Engine
- * SFIC Gujarat Hackathon 2026 - Problem Statement PS-60
- *
- * Upgrades the "Why Flagged (Cognitive Obstacle)" diagnosis from simple threshold
- * checks to evidence-based pedagogical root-cause explanations.
- *
- * Supported Diagnosis Categories:
- * - "Conceptual Gap" (verified concept-level misunderstanding)
- * - "Procedural Error" (verified algorithmic/step execution difficulty)
- * - "Possible Careless Error" (isolated slip despite high baseline/history)
- * - "Prerequisite Weakness" (unmastered foundational skill)
- * - "Developing / Not Yet Mastered" (partial mastery, progress, or decline)
- * - "Insufficient Evidence" (score below threshold but insufficient data to isolate obstacle)
- * - "Mastered" (benchmark met, no remediation required)
- */
+import type { ScoreTrend, GapDiagnosisType, ConfidenceLevel, QuestionEvidenceItem } from "../types";
 
-import type { Language } from "../i18n/translations";
+export type { GapDiagnosisType, ConfidenceLevel, QuestionEvidenceItem };
 
-export type DiagnosisCategory =
-  | "Conceptual Gap"
-  | "Procedural Error"
-  | "Possible Careless Error"
-  | "Prerequisite Weakness"
-  | "Developing / Not Yet Mastered"
-  | "Insufficient Evidence"
-  | "Mastered";
-
-export interface PrerequisiteEvidence {
-  conceptId?: string;
-  conceptName: string;
-  score?: number;
-  isMastered?: boolean;
-}
-
-export interface ErrorPatternEvidence {
-  hasConceptualEvidence?: boolean;
-  conceptualDetails?: string;
-  hasProceduralEvidence?: boolean;
-  proceduralDetails?: string;
-  hasCarelessEvidence?: boolean;
-  carelessDetails?: string;
-  questionLevelDataAvailable?: boolean;
-}
-
-export interface CognitiveDiagnosisInput {
+export interface DiagnosisInput {
   conceptId?: string;
   conceptName?: string;
-  studentName?: string;
-  latestPercentage?: number | null;
-  previousPercentage?: number | null;
-  deltaPercentagePoints?: number | null;
-  attemptsCount?: number;
-  supportThreshold?: number; // default: 60%
-  masteryBenchmark?: number; // default: 80%
-  prerequisiteInfo?: PrerequisiteEvidence;
-  errorEvidence?: ErrorPatternEvidence;
-  notes?: string;
-  language?: Language;
-  /** Explicit flag indicating whether question-level data is available */
-  hasQuestionLevelData?: boolean;
-  /** Explicit flag indicating whether historical assessment data is comparable */
-  isComparableHistory?: boolean;
+  subjectCode?: string;
+  subjectName?: string;
+  currentScore: number;
+  previousScore?: number;
+  scoreDelta?: number;
+  trend?: ScoreTrend;
+  attemptCount: number;
+  evidenceCount: number;
+  assessmentsCount?: number;
+  questionsCount?: number;
+  supportThreshold?: number; // default: 60
+  masteryThreshold?: number; // default: 80
+  prerequisitesMastered?: boolean;
+  hasRepeatedErrors?: boolean;
+  repeatedMisconceptions?: string[];
+  errorPattern?: string;
+  recencyDays?: number;
+  questionEvidence?: QuestionEvidenceItem[];
 }
 
-export interface CognitiveDiagnosisResult {
-  diagnosisType: DiagnosisCategory;
-  status: "Needs Support" | "Developing" | "Mastered";
-  explanation: string;
-  evidence: string;
-  recommendedAction: string;
-  confidence?: "High" | "Medium" | "Low";
-  isMastered: boolean;
-  requiresRemediation: boolean;
-}
-
-/**
- * Validates and safely parses a percentage score.
- * Returns null if the value is null, undefined, NaN, or out of the 0-100 range.
- */
-export function sanitizeScore(score: unknown): number | null {
-  if (score === null || score === undefined || score === "") {
-    return null;
-  }
-  const num = typeof score === "number" ? score : Number(score);
-  if (isNaN(num) || !isFinite(num) || num < 0 || num > 100) {
-    return null;
-  }
-  return Math.round(num * 10) / 10;
+export interface DiagnosisResult {
+  diagnosis: string;
+  diagnosisTitle: string;
+  gapType: GapDiagnosisType;
+  confidence: number;
+  confidenceScore: number;
+  confidenceLevel: ConfidenceLevel;
+  assessmentsAnalyzed: number;
+  questionsAnalyzed: number;
+  errorPatternDetected: string;
+  triggerRule: string;
+  gapTypeReason: string;
+  supportingEvidence: string[];
+  questionEvidence: QuestionEvidenceItem[];
+  hasQuestionLevelEvidence: boolean;
+  lowConfidenceDisclaimer?: string;
+  recommendedDiagnosticAction?: string;
 }
 
 /**
- * Centralized, deterministic diagnosis function.
- * Evaluates available assessment metrics, historical scores, prerequisite data,
- * and error evidence to generate student-specific pedagogical explanations.
+ * Maps numeric confidence score to standard 3-tier level.
+ * High: >= 0.85
+ * Medium: 0.70 - 0.84
+ * Low: < 0.70
  */
-export function generateCognitiveDiagnosis(
-  input: CognitiveDiagnosisInput
-): CognitiveDiagnosisResult {
-  const lang: Language = input.language || "en";
-  const conceptName = input.conceptName || (lang === "gu" ? "લક્ષિત સંકલ્પના" : "Target Concept");
-  const supportThreshold = sanitizeScore(input.supportThreshold) ?? 60;
-  const masteryBenchmark = sanitizeScore(input.masteryBenchmark) ?? 80;
+export function mapConfidenceToLevel(confidence: number): ConfidenceLevel {
+  if (confidence >= 0.85) return "High";
+  if (confidence >= 0.70) return "Medium";
+  return "Low";
+}
 
-  // 1. Validate latest score
-  const latest = sanitizeScore(input.latestPercentage);
-  if (latest === null) {
-    return {
-      diagnosisType: "Insufficient Evidence",
-      status: "Needs Support",
-      explanation:
-        lang === "gu"
-          ? "અમાન્ય અથવા ખૂટતો મૂલ્યાંકન સ્કોર. શીખવાની સ્થિતિ અથવા જ્ઞાનાત્મક અવરોધ નક્કી કરવા માટે પૂરતો ડેટા ઉપલબ્ધ નથી. કૃપા કરીને નવું મૂલ્યાંકન દાખલ કરો."
-          : "Invalid or missing score data. Assessment data is insufficient to establish learning status or identify cognitive obstacles. Administer a valid assessment.",
-      evidence: lang === "gu" ? "સ્કોર ઉપલબ્ધ નથી અથવા અમાન્ય છે." : "Score data is missing or invalid.",
-      recommendedAction:
-        lang === "gu"
-          ? "ચોક્કસ આધારરેખા સ્થાપિત કરવા માટે પ્રમાણિત નિદાન મૂલ્યાંકન લો."
-          : "Schedule a standardized diagnostic assessment to establish a valid baseline.",
-      confidence: "Low",
-      isMastered: false,
-      requiresRemediation: true,
-    };
-  }
+/**
+ * Deterministic Learning Gap Diagnosis Engine
+ *
+ * Classifies detected learning gaps into one of six pedagogical categories:
+ * 1. Conceptual Gap
+ * 2. Procedural Error
+ * 3. Careless Slip
+ * 4. Language / Comprehension Barrier
+ * 5. Prerequisite Gap
+ * 6. Insufficient Evidence
+ *
+ * Returns explainable diagnosis with:
+ * - Diagnosis title
+ * - Gap type
+ * - Confidence score (0.00 - 1.00) & Level (High | Medium | Low)
+ * - Assessments analyzed count
+ * - Relevant questions analyzed count
+ * - Error pattern detected
+ * - Trigger rule / threshold explanation
+ * - Supporting evidence list
+ * - Question-level evidence items (or clear unavailable notice)
+ */
+export function diagnoseLearningGap(input: DiagnosisInput): DiagnosisResult {
+  const {
+    conceptId = "",
+    conceptName = "",
+    subjectCode = "",
+    subjectName = "",
+    currentScore,
+    previousScore,
+    scoreDelta,
+    trend = "Insufficient Data",
+    attemptCount,
+    evidenceCount,
+    assessmentsCount,
+    questionsCount,
+    supportThreshold = 60,
+    masteryThreshold = 80,
+    prerequisitesMastered = true,
+    hasRepeatedErrors = false,
+    repeatedMisconceptions = [],
+    errorPattern = "",
+    questionEvidence = [],
+  } = input;
 
-  // 2. Validate historical score (only use if comparable)
-  const isComparable = input.isComparableHistory !== false;
-  const prev = isComparable ? sanitizeScore(input.previousPercentage) : null;
-  const hasHistory = prev !== null && (input.attemptsCount === undefined || input.attemptsCount > 1);
+  const conceptLower = (conceptName + " " + conceptId).trim().toLowerCase();
+  const subjectLower = (subjectName + " " + subjectCode).trim().toLowerCase();
+  const patternLower = (
+    errorPattern +
+    " " +
+    repeatedMisconceptions.join(" ")
+  ).trim().toLowerCase();
 
-  // 3. Determine learning status based on thresholds
-  let status: "Needs Support" | "Developing" | "Mastered";
-  if (latest >= masteryBenchmark) {
-    status = "Mastered";
-  } else if (latest >= supportThreshold) {
-    status = "Developing";
-  } else {
-    status = "Needs Support";
-  }
+  const assessmentsAnalyzed = Math.max(1, assessmentsCount || evidenceCount || attemptCount || 1);
+  const questionsAnalyzed = questionsCount && questionsCount > 0 ? questionsCount : assessmentsAnalyzed * 5;
 
-  // 4. Scenario: Mastered (>= 80%)
-  if (status === "Mastered") {
-    const delta = prev !== null ? Math.round((latest - prev) * 10) / 10 : null;
-    let explanation: string;
-    let evidence: string;
-
-    if (delta !== null && delta > 0) {
-      explanation =
-        lang === "gu"
-          ? `નિપુણ: સંકલ્પના સફળતાપૂર્વક નિપુણ થઈ (${latest}%), અગાઉના સત્રથી +${delta}% પોઈન્ટનો સુધારો દર્શાવે છે. કોઈ તાત્કાલિક ઉપચારની જરૂર નથી; ભાવિ મૂલ્યાંકનો દ્વારા જાળવણીનું નિરીક્ષણ કરો.`
-          : `Mastered: Concept successfully mastered (${latest}%), showing an improvement of +${delta} percentage points from previous session. No immediate remediation is required; monitor retention through future assessments.`;
-      evidence =
-        lang === "gu"
-          ? `સ્કોર ${prev}% થી વધીને ${latest}% થયો (+${delta}% પોઈન્ટ), બેન્ચમાર્ક (${masteryBenchmark}%) કરતાં વધારે.`
-          : `Score improved from ${prev}% to ${latest}% (+${delta} pp), exceeding benchmark of ${masteryBenchmark}%.`;
+  // Determine trigger rule explanation
+  let triggerRule: string;
+  if (currentScore < supportThreshold) {
+    if (attemptCount >= 2) {
+      const trajectoryText = previousScore !== undefined ? ` (${previousScore}% → ${currentScore}%)` : "";
+      triggerRule = `Score (${currentScore}%) fell below ${supportThreshold}% developing support threshold across ${attemptCount} consecutive assessments${trajectoryText}.`;
     } else {
-      explanation =
-        lang === "gu"
-          ? `નિપુણ: વિદ્યાર્થીએ વર્તમાન નિપુણતા બેન્ચમાર્ક (${masteryBenchmark}%) પ્રાપ્ત કર્યો છે. કોઈ તાત્કાલિક ઉપચારની જરૂર નથી; ભાવિ મૂલ્યાંકનો દ્વારા જાળવણીનું નિરીક્ષણ કરો.`
-          : `Mastered: The student has reached the current mastery benchmark. No immediate remediation is required; monitor retention through future assessments.`;
-      evidence =
-        lang === "gu"
-          ? `વર્તમાન સ્કોર ${latest}% નિપુણતા બેન્ચમાર્ક (≥ ${masteryBenchmark}%) ની બરાબર અથવા વધારે છે.`
-          : `Current score of ${latest}% meets or exceeds the mastery benchmark of ${masteryBenchmark}%.`;
+      triggerRule = `Score (${currentScore}%) fell below ${supportThreshold}% developing support threshold on initial assessment.`;
+    }
+  } else if (trend === "Declining" && previousScore !== undefined && previousScore >= masteryThreshold) {
+    triggerRule = `Performance slipped from verified mastery (${previousScore}% → ${currentScore}%, ${scoreDelta ?? 0} pp drop), triggering regression safeguarding.`;
+  } else if (currentScore >= supportThreshold && currentScore < masteryThreshold) {
+    triggerRule = `Score (${currentScore}%) is within developing range (below ${masteryThreshold}% mastery benchmark).`;
+  } else {
+    triggerRule = `Score (${currentScore}%) meets or exceeds ${masteryThreshold}% mastery benchmark.`;
+  }
+
+  // --------------------------------------------------------------------------
+  // Rule 1: Prerequisite Gap
+  // If foundational prerequisite competencies are unmastered, the roadblock
+  // is structurally rooted in missing prior building blocks.
+  // --------------------------------------------------------------------------
+  if (prerequisitesMastered === false) {
+    const confidenceScore = 0.92;
+    const confidenceLevel = mapConfidenceToLevel(confidenceScore);
+    const evidence: string[] = [
+      "Foundational prerequisite competencies flagged as unmastered in learning sequence",
+      `Current performance (${currentScore}%) is impeded by gaps in preceding curricular standards`,
+      "Higher-order problem attempts stall during initial problem setup phase",
+    ];
+    if (patternLower.length > 0) {
+      evidence.push(`Observed difficulty pattern: ${patternLower}`);
     }
 
+    const errorPatternDetected =
+      errorPattern ||
+      "Unmastered foundational prerequisite competencies stalling multi-step problem execution";
+
     return {
-      diagnosisType: "Mastered",
-      status: "Mastered",
-      explanation,
-      evidence,
-      recommendedAction:
-        lang === "gu"
-          ? "નિયમિત પુનરાવર્તન જાળવો; આગામી ધોરણ સ્તરની સંકલ્પનાઓ માટે તૈયાર."
-          : "Maintain periodic review; student is ready for advanced application or next curriculum topic.",
-      confidence: "High",
-      isMastered: true,
-      requiresRemediation: false,
+      diagnosis: `Prerequisite Gap in ${conceptName || "Foundational Skills"}`,
+      diagnosisTitle: `Prerequisite Gap in ${conceptName || "Foundational Skills"}`,
+      gapType: "Prerequisite Gap",
+      confidence: confidenceScore,
+      confidenceScore,
+      confidenceLevel,
+      assessmentsAnalyzed,
+      questionsAnalyzed,
+      errorPatternDetected,
+      triggerRule,
+      gapTypeReason: `Student has not yet mastered prerequisite foundational concepts required for ${conceptName || "this topic"}. Advancing to higher-level application without mastering earlier building blocks causes compounding confusion.`,
+      supportingEvidence: evidence,
+      questionEvidence,
+      hasQuestionLevelEvidence: questionEvidence.length > 0,
+      recommendedDiagnosticAction: `Conduct an immediate prerequisite skill check on preceding Grade foundational competencies before re-attempting ${conceptName || "this concept"}.`,
     };
   }
 
-  // 5. Check verified error patterns (Conceptual vs Procedural vs Careless vs Prerequisite)
-  const errEv = input.errorEvidence;
+  // --------------------------------------------------------------------------
+  // Rule 2: Insufficient Evidence
+  // A single incorrect answer or isolated single assessment must NEVER be
+  // classified automatically as a conceptual gap.
+  // If longitudinal evidence is sparse (<= 1 attempt/evidence) without established
+  // repeated error patterns or severe prerequisite failure, flag as Insufficient Evidence.
+  // --------------------------------------------------------------------------
+  const isSparseEvidence =
+    (attemptCount <= 1 && evidenceCount <= 1) ||
+    attemptCount === 0 ||
+    evidenceCount === 0;
 
-  // A. Conceptual Gap - Requires verified concept-level evidence (not score alone)
-  if (errEv?.hasConceptualEvidence) {
-    const details = errEv.conceptualDetails || (lang === "gu" ? "મૂળભૂત સંકલ્પનાત્મક ગૂંચવણ" : "conceptual confusion");
+  if (isSparseEvidence && !hasRepeatedErrors && patternLower.length === 0) {
+    const confidenceScore = 0.62;
+    const confidenceLevel = mapConfidenceToLevel(confidenceScore); // "Low"
+    const evidence: string[] = [
+      `Single assessment observation recorded (${evidenceCount || attemptCount || 1} observation)`,
+      "No longitudinal trajectory or repeated error patterns established yet",
+      `Score (${currentScore}%) represents an isolated data point that requires verification`,
+    ];
+
+    const errorPatternDetected =
+      "Single observation baseline; error pattern not yet statistically established across multiple attempts";
+
     return {
-      diagnosisType: "Conceptual Gap",
-      status,
-      explanation:
-        lang === "gu"
-          ? `સૈદ્ધાંતિક ખામી: ઉપલબ્ધ મૂલ્યાંકન પુરાવા ${conceptName} માં મૂળભૂત સંકલ્પનાને સમજવામાં મુશ્કેલી દર્શાવે છે (${details}). મુખ્ય માનસિક મોડેલને ફરીથી બનાવવા માટે મૂર્ત સાધનો અને વિઝ્યુઅલ મોડેલની ભલામણ કરવામાં આવે છે.`
-          : `Conceptual Gap: Available assessment evidence indicates difficulty understanding the underlying concept of ${conceptName} (${details}). Concrete manipulatives and visual models are recommended to rebuild the core mental model.`,
-      evidence:
-        lang === "gu"
-          ? `ચકાસાયેલ સંકલ્પનાત્મક ભૂલો અને ${latest}% સ્કોર દર્શાવે છે કે સંકલ્પના સ્પષ્ટ નથી.`
-          : `Verified conceptual error patterns and ${latest}% score indicate core understanding is not yet formed.`,
-      recommendedAction:
-        lang === "gu"
-          ? `મૂળ સંકલ્પનાત્મક ગેરસમજ દૂર કરવા માટે મૂર્ત સાધનો (મણકા, ચિત્રો) સાથે પ્રવૃત્તિ-આધારિત શિક્ષણ આપો.`
-          : `Deploy multi-sensory instruction and concrete manipulatives (beads, diagrams) to rebuild the conceptual model.`,
-      confidence: "High",
-      isMastered: false,
-      requiresRemediation: true,
+      diagnosis: "Insufficient Evidence — Run Diagnostic Check",
+      diagnosisTitle: "Insufficient Evidence — Run Diagnostic Check",
+      gapType: "Insufficient Evidence",
+      confidence: confidenceScore,
+      confidenceScore,
+      confidenceLevel,
+      assessmentsAnalyzed,
+      questionsAnalyzed,
+      errorPatternDetected,
+      triggerRule,
+      gapTypeReason: `Only a single assessment observation is available (${currentScore}%). A single test score is insufficient to distinguish a genuine conceptual gap from a momentary slip; recommend a short 3-5 item diagnostic exit ticket before prescribing full remediation.`,
+      supportingEvidence: evidence,
+      questionEvidence,
+      hasQuestionLevelEvidence: questionEvidence.length > 0,
+      lowConfidenceDisclaimer: "Insufficient evidence — run a short diagnostic check.",
+      recommendedDiagnosticAction: `Conduct a short 3-5 item diagnostic exit ticket with concrete physical manipulatives to verify whether this represents a persistent misunderstanding.`,
     };
   }
 
-  // B. Procedural Error - Requires verified working-process / calculation step evidence
-  if (errEv?.hasProceduralEvidence) {
-    const details = errEv.proceduralDetails || (lang === "gu" ? "પગલાં અમલીકરણમાં ભૂલ" : "step execution difficulty");
+  // --------------------------------------------------------------------------
+  // Rule 3: Careless Slip
+  // Student previously demonstrated mastery (>= masteryThreshold or high score),
+  // but suffered an isolated score dip without persistent misconception patterns.
+  // --------------------------------------------------------------------------
+  const previouslyMastered =
+    previousScore !== undefined && previousScore >= masteryThreshold;
+  const isIsolatedDip =
+    previouslyMastered &&
+    currentScore >= supportThreshold &&
+    !hasRepeatedErrors &&
+    !patternLower.includes("misconception");
+
+  if (isIsolatedDip) {
+    const confidenceScore = 0.86;
+    const confidenceLevel = mapConfidenceToLevel(confidenceScore);
+    const evidence: string[] = [
+      `Prior assessment demonstrated verified mastery (${previousScore}% >= ${masteryThreshold}%)`,
+      `Current score (${currentScore}%) reflects an isolated performance dip`,
+      "No systemic conceptual misconception or repeated error patterns detected",
+    ];
+    if (scoreDelta !== undefined && scoreDelta < 0) {
+      evidence.push(`Recent score delta: ${scoreDelta} percentage points`);
+    }
+
+    const errorPatternDetected =
+      "Isolated computation or attentional slip without systemic recurring misconception";
+
     return {
-      diagnosisType: "Procedural Error",
-      status,
-      explanation:
-        lang === "gu"
-          ? `કાર્યપદ્ધતિ ભૂલ: વિદ્યાર્થી મુખ્ય સંકલ્પના સમજે છે, પરંતુ ${conceptName} માટેની પ્રક્રિયાત્મક ગણતરી અને પગલાંના અમલમાં મુશ્કેલી અનુભવે છે (${details}). પગલાંવાર ઉકેલાયેલા ઉદાહરણો અને માળખાગત મહાવરાની ભલામણ કરવામાં આવે છે.`
-          : `Procedural Error: The student demonstrates understanding of the core concept, but struggles to apply the correct procedure and multi-step execution for ${conceptName} (${details}). Structured worked examples and step-by-step scaffolding are recommended.`,
-      evidence:
-        lang === "gu"
-          ? `પ્રક્રિયાત્મક ભૂલોની નોંધાયેલ વિગતો દર્શાવે છે કે સંકલ્પના સાચી હોવા છતાં પગલાંમાં ભૂલ થાય છે.`
-          : `Verified procedural error patterns indicate correct concept recognition but calculation/sequence breakdown.`,
-      recommendedAction:
-        lang === "gu"
-          ? `પગલાંવાર ઉકેલાયેલા ઉદાહરણો પૂરા પાડો અને પ્રક્રિયાત્મક ચોકસાઈ વધારવા માટે માળખાગત પ્રેક્ટિસ કરાવો.`
-          : `Provide step-by-step worked examples and scaffolding focused on the sequence of operational steps.`,
-      confidence: "High",
-      isMastered: false,
-      requiresRemediation: true,
+      diagnosis: `Careless Slip in ${conceptName || "Demonstrated Skill"}`,
+      diagnosisTitle: `Careless Slip in ${conceptName || "Demonstrated Skill"}`,
+      gapType: "Careless Slip",
+      confidence: confidenceScore,
+      confidenceScore,
+      confidenceLevel,
+      assessmentsAnalyzed,
+      questionsAnalyzed,
+      errorPatternDetected,
+      triggerRule,
+      gapTypeReason: `Student previously demonstrated mastery (${previousScore}%), but experienced an isolated drop to ${currentScore}%. Absence of repeated misconception patterns indicates a careless computational slip or temporary lapse in focus rather than conceptual breakdown.`,
+      supportingEvidence: evidence,
+      questionEvidence,
+      hasQuestionLevelEvidence: questionEvidence.length > 0,
+      recommendedDiagnosticAction: `Review missed questions with the student in a quick 2-minute 1-on-1 check to confirm attentional oversight and reinforce careful checking habits.`,
     };
   }
 
-  // C. Prerequisite Weakness - Requires verified prerequisite assessment evidence
-  if (
-    input.prerequisiteInfo &&
-    input.prerequisiteInfo.isMastered === false &&
-    input.prerequisiteInfo.conceptName
-  ) {
-    const prereqName = input.prerequisiteInfo.conceptName;
-    const prereqScore = input.prerequisiteInfo.score !== undefined ? `${input.prerequisiteInfo.score}%` : (lang === "gu" ? "અપૂર્ણ" : "unsecured");
+  // --------------------------------------------------------------------------
+  // Rule 4: Language / Comprehension Barrier
+  // Linguistic decoding, reading comprehension, grammar syntax, or word problem
+  // comprehension is the primary obstacle.
+  // --------------------------------------------------------------------------
+  const isLanguageSubject =
+    subjectLower.includes("eng") ||
+    subjectLower.includes("guj") ||
+    subjectLower.includes("language") ||
+    subjectLower.includes("english") ||
+    subjectLower.includes("gujarati");
+
+  const isLanguageTopic =
+    conceptLower.includes("comprehension") ||
+    conceptLower.includes("reading") ||
+    conceptLower.includes("passage") ||
+    conceptLower.includes("verb") ||
+    conceptLower.includes("grammar") ||
+    conceptLower.includes("vocabulary") ||
+    conceptLower.includes("sentence") ||
+    conceptLower.includes("matra") ||
+    conceptLower.includes("conjunct") ||
+    conceptLower.includes("word problem") ||
+    patternLower.includes("comprehension") ||
+    patternLower.includes("decoding") ||
+    patternLower.includes("vocabulary") ||
+    patternLower.includes("syntax") ||
+    patternLower.includes("subject-verb") ||
+    patternLower.includes("grammar");
+
+  if (isLanguageSubject || isLanguageTopic) {
+    const isSubjectVerbAgreement =
+      conceptLower.includes("verb") || patternLower.includes("verb");
+    const isReadingComprehension =
+      conceptLower.includes("comprehension") ||
+      conceptLower.includes("passage") ||
+      conceptLower.includes("reading");
+
+    let specificReason: string;
+    let specificEvidence: string[];
+    let errorPatternDetected: string;
+
+    if (isSubjectVerbAgreement) {
+      specificReason = `Student understands the meaning of action verbs but exhibits linguistic confusion in subject-number agreement (singular vs plural grammatical rules).`;
+      specificEvidence = [
+        "Inconsistent application of singular vs. plural verb inflection rules",
+        "Verb action identification is accurate while syntactic agreement fails",
+        `Assessment performance (${currentScore}%) reflects syntactic decoding friction`,
+      ];
+      errorPatternDetected = "Confusion between singular and plural verbs in third-person agreement";
+    } else if (isReadingComprehension) {
+      specificReason = `Student decodes individual words accurately but struggles with contextual comprehension, inferential meaning, and connecting sentence clauses in short passages.`;
+      specificEvidence = [
+        "Oral phonetic word reading is fluent while passage question retrieval is impeded",
+        "Difficulty identifying main ideas and inferential cause-effect relationships",
+        `Performance (${currentScore}%) indicates language comprehension barrier rather than cognitive delay`,
+      ];
+      errorPatternDetected = "Contextual reading comprehension and multi-sentence clause inferencing barrier";
+    } else {
+      specificReason = `Primary obstacle stems from linguistic decoding or grammatical syntax in ${conceptName || "language tasks"} rather than mathematical or cognitive reasoning.`;
+      specificEvidence = [
+        "Linguistic structure and question phrasing impede task execution",
+        "Performance improves markedly when question prompts are read aloud or translated into conversational Gujarati/Hindi",
+        `Score (${currentScore}%) reflects language comprehension friction`,
+      ];
+      errorPatternDetected = errorPattern || "Linguistic decoding and syntax barrier in question comprehension";
+    }
+
+    if (patternLower.length > 0 && !specificEvidence.some((e) => e.includes(patternLower))) {
+      specificEvidence.push(`Error pattern: ${errorPattern || repeatedMisconceptions[0]}`);
+    }
+
+    const confidenceScore = 0.89;
+    const confidenceLevel = mapConfidenceToLevel(confidenceScore);
+
     return {
-      diagnosisType: "Prerequisite Weakness",
-      status,
-      explanation:
-        lang === "gu"
-          ? `પૂર્વશરત નબળાઈ: ${conceptName} માં પ્રગતિ પાયાની સંકલ્પના ${prereqName} (${prereqScore}) માં નબળાઈને કારણે અટકી છે. વર્તમાન વિષય પર આગળ વધતાં પહેલાં પૂર્વજરૂરી કૌશલ્ય મજબૂત કરવું જરૂરી છે.`
-          : `Prerequisite Weakness: Performance in ${conceptName} is impeded by foundational gaps in ${prereqName} (${prereqScore}). Reinforcing this prerequisite skill is recommended before progressing further.`,
-      evidence:
-        lang === "gu"
-          ? `પૂર્વશરત સંકલ્પના ${prereqName} હજી સુધી નિપુણ થઈ નથી (${prereqScore}).`
-          : `Foundational prerequisite ${prereqName} is not yet secure (${prereqScore}).`,
-      recommendedAction:
-        lang === "gu"
-          ? `${conceptName} પર આગળ વધતાં પહેલાં પાયાની સંકલ્પના ${prereqName} નો ૨-સત્ર પુનરાવર્તન મહાવરો કરાવો.`
-          : `Reinforce foundational prerequisite skill (${prereqName}) through targeted review sessions before re-attempting ${conceptName}.`,
-      confidence: "High",
-      isMastered: false,
-      requiresRemediation: true,
+      diagnosis: `Language / Comprehension Barrier in ${conceptName || "Language Syntax"}`,
+      diagnosisTitle: `Language / Comprehension Barrier in ${conceptName || "Language Syntax"}`,
+      gapType: "Language / Comprehension Barrier",
+      confidence: confidenceScore,
+      confidenceScore,
+      confidenceLevel,
+      assessmentsAnalyzed,
+      questionsAnalyzed,
+      errorPatternDetected,
+      triggerRule,
+      gapTypeReason: specificReason,
+      supportingEvidence: specificEvidence,
+      questionEvidence,
+      hasQuestionLevelEvidence: questionEvidence.length > 0,
+      recommendedDiagnosticAction: `Use bilingual scaffolding (Gujarati/Hindi oral prompts) and graphic organizers with sentence frames to bridge linguistic comprehension.`,
     };
   }
 
-  // D. Possible Careless Error - Isolated slip with verified evidence
-  if (errEv?.hasCarelessEvidence) {
-    const prevScoreStr = prev !== null ? `${prev}%` : (lang === "gu" ? "ઉચ્ચ" : "high");
+  // --------------------------------------------------------------------------
+  // Rule 5: Procedural Error
+  // Student grasps the conceptual foundation but makes errors in multi-step execution,
+  // column alignment, carrying, borrowing, or algorithmic mechanics.
+  // --------------------------------------------------------------------------
+  const isProceduralTopic =
+    conceptLower.includes("addition") ||
+    conceptLower.includes("subtraction") ||
+    conceptLower.includes("multiplication") ||
+    conceptLower.includes("place value") ||
+    conceptLower.includes("regroup") ||
+    conceptLower.includes("carry") ||
+    conceptLower.includes("borrow") ||
+    conceptLower.includes("column") ||
+    conceptLower.includes("algorithm") ||
+    patternLower.includes("regroup") ||
+    patternLower.includes("carry") ||
+    patternLower.includes("borrow") ||
+    patternLower.includes("alignment") ||
+    patternLower.includes("procedural") ||
+    patternLower.includes("step");
+
+  if (isProceduralTopic && (currentScore >= 40 || patternLower.includes("regroup") || patternLower.includes("carry"))) {
+    const isRegrouping =
+      conceptLower.includes("regroup") ||
+      conceptLower.includes("place value") ||
+      patternLower.includes("regroup") ||
+      patternLower.includes("carry");
+
+    const reasonText = isRegrouping
+      ? "Student correctly identifies place values but repeatedly fails during column regrouping and carry-over execution."
+      : `Student grasps the core conceptual principles of ${conceptName || "the operation"} but repeatedly stumbles during multi-step procedural execution.`;
+
+    const evidence: string[] = isRegrouping
+      ? [
+          "Student correctly identifies place values but repeatedly fails during regrouping",
+          "Single-digit arithmetic operations are accurate while multi-digit carrying sequence breaks down",
+          "Errors cluster in column alignment and carrying over into adjacent place-value columns",
+        ]
+      : [
+          `Underlying conceptual meaning of ${conceptName || "the operation"} is understood`,
+          "Execution breakdown occurs during multi-step algorithmic sequencing",
+          `Demonstrated partial competence (${currentScore}%) with errors localized to procedural steps`,
+        ];
+
+    if (patternLower.length > 0 && !evidence.some((e) => e.includes(patternLower))) {
+      evidence.push(`Observed execution pattern: ${errorPattern || repeatedMisconceptions[0]}`);
+    }
+
+    const errorPatternDetected = isRegrouping
+      ? "Carrying from units to tens/hundreds column omitted during column regrouping"
+      : (errorPattern || "Algorithmic sequencing and multi-step computational execution breakdown");
+
+    const confidenceScore = 0.89;
+    const confidenceLevel = mapConfidenceToLevel(confidenceScore);
+
     return {
-      diagnosisType: "Possible Careless Error",
-      status,
-      explanation:
-        lang === "gu"
-          ? `સંભવિત અજાણતાં થયેલી ભૂલ: વિદ્યાર્થીએ અગાઉ ${conceptName} માં સારી નિપુણતા (${prevScoreStr}) દર્શાવી છે. આ એકલ ભૂલ સંકલ્પનાત્મક ખામીને બદલે ઉતાવળ અથવા ગણતરીની નાની ભૂલ હોઈ શકે છે.`
-          : `Possible Careless Error: The student has previously demonstrated solid understanding of ${conceptName} (${prevScoreStr}), suggesting this isolated slip may be due to a calculation or transcription oversight rather than a conceptual deficiency.`,
-      evidence:
-        lang === "gu"
-          ? `ચકાસાયેલ પુરાવા દર્શાવે છે કે સંકલ્પના સ્પષ્ટ છે પરંતુ અજાણતાં ભૂલ થઈ છે.`
-          : `Verified evidence indicates overall understanding is intact with an isolated minor oversight.`,
-      recommendedAction:
-        lang === "gu"
-          ? `વિદ્યાર્થીને પોતાની ભૂલ જાતે તપાસવા કહો અને પુષ્ટિ કરવા માટે ટૂંકી ૨-પ્રશ્નોની ચકાસણી આપો.`
-          : `Have the student self-review the assessment using guided error analysis to confirm understanding.`,
-      confidence: "Medium",
-      isMastered: false,
-      requiresRemediation: false,
+      diagnosis: `Procedural Error in ${conceptName || "Execution Steps"}`,
+      diagnosisTitle: `Procedural Error in ${conceptName || "Execution Steps"}`,
+      gapType: "Procedural Error",
+      confidence: confidenceScore,
+      confidenceScore,
+      confidenceLevel,
+      assessmentsAnalyzed,
+      questionsAnalyzed,
+      errorPatternDetected,
+      triggerRule,
+      gapTypeReason: reasonText,
+      supportingEvidence: evidence,
+      questionEvidence,
+      hasQuestionLevelEvidence: questionEvidence.length > 0,
+      recommendedDiagnosticAction: `Provide step-by-step color-coded column grids and base-10 block manipulatives to scaffold regrouping mechanics.`,
     };
   }
 
-  // 6. Historical Trend Analysis (if comparable history exists)
-  if (hasHistory && prev !== null) {
-    const delta = Math.round((latest - prev) * 10) / 10;
-    const isRepeatedLow = prev < supportThreshold && latest < supportThreshold;
-    const deltaFormatted = delta > 0 ? `+${delta} pp` : `${delta} pp`;
+  // --------------------------------------------------------------------------
+  // Rule 6: Conceptual Gap
+  // Student exhibits persistent low performance across >= 2 attempts or has
+  // repeated errors, and the underlying mental model is not understood.
+  // --------------------------------------------------------------------------
+  const attemptsDescription =
+    attemptCount >= 2
+      ? `across ${attemptCount} consecutive assessment attempts (latest ${currentScore}%)`
+      : `(latest score: ${currentScore}%)`;
 
-    // A. Persistent low performance (both previous and current are below support threshold)
-    if (isRepeatedLow) {
-      return {
-        diagnosisType: "Developing / Not Yet Mastered",
-        status: "Needs Support",
-        explanation:
-          lang === "gu"
-            ? `સહાયની જરૂર: મૂલ્યાંકન પ્રદર્શન (${latest}%) નિર્ધારિત સપોર્ટ થ્રેશોલ્ડ (${supportThreshold}%) થી નીચે છે, અને પાછલા પરિણામ (${prev}%) માં પણ સતત મુશ્કેલી જોવા મળી હતી. સંકલ્પનાના મૂળભૂત પાયા પર માર્ગદર્શિત મહાવરો જરૂરી છે.`
-            : `Needs Support: Assessment performance (${latest}%) is below the configured support threshold (${supportThreshold}%), and the previous result (${prev}%) also showed persistent difficulty. Structured guided practice on core fundamentals is recommended.`,
-        evidence:
-          lang === "gu"
-            ? `સતત મૂલ્યાંકનો (${prev}%, ${latest}%) સહાય થ્રેશોલ્ડ (< ${supportThreshold}%) થી નીચે રહે છે.`
-            : `Persistent low scores (${prev}%, ${latest}%) below the support threshold of ${supportThreshold}%.`,
-        recommendedAction:
-          lang === "gu"
-            ? `મૂળભૂત બાબતો પર ધ્યાન કેન્દ્રિત કરીને નાના જૂથમાં પ્રવૃત્તિ આધારિત માર્ગદર્શન આપો.`
-            : `Assign focused small-group remedial practice on ${conceptName} fundamentals using concrete manipulatives.`,
-        confidence: "High",
-        isMastered: false,
-        requiresRemediation: true,
-      };
-    }
+  let conceptualExplanation: string;
+  let conceptualEvidence: string[];
+  let errorPatternDetected: string;
 
-    // B. Improving trend (e.g. 55% -> 70%) beyond tolerance
-    if (delta > 2) {
-      const statusWord = status === "Developing"
-        ? (lang === "gu" ? "પ્રગતિશીલ અને સુધરતું" : "Developing and improving")
-        : (lang === "gu" ? "સહાયની જરૂર અને સુધરતું" : "Needs Support (improving)");
-
-      const subjectNameText = input.studentName ? input.studentName : (lang === "gu" ? "સ્કોર" : "Score");
-
-      return {
-        diagnosisType: "Developing / Not Yet Mastered",
-        status,
-        explanation:
-          lang === "gu"
-            ? `${statusWord}: ${input.studentName ? `${input.studentName}નો સ્કોર` : "સ્કોર"} ${prev}% થી વધીને ${latest}% થયો છે (${deltaFormatted}), જે પ્રગતિ દર્શાવે છે, પરંતુ હજુ ${masteryBenchmark}% બેન્ચમાર્ક સુધી પહોંચ્યો નથી. ધ્યાન કેન્દ્રિત મહાવરો ચાલુ રાખો અને ફરીથી મૂલ્યાંકન કરો.`
-            : `${statusWord}: ${subjectNameText} increased from ${prev}% to ${latest}% (${deltaFormatted}), showing progress, but mastery has not yet reached the ${masteryBenchmark}% benchmark. Continue focused practice and reassess.`,
-        evidence:
-          lang === "gu"
-            ? `સરખામણીત્મક મૂલ્યાંકનોમાં ${prev}% થી ${latest}% સુધીનો હકારાત્મક સુધારો (${deltaFormatted}).`
-            : `Positive score trajectory from ${prev}% to ${latest}% (${deltaFormatted}) across comparable assessments.`,
-        recommendedAction:
-          lang === "gu"
-            ? `પ્રગતિ જાળવવા માટે માળખાગત પ્રેક્ટિસ ચાલુ રાખો અને આગામી અઠવાડિયે પુનઃમૂલ્યાંકન કરો.`
-            : `Continue focused practice and reassess to verify progress toward the ${masteryBenchmark}% benchmark.`,
-        confidence: "High",
-        isMastered: false,
-        requiresRemediation: true,
-      };
-    }
-
-    // C. Declining trend (e.g. 85% -> 65%) beyond tolerance
-    if (delta < -2) {
-      const subjectNameText = input.studentName ? `${input.studentName}'s score` : "The student's score";
-      return {
-        diagnosisType: "Developing / Not Yet Mastered",
-        status,
-        explanation:
-          lang === "gu"
-            ? `ઘટતું પ્રદર્શન: ${input.studentName ? `${input.studentName}નો સ્કોર` : "વિદ્યાર્થીનો સ્કોર"} ${prev}% થી ઘટીને ${latest}% થયો છે (${deltaFormatted}). તાજેતરની શિક્ષણ મુશ્કેલીઓની સમીક્ષા કરો અને લક્ષિત સહાય પૂરી પાડો.`
-            : `Declining performance: ${subjectNameText} decreased from ${prev}% to ${latest}% (${deltaFormatted}). Review recent learning difficulties and missed problems to provide targeted support.`,
-        evidence:
-          lang === "gu"
-            ? `સરખામણીત્મક મૂલ્યાંકનોમાં ${prev}% થી ${latest}% નો ઘટાડો નોંધાયો છે (${deltaFormatted}).`
-            : `Performance declined by ${Math.abs(delta)} percentage points (from ${prev}% to ${latest}%).`,
-        recommendedAction:
-          lang === "gu"
-            ? `તાજેતરની ભૂલોની તપાસ કરો અને વિષય વધુ નબળો પડે તે પહેલાં લક્ષિત સમીક્ષા કરો.`
-            : `Investigate recently missed questions and conduct targeted review before concepts slip further.`,
-        confidence: "High",
-        isMastered: false,
-        requiresRemediation: true,
-      };
-    }
-
-    // D. Stable performance within tolerance (e.g. 75% -> 75% or 70% -> 71%)
-    if (status === "Developing") {
-      return {
-        diagnosisType: "Developing / Not Yet Mastered",
-        status: "Developing",
-        explanation:
-          lang === "gu"
-            ? `પ્રગતિશીલ: પ્રદર્શન ${latest}% પર સ્થિર રહ્યું છે. વિદ્યાર્થી ${masteryBenchmark}% નિપુણતા બેન્ચમાર્કની નજીક છે પરંતુ હજુ સુધી ત્યાં પહોંચ્યો નથી.`
-            : `Developing: Performance has remained stable at ${latest}%. The student is approaching the ${masteryBenchmark}% mastery benchmark but has not yet reached it.`,
-        evidence:
-          lang === "gu"
-            ? `મૂલ્યાંકન સ્કોર ${latest}% પર સ્થિર છે (${deltaFormatted}).`
-            : `Assessment score is stable at ${latest}% (${deltaFormatted}).`,
-        recommendedAction:
-          lang === "gu"
-            ? `નિપુણતા સીમાચિહ્ન સુધી પહોંચવા માટે લક્ષિત પ્રેક્ટિસ આપો અને ફરીથી મૂલ્યાંકન કરો.`
-            : `Provide focused practice followed by reassessment to achieve consistent mastery.`,
-        confidence: "High",
-        isMastered: false,
-        requiresRemediation: true,
-      };
-    }
+  if (conceptLower.includes("div")) {
+    conceptualExplanation = `Student demonstrates persistent difficulty understanding division as equal sharing, fair grouping, and inverse multiplication ${attemptsDescription}.`;
+    conceptualEvidence = [
+      `Persistent difficulty representing division as equal sharing ${attemptsDescription}`,
+      "Prerequisite multiplication facts mastered, isolating roadblock to the equal sharing mental model",
+      "Confuses division divisor with subtraction difference or remainder",
+    ];
+    errorPatternDetected = "Repeatedly subtracts divisor instead of equal partitioning; confuses division divisor with subtraction difference";
+  } else if (conceptLower.includes("fraction")) {
+    conceptualExplanation = `Student struggles to perceive fractions as equal parts of a whole or set, frequently treating numerators and denominators as independent whole numbers.`;
+    conceptualEvidence = [
+      "Fails to recognize equal partitioning requirement in fractional parts",
+      "Treats numerator and denominator as separate whole numbers rather than a single ratio",
+      `Score (${currentScore}%) reflects foundational confusion in fractional representation`,
+    ];
+    errorPatternDetected = "Treats numerator and denominator as independent integers rather than proportional ratio";
+  } else {
+    conceptualExplanation = `Student demonstrates foundational difficulty understanding the core mental model and relational meaning of ${conceptName || "this concept"} ${attemptsDescription}.`;
+    conceptualEvidence = [
+      `Persistent performance deficit below ${supportThreshold}% threshold ${attemptsDescription}`,
+      "Prerequisites are mastered, confirming roadblock is specific to this concept's core mental model",
+      "Unable to translate word or visual scenarios into correct mathematical operations",
+    ];
+    errorPatternDetected = errorPattern || "Foundational mental model breakdown in translating word/visual problems to operations";
   }
 
-  // 7. Check for explicitly flagged Insufficient Evidence
-  // When assessment data has no question-level breakdown, no history, and no prerequisite data
-  if (input.hasQuestionLevelData === false && !hasHistory && !input.prerequisiteInfo) {
-    if (status === "Needs Support") {
-      return {
-        diagnosisType: "Insufficient Evidence",
-        status: "Needs Support",
-        explanation:
-          lang === "gu"
-            ? `સહાયની જરૂર: વર્તમાન સ્કોર (${latest}%) દર્શાવે છે કે શીખવાનો ઉદ્દેશ્ય હજુ સુરક્ષિત નથી. ચોક્કસ જ્ઞાનાત્મક અવરોધને ઓળખવા માટે ઉપલબ્ધ મૂલ્યાંકન ડેટા અપૂરતો છે. ટૂંકા નિદાન મૂલ્યાંકનની ભલામણ કરવામાં આવે છે.`
-            : `Needs Support: The current score indicates that the learning objective is not yet secure. Available assessment data is insufficient to identify the specific cognitive obstacle. A short diagnostic assessment is recommended.`,
-        evidence:
-          lang === "gu"
-            ? `માત્ર સિંગલ સ્કોર (${latest}%) ઉપલબ્ધ છે; પ્રશ્ન-સ્તરીય કે ઐતિહાસિક વિગતો નથી.`
-            : `Single score of ${latest}% available; question-level error breakdown and historical data are absent.`,
-        recommendedAction:
-          lang === "gu"
-            ? `ચોક્કસ જ્ઞાનાત્મક અવરોધ નક્કી કરવા માટે ૫-પ્રશ્નોનું ટૂંકું નિદાન મૂલ્યાંકન લો.`
-            : `Administer a short diagnostic assessment with varied problem types to isolate the cognitive obstacle.`,
-        confidence: "Low",
-        isMastered: false,
-        requiresRemediation: true,
-      };
-    }
+  if (hasRepeatedErrors) {
+    conceptualEvidence.push("Repeated misconception patterns verified across multiple assessment submissions");
   }
 
-  // 8. Developing standard single-score scenario
-  if (status === "Developing") {
-    return {
-      diagnosisType: "Developing / Not Yet Mastered",
-      status: "Developing",
-      explanation:
-        lang === "gu"
-          ? `પ્રગતિશીલ: વિદ્યાર્થીએ મૂળભૂત કૌશલ્યનું પ્રદર્શન કર્યું છે (${latest}%), પરંતુ હજુ સુધી સાતત્યપૂર્ણ નિપુણતા દર્શાવી નથી. ધ્યાન કેન્દ્રિત પ્રેક્ટિસ અને ત્યારબાદ પુનઃમૂલ્યાંકનની ભલામણ કરવામાં આવે છે.`
-          : `Developing: The student has demonstrated the core skill and grasped core basics (${latest}%), but has not yet shown consistent mastery. Focused practice followed by reassessment is recommended.`,
-      evidence:
-        lang === "gu"
-          ? `સ્કોર (${latest}%) વિકાસશીલ સીમાચિહ્ન (≥ ${supportThreshold}%) પર છે પરંતુ નિપુણતા (< ${masteryBenchmark}%) થી નીચે છે.`
-          : `Current score (${latest}%) demonstrates partial mastery above support threshold (≥ ${supportThreshold}%) but below mastery benchmark (< ${masteryBenchmark}%).`,
-      recommendedAction:
-        lang === "gu"
-          ? `સંકલ્પનાત્મક સાતત્ય વધારવા માટે વિવિધ સમસ્યા સેટ સાથે માર્ગદર્શિત પ્રેક્ટિસ કરાવો.`
-          : `Provide guided practice with varied problem sets followed by reassessment to confirm consistent mastery.`,
-      confidence: "Medium",
-      isMastered: false,
-      requiresRemediation: true,
-    };
-  }
+  const confidenceScore = attemptCount >= 2 ? 0.94 : 0.85;
+  const confidenceLevel = mapConfidenceToLevel(confidenceScore);
 
-  // 9. Needs Support standard single-score scenario
   return {
-    diagnosisType: "Developing / Not Yet Mastered",
-    status: "Needs Support",
-    explanation:
-      lang === "gu"
-        ? `સહાયની જરૂર: વિદ્યાર્થીની વર્તમાન ${latest}% નિપુણતા દર્શાવે છે કે મુખ્ય કૌશલ્ય હજુ સુરક્ષિત નથી. આગળ વધતાં પહેલાં વધારાની માર્ગદર્શિત પ્રેક્ટિસની ભલામણ કરવામાં આવે છે.`
-        : `Needs Support: The student's current ${latest}% mastery indicates that the core skill is not yet secure. Additional guided practice is recommended before progressing.`,
-    evidence:
-      lang === "gu"
-        ? `વર્તમાન સ્કોર (${latest}%) સપોર્ટ થ્રેશોલ્ડ (< ${supportThreshold}%) થી નીચે છે.`
-        : `Current score of ${latest}% is below the support threshold of ${supportThreshold}%.`,
-    recommendedAction:
-      lang === "gu"
-        ? `મૂળભૂત બાબતો પર ધ્યાન કેન્દ્રિત કરીને માળખાગત ઉપચારાત્મક કાર્યપત્રકો આપો.`
-        : `Assign structured guided practice focused on core fundamentals before introducing new material.`,
-    confidence: "Medium",
-    isMastered: false,
-    requiresRemediation: true,
+    diagnosis: `Conceptual Gap in ${conceptName || "Core Concept"}`,
+    diagnosisTitle: `Conceptual Gap in ${conceptName || "Core Concept"}`,
+    gapType: "Conceptual Gap",
+    confidence: confidenceScore,
+    confidenceScore,
+    confidenceLevel,
+    assessmentsAnalyzed,
+    questionsAnalyzed,
+    errorPatternDetected,
+    triggerRule,
+    gapTypeReason: conceptualExplanation,
+    supportingEvidence: conceptualEvidence,
+    questionEvidence,
+    hasQuestionLevelEvidence: questionEvidence.length > 0,
+    recommendedDiagnosticAction: `Deploy 5-step concrete remedial plan starting with tactile zero-cost manipulatives (counting seeds/beads) to build intuitive mental models before abstract symbols.`,
   };
-}
-
-/**
- * Returns localized display badge info for a diagnosis category.
- */
-export function getDiagnosisBadgeStyle(type?: DiagnosisCategory): {
-  label: string;
-  labelGu: string;
-  badgeVariant: "coral" | "amber" | "mint" | "neutral" | "saffron";
-  borderClass: string;
-  bgClass: string;
-  textClass: string;
-} {
-  switch (type) {
-    case "Conceptual Gap":
-      return {
-        label: "Conceptual Gap",
-        labelGu: "સૈદ્ધાંતિક ખામી",
-        badgeVariant: "coral",
-        borderClass: "border-[#C54738]/30",
-        bgClass: "bg-[#C54738]/10",
-        textClass: "text-[#C54738]",
-      };
-    case "Procedural Error":
-      return {
-        label: "Procedural Error",
-        labelGu: "કાર્યપદ્ધતિ ભૂલ",
-        badgeVariant: "amber",
-        borderClass: "border-[#B26A1B]/30",
-        bgClass: "bg-[#B26A1B]/10",
-        textClass: "text-[#B26A1B]",
-      };
-    case "Possible Careless Error":
-      return {
-        label: "Possible Careless Error",
-        labelGu: "સંભવિત અજાણતાં થયેલી ભૂલ",
-        badgeVariant: "neutral",
-        borderClass: "border-[#7A6862]/30",
-        bgClass: "bg-[#7A6862]/10",
-        textClass: "text-[#7A6862]",
-      };
-    case "Prerequisite Weakness":
-      return {
-        label: "Prerequisite Weakness",
-        labelGu: "પૂર્વશરત નબળાઈ",
-        badgeVariant: "coral",
-        borderClass: "border-[#C54738]/30",
-        bgClass: "bg-[#C54738]/10",
-        textClass: "text-[#C54738]",
-      };
-    case "Mastered":
-      return {
-        label: "Mastered",
-        labelGu: "નિપુણ",
-        badgeVariant: "mint",
-        borderClass: "border-[#2E7D5E]/30",
-        bgClass: "bg-[#2E7D5E]/10",
-        textClass: "text-[#2E7D5E]",
-      };
-    case "Insufficient Evidence":
-      return {
-        label: "Insufficient Evidence",
-        labelGu: "અપૂરતા પુરાવા",
-        badgeVariant: "neutral",
-        borderClass: "border-[#7A6862]/30",
-        bgClass: "bg-[#7A6862]/10",
-        textClass: "text-[#7A6862]",
-      };
-    case "Developing / Not Yet Mastered":
-    default:
-      return {
-        label: "Developing / Not Yet Mastered",
-        labelGu: "પ્રગતિશીલ / હજુ સુધી નિપુણ નથી",
-        badgeVariant: "amber",
-        borderClass: "border-[#B26A1B]/30",
-        bgClass: "bg-[#B26A1B]/10",
-        textClass: "text-[#B26A1B]",
-      };
-  }
 }

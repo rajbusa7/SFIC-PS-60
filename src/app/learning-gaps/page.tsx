@@ -19,6 +19,13 @@ import { LearningGapMap } from "@/components/learning-gaps/LearningGapMap";
 import { ClassLearningGapHeatmap } from "@/components/learning-gaps/ClassLearningGapHeatmap";
 import { SmartRemediationGroups } from "@/components/learning-gaps/SmartRemediationGroups";
 import {
+  TodaysPrioritiesSection,
+  PriorityQueueCategory,
+} from "@/components/learning-gaps/TodaysPrioritiesSection";
+import { ProgressTimeline } from "@/components/learning-gaps/ProgressTimeline";
+import { calculateTodaysPriorities } from "@/lib/engine/todaysPriorities";
+import { generatePedagogicalPrescription } from "@/lib/engine/prescriptionEngine";
+import {
   getSmartRemediationGroups,
   SmartRemediationGroup,
 } from "@/lib/engine/smartGroupingEngine";
@@ -35,6 +42,9 @@ import {
   Sparkles,
   ArrowRight,
   TrendingDown,
+  TrendingUp,
+  Clock,
+  Zap,
   Info,
   Sliders,
   BrainCircuit,
@@ -55,6 +65,19 @@ export default function LearningGapsPage() {
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [generatingPlanId, setGeneratingPlanId] = useState<string | null>(null);
+
+  // Priority Queue Category Filter state (Today's Priorities interactive queue)
+  const [priorityQueueFilter, setPriorityQueueFilter] = useState<PriorityQueueCategory | null>(null);
+
+  // Expandable longitudinal Progress Timeline state
+  const [expandedTimelineGapIds, setExpandedTimelineGapIds] = useState<Record<string, boolean>>({});
+
+  const toggleTimeline = (gapId: string) => {
+    setExpandedTimelineGapIds((prev) => ({
+      ...prev,
+      [gapId]: !prev[gapId],
+    }));
+  };
 
   // Expandable question-level evidence state
   const [expandedEvidenceGapIds, setExpandedEvidenceGapIds] = useState<Record<string, boolean>>({});
@@ -315,6 +338,26 @@ export default function LearningGapsPage() {
     const dynamicRootCauseExplanation = g.rootCauseExplanation ?? rootCause.rootCauseExplanation;
     const dynamicInsufficientEvidenceWarning = g.insufficientEvidenceWarning ?? rootCause.insufficientEvidenceWarning;
 
+    // Phase 5: Pedagogical Prescription Engine
+    const dynamicPrescription = generatePedagogicalPrescription({
+      conceptId: g.conceptId,
+      conceptName: g.conceptName,
+      subjectCode: g.subjectCode,
+      subjectName: g.subjectName,
+      currentScore: score,
+      previousScore: prevScore,
+      gapStatus: dynamicStatus,
+      gapType: dynamicGapType,
+      trend,
+      previousIntervention: g.previousIntervention || (g.remedialPlanStatus === "Completed" ? "5-Step Remedial Plan Completed" : undefined),
+      grade: g.grade,
+      masteryThreshold,
+      supportThreshold,
+      rootConceptName: dynamicIsRootGapIdentified && dynamicRootConcept ? dynamicRootConcept.name : undefined,
+      prerequisiteConcepts: dynamicPrerequisiteConcepts?.map((p: any) => (typeof p === "string" ? p : p?.name)),
+      isRootGapIdentified: dynamicIsRootGapIdentified,
+    });
+
     // A concept reaching mastery should no longer be treated as an unresolved active learning gap
     const dynamicIsGap = dynamicLifecycle === "Active Gap";
 
@@ -352,9 +395,26 @@ export default function LearningGapsPage() {
       dynamicRootCauseConfidenceLevel,
       dynamicRootCauseExplanation,
       dynamicInsufficientEvidenceWarning,
+      dynamicPrescription,
+      gapReopened: g.gapReopened ?? false,
+      previousMasteryScore: g.previousMasteryScore,
+      masteryDate: g.masteryDate,
+      assessmentHistory: g.assessmentHistory || [],
+      totalImprovement: g.totalImprovement,
+      latestScoreDelta: g.latestScoreDelta ?? g.scoreDelta ?? g.deltaPercentagePoints,
+      numberOfAssessments: g.numberOfAssessments ?? g.assessmentHistory?.length ?? 1,
+      numberOfInterventions: g.numberOfInterventions ?? (g.remedialPlanStatus ? 1 : 0),
+      timeToMastery: g.timeToMastery,
+      reassessmentDue: g.reassessmentDue,
+      remedialPlanStatus: g.remedialPlanStatus,
       dynamicIsGap,
     };
   });
+
+  // Calculate Today's Priorities summary dynamically
+  const todaysPriorities = React.useMemo(() => {
+    return calculateTodaysPriorities(processedGaps);
+  }, [processedGaps]);
 
   const heatmapData = React.useMemo(() => {
     return getClassLearningGapHeatmap(gaps, selectedClass);
@@ -366,6 +426,15 @@ export default function LearningGapsPage() {
   }, [heatmapFilter, heatmapData, processedGaps]);
 
   const filteredGaps = baseGapsToDisplay.filter((g) => {
+    // Priority Queue Category Filter (Today's Priorities)
+    if (priorityQueueFilter) {
+      if (priorityQueueFilter === "immediate" && !todaysPriorities.immediateSupportGapIds.includes(g.id)) return false;
+      if (priorityQueueFilter === "developing" && !todaysPriorities.developingGapIds.includes(g.id)) return false;
+      if (priorityQueueFilter === "reassess" && !todaysPriorities.readyToReassessGapIds.includes(g.id)) return false;
+      if (priorityQueueFilter === "mastered" && !todaysPriorities.recentlyMasteredGapIds.includes(g.id)) return false;
+      if (priorityQueueFilter === "reopened" && !todaysPriorities.reopenedGapIds.includes(g.id)) return false;
+    }
+
     if (priorityFilter !== "all") {
       const cleanFilter = priorityFilter.toLowerCase().replace(/\s*priority$/i, "");
       const gapPriority = String(g.dynamicPriority || g.severityLevel || g.priority || "").toLowerCase().replace(/\s*priority$/i, "");
@@ -509,7 +578,14 @@ export default function LearningGapsPage() {
           </div>
         </Card>
 
-        {/* 2. CLASS LEARNING GAP HEATMAP (Cross-competency cohort distribution) */}
+        {/* 2. TODAY'S PRIORITIES / ACTION QUEUE */}
+        <TodaysPrioritiesSection
+          priorities={todaysPriorities}
+          activeCategory={priorityQueueFilter}
+          onSelectCategory={setPriorityQueueFilter}
+        />
+
+        {/* 3. CLASS LEARNING GAP HEATMAP (Cross-competency cohort distribution) */}
         <ClassLearningGapHeatmap
           heatmapData={heatmapData}
           activeFilter={heatmapFilter}
@@ -518,7 +594,7 @@ export default function LearningGapsPage() {
           onSelectClass={setSelectedClass}
         />
 
-        {/* 3. SMART REMEDIATION GROUPING (Teacher in Control) */}
+        {/* 4. SMART REMEDIATION GROUPING (Teacher in Control) */}
         <SmartRemediationGroups
           groups={smartGroups}
           onUpdateGroup={handleUpdateGroup}
@@ -560,6 +636,32 @@ export default function LearningGapsPage() {
           </div>
 
           <div className="flex items-center gap-2">
+            {priorityQueueFilter && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-[#FAF6E9] border border-[#B26A1B]/30 text-[#8D4E10]">
+                <span>
+                  Priority:{" "}
+                  <strong>
+                    {priorityQueueFilter === "immediate"
+                      ? "Immediate Support"
+                      : priorityQueueFilter === "developing"
+                      ? "Developing Practice"
+                      : priorityQueueFilter === "reassess"
+                      ? "Ready to Reassess"
+                      : priorityQueueFilter === "reopened"
+                      ? "Reopened Gaps"
+                      : "Recently Mastered"}
+                  </strong>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setPriorityQueueFilter(null)}
+                  className="ml-1 text-[#C54738] hover:text-[#991B1B] cursor-pointer"
+                  title="Clear priority queue filter"
+                >
+                  ✕
+                </button>
+              </span>
+            )}
             {heatmapFilter && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-[#FAF6E9] border border-[#B26A1B]/30 text-[#8D4E10]">
                 <span>Heatmap Filter: <strong>{heatmapFilter.competencyName}</strong> ({heatmapFilter.status})</span>
@@ -636,6 +738,11 @@ export default function LearningGapsPage() {
                           {gap.trendText}
                         </Badge>
                       )}
+                      {gap.gapReopened && (
+                        <Badge variant="coral" size="sm" dot>
+                          GAP REOPENED (Was {gap.previousMasteryScore ?? 85}%)
+                        </Badge>
+                      )}
                       {gap.dynamicIsRootGapIdentified && gap.dynamicRootConcept && (
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-[#F2CAB3]/40 border border-[#B26A1B]/30 text-[#8D4E10]">
                           <GitFork className="w-3 h-3 text-[#B26A1B] shrink-0" />
@@ -666,15 +773,52 @@ export default function LearningGapsPage() {
 
                   {/* Actions */}
                   <div className="flex items-center gap-2">
+                    {gap.dynamicStatus === "Mastered" ? (
+                      <Button
+                        variant="mint"
+                        size="sm"
+                        disabled
+                        className="rounded-full text-xs font-bold opacity-80 cursor-default"
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+                        <span>Mastery Certified</span>
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="saffron"
+                        size="sm"
+                        onClick={() => handleGeneratePlan(gap.id)}
+                        disabled={generatingPlanId === gap.id}
+                        className="rounded-full text-xs font-bold"
+                      >
+                        <Layers className="w-3.5 h-3.5 mr-1" />
+                        <span>{generatingPlanId === gap.id ? "Generating..." : "Generate 5-Step Plan"}</span>
+                      </Button>
+                    )}
+
                     <Button
-                      variant="saffron"
+                      variant="outline"
                       size="sm"
-                      onClick={() => handleGeneratePlan(gap.id)}
-                      disabled={generatingPlanId === gap.id}
-                      className="rounded-full text-xs font-bold"
+                      onClick={() => toggleTimeline(gap.id)}
+                      className={`rounded-full text-xs transition-colors border ${
+                        expandedTimelineGapIds[gap.id]
+                          ? "bg-[#FAF6E9] text-[#49352F] border-[#B26A1B]/40 font-bold"
+                          : "bg-white hover:bg-[#FAF6E9] text-[#49352F] border-[#49352F]/15"
+                      }`}
+                      aria-expanded={Boolean(expandedTimelineGapIds[gap.id])}
                     >
-                      <Layers className="w-3.5 h-3.5 mr-1" />
-                      <span>{generatingPlanId === gap.id ? "Generating..." : "Generate 5-Step Plan"}</span>
+                      <TrendingUp className="w-3.5 h-3.5 mr-1 text-[#2E7D5E]" />
+                      <span>{expandedTimelineGapIds[gap.id] ? "Hide Timeline" : "Progress Timeline"}</span>
+                      {gap.assessmentHistory && gap.assessmentHistory.length > 0 && (
+                        <span className="ml-1 px-1.5 py-0.2 rounded-full bg-[#2E7D5E]/15 text-[10px] font-mono font-bold text-[#2E7D5E]">
+                          {gap.assessmentHistory.length}
+                        </span>
+                      )}
+                      {expandedTimelineGapIds[gap.id] ? (
+                        <ChevronUp className="w-3.5 h-3.5 ml-1" />
+                      ) : (
+                        <ChevronDown className="w-3.5 h-3.5 ml-1" />
+                      )}
                     </Button>
 
                     <Button
@@ -726,13 +870,23 @@ export default function LearningGapsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 text-xs">
                   {/* Explainable Cognitive Diagnosis Card */}
                   <div data-tour="gaps-why-flagged" className="p-3.5 rounded-2xl bg-[#FAF6E9] border border-[#49352F]/10 space-y-2.5 text-[#49352F]">
+                    {/* Reopened Gap Alert Banner */}
+                    {gap.gapReopened && (
+                      <div className="p-2.5 rounded-xl bg-[#FBECE9] border border-[#C54738]/25 text-[#A93327] text-[11px] font-semibold flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4 shrink-0 text-[#C54738]" />
+                        <span>
+                          <strong>Gap Reopened:</strong> Previously mastered on {gap.masteryDate ? new Date(gap.masteryDate).toLocaleDateString() : "prior assessment"} ({gap.previousMasteryScore ?? 85}%), but recent assessment dropped to {gap.currentScore ?? gap.latestPercentage}%.
+                        </span>
+                      </div>
+                    )}
+
                     {/* Header Row: Title & Confidence Level */}
                     <div className="flex flex-wrap items-center justify-between gap-1.5 border-b border-[#49352F]/10 pb-1.5">
                       <span className="font-bold uppercase tracking-wider text-[#C54738] text-[10px] flex items-center gap-1.5">
                         <BrainCircuit className="w-3.5 h-3.5" />
                         <span>
                           {gap.dynamicStatus === "Mastered"
-                            ? "Mastery Status (Verified Benchmark)"
+                            ? "MASTERY EVIDENCE"
                             : "Why Flagged (Explainable Diagnosis)"}
                         </span>
                         <ContextualHelp termKey="gapDetection" />
@@ -762,26 +916,30 @@ export default function LearningGapsPage() {
                           Diagnosis:
                         </span>
                         <span className="font-heading font-bold text-xs text-[#49352F]">
-                          {gap.dynamicConfidenceLevel === "Low"
+                          {gap.dynamicStatus === "Mastered"
+                            ? "Mastered Competency (Certified)"
+                            : gap.dynamicConfidenceLevel === "Low"
                             ? "Uncertain (Diagnostic Verification Required)"
                             : gap.dynamicDiagnosis || gap.dynamicGapType}
                         </span>
-                        <Badge variant="saffron" size="sm">
-                          {gap.dynamicGapType}
+                        <Badge variant={gap.dynamicStatus === "Mastered" ? "mint" : "saffron"} size="sm">
+                          {gap.dynamicStatus === "Mastered" ? "Mastered" : gap.dynamicGapType}
                         </Badge>
                       </div>
 
                       {/* Low-confidence caution (do not present as certain) */}
-                      {gap.dynamicConfidenceLevel === "Low" ? (
+                      {gap.dynamicStatus === "Mastered" ? (
+                        <p className="text-[#49352F] leading-relaxed text-xs">
+                          Mastery achieved — continue periodic retrieval practice. Verified retention at or above benchmark with no active cognitive obstacle detected.
+                        </p>
+                      ) : gap.dynamicConfidenceLevel === "Low" ? (
                         <div className="p-2 rounded-xl bg-[#FBECE9] border border-[#C54738]/25 text-[#A93327] text-[11px] font-semibold flex items-center gap-1.5">
                           <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                           <span>Insufficient evidence — run a short diagnostic check.</span>
                         </div>
                       ) : (
                         <p className="text-[#49352F] leading-relaxed text-xs">
-                          {gap.dynamicStatus === "Mastered"
-                            ? gap.reason || "Concept successfully mastered with verified retention above the mastery benchmark."
-                            : gap.dynamicGapTypeReason || gap.gapTypeReason || gap.reason || "Performance dropped below developing benchmark across consecutive classroom observations."}
+                          {gap.dynamicGapTypeReason || gap.gapTypeReason || gap.reason || "Performance dropped below developing benchmark across consecutive classroom observations."}
                         </p>
                       )}
                     </div>
@@ -1072,31 +1230,73 @@ export default function LearningGapsPage() {
                     </div>
                   </div>
 
-                  {/* Actionable Next Step */}
-                  <div data-tour="gaps-action-plan" className="p-3.5 rounded-2xl bg-[#FAF6E9] border border-[#49352F]/10 space-y-1.5 text-[#49352F]">
-                    <span className="font-bold uppercase tracking-wider text-[#B26A1B] text-[10px] flex items-center gap-1.5">
-                      <ClipboardList className="w-3.5 h-3.5" />
-                      Pedagogical Prescription
-                    </span>
-                    <p className="text-[#49352F] leading-relaxed">
-                      {gap.dynamicStatus === "Mastered"
-                        ? "Mastery certified; ready for advanced enrichment exercises or next curriculum topic."
-                        : (gap.dynamicGapType === "Insufficient Evidence" || gap.gapType === "Insufficient Evidence")
-                        ? gap.dynamicRecommendedDiagnosticAction || gap.suggestedAction || "Conduct a short 3-5 item diagnostic exit ticket with concrete physical manipulatives before prescribing full remediation."
-                        : gap.suggestedAction || "Deploy Step 2 concrete manipulatives (counting beads / number lines) followed by paired practice."}
+                  {/* Actionable Next Step: Personalized Pedagogical Prescription */}
+                  <div data-tour="gaps-action-plan" className="p-3.5 rounded-2xl bg-[#FAF6E9] border border-[#49352F]/10 space-y-2 text-[#49352F]">
+                    {/* Header with Modality and Duration */}
+                    <div className="flex flex-wrap items-center justify-between gap-1.5 border-b border-[#49352F]/10 pb-1.5">
+                      <span className="font-bold uppercase tracking-wider text-[#B26A1B] text-[10px] flex items-center gap-1.5">
+                        <ClipboardList className="w-3.5 h-3.5" />
+                        <span>Pedagogical Prescription</span>
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        {gap.dynamicPrescription?.suggestedModality && (
+                          <Badge variant="saffron" size="sm">
+                            {gap.dynamicPrescription.suggestedModality}
+                          </Badge>
+                        )}
+                        {gap.dynamicPrescription?.approximateDuration && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white border border-[#49352F]/10 text-[#7A6862]">
+                            <Clock className="w-3 h-3 text-[#B26A1B]" />
+                            {gap.dynamicPrescription.approximateDuration}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Recommended Action */}
+                    <p className="text-[#49352F] leading-relaxed text-xs">
+                      {gap.dynamicPrescription?.recommendedAction ||
+                        (gap.dynamicStatus === "Mastered"
+                          ? "Mastery achieved — continue periodic retrieval practice."
+                          : gap.suggestedAction || "Deploy concrete manipulatives followed by paired practice.")}
                     </p>
+
+                    {/* Rationale / Explanation */}
+                    {gap.dynamicPrescription?.reason && (
+                      <p className="text-[11px] text-[#7A6862] leading-snug">
+                        <strong className="text-[#49352F]">Pedagogical Rationale:</strong> {gap.dynamicPrescription.reason}
+                      </p>
+                    )}
+
+                    {/* Reassessment Recommendation Note */}
+                    {gap.dynamicPrescription?.reassessmentRecommendation && (
+                      <div className="text-[10.5px] text-[#7A6862] flex items-center gap-1 pt-0.5">
+                        <RotateCcw className="w-3 h-3 text-[#B26A1B] shrink-0" />
+                        <span>{gap.dynamicPrescription.reassessmentRecommendation}</span>
+                      </div>
+                    )}
+
+                    {/* Plan Status / Eligibility Label */}
                     <div className="text-[11px] text-[#2E7D5E] pt-1 font-semibold flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3" />
+                      <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                       <span>
-                        {gap.dynamicStatus === "Mastered"
-                          ? "Mastery Verified • Gap Closed"
-                          : (gap.dynamicGapType === "Insufficient Evidence" || gap.gapType === "Insufficient Evidence")
-                          ? "Recommend 3-5 Item Diagnostic Exit Ticket"
-                          : "Ready for 5-Step Concrete Remedial Plan"}
+                        {gap.dynamicPrescription?.planStatusLabel ||
+                          (gap.dynamicStatus === "Mastered"
+                            ? "Mastery achieved — continue periodic retrieval practice."
+                            : (gap.dynamicGapType === "Insufficient Evidence" || gap.gapType === "Insufficient Evidence")
+                            ? "Recommend 3-5 Item Diagnostic Exit Ticket"
+                            : "Ready for 5-Step Concrete Remedial Plan")}
                       </span>
                     </div>
                   </div>
                 </div>
+
+                {/* Expandable Longitudinal Progress Timeline */}
+                {expandedTimelineGapIds[gap.id] && (
+                  <div className="pt-2 border-t border-[#49352F]/10">
+                    <ProgressTimeline gap={gap} studentName={gap.studentName} />
+                  </div>
+                )}
 
                 {/* Expandable Learning Gap Map */}
                 {expandedMapGapIds[gap.id] && (

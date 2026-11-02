@@ -55,6 +55,7 @@ export interface RemedialPlan {
   learningObjective: string;
   recommendationReason: string;
   status: PlanStatus;
+  reassessmentDue?: boolean;
   estimatedMinutes: number;
   difficulty: "Beginner" | "Intermediate" | "Advanced";
   requiredMaterials: string[];

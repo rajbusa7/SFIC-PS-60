@@ -142,11 +142,37 @@ export interface LearningGap {
   rootCauseExplanation?: string;
   insufficientEvidenceWarning?: string;
 
+  // Longitudinal Progress & Reassessment History
+  gapReopened?: boolean;
+  previousMasteryScore?: number;
+  masteryDate?: string;
+  assessmentHistory?: AssessmentHistoryItem[];
+  totalImprovement?: number;
+  latestScoreDelta?: number;
+  numberOfAssessments?: number;
+  numberOfInterventions?: number;
+  timeToMastery?: string;
+  reassessmentDue?: boolean;
+  remedialPlanStatus?: string;
+
   updatedAt: string;
   remedialPlanId?: string;
   // Backwards compatibility legacy aliases
   diagnosisType?: any;
   trendLabel?: string;
+}
+
+export interface AssessmentHistoryItem {
+  id?: string;
+  assessmentId?: string;
+  date?: string;
+  score: number;
+  marks?: string;
+  assessment?: string;
+  intervention?: string;
+  status: MasteryStatus | string;
+  scoreDelta?: number;
+  notes?: string;
 }
 
 export type MapNodeRole =

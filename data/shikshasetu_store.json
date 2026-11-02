@@ -956,6 +956,83 @@
       "maximumMarks": 15,
       "percentage": 73,
       "recordedAt": "2026-09-18T11:00:00Z"
+    },
+    {
+      "id": "res-arjun-frac-01",
+      "assessmentId": "asm-01",
+      "studentId": "std-arjun",
+      "conceptId": "c-frac-01",
+      "marksObtained": 16,
+      "maximumMarks": 20,
+      "percentage": 82,
+      "recordedAt": "2026-09-01T10:00:00Z",
+      "notes": "Initial diagnostic on fractions basics."
+    },
+    {
+      "id": "res-arjun-frac-02",
+      "assessmentId": "asm-02",
+      "studentId": "std-arjun",
+      "conceptId": "c-frac-01",
+      "marksObtained": 17,
+      "maximumMarks": 20,
+      "percentage": 85,
+      "recordedAt": "2026-09-15T10:00:00Z",
+      "notes": "Unit assessment: achieved mastery threshold."
+    },
+    {
+      "id": "res-arjun-frac-03",
+      "assessmentId": "asm-03",
+      "studentId": "std-arjun",
+      "conceptId": "c-frac-01",
+      "marksObtained": 17,
+      "maximumMarks": 20,
+      "percentage": 83,
+      "recordedAt": "2026-10-01T10:00:00Z",
+      "notes": "Monthly review: maintained mastery."
+    },
+    {
+      "id": "res-arjun-frac-04",
+      "assessmentId": "asm-04",
+      "studentId": "std-arjun",
+      "conceptId": "c-frac-01",
+      "marksObtained": 12,
+      "maximumMarks": 20,
+      "percentage": 62,
+      "recordedAt": "2026-10-20T10:00:00Z",
+      "notes": "Quarterly exam: confusion on unequal denominators."
+    },
+    {
+      "id": "res-pooja-comp-01",
+      "assessmentId": "asm-01",
+      "studentId": "std-pooja",
+      "conceptId": "c-eng-comp-01",
+      "marksObtained": 10,
+      "maximumMarks": 20,
+      "percentage": 50,
+      "recordedAt": "2026-09-10T10:00:00Z",
+      "notes": "Baseline reading assessment: struggled with main ideas."
+    },
+    {
+      "id": "res-pooja-comp-02",
+      "assessmentId": "asm-02",
+      "studentId": "std-pooja",
+      "conceptId": "c-eng-comp-01",
+      "marksObtained": 14,
+      "maximumMarks": 20,
+      "percentage": 70,
+      "recordedAt": "2026-09-25T10:00:00Z",
+      "notes": "Post-guided reading practice: developing well."
+    },
+    {
+      "id": "res-pooja-comp-03",
+      "assessmentId": "asm-03",
+      "studentId": "std-pooja",
+      "conceptId": "c-eng-comp-01",
+      "marksObtained": 17,
+      "maximumMarks": 20,
+      "percentage": 85,
+      "recordedAt": "2026-10-30T10:00:00Z",
+      "notes": "Recent reassessment: confirmed independent mastery."
     }
   ],
   "learningGaps": [
@@ -969,8 +1046,8 @@
       "grade": 4,
       "priority": "High",
       "masteryStatus": "Needs Support",
-      "reason": "Recent assessment performance (35%) is below the configured support threshold (60%), and previous result (40%) also showed persistent difficulty.",
-      "suggestedAction": "Assign focused small-group remedial practice on Division Basics fundamentals, using visual manipulatives or physical objects.",
+      "reason": "Needs Support: Assessment performance (35%) is below the configured support threshold (60%), and the previous result (40%) also showed persistent difficulty. Structured guided practice on core fundamentals is recommended.",
+      "suggestedAction": "Assign focused small-group remedial practice on Division Basics fundamentals using concrete manipulatives.",
       "diagnosisType": "Developing / Not Yet Mastered",
       "status": "Active",
       "attemptsCount": 2,
@@ -980,134 +1057,7 @@
       "trend": "Declining",
       "trendLabel": "Declining",
       "updatedAt": "2026-09-24T12:00:00Z",
-      "remedialPlanId": "plan-aarav-div-01",
-      "subjectName": "Mathematics",
-      "section": "A",
-      "lifecycleStatus": "Active Gap",
-      "attemptCount": 2,
-      "evidenceCount": 2,
-      "currentScore": 35,
-      "previousScore": 40,
-      "scoreDelta": -5,
-      "trendText": "↓ -5% Declining",
-      "hasRepeatedErrors": true,
-      "prerequisitesMastered": false,
-      "severityScore": 68,
-      "severityLevel": "High",
-      "severityReasons": [
-        "Score (35%) is below operational support threshold of 60%",
-        "Persistent conceptual errors recurring across multiple assessment attempts",
-        "Declining trajectory (-5 pp drop); performance is slipping"
-      ],
-      "diagnosis": "Conceptual Gap in Division & Equal Sharing",
-      "diagnosisTitle": "Conceptual Gap in Division & Equal Sharing",
-      "gapType": "Conceptual Gap",
-      "gapTypeReason": "Student demonstrates persistent difficulty understanding division as equal sharing, fair grouping, and inverse multiplication across consecutive attempts (40% → 35%).",
-      "confidence": 0.94,
-      "confidenceScore": 0.94,
-      "confidenceLevel": "High",
-      "assessmentsAnalyzed": 2,
-      "questionsAnalyzed": 10,
-      "errorPatternDetected": "Repeatedly subtracts divisor instead of equal partitioning; confuses division divisor with subtraction difference",
-      "triggerRule": "Score (35%) fell below 60% developing support threshold across 2 consecutive assessments (40% → 35%).",
-      "supportingEvidence": [
-        "Persistent deficit across 2 consecutive assessment attempts (40% → 35%)",
-        "Prerequisites mastered, isolating roadblock to the equal sharing mental model",
-        "Confuses division divisor with subtraction difference or remainder"
-      ],
-      "questionEvidence": [
-        {
-          "questionNumber": 1,
-          "topic": "Equal Sharing (Word Problem)",
-          "questionText": "If you have 12 laddus and want to share them equally among 3 friends, how many laddus does each friend get?",
-          "studentResponse": "9 laddus",
-          "correctResponse": "4 laddus",
-          "detectedError": "Subtracted 3 from 12 (12 - 3 = 9) instead of equal partitioning (12 ÷ 3 = 4)",
-          "relatedConcept": "Division as Equal Sharing"
-        },
-        {
-          "questionNumber": 2,
-          "topic": "Grouping & Division",
-          "questionText": "A teacher has 15 pencils. She puts 5 pencils in each pencil box. How many pencil boxes are needed?",
-          "studentResponse": "10 boxes",
-          "correctResponse": "3 boxes",
-          "detectedError": "Subtracted 5 from 15 (15 - 5 = 10) instead of repeated grouping (15 ÷ 5 = 3)",
-          "relatedConcept": "Repeated Subtraction Model"
-        },
-        {
-          "questionNumber": 3,
-          "topic": "Inverse Multiplication",
-          "questionText": "Which multiplication fact helps you solve 20 ÷ 5 = ?",
-          "studentResponse": "5 x 2 = 10",
-          "correctResponse": "5 x 4 = 20",
-          "detectedError": "Selected lowest familiar factor without checking inverse product",
-          "relatedConcept": "Multiplication-Division Inverse Relationship"
-        }
-      ],
-      "isRootGapIdentified": true,
-      "rootConcept": {
-        "id": "c-mult-01",
-        "name": "Multiplication Tables"
-      },
-      "affectedConcept": {
-        "id": "c-div-01",
-        "name": "Division"
-      },
-      "prerequisiteConcepts": [
-        "Skip Counting",
-        "Multiplication Tables",
-        "Multiplication"
-      ],
-      "dependentConcepts": [
-        "Fractions Introduction",
-        "Long Division"
-      ],
-      "recommendedLearningOrder": [
-        "Multiplication Tables",
-        "Multiplication",
-        "Division"
-      ],
-      "rootCauseConfidence": 0.92,
-      "rootCauseConfidenceLevel": "High",
-      "rootCauseExplanation": "Student experiences persistent division difficulty due to unmastered multiplication facts and inverse operations. Equal sharing questions are solved as simple subtraction because multiplication tables (tables 2 to 9) cannot be recalled fluently.",
-      "learningPath": [
-        {
-          "stepNumber": 1,
-          "conceptId": "c-math-skip-count",
-          "conceptName": "Skip Counting",
-          "isRoot": false,
-          "isTarget": false,
-          "status": "Mastered",
-          "note": "Skip counting sequences confirmed mastered."
-        },
-        {
-          "stepNumber": 2,
-          "conceptId": "c-mult-01",
-          "conceptName": "Multiplication Tables",
-          "isRoot": true,
-          "isTarget": false,
-          "status": "Root Gap",
-          "note": "Root obstacle: Fact retrieval latency limits division mental model."
-        },
-        {
-          "stepNumber": 3,
-          "conceptId": "c-mult-02",
-          "conceptName": "Multiplication",
-          "isRoot": false,
-          "isTarget": false,
-          "status": "In Progress",
-          "note": "Inverse multiplication relationship to reinforce."
-        },
-        {
-          "stepNumber": 4,
-          "conceptId": "c-div-01",
-          "conceptName": "Division",
-          "isRoot": false,
-          "isTarget": true,
-          "status": "Target Gap",
-          "note": "Target competency to verify following multiplication fluency."
-        }
-      ]
+      "remedialPlanId": "plan-aarav-div-01"
     },
     {
       "id": "gap-dev-verb",
@@ -1119,119 +1069,13 @@
       "grade": 4,
       "priority": "High",
       "masteryStatus": "Needs Support",
-      "reason": "Score (45%) indicates confusion between singular and plural verbs.",
-      "suggestedAction": "Conduct paired practice with pronoun-verb flashcards and simple oral sentence frames.",
+      "reason": "Conceptual Gap: Available assessment evidence indicates difficulty understanding the underlying concept of Subject-Verb Agreement (confusion between singular and plural verbs with collective nouns). Concrete manipulatives and visual models are recommended to rebuild the core mental model.",
+      "suggestedAction": "Deploy multi-sensory instruction and visual flashcards to rebuild the conceptual model of singular vs plural agreements.",
       "diagnosisType": "Conceptual Gap",
       "status": "Active",
       "attemptsCount": 1,
       "latestPercentage": 45,
-      "updatedAt": "2026-10-02T12:00:00Z",
-      "subjectName": "English",
-      "section": "A",
-      "lifecycleStatus": "Active Gap",
-      "attemptCount": 1,
-      "evidenceCount": 1,
-      "currentScore": 45,
-      "trend": "Insufficient Data",
-      "trendText": "⋯ Insufficient Data",
-      "hasRepeatedErrors": false,
-      "prerequisitesMastered": false,
-      "severityScore": 52,
-      "severityLevel": "High",
-      "severityReasons": [
-        "Score (45%) is below operational support threshold of 60%",
-        "Conceptual confusion between singular and plural verbs",
-        "Single observation baseline; requires initial diagnostic follow-up"
-      ],
-      "diagnosis": "Linguistic Barrier in Subject-Verb Concord",
-      "diagnosisTitle": "Linguistic Barrier in Subject-Verb Concord",
-      "gapType": "Language / Comprehension Barrier",
-      "gapTypeReason": "Student understands the meaning of action verbs but exhibits linguistic confusion in subject-number agreement (singular vs plural grammatical rules).",
-      "confidence": 0.89,
-      "confidenceScore": 0.89,
-      "confidenceLevel": "High",
-      "assessmentsAnalyzed": 1,
-      "questionsAnalyzed": 5,
-      "errorPatternDetected": "Confusion between singular and plural verbs in third-person agreement",
-      "triggerRule": "Score (45%) fell below 60% developing support threshold on initial assessment.",
-      "supportingEvidence": [
-        "Inconsistent application of singular vs. plural verb inflection rules",
-        "Verb action identification is accurate while syntactic agreement fails",
-        "Assessment performance (45%) reflects syntactic decoding friction"
-      ],
-      "questionEvidence": [
-        {
-          "questionNumber": 1,
-          "topic": "Plural Subject Agreement",
-          "questionText": "Choose the correct verb: The birds _____ (is / are) singing in the tree.",
-          "studentResponse": "is",
-          "correctResponse": "are",
-          "detectedError": "Selected singular auxiliary 'is' for plural noun subject 'birds'",
-          "relatedConcept": "Plural Subject-Verb Concord"
-        },
-        {
-          "questionNumber": 2,
-          "topic": "Third-Person Singular Present",
-          "questionText": "Choose the correct verb: She _____ (go / goes) to school every morning.",
-          "studentResponse": "go",
-          "correctResponse": "goes",
-          "detectedError": "Omitted third-person singular inflection '-es' on action verb",
-          "relatedConcept": "Third-Person Singular Agreement"
-        }
-      ],
-      "isRootGapIdentified": true,
-      "rootConcept": {
-        "id": "c-eng-nouns-01",
-        "name": "Singular & Plural Nouns"
-      },
-      "affectedConcept": {
-        "id": "c-eng-verb-01",
-        "name": "Subject-Verb Agreement"
-      },
-      "prerequisiteConcepts": [
-        "Phonics",
-        "Word Formation",
-        "Singular & Plural Nouns"
-      ],
-      "dependentConcepts": [
-        "Reading Comprehension"
-      ],
-      "recommendedLearningOrder": [
-        "Singular & Plural Nouns",
-        "Subject-Verb Agreement"
-      ],
-      "rootCauseConfidence": 0.88,
-      "rootCauseConfidenceLevel": "High",
-      "rootCauseExplanation": "Difficulty in matching subject with verb originates from uncertain identification of plural noun inflections (-s, -es) and third-person pronouns.",
-      "learningPath": [
-        {
-          "stepNumber": 1,
-          "conceptId": "c-eng-word-2",
-          "conceptName": "Word Formation",
-          "isRoot": false,
-          "isTarget": false,
-          "status": "Mastered",
-          "note": "Basic vocabulary and word blending intact."
-        },
-        {
-          "stepNumber": 2,
-          "conceptId": "c-eng-nouns-01",
-          "conceptName": "Singular & Plural Nouns",
-          "isRoot": true,
-          "isTarget": false,
-          "status": "Root Gap",
-          "note": "Root obstacle: Noun plurality identification must be reinforced."
-        },
-        {
-          "stepNumber": 3,
-          "conceptId": "c-eng-verb-01",
-          "conceptName": "Subject-Verb Agreement",
-          "isRoot": false,
-          "isTarget": true,
-          "status": "Target Gap",
-          "note": "Target competency to verify."
-        }
-      ]
+      "updatedAt": "2026-10-02T12:00:00Z"
     },
     {
       "id": "gap-diya-place",
@@ -1243,139 +1087,13 @@
       "grade": 3,
       "priority": "High",
       "masteryStatus": "Needs Support",
-      "reason": "Score (50%) indicates difficulty with column regrouping.",
-      "suggestedAction": "Use base-10 blocks or bundled matchsticks to visually explain carrying over from units to tens column.",
+      "reason": "Procedural Error: The student demonstrates understanding of the core concept, but struggles to apply the correct procedure and multi-step execution for Place Value & 3-Digit Addition (column alignment and tens carry-over sequencing). Structured worked examples and step-by-step scaffolding are recommended.",
+      "suggestedAction": "Provide step-by-step worked examples and scaffolding focused on the sequence of operational steps.",
       "diagnosisType": "Procedural Error",
       "status": "Active",
       "attemptsCount": 1,
       "latestPercentage": 50,
-      "updatedAt": "2026-09-15T12:00:00Z",
-      "subjectName": "Mathematics",
-      "section": "A",
-      "lifecycleStatus": "Active Gap",
-      "attemptCount": 1,
-      "evidenceCount": 1,
-      "currentScore": 50,
-      "trend": "Insufficient Data",
-      "trendText": "⋯ Insufficient Data",
-      "hasRepeatedErrors": false,
-      "prerequisitesMastered": false,
-      "severityScore": 46,
-      "severityLevel": "Medium",
-      "severityReasons": [
-        "Score (50%) is below operational support threshold of 60%",
-        "Difficulty with regrouping units to tens column",
-        "Single initial observation in developing stage"
-      ],
-      "diagnosis": "Procedural Error in Column Regrouping",
-      "diagnosisTitle": "Procedural Error in Column Regrouping",
-      "gapType": "Procedural Error",
-      "gapTypeReason": "Student correctly identifies place values but repeatedly fails during column regrouping and carry-over execution.",
-      "confidence": 0.89,
-      "confidenceScore": 0.89,
-      "confidenceLevel": "High",
-      "assessmentsAnalyzed": 1,
-      "questionsAnalyzed": 5,
-      "errorPatternDetected": "Carrying from units into tens column omitted during column regrouping",
-      "triggerRule": "Score (50%) fell below 60% developing support threshold on initial assessment.",
-      "supportingEvidence": [
-        "Student correctly identifies place values but repeatedly fails during regrouping",
-        "Single-digit arithmetic operations are accurate while multi-digit carrying sequence breaks down",
-        "Errors cluster in column alignment and carrying over into adjacent place-value columns"
-      ],
-      "questionEvidence": [
-        {
-          "questionNumber": 1,
-          "topic": "3-Digit Addition with Regrouping",
-          "questionText": "Calculate: 247 + 138",
-          "studentResponse": "375",
-          "correctResponse": "385",
-          "detectedError": "Added 7 + 8 = 15, wrote 5 in units place but forgot to carry over 1 to tens place (4 + 3 = 7 instead of 8)",
-          "relatedConcept": "Units-to-Tens Column Regrouping"
-        },
-        {
-          "questionNumber": 2,
-          "topic": "Place Value Identification",
-          "questionText": "In the number 458, what is the place value of digit 5?",
-          "studentResponse": "50 (Tens)",
-          "correctResponse": "50 (Tens)",
-          "detectedError": "None (Student correctly identifies place value; confirms conceptual grasp)",
-          "relatedConcept": "Base-10 Place Value"
-        },
-        {
-          "questionNumber": 3,
-          "topic": "3-Digit Addition with Carrying",
-          "questionText": "Calculate: 185 + 267",
-          "studentResponse": "442",
-          "correctResponse": "452",
-          "detectedError": "Carried units to tens correctly (5+7=12), but dropped carrying from tens to hundreds (8+6+1=15)",
-          "relatedConcept": "Tens-to-Hundreds Column Carrying"
-        }
-      ],
-      "isRootGapIdentified": true,
-      "rootConcept": {
-        "id": "c-math-regroup",
-        "name": "Regrouping"
-      },
-      "affectedConcept": {
-        "id": "c-place-01",
-        "name": "3-Digit Addition"
-      },
-      "prerequisiteConcepts": [
-        "Ones & Tens",
-        "Place Value",
-        "Regrouping"
-      ],
-      "dependentConcepts": [
-        "Multi-Digit Multiplication",
-        "Division"
-      ],
-      "recommendedLearningOrder": [
-        "Place Value",
-        "Regrouping",
-        "3-Digit Addition"
-      ],
-      "rootCauseConfidence": 0.94,
-      "rootCauseConfidenceLevel": "High",
-      "rootCauseExplanation": "Student struggles with 3-Digit Addition primarily due to unmastered Regrouping and place-value carrying. In column addition, single-digit calculations are accurate but column regrouping into tens and hundreds places fails consistently.",
-      "learningPath": [
-        {
-          "stepNumber": 1,
-          "conceptId": "c-math-ones-tens",
-          "conceptName": "Ones & Tens",
-          "isRoot": false,
-          "isTarget": false,
-          "status": "Mastered",
-          "note": "Foundational grouping of units into tens confirmed mastered."
-        },
-        {
-          "stepNumber": 2,
-          "conceptId": "c-math-pv-2",
-          "conceptName": "Place Value",
-          "isRoot": false,
-          "isTarget": false,
-          "status": "Mastered",
-          "note": "Place value position identification (Hundreds, Tens, Ones) intact."
-        },
-        {
-          "stepNumber": 3,
-          "conceptId": "c-math-regroup",
-          "conceptName": "Regrouping",
-          "isRoot": true,
-          "isTarget": false,
-          "status": "Root Gap",
-          "note": "Root obstacle: Column carrying when sum exceeds 9 requires concrete reteaching."
-        },
-        {
-          "stepNumber": 4,
-          "conceptId": "c-place-01",
-          "conceptName": "3-Digit Addition",
-          "isRoot": false,
-          "isTarget": true,
-          "status": "Target Gap",
-          "note": "Target competency to verify following regrouping mastery."
-        }
-      ]
+      "updatedAt": "2026-09-15T12:00:00Z"
     },
     {
       "id": "gap-meera-mult",
@@ -1387,46 +1105,16 @@
       "grade": 4,
       "priority": "Medium",
       "masteryStatus": "Developing",
-      "reason": "Student scored 70% (Developing); core concepts grasped but recall speed needs practice.",
-      "suggestedAction": "Provide guided practice with 2 to 9 multiplication grids and interactive choral chanting.",
+      "reason": "Developing: The student has demonstrated the core skill and grasped core basics (70%), but has not yet shown consistent mastery. Focused practice completed; reassessment is due to evaluate growth.",
+      "suggestedAction": "Conduct scheduled reassessment on Multiplication Tables (2 to 9) to measure post-intervention growth.",
       "diagnosisType": "Developing / Not Yet Mastered",
       "status": "Under Intervention",
+      "remedialPlanId": "plan-meera-mult-01",
+      "remedialPlanStatus": "Completed",
+      "reassessmentDue": true,
       "attemptsCount": 1,
       "latestPercentage": 70,
-      "updatedAt": "2026-09-10T12:00:00Z",
-      "subjectName": "Mathematics",
-      "section": "A",
-      "lifecycleStatus": "Monitoring/Developing",
-      "attemptCount": 1,
-      "evidenceCount": 1,
-      "currentScore": 70,
-      "trend": "Insufficient Data",
-      "trendText": "⋯ Insufficient Data",
-      "hasRepeatedErrors": false,
-      "prerequisitesMastered": true,
-      "severityScore": 28,
-      "severityLevel": "Medium",
-      "severityReasons": [
-        "Score (70%) is in developing range toward 80% mastery benchmark",
-        "Recall speed requires practice with times tables grids"
-      ],
-      "diagnosis": "Procedural Fluency Latency in Times Tables",
-      "diagnosisTitle": "Procedural Fluency Latency in Times Tables",
-      "gapType": "Procedural Error",
-      "gapTypeReason": "Student grasps multiplication as repeated addition but recall speed and grid execution require targeted fluency practice.",
-      "confidence": 0.85,
-      "confidenceScore": 0.85,
-      "confidenceLevel": "High",
-      "assessmentsAnalyzed": 1,
-      "questionsAnalyzed": 10,
-      "errorPatternDetected": "Latency on 6 to 9 times tables grids during timed assessment",
-      "triggerRule": "Score (70%) is within developing range (below 80% mastery benchmark).",
-      "supportingEvidence": [
-        "Conceptual grouping understanding is intact",
-        "Recall latency on 6-9 multiplication tables impacts test pacing",
-        "Score (70%) is in developing range toward 80% mastery benchmark"
-      ],
-      "questionEvidence": []
+      "updatedAt": "2026-09-10T12:00:00Z"
     },
     {
       "id": "gap-krisha-count",
@@ -1474,46 +1162,61 @@
       "grade": 3,
       "priority": "Medium",
       "masteryStatus": "Developing",
-      "reason": "Scored 65% (Developing); needs practice with carrying over into hundreds place.",
-      "suggestedAction": "Assign 5 scaffolded regrouping addition problems and check place-value column alignment.",
+      "reason": "Developing: The student has demonstrated the core skill and grasped core basics (65%), but has not yet shown consistent mastery. Focused practice followed by reassessment is recommended.",
+      "suggestedAction": "Provide guided practice with varied problem sets followed by reassessment to confirm consistent mastery.",
       "diagnosisType": "Developing / Not Yet Mastered",
       "status": "Active",
       "attemptsCount": 1,
       "latestPercentage": 65,
-      "updatedAt": "2026-09-15T12:00:00Z",
-      "subjectName": "Mathematics",
-      "section": "A",
-      "lifecycleStatus": "Monitoring/Developing",
-      "attemptCount": 1,
-      "evidenceCount": 1,
-      "currentScore": 65,
-      "trend": "Insufficient Data",
-      "trendText": "⋯ Insufficient Data",
-      "hasRepeatedErrors": false,
-      "prerequisitesMastered": true,
-      "severityScore": 32,
-      "severityLevel": "Medium",
-      "severityReasons": [
-        "Score (65%) is in developing range toward 80% mastery benchmark",
-        "Needs practice with carrying over into hundreds place"
-      ],
-      "diagnosis": "Procedural Error in Hundreds Column Carrying",
-      "diagnosisTitle": "Procedural Error in Hundreds Column Carrying",
-      "gapType": "Procedural Error",
-      "gapTypeReason": "Student correctly aligns tens and units but stumbles during carrying execution into the hundreds place column.",
-      "confidence": 0.87,
-      "confidenceScore": 0.87,
-      "confidenceLevel": "High",
-      "assessmentsAnalyzed": 1,
-      "questionsAnalyzed": 5,
-      "errorPatternDetected": "Carrying error into hundreds place column during 3-digit addition",
-      "triggerRule": "Score (65%) is within developing range (below 80% mastery benchmark).",
-      "supportingEvidence": [
-        "Place value decomposition is understood",
-        "Procedural carrying error localized to hundreds place column",
-        "Partial competence demonstrated (65%) with procedural steps needing reinforcement"
-      ],
-      "questionEvidence": []
+      "updatedAt": "2026-09-15T12:00:00Z"
+    },
+    {
+      "id": "gap-arjun-frac",
+      "studentId": "std-arjun",
+      "studentName": "Arjun Mehta",
+      "conceptId": "c-frac-01",
+      "conceptName": "Fractions Introduction",
+      "subjectCode": "MATH",
+      "grade": 4,
+      "priority": "High",
+      "masteryStatus": "Needs Support",
+      "reason": "Gap Reopened: This competency was previously mastered (85% on 15 Sep), but performance has declined to 62% across consecutive observations (82% → 85% → 83% → 62%). Targeted intervention is re-activated to restore foundational mastery.",
+      "suggestedAction": "Re-activate targeted practice using circular fraction cut-outs and paper strips to rebuild equal-sharing mental models.",
+      "diagnosisType": "Conceptual Gap",
+      "status": "Active",
+      "gapReopened": true,
+      "previousMasteryScore": 85,
+      "masteryDate": "2026-09-15T10:00:00Z",
+      "attemptsCount": 4,
+      "latestPercentage": 62,
+      "previousPercentage": 83,
+      "deltaPercentagePoints": -21,
+      "trend": "Declining",
+      "trendLabel": "Declining",
+      "updatedAt": "2026-10-20T12:00:00Z"
+    },
+    {
+      "id": "gap-pooja-comp",
+      "studentId": "std-pooja",
+      "studentName": "Pooja Joshi",
+      "conceptId": "c-eng-comp-01",
+      "conceptName": "Reading Comprehension",
+      "subjectCode": "ENG",
+      "grade": 4,
+      "priority": "Low",
+      "masteryStatus": "Mastered",
+      "reason": "Mastery achieved: The student scored 85%, meeting the configured mastery benchmark of 80%. No immediate remedial intervention is required; continue periodic retrieval practice to monitor retention.",
+      "suggestedAction": "Mastery achieved — continue periodic retrieval practice.",
+      "diagnosisType": "Mastered",
+      "status": "Resolved",
+      "lifecycleStatus": "Closed Gap",
+      "attemptsCount": 3,
+      "latestPercentage": 85,
+      "previousPercentage": 70,
+      "deltaPercentagePoints": 15,
+      "trend": "Improving",
+      "trendLabel": "Improving",
+      "updatedAt": "2026-10-30T12:00:00Z"
     }
   ],
   "remedialPlans": [
@@ -1535,7 +1238,7 @@
       "baselineScore": 35,
       "masteryBenchmark": 80,
       "recommendationReason": "Recent assessment performance (35%) is below the configured support threshold (60%), and previous result (40%) also showed persistent difficulty.",
-      "status": "Approved",
+      "status": "Completed",
       "estimatedMinutes": 20,
       "difficulty": "Beginner",
       "requiredMaterials": [
@@ -1743,7 +1446,8 @@
       "subjectCode": "MATH",
       "learningObjective": "Master instant recall for 6, 7, and 8 times tables.",
       "recommendationReason": "Student scored 70% (Developing); core concepts grasped but recall speed needs practice.",
-      "status": "In Progress",
+      "status": "Completed",
+      "reassessmentDue": true,
       "estimatedMinutes": 15,
       "difficulty": "Intermediate",
       "requiredMaterials": [
@@ -4272,7 +3976,40 @@
       "createdAt": "2026-09-01T10:00:00Z"
     }
   ],
-  "attempts": [],
+  "attempts": [
+    {
+      "studentId": "std-aarav",
+      "activityId": "act-div-01",
+      "score": 4,
+      "maximumScore": 4,
+      "percentage": 100,
+      "answers": {
+        "q-div-1": "4 laddus",
+        "q-div-2": "5 × 4 = 20",
+        "q-div-3": "True",
+        "q-div-4": "3 boxes"
+      },
+      "incorrectQuestions": [],
+      "id": "att-1793601756257",
+      "completedAt": "2026-11-02T06:42:36.257Z"
+    },
+    {
+      "studentId": "std-aarav",
+      "activityId": "act-div-01",
+      "score": 4,
+      "maximumScore": 4,
+      "percentage": 100,
+      "answers": {
+        "q-div-1": "4 laddus",
+        "q-div-2": "5 × 4 = 20",
+        "q-div-3": "True",
+        "q-div-4": "3 boxes"
+      },
+      "incorrectQuestions": [],
+      "id": "att-1793601959973",
+      "completedAt": "2026-11-02T06:45:59.973Z"
+    }
+  ],
   "parents": [
     {
       "id": "par-aarav",
@@ -4340,17 +4077,17 @@
       "id": "plc-demo-aarav",
       "studentId": "std-aarav",
       "code": "PAR-4892",
-      "expiresAt": "2026-11-08T17:56:38.264Z",
+      "expiresAt": "2026-11-09T06:42:12.612Z",
       "status": "active",
-      "createdAt": "2026-11-01T17:56:38.264Z"
+      "createdAt": "2026-11-02T06:42:12.613Z"
     },
     {
       "id": "plc-demo-diya",
       "studentId": "std-diya",
       "code": "PAR-5219",
-      "expiresAt": "2026-11-08T17:56:38.264Z",
+      "expiresAt": "2026-11-09T06:42:12.613Z",
       "status": "active",
-      "createdAt": "2026-11-01T17:56:38.264Z"
+      "createdAt": "2026-11-02T06:42:12.613Z"
     }
   ],
   "parentMessages": [],
@@ -4728,5 +4465,45 @@
       "assignedAt": "2026-01-01T00:00:00Z"
     }
   ],
-  "auditLogs": []
+  "auditLogs": [],
+  "worksheetSubmissions": [
+    {
+      "id": "sub-1793601960493-972",
+      "worksheetId": "ws-demo-aarav-div",
+      "studentId": "std-aarav",
+      "studentName": "Aarav Patel",
+      "answers": {},
+      "scoresPerQuestion": {
+        "1": 2,
+        "2": 3,
+        "3": 5
+      },
+      "marksObtained": 10,
+      "totalMarks": 10,
+      "percentage": 100,
+      "incorrectQuestions": [],
+      "teacherComments": "Excellent application on word problems!",
+      "evaluatedAt": "2026-11-02T06:46:00.493Z",
+      "timeSpentMinutes": 18
+    },
+    {
+      "id": "sub-1793601756720-499",
+      "worksheetId": "ws-demo-aarav-div",
+      "studentId": "std-aarav",
+      "studentName": "Aarav Patel",
+      "answers": {},
+      "scoresPerQuestion": {
+        "1": 2,
+        "2": 3,
+        "3": 5
+      },
+      "marksObtained": 10,
+      "totalMarks": 10,
+      "percentage": 100,
+      "incorrectQuestions": [],
+      "teacherComments": "Excellent application on word problems!",
+      "evaluatedAt": "2026-11-02T06:42:36.720Z",
+      "timeSpentMinutes": 18
+    }
+  ]
 }

@@ -656,20 +656,83 @@ export const db = {
     const store = loadStore();
     const gaps = !studentId ? store.learningGaps : store.learningGaps.filter((g) => g.studentId === studentId);
     return gaps.map((g) => {
+      let enriched = { ...g };
+
       if (g.remedialPlanId) {
         const plan = store.remedialPlans?.find((p) => p.id === g.remedialPlanId);
         if (plan) {
           const isCompleted =
             plan.status === "Completed" ||
             (Array.isArray(plan.completedSteps) && Array.isArray(plan.steps) && plan.completedSteps.length >= plan.steps.length);
-          return {
-            ...g,
-            remedialPlanStatus: plan.status,
-            reassessmentDue: (isCompleted || (plan as any).reassessmentDue === true) && !plan.reassessmentResult,
-          };
+          enriched.remedialPlanStatus = plan.status;
+          enriched.reassessmentDue = (isCompleted || (plan as any).reassessmentDue === true) && !plan.reassessmentResult;
         }
       }
-      return g;
+
+      // Longitudinal assessment history lookup from recorded results
+      const cResults = (store.results || [])
+        .filter((r) => r.studentId === g.studentId && r.conceptId === g.conceptId)
+        .sort((a, b) => new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime());
+
+      if (cResults.length > 0) {
+        enriched.assessmentHistory = cResults.map((r, idx) => {
+          const score = r.percentage;
+          const prevScore = idx > 0 ? cResults[idx - 1].percentage : undefined;
+          const scoreDelta = prevScore !== undefined ? Math.round((score - prevScore) * 10) / 10 : undefined;
+          const status = score >= 80 ? "Mastered" : score >= 60 ? "Developing" : "Needs Support";
+          const assessmentTitle =
+            idx === 0
+              ? "Initial Assessment"
+              : idx === cResults.length - 1
+              ? "Latest Reassessment"
+              : `Progress Check #${idx}`;
+          return {
+            id: r.id,
+            assessmentId: r.assessmentId,
+            date: r.recordedAt,
+            score,
+            marks: `${r.marksObtained}/${r.maximumMarks}`,
+            assessment: r.notes?.includes("Assessment") ? r.notes : assessmentTitle,
+            intervention: idx > 0 ? (g.remedialPlanId ? "Targeted 5-Step Remedial Plan" : "Guided Practice Session") : undefined,
+            status,
+            scoreDelta,
+            notes: r.notes || "",
+          };
+        });
+
+        enriched.numberOfAssessments = cResults.length;
+        enriched.totalImprovement =
+          cResults.length >= 2
+            ? Math.round((cResults[cResults.length - 1].percentage - cResults[0].percentage) * 10) / 10
+            : 0;
+        enriched.latestScoreDelta =
+          cResults.length >= 2
+            ? Math.round((cResults[cResults.length - 1].percentage - cResults[cResults.length - 2].percentage) * 10) / 10
+            : g.deltaPercentagePoints;
+
+        // Gap Reopening Evaluation
+        const priorMasteryIndex = cResults.slice(0, -1).findIndex((r) => r.percentage >= 80);
+        if (priorMasteryIndex !== -1 && (cResults[cResults.length - 1]?.percentage ?? g.latestPercentage) < 80) {
+          enriched.gapReopened = true;
+          enriched.previousMasteryScore = cResults[priorMasteryIndex].percentage;
+          enriched.masteryDate = cResults[priorMasteryIndex].recordedAt;
+        }
+      } else {
+        // If zero result records exist, format single observation cleanly without fabricating history
+        enriched.assessmentHistory = [
+          {
+            score: g.latestPercentage,
+            date: g.updatedAt,
+            assessment: "Initial Assessment",
+            status: g.masteryStatus,
+          },
+        ];
+        enriched.numberOfAssessments = 1;
+        enriched.totalImprovement = 0;
+        enriched.latestScoreDelta = undefined;
+      }
+
+      return enriched;
     });
   },
 

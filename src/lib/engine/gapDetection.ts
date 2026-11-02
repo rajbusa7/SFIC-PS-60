@@ -59,6 +59,7 @@ export interface GapDetectionOptions {
   prerequisitesMastered?: boolean;
   hasRepeatedErrors?: boolean;
   referenceDate?: string | Date;
+  remedialPlanId?: string;
 }
 
 export interface ScoreTrajectoryCalculation {
@@ -138,6 +139,17 @@ export interface GapDetectionResult {
   rootCauseConfidenceLevel?: ConfidenceLevel;
   rootCauseExplanation?: string;
   insufficientEvidenceWarning?: string;
+
+  // Longitudinal Progress & Gap Reopening
+  gapReopened?: boolean;
+  previousMasteryScore?: number;
+  masteryDate?: string;
+  assessmentHistory?: any[];
+  totalImprovement?: number;
+  latestScoreDelta?: number;
+  numberOfAssessments?: number;
+  numberOfInterventions?: number;
+  timeToMastery?: string;
 }
 
 /**
@@ -411,7 +423,54 @@ export function evaluateStudentGapTrajectory(params: {
     previousScore !== undefined &&
     (previousScore >= masteryThreshold || (totalDelta !== undefined && totalDelta <= -10));
 
-  if (currentScore >= masteryThreshold) {
+  // Gap Reopening Evaluation (Section 5):
+  // Check if student previously achieved mastery on an earlier assessment and has now meaningfully dropped
+  // (e.g. 82% → 85% → 83% → 62%)
+  let highestPriorMasteryRecord: typeof historySortedByDateAsc[0] | undefined;
+  let highestPriorMasteryPct = -1;
+
+  for (let i = 0; i < historySortedByDateAsc.length - 1; i++) {
+    const h = historySortedByDateAsc[i];
+    const p = h.maximumMarks > 0 ? (h.marksObtained / h.maximumMarks) * 100 : 0;
+    if (p >= masteryThreshold && p > highestPriorMasteryPct) {
+      highestPriorMasteryPct = p;
+      highestPriorMasteryRecord = h;
+    }
+  }
+
+  const wasPreviouslyMastered = highestPriorMasteryRecord !== undefined;
+  const previousMasteryRecord = highestPriorMasteryRecord;
+  const previousMasteryScore = previousMasteryRecord
+    ? Math.round(((previousMasteryRecord.marksObtained / previousMasteryRecord.maximumMarks) * 100) * 10) / 10
+    : undefined;
+  const masteryDate = previousMasteryRecord?.recordedAt;
+
+  // Strict rule: DO NOT reopen a mastered gap because of one isolated error when evidence is insufficient
+  const isMeaningfulDecline =
+    currentScore < masteryThreshold &&
+    (currentScore < supportThreshold ||
+      (previousScore !== undefined && previousScore - currentScore >= 8) ||
+      hasRepeatedErrors ||
+      (trend === "Declining" && attemptCount >= 2));
+
+  const isInsufficientEvidence =
+    diagnosis.gapType === "Insufficient Evidence" || attemptCount < 2;
+
+  const isGapReopened = wasPreviouslyMastered && isMeaningfulDecline && !isInsufficientEvidence;
+
+  if (isGapReopened) {
+    // ------------------------------------------------------------------------
+    // GAP REOPENED: Previously mastered competency has regressed with confirmed evidence
+    // ------------------------------------------------------------------------
+    masteryStatus = (currentScore < supportThreshold || hasDeclinedFromHigher) ? "Needs Support" : "Developing";
+    priority = (currentScore < supportThreshold || hasDeclinedFromHigher) ? "High" : severity.severityLevel;
+    lifecycleStatus = "Active Gap";
+    requiresRemediation = true;
+    const trajectoryPath = percentages.map((p) => `${p}%`).join(" → ");
+    const regressionPp = scoreDelta !== undefined && scoreDelta < 0 ? scoreDelta : totalDelta;
+    reason = `Performance reflects a declining trajectory (${trajectoryPath}, ${regressionPp} pp regression from prior performance); Gap Reopened: This competency was previously mastered (${previousMasteryScore}% on ${masteryDate ? new Date(masteryDate).toLocaleDateString("en-GB") : "prior assessment"}). Requires teacher attention before conceptual regression deepens.`;
+    suggestedAction = `Diagnose and review recently missed questions in ${conceptName} to stop regression, address newly developed misconceptions, and restore confidence.`;
+  } else if (currentScore >= masteryThreshold) {
     // ------------------------------------------------------------------------
     // CASE 1: Current Score >= Mastery Threshold (e.g. >= 80%)
     // ------------------------------------------------------------------------
@@ -536,6 +595,44 @@ export function evaluateStudentGapTrajectory(params: {
       "Conduct a short 3-5 item diagnostic exit ticket with concrete physical manipulatives before prescribing full remediation.";
   }
 
+  // Build Longitudinal Assessment History (Section 3 & 4)
+  const assessmentHistory = historySortedByDateAsc.map((h, idx) => {
+    const score = Math.round(((h.marksObtained / h.maximumMarks) * 100) * 10) / 10;
+    const prevScore =
+      idx > 0
+        ? Math.round(((historySortedByDateAsc[idx - 1].marksObtained / historySortedByDateAsc[idx - 1].maximumMarks) * 100) * 10) / 10
+        : undefined;
+    const delta = prevScore !== undefined ? Math.round((score - prevScore) * 10) / 10 : undefined;
+    const status: MasteryStatus =
+      score >= masteryThreshold ? "Mastered" : score >= supportThreshold ? "Developing" : "Needs Support";
+    const assessmentTitle =
+      idx === 0
+        ? "Initial Assessment"
+        : idx === historySortedByDateAsc.length - 1
+        ? "Latest Reassessment"
+        : `Progress Check #${idx}`;
+
+    return {
+      date: h.recordedAt,
+      score,
+      marks: `${h.marksObtained}/${h.maximumMarks}`,
+      assessment: assessmentTitle,
+      intervention: idx > 0 ? "Targeted Remedial Practice" : undefined,
+      status,
+      scoreDelta: delta,
+    };
+  });
+
+  const totalImprovement =
+    attemptCount >= 2 ? Math.round((currentScore - percentages[0]) * 10) / 10 : 0;
+  const latestScoreDelta = scoreDelta;
+  const numberOfAssessments = attemptCount;
+  const numberOfInterventions = options?.remedialPlanId ? 1 : attemptCount > 2 ? 1 : 0;
+  const timeToMastery =
+    currentScore >= masteryThreshold && historySortedByDateAsc[0]?.recordedAt && latestRecord?.recordedAt
+      ? `${Math.max(1, Math.round((new Date(latestRecord.recordedAt).getTime() - new Date(historySortedByDateAsc[0].recordedAt).getTime()) / (1000 * 60 * 60 * 24)))} days`
+      : undefined;
+
   return {
     conceptId,
     conceptName,
@@ -596,6 +693,15 @@ export function evaluateStudentGapTrajectory(params: {
     rootCauseConfidenceLevel: rootCause.rootCauseConfidenceLevel,
     rootCauseExplanation: rootCause.rootCauseExplanation,
     insufficientEvidenceWarning: rootCause.insufficientEvidenceWarning,
+    gapReopened: isGapReopened,
+    previousMasteryScore,
+    masteryDate,
+    assessmentHistory,
+    totalImprovement,
+    latestScoreDelta,
+    numberOfAssessments,
+    numberOfInterventions,
+    timeToMastery,
   };
 }
 

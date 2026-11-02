@@ -189,11 +189,18 @@ export function LandingNavbar() {
           {/* Brand Logo & GovTech Status */}
           <div className="flex items-center gap-3 shrink-0">
             <Link
-              href="#hero"
-              onClick={(e) => handleNavClick(e, "#hero")}
-              className="cursor-pointer group flex items-center gap-2.5 transition-transform duration-200 active:scale-95"
+              href="/"
+              onClick={(e) => {
+                if (pathname === "/") {
+                  handleNavClick(e, "#hero");
+                } else {
+                  setIsMobileMenuOpen(false);
+                }
+              }}
+              className="cursor-pointer group flex items-center gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-2xl bg-[#FAF6E9] hover:bg-white border border-[#49352F]/15 shadow-sm hover:shadow-md transition-all duration-200 active:scale-95 shrink-0"
+              aria-label="StudySaathi AI - Home"
             >
-              <BrandLogo size={isScrolled ? 34 : 38} variant="dark" />
+              <BrandLogo size={isScrolled ? 32 : 36} variant="navbar" />
             </Link>
 
             {/* Live Hackathon Status Indicator */}

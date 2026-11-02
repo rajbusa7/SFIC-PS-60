@@ -11,37 +11,50 @@ export function BrandLogo({
   size?: number;
   showText?: boolean;
   className?: string;
-  variant?: "auto" | "dark" | "light";
+  variant?: "auto" | "dark" | "light" | "navbar";
 }) {
+  const isNavbar = variant === "navbar";
   const isDarkExplicit = variant === "dark";
   const isLightExplicit = variant === "light";
 
-  const titleStudyClass = isDarkExplicit
+  // StudySaathi brand typography styles:
+  // "StudySaathi" is styled in prominent, crisp dark brown (#49352F)
+  const titleStudyClass = isNavbar
+    ? "text-[#49352F]"
+    : isDarkExplicit
     ? "text-white"
     : isLightExplicit
     ? "text-[#49352F]"
     : "text-[#49352F] dark:text-white";
 
-  const titleSaathiClass = isDarkExplicit
+  const titleSaathiClass = isNavbar
+    ? "text-[#49352F]"
+    : isDarkExplicit
     ? "text-[#FF8A3D]"
     : isLightExplicit
-    ? "text-[#B26A1B]"
-    : "text-[#B26A1B] dark:text-[#FF8A3D]";
+    ? "text-[#49352F]"
+    : "text-[#49352F] dark:text-[#FF8A3D]";
 
-  const badgeClass = isDarkExplicit
+  // "AI" is highlighted in warm peach (#F2CAB3) with dark brown text
+  const badgeClass = isNavbar
+    ? "bg-[#F2CAB3] border-[#49352F]/20 text-[#49352F] shadow-xs font-black"
+    : isDarkExplicit
     ? "bg-amber-500/20 border-amber-500/40 text-amber-300 shadow-[0_0_10px_rgba(255,138,61,0.25)]"
     : isLightExplicit
     ? "bg-[#F2CAB3] border-[#49352F]/15 text-[#49352F]"
     : "bg-[#F2CAB3] dark:bg-amber-500/20 border-[#49352F]/15 dark:border-amber-500/30 text-[#49352F] dark:text-amber-300";
 
-  const subtitleClass = isDarkExplicit
+  const subtitleClass = isNavbar
+    ? "text-[#7A6862]"
+    : isDarkExplicit
     ? "text-slate-300"
     : isLightExplicit
     ? "text-[#7A6862]"
     : "text-[#7A6862] dark:text-slate-400";
+
   return (
-    <div className={`flex items-center gap-3 select-none ${className}`}>
-      {/* Warm Bridge Glyph + Gujarati "શ" Icon */}
+    <div className={`flex items-center gap-2.5 sm:gap-3 select-none ${className}`}>
+      {/* Warm Bridge Glyph + Gujarati "સ" Icon */}
       <div
         className="relative shrink-0 flex items-center justify-center rounded-2xl bg-gradient-to-br from-[#F2DCB5] via-[#FAF6E9] to-[#F2CAB3] border border-[#49352F]/15 shadow-[0_4px_14px_rgba(73,53,47,0.08)] overflow-hidden"
         style={{ width: size, height: size }}
@@ -78,16 +91,32 @@ export function BrandLogo({
       </div>
 
       {showText && (
-        <div className="flex flex-col">
+        <div className="flex flex-col text-left">
           <div className="flex items-center gap-1.5">
-            <span className={`font-heading font-extrabold text-base tracking-tight leading-none ${titleStudyClass}`}>
+            <span
+              className={`font-heading font-black tracking-tight leading-none ${
+                isNavbar ? "text-base sm:text-lg" : "text-base"
+              } ${titleStudyClass}`}
+            >
               Study<span className={titleSaathiClass}>Saathi</span>
             </span>
-            <span className={`border text-[10px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider ${badgeClass}`}>
+            <span
+              className={`border font-black rounded-md uppercase tracking-wider ${
+                isNavbar
+                  ? "text-[10px] sm:text-[11px] px-2 py-0.5"
+                  : "text-[10px] px-1.5 py-0.5"
+              } ${badgeClass}`}
+            >
               AI
             </span>
           </div>
-          <span className={`text-[10px] font-semibold tracking-wider uppercase mt-1 ${subtitleClass}`}>
+          <span
+            className={`font-bold tracking-wider uppercase ${
+              isNavbar
+                ? "text-[9px] sm:text-[10px] mt-0.5"
+                : "text-[10px] mt-1"
+            } ${subtitleClass}`}
+          >
             Learning Gap Bridge
           </span>
         </div>

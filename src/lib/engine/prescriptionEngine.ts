@@ -20,15 +20,25 @@ export interface PedagogicalPrescriptionInput {
   conceptId?: string;
   conceptName?: string;
   subject?: string;
+  subjectName?: string;
   subjectCode?: string;
   learningObjective?: string;
-  status: "Needs Support" | "Developing" | "Mastered" | string;
+  status?: "Needs Support" | "Developing" | "Mastered" | string;
+  gapStatus?: "Needs Support" | "Developing" | "Mastered" | string;
+  gapType?: string;
   diagnosisType?: DiagnosisCategory | string;
   previousScore?: number | null;
   currentScore?: number | null;
   scoreDelta?: number | null;
   trend?: "Improving" | "Stable" | "Declining" | string;
   language?: "en" | "gu";
+  grade?: number;
+  masteryThreshold?: number;
+  supportThreshold?: number;
+  rootConceptName?: string;
+  prerequisiteConcepts?: string[];
+  isRootGapIdentified?: boolean;
+  previousIntervention?: string;
 }
 
 export interface PedagogicalPrescription {
@@ -43,6 +53,10 @@ export interface PedagogicalPrescription {
   remedialPlanEligible: boolean;
   planStatusLabel: string;
   planStatusLabelGu: string;
+  recommendedAction: string;
+  approximateDuration: string;
+  suggestedModality: string;
+  reassessmentRecommendation: string;
 }
 
 // Normalized concept keys
@@ -674,6 +688,55 @@ export function identifyConceptKey(
 }
 
 /**
+ * Resolves the primary instructional modality for the pedagogical prescription
+ */
+export function getSuggestedModality(
+  conceptKey: KnownConceptKey,
+  status: string,
+  diag?: string
+): string {
+  if (status === "Mastered") {
+    return "Periodic Retrieval Practice & Concept Transfer";
+  }
+  if (diag === "Insufficient Evidence") {
+    return "Diagnostic Exit Ticket / Direct Oral Questioning";
+  }
+  if (diag === "Possible Careless Error") {
+    return "Self-Verification & Error-Checking Checklist";
+  }
+  switch (conceptKey) {
+    case "PLACE_VALUE":
+      return "Concrete Manipulatives (Base-10 Blocks / Place-Value Charts / Bundled Sticks)";
+    case "ADDITION_REGROUPING":
+      return "Concrete Base-10 Regrouping Models & Column Scaffolding";
+    case "MULTIPLICATION_TABLES":
+      return "Visual Arrays, Skip Counting, Equal Groups & Retrieval Practice";
+    case "DIVISION_EQUAL_SHARING":
+      return "Concrete Objects / Equal Group Partitioning before Symbolic Division";
+    case "READING_COMPREHENSION":
+      return "Age-Appropriate Passage Reading & Direct Evidence-Finding Questions";
+    case "WATER_CYCLE":
+      return "Labelled Visual Sequencing Chart & Verbal Self-Explanation";
+    case "FRACTIONS":
+      return "Circular Paper Cut-Outs, Strip Folding & Equal-Part Shading";
+    case "SUBJECT_VERB_AGREEMENT":
+      return "Paired Subject-Verb Flashcard Sorting & Fill-In-The-Blank Practice";
+    case "PHONETIC_BLENDS":
+      return "Multi-Sensory Digraph Flashcards & Word Building Practice";
+    case "GUJARATI_MATRAS":
+      return "Tactile Sand Trays & Consonant-Matra Flashcard Pronunciation";
+    case "GUJARATI_CONJUNCTS":
+      return "Slate Character Deconstruction & Joint Pronunciation Practice";
+    case "PLANT_PARTS":
+      return "Direct Botanical Observation & Function Matching Cards";
+    case "COMMUNITY_HELPERS":
+      return "Civic Helper Picture Cards & Real-World Scenario Discussion";
+    default:
+      return "Concrete & Visual Manipulatives (Targeted Scaffold)";
+  }
+}
+
+/**
  * Standardize status input
  */
 function normalizeStatus(status?: string): "Needs Support" | "Developing" | "Mastered" {
@@ -691,8 +754,9 @@ export function generatePedagogicalPrescription(
   input: PedagogicalPrescriptionInput
 ): PedagogicalPrescription {
   const lang = input.language === "gu" ? "gu" : "en";
-  const status = normalizeStatus(input.status);
-  const conceptKey = identifyConceptKey(input.conceptId, input.conceptName, input.subject || input.subjectCode);
+  const status = normalizeStatus(input.status || input.gapStatus);
+  const conceptKey = identifyConceptKey(input.conceptId, input.conceptName, input.subject || input.subjectName || input.subjectCode);
+  const diagnosisType = input.diagnosisType || input.gapType;
 
   // -------------------------------------------------------------
   // 1. MASTERED COMPETENCY HANDLING (Section 5 & 10)
@@ -704,27 +768,36 @@ export function generatePedagogicalPrescription(
       ? lang === "gu" ? template.nameGu : template.nameEn
       : input.conceptName || (lang === "gu" ? "સંકલ્પના" : "Concept");
 
+    const activity =
+      lang === "gu"
+        ? `નિપુણતા પ્રાપ્ત થઈ છે. સમયાંતરે ૫ મિનિટનો પુનરાવર્તન મહાવરો કરાવો અને ${conceptDisplayName} સંકલ્પનાને નવા વાસ્તવિક ઉદાહરણોમાં લાગુ કરવા પ્રોત્સાહિત કરો.`
+        : `Mastery achieved. Conduct periodic 5-minute retrieval practice and encourage the student to apply ${conceptDisplayName} to new examples and advanced problems.`;
+    const reason =
+      lang === "gu"
+        ? "સામયિક પુનરાવર્તન અને સંકલ્પના ટ્રાન્સફર બિનજરૂરી ઉપચાર વિના લાંબા ગાળાની જાળવણી સુનિશ્ચિત કરે છે."
+        : "Periodic retrieval practice and concept transfer maintain long-term retention without unnecessary remediation.";
+    const duration = lang === "gu" ? "૫ મિનિટ" : "5 minutes";
+    const reassessment =
+      lang === "gu"
+        ? "લાંબા ગાળાની જાળવણીનું નિરીક્ષણ કરવા માટે ભાવિ મૂલ્યાંકનોમાં ૧–૨ સમીક્ષા પ્રશ્નો શામેલ કરો."
+        : "Include 1–2 periodic check questions in future assessments to monitor retention.";
+
     return {
       conceptKey,
       conceptDisplayName,
-      activity:
-        lang === "gu"
-          ? `નિપુણતા પ્રાપ્ત થઈ છે. સમયાંતરે ૫ મિનિટનો પુનરાવર્તન મહાવરો કરાવો અને ${conceptDisplayName} સંકલ્પનાને નવા વાસ્તવિક ઉદાહરણોમાં લાગુ કરવા પ્રોત્સાહિત કરો.`
-          : `Mastery achieved. Conduct periodic 5-minute retrieval practice and encourage the student to apply ${conceptDisplayName} to new examples and advanced problems.`,
-      reason:
-        lang === "gu"
-          ? "સામયિક પુનરાવર્તન અને સંકલ્પના ટ્રાન્સફર બિનજરૂરી ઉપચાર વિના લાંબા ગાળાની જાળવણી સુનિશ્ચિત કરે છે."
-          : "Periodic retrieval practice and concept transfer maintain long-term retention without unnecessary remediation.",
-      duration: lang === "gu" ? "૫ મિનિટ" : "5 minutes",
-      reassessment:
-        lang === "gu"
-          ? "લાંબા ગાળાની જાળવણીનું નિરીક્ષણ કરવા માટે ભાવિ મૂલ્યાંકનોમાં ૧–૨ સમીક્ષા પ્રશ્નો શામેલ કરો."
-          : "Include 1–2 periodic check questions in future assessments to monitor retention.",
+      activity,
+      reason,
+      duration,
+      reassessment,
       recommendationType: "Mastery Maintenance",
       recommendationTypeGu: "નિપુણતા જાળવણી",
       remedialPlanEligible: false,
       planStatusLabel: "Mastery achieved — continue periodic retrieval practice.",
       planStatusLabelGu: "નિપુણતા પ્રાપ્ત થઈ — સામયિક પુનરાવર્તન જાળવો.",
+      recommendedAction: activity,
+      approximateDuration: duration,
+      suggestedModality: getSuggestedModality(conceptKey, "Mastered", input.diagnosisType),
+      reassessmentRecommendation: reassessment,
     };
   }
 
@@ -802,8 +875,12 @@ export function generatePedagogicalPrescription(
       recommendationType: "Diagnostic Activity",
       recommendationTypeGu: "નિદાન પ્રવૃત્તિ",
       remedialPlanEligible: true,
-      planStatusLabel: "Ready for 5-Step Concrete Remedial Plan",
-      planStatusLabelGu: "૫-પગલાં પ્રવૃત્તિ આધારિત ઉપચાર માટે તૈયાર",
+      planStatusLabel: "Recommend 3–5 Item Diagnostic Exit Ticket",
+      planStatusLabelGu: "૩-૫ પ્રશ્નોની નિદાન ટિકિટની ભલામણ",
+      recommendedAction: activity,
+      approximateDuration: duration,
+      suggestedModality: getSuggestedModality("UNKNOWN_CONCEPT", status, input.diagnosisType),
+      reassessmentRecommendation: reassessment,
     };
   }
 
@@ -822,14 +899,19 @@ export function generatePedagogicalPrescription(
   let recommendationType: RecommendationType =
     status === "Needs Support" ? "Remedial Practice" : "Focused Practice";
 
+  let remedialPlanEligible = true;
+  let planStatusLabel = "Ready for 5-Step Concrete Remedial Plan";
+  let planStatusLabelGu = "૫-પગલાં પ્રવૃત્તિ આધારિત ઉપચાર માટે તૈયાર";
+
   // -------------------------------------------------------------
   // 4. DIAGNOSIS-AWARE REFINEMENTS (Section 4)
   // Must influence the recommendation without overriding the concept
   // -------------------------------------------------------------
-  const diag = input.diagnosisType || "";
+  const diag = String(input.diagnosisType || input.gapType || "");
 
-  if (diag === "Insufficient Evidence") {
+  if (diag === "Insufficient Evidence" || diag.toLowerCase().includes("insufficient")) {
     recommendationType = "Diagnostic Activity";
+    remedialPlanEligible = false;
     activity = lang === "gu"
       ? `ચોક્કસ જ્ઞાનાત્મક અવરોધ નક્કી કરવા માટે ${conceptDisplayName} પર ૫-મિનિટનું ટૂંકું નિદાન કાર્ય લો.`
       : `Administer a short 5-minute diagnostic task covering varied problem types in ${conceptDisplayName} to isolate the cognitive obstacle.`;
@@ -840,6 +922,8 @@ export function generatePedagogicalPrescription(
     reassessment = lang === "gu"
       ? "નિદાન પરિણામોની સમીક્ષા કરી યોગ્ય મૂર્ત અથવા પ્રક્રિયાત્મક સહાય પસંદ કરો."
       : "Review diagnostic responses to select the appropriate concrete or procedural intervention.";
+    planStatusLabel = "Diagnostic check recommended before intervention";
+    planStatusLabelGu = "૩-૫ પ્રશ્નોની નિદાન ટિકિટની ભલામણ";
   } else if (diag === "Conceptual Gap") {
     const noteEn = " Concrete demonstration and student verbal explanation are emphasized to rebuild the mental model.";
     const noteGu = " માનસિક મોડેલને ફરીથી બનાવવા માટે મૂર્ત નિદર્શન અને વિદ્યાર્થીની મૌખિક સમજૂતી પર ભાર મૂકવામાં આવ્યો છે.";
@@ -852,15 +936,39 @@ export function generatePedagogicalPrescription(
     if (!reason.includes("worked examples") && !reason.includes("ઉકેલાયેલા ઉદાહરણો")) {
       reason += lang === "gu" ? noteGu : noteEn;
     }
-  } else if (diag === "Possible Careless Error") {
-    const noteEn = " Guide the student through an error-checking checklist on 2–3 questions to confirm understanding.";
-    const noteGu = " સમજણની પુષ્ટિ કરવા માટે ૨–૩ પ્રશ્નો પર ભૂલ-તપાસણી ચેકલિસ્ટ દ્વારા વિદ્યાર્થીને માર્ગદર્શન આપો.";
-    duration = lang === "gu" ? "૫–૧૦ મિનિટ" : "5–10 minutes";
+  } else if (
+    diag === "Possible Careless Error" ||
+    diag === "Careless Error" ||
+    diag === "Careless Slip" ||
+    diag.toLowerCase().includes("careless")
+  ) {
+    recommendationType = "Focused Practice";
+    activity = lang === "gu"
+      ? "સંપૂર્ણ ઉપચાર ક્રમ બનાવવાને બદલે વિદ્યાર્થીને ૨–૩ પ્રશ્નો પર ભૂલ-તપાસણી ચેકલિસ્ટ દ્વારા ચકાસણીનો મહાવરો કરાવો."
+      : "Guide the student through an error-checking checklist on 2–3 questions to confirm understanding.";
+    const noteEn = " Guide the student through an error-checking checklist on 2–3 questions to confirm understanding. Performance reflects isolated errors; verification practice and short reassessment are recommended over full remediation.";
+    const noteGu = " સમજણની પુષ્ટિ કરવા માટે ૨–૩ પ્રશ્નો પર ભૂલ-તપાસણી ચેકલિસ્ટ દ્વારા વિદ્યાર્થીને માર્ગદર્શન આપો. કામગીરી એકલદોકલ ભૂલો દર્શાવે છે; સંપૂર્ણ ઉપચાર કરતાં ચકાસણી અને ટૂંકું પુનઃમૂલ્યાંકન વધુ યોગ્ય છે.";
+    duration = lang === "gu" ? "૫–૧૦ મિનિટ" : "5 minutes";
+    reassessment = lang === "gu"
+      ? "ચોકસાઈની પુષ્ટિ કરવા માટે ૨ સમાન પ્રશ્નો સાથે ટૂંકું પુનઃમૂલ્યાંકન કરો."
+      : "Reassess with 2 similar questions to verify consistent operational execution.";
     reason += lang === "gu" ? noteGu : noteEn;
+    remedialPlanEligible = false;
+    planStatusLabel = "Verification & error-checking practice recommended";
+    planStatusLabelGu = "ચકાસણી અને ભૂલ-તપાસ મહાવરો ભલામણ કરેલ";
   } else if (diag === "Prerequisite Weakness") {
     const noteEn = " Briefly revisit the foundational prerequisite before proceeding to current grade-level problems.";
     const noteGu = " વર્તમાન ધોરણ-સ્તરની સમસ્યાઓ પર આગળ વધતાં પહેલાં પાયાની પૂર્વશરત સંકલ્પનાનું પુનરાવર્તન કરો.";
     reason += lang === "gu" ? noteGu : noteEn;
+  }
+
+  // Root Prerequisite Cause linkage
+  if (input.isRootGapIdentified && input.rootConceptName) {
+    const rootNoteEn = ` Foundational root cause identified in ${input.rootConceptName}; address this prerequisite first before progressing.`;
+    const rootNoteGu = ` ${input.rootConceptName} માં પાયાની પૂર્વશરત ઓળખાઈ છે; આગળ વધતાં પહેલાં તેનું નિરાકરણ કરો.`;
+    if (!reason.includes(input.rootConceptName)) {
+      reason += lang === "gu" ? rootNoteGu : rootNoteEn;
+    }
   }
 
   // -------------------------------------------------------------
@@ -891,6 +999,8 @@ export function generatePedagogicalPrescription(
       ? "લક્ષિત મહાવરો"
       : "નિદાન પ્રવૃત્તિ";
 
+  const suggestedModality = getSuggestedModality(conceptKey, status, diag);
+
   return {
     conceptKey,
     conceptDisplayName,
@@ -900,9 +1010,13 @@ export function generatePedagogicalPrescription(
     reassessment,
     recommendationType,
     recommendationTypeGu,
-    remedialPlanEligible: true,
-    planStatusLabel: "Ready for 5-Step Concrete Remedial Plan",
-    planStatusLabelGu: "૫-પગલાં પ્રવૃત્તિ આધારિત ઉપચાર માટે તૈયાર",
+    remedialPlanEligible,
+    planStatusLabel,
+    planStatusLabelGu,
+    recommendedAction: activity,
+    approximateDuration: duration,
+    suggestedModality,
+    reassessmentRecommendation: reassessment,
   };
 }
 

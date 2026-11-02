@@ -12,6 +12,7 @@ import { BridgeProgress } from "@/components/ui/BridgeProgress";
 import type { SkillNode } from "@/components/3d/StudentSkillTree3D";
 import { useLanguage } from "@/context/LanguageContext";
 import { ContextualHelp } from "@/components/shared/ContextualHelp";
+import { LearningGapMap } from "@/components/learning-gaps/LearningGapMap";
 import { subscribeToDataUpdates } from "@/lib/events";
 import {
   Users,
@@ -36,6 +37,9 @@ import {
   KeyRound,
   ShieldCheck,
   X,
+  GitFork,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -92,6 +96,16 @@ export default function StudentDetailPage({
   const [attempts, setAttempts] = useState<any[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Expandable Learning Gap Map state
+  const [expandedMapGapIds, setExpandedMapGapIds] = useState<Record<string, boolean>>({});
+
+  const toggleGapMap = (gapId: string) => {
+    setExpandedMapGapIds((prev) => ({
+      ...prev,
+      [gapId]: !prev[gapId],
+    }));
+  };
 
   // Active tab: default to 3D Skill Tree for immediate WOW factor!
   const [activeTab, setActiveTab] = useState<"skilltree" | "gaps" | "mastery" | "history" | "plans">("skilltree");
@@ -612,7 +626,31 @@ export default function StudentDetailPage({
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => toggleGapMap(gap.id)}
+                        className={`rounded-full text-xs transition-colors border ${
+                          expandedMapGapIds[gap.id]
+                            ? "bg-[#F2CAB3] text-[#49352F] border-[#B26A1B]/40 font-bold"
+                            : "bg-white hover:bg-[#F2CAB3]/40 text-[#49352F] border border-[#49352F]/15"
+                        }`}
+                        aria-expanded={Boolean(expandedMapGapIds[gap.id])}
+                      >
+                        <GitFork className="w-3.5 h-3.5 mr-1 text-[#B26A1B]" />
+                        <span>
+                          {expandedMapGapIds[gap.id]
+                            ? (language === "gu" ? "મેપ છુપાવો" : "Hide Gap Map")
+                            : (language === "gu" ? "લર્નિંગ ગેપ મેપ" : "Learning Gap Map")}
+                        </span>
+                        {expandedMapGapIds[gap.id] ? (
+                          <ChevronUp className="w-3.5 h-3.5 ml-1" />
+                        ) : (
+                          <ChevronDown className="w-3.5 h-3.5 ml-1" />
+                        )}
+                      </Button>
+
                       <Button
                         variant="saffron"
                         size="sm"
@@ -665,6 +703,13 @@ export default function StudentDetailPage({
                         <ContextualHelp termKey="gapDetection" />
                       </div>
                       <p className="text-[#49352F] leading-relaxed">{gap.reason}</p>
+                    </div>
+                  )}
+
+                  {/* Expandable Learning Gap Map */}
+                  {expandedMapGapIds[gap.id] && (
+                    <div className="pt-2 border-t border-[#49352F]/10">
+                      <LearningGapMap gap={gap} studentName={student?.displayName} />
                     </div>
                   )}
                 </Card>

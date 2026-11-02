@@ -1,4 +1,4 @@
-import { describe, it } from "node:test";
+import { describe, it, beforeEach } from "node:test";
 import assert from "node:assert";
 import { GET } from "../../app/api/progress/route";
 import { db } from "../db/database";
@@ -9,6 +9,9 @@ import {
 } from "./calculations";
 
 describe("Progress Tracking & Analytics Engine", () => {
+  beforeEach(() => {
+    db.resetToDemoData();
+  });
   it("should calculate exact percentage-point delta and differentiate from relative growth", () => {
     // Aarav Division case: 40% initial, 35% latest
     const initial = 40;

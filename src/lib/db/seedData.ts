@@ -18,6 +18,7 @@ import type {
   ParentProfile,
   AiProviderConfig,
   TeacherAssignment,
+  InterventionRecord,
 } from "../types";
 
 export const SEED_SCHOOL: School = {
@@ -808,6 +809,87 @@ export const SEED_RESULTS: AssessmentResult[] = [
     percentage: 73,
     recordedAt: "2026-09-18T11:00:00Z",
   },
+
+  // Arjun Mehta (Class 4-A) - Fractions Gap Reopening Demo (82% -> 85% -> 83% -> 62%)
+  {
+    id: "res-arjun-frac-01",
+    assessmentId: "asm-01",
+    studentId: "std-arjun",
+    conceptId: "c-frac-01",
+    marksObtained: 16,
+    maximumMarks: 20,
+    percentage: 82,
+    recordedAt: "2026-09-01T10:00:00Z",
+    notes: "Initial diagnostic on fractions basics.",
+  },
+  {
+    id: "res-arjun-frac-02",
+    assessmentId: "asm-02",
+    studentId: "std-arjun",
+    conceptId: "c-frac-01",
+    marksObtained: 17,
+    maximumMarks: 20,
+    percentage: 85,
+    recordedAt: "2026-09-15T10:00:00Z",
+    notes: "Unit assessment: achieved mastery threshold.",
+  },
+  {
+    id: "res-arjun-frac-03",
+    assessmentId: "asm-03",
+    studentId: "std-arjun",
+    conceptId: "c-frac-01",
+    marksObtained: 17,
+    maximumMarks: 20,
+    percentage: 83,
+    recordedAt: "2026-10-01T10:00:00Z",
+    notes: "Monthly review: maintained mastery.",
+  },
+  {
+    id: "res-arjun-frac-04",
+    assessmentId: "asm-04",
+    studentId: "std-arjun",
+    conceptId: "c-frac-01",
+    marksObtained: 12,
+    maximumMarks: 20,
+    percentage: 62,
+    recordedAt: "2026-10-20T10:00:00Z",
+    notes: "Quarterly exam: confusion on unequal denominators.",
+  },
+
+  // Pooja Joshi (Class 4-A) - Mastered Reading Comprehension Demo (50% -> 70% -> 85%)
+  {
+    id: "res-pooja-comp-01",
+    assessmentId: "asm-01",
+    studentId: "std-pooja",
+    conceptId: "c-eng-comp-01",
+    marksObtained: 10,
+    maximumMarks: 20,
+    percentage: 50,
+    recordedAt: "2026-09-10T10:00:00Z",
+    notes: "Baseline reading assessment: struggled with main ideas.",
+  },
+  {
+    id: "res-pooja-comp-02",
+    assessmentId: "asm-02",
+    studentId: "std-pooja",
+    conceptId: "c-eng-comp-01",
+    marksObtained: 14,
+    maximumMarks: 20,
+    percentage: 70,
+    recordedAt: "2026-09-25T10:00:00Z",
+    notes: "Post-guided reading practice: developing well.",
+  },
+  {
+    id: "res-pooja-comp-03",
+    assessmentId: "asm-03",
+    studentId: "std-pooja",
+    conceptId: "c-eng-comp-01",
+    marksObtained: 17,
+    maximumMarks: 20,
+    percentage: 85,
+    recordedAt: "2026-10-30T10:00:00Z",
+    notes: "Recent reassessment: confirmed independent mastery.",
+  },
 ];
 
 export const SEED_LEARNING_GAPS: LearningGap[] = [
@@ -880,10 +962,13 @@ export const SEED_LEARNING_GAPS: LearningGap[] = [
     grade: 4,
     priority: "Medium",
     masteryStatus: "Developing",
-    reason: "Developing: The student has demonstrated the core skill and grasped core basics (70%), but has not yet shown consistent mastery. Focused practice followed by reassessment is recommended.",
-    suggestedAction: "Provide guided practice with varied problem sets followed by reassessment to confirm consistent mastery.",
+    reason: "Developing: The student has demonstrated the core skill and grasped core basics (70%), but has not yet shown consistent mastery. Focused practice completed; reassessment is due to evaluate growth.",
+    suggestedAction: "Conduct scheduled reassessment on Multiplication Tables (2 to 9) to measure post-intervention growth.",
     diagnosisType: "Developing / Not Yet Mastered",
     status: "Under Intervention",
+    remedialPlanId: "plan-meera-mult-01",
+    remedialPlanStatus: "Completed",
+    reassessmentDue: true,
     attemptsCount: 1,
     latestPercentage: 70,
     updatedAt: "2026-09-10T12:00:00Z",
@@ -941,6 +1026,54 @@ export const SEED_LEARNING_GAPS: LearningGap[] = [
     attemptsCount: 1,
     latestPercentage: 65,
     updatedAt: "2026-09-15T12:00:00Z",
+  },
+  {
+    id: "gap-arjun-frac",
+    studentId: "std-arjun",
+    studentName: "Arjun Mehta",
+    conceptId: "c-frac-01",
+    conceptName: "Fractions Introduction",
+    subjectCode: "MATH",
+    grade: 4,
+    priority: "High",
+    masteryStatus: "Needs Support",
+    reason: "Gap Reopened: This competency was previously mastered (85% on 15 Sep), but performance has declined to 62% across consecutive observations (82% → 85% → 83% → 62%). Targeted intervention is re-activated to restore foundational mastery.",
+    suggestedAction: "Re-activate targeted practice using circular fraction cut-outs and paper strips to rebuild equal-sharing mental models.",
+    diagnosisType: "Conceptual Gap",
+    status: "Active",
+    gapReopened: true,
+    previousMasteryScore: 85,
+    masteryDate: "2026-09-15T10:00:00Z",
+    attemptsCount: 4,
+    latestPercentage: 62,
+    previousPercentage: 83,
+    deltaPercentagePoints: -21,
+    trend: "Declining",
+    trendLabel: "Declining",
+    updatedAt: "2026-10-20T12:00:00Z",
+  },
+  {
+    id: "gap-pooja-comp",
+    studentId: "std-pooja",
+    studentName: "Pooja Joshi",
+    conceptId: "c-eng-comp-01",
+    conceptName: "Reading Comprehension",
+    subjectCode: "ENG",
+    grade: 4,
+    priority: "Low",
+    masteryStatus: "Mastered",
+    reason: "Mastery achieved: The student scored 85%, meeting the configured mastery benchmark of 80%. No immediate remedial intervention is required; continue periodic retrieval practice to monitor retention.",
+    suggestedAction: "Mastery achieved — continue periodic retrieval practice.",
+    diagnosisType: "Mastered",
+    status: "Resolved",
+    lifecycleStatus: "Closed Gap",
+    attemptsCount: 3,
+    latestPercentage: 85,
+    previousPercentage: 70,
+    deltaPercentagePoints: 15,
+    trend: "Improving",
+    trendLabel: "Improving",
+    updatedAt: "2026-10-30T12:00:00Z",
   },
 ];
 
@@ -1140,7 +1273,8 @@ export const SEED_REMEDIAL_PLANS: RemedialPlan[] = [
     subjectCode: "MATH",
     learningObjective: "Master instant recall for 6, 7, and 8 times tables.",
     recommendationReason: "Student scored 70% (Developing); core concepts grasped but recall speed needs practice.",
-    status: "In Progress",
+    status: "Completed",
+    reassessmentDue: true,
     estimatedMinutes: 15,
     difficulty: "Intermediate",
     requiredMaterials: ["10x10 multiplication grid", "Flashcard deck"],
@@ -1609,5 +1743,126 @@ export const SEED_TEACHER_ASSIGNMENTS: TeacherAssignment[] = [
     classroomIds: ["cls-1a"],
     grades: [1],
     assignedAt: "2026-01-01T00:00:00Z",
+  },
+];
+
+// =========================================================================
+// PHASE 6: AUTHENTIC HISTORICAL INTERVENTION RECORDS
+// =========================================================================
+
+export const SEED_INTERVENTION_RECORDS: InterventionRecord[] = [
+  // Base-10 Blocks: 18 records (avg improvement: ~+17 pp)
+  ...Array.from({ length: 18 }).map((_, i) => {
+    const pre = 35 + (i % 6) * 3;
+    const delta = 15 + (i % 5); // deltas between 15 and 19 (avg ~17)
+    const post = pre + delta;
+    return {
+      id: `int-b10-${i + 1}`,
+      interventionType: "Base-10 Blocks",
+      conceptId: i % 2 === 0 ? "c-pv-01" : "c-add-01",
+      conceptName: i % 2 === 0 ? "Place Value (Tens and Ones)" : "3-Digit Addition with Regrouping",
+      subjectCode: "MATH",
+      gapType: i % 2 === 0 ? "Conceptual Gap" : "Procedural Error",
+      studentId: `std-${["aarav", "diya", "meera", "kabir", "ananya", "rohan"][i % 6]}`,
+      studentName: ["Aarav Patel", "Diya Sharma", "Meera Shah", "Kabir Joshi", "Ananya Verma", "Rohan Mehta"][i % 6],
+      preInterventionScore: pre,
+      postInterventionScore: post,
+      scoreDelta: delta,
+      date: `2026-09-${10 + (i % 15)}T10:00:00Z`,
+      durationMinutes: 12,
+      teacherFeedback: "Student showed strong understanding of bundling tens into rods.",
+      outcome: (post >= 80 ? "Mastered" : post >= 60 ? "Developing" : "Needs Further Support") as any,
+    };
+  }),
+
+  // Guided Worksheet Practice: 21 records (avg improvement: ~+6 pp)
+  ...Array.from({ length: 21 }).map((_, i) => {
+    const pre = 50 + (i % 5) * 3;
+    const delta = 4 + (i % 5); // deltas between 4 and 8 (avg ~6)
+    const post = pre + delta;
+    return {
+      id: `int-gwp-${i + 1}`,
+      interventionType: "Guided Worksheet Practice",
+      conceptId: ["c-pv-01", "c-add-01", "c-mult-01", "c-div-01"][i % 4],
+      conceptName: ["Place Value", "3-Digit Addition", "Multiplication", "Division"][i % 4],
+      subjectCode: "MATH",
+      gapType: "Procedural Error",
+      studentId: `std-${["aarav", "diya", "meera", "kabir", "ananya"][i % 5]}`,
+      studentName: ["Aarav Patel", "Diya Sharma", "Meera Shah", "Kabir Joshi", "Ananya Verma"][i % 5],
+      preInterventionScore: pre,
+      postInterventionScore: post,
+      scoreDelta: delta,
+      date: `2026-09-${5 + (i % 20)}T11:00:00Z`,
+      durationMinutes: 15,
+      teacherFeedback: "Completed worksheet with paired peer verification.",
+      outcome: (post >= 80 ? "Mastered" : post >= 60 ? "Developing" : "Needs Further Support") as any,
+    };
+  }),
+
+  // Skip Counting & Arrays: 15 records (avg improvement: ~+22 pp)
+  ...Array.from({ length: 15 }).map((_, i) => {
+    const pre = 40 + (i % 4) * 4;
+    const delta = 20 + (i % 5); // deltas 20-24 (avg ~22)
+    const post = pre + delta;
+    return {
+      id: `int-sca-${i + 1}`,
+      interventionType: "Skip Counting & Arrays",
+      conceptId: "c-mult-01",
+      conceptName: "Multiplication Tables (2 to 9)",
+      subjectCode: "MATH",
+      gapType: "Conceptual Gap",
+      studentId: `std-${["meera", "aarav", "diya", "kabir"][i % 4]}`,
+      studentName: ["Meera Shah", "Aarav Patel", "Diya Sharma", "Kabir Joshi"][i % 4],
+      preInterventionScore: pre,
+      postInterventionScore: post,
+      scoreDelta: delta,
+      date: `2026-09-${12 + (i % 12)}T09:30:00Z`,
+      durationMinutes: 10,
+      teacherFeedback: "Physical array arrangement built rapid recall.",
+      outcome: (post >= 80 ? "Mastered" : "Developing") as any,
+    };
+  }),
+
+  // Concrete Equal Groups Partitioning: 12 records (avg improvement: ~+25 pp)
+  ...Array.from({ length: 12 }).map((_, i) => {
+    const pre = 35 + (i % 4) * 3;
+    const delta = 23 + (i % 5); // deltas 23-27 (avg ~25)
+    const post = pre + delta;
+    return {
+      id: `int-div-${i + 1}`,
+      interventionType: "Concrete Equal Groups",
+      conceptId: "c-div-01",
+      conceptName: "Division Basics (Equal Sharing)",
+      subjectCode: "MATH",
+      gapType: "Conceptual Gap",
+      studentId: `std-${["aarav", "kabir", "diya"][i % 3]}`,
+      studentName: ["Aarav Patel", "Kabir Joshi", "Diya Sharma"][i % 3],
+      preInterventionScore: pre,
+      postInterventionScore: post,
+      scoreDelta: delta,
+      date: `2026-09-${15 + (i % 10)}T11:00:00Z`,
+      durationMinutes: 12,
+      teacherFeedback: "Fair sharing with physical counters eliminated conceptual hesitation.",
+      outcome: (post >= 80 ? "Mastered" : "Developing") as any,
+    };
+  }),
+
+  // Tactile Sand Trays: Exactly 1 record (Tests "Insufficient historical evidence")
+  {
+    id: "int-sand-01",
+    interventionType: "Tactile Sand Trays",
+    conceptId: "c-guj-01",
+    conceptName: "Gujarati Matras",
+    subjectCode: "GUJ",
+    gapType: "Language / Comprehension Barrier",
+    studentId: "std-aarav",
+    studentName: "Aarav Patel",
+    preInterventionScore: 50,
+    postInterventionScore: 65,
+    scoreDelta: 15,
+    date: "2026-10-01T10:00:00Z",
+    durationMinutes: 10,
+    teacherFeedback: "Initial trial with sand tracing for vowels.",
+    outcome: "Developing",
   },
 ];

@@ -210,13 +210,49 @@ export async function GET(
         };
       });
 
+    // Phase 6: Fetch teacher-dispatched home practices from Parent Bridge queue
+    const teacherSentHomeActivities = db.getParentHomeActivities(studentId);
+    const teacherSentFormatted = teacherSentHomeActivities.map((ts: any) => ({
+      id: ts.id,
+      gapId: ts.activity?.gapId || `gap-${ts.id}`,
+      conceptId: ts.activity?.conceptId || "concept",
+      conceptName: ts.activity?.conceptName || ts.activity?.title,
+      subjectCode: ts.activity?.subjectCode || "MATH",
+      title: ts.activity?.title || "Teacher-Approved Home Practice",
+      titleGujarati: ts.activity?.titleGu || ts.activity?.title || "શિક્ષક-માન્ય ઘર-મહાવરો",
+      whyNeededEn: ts.customNotes ? `Teacher Note: ${ts.customNotes}` : ts.activity?.whyThisWorks || "5-minute hands-on home practice using household items.",
+      whyNeededGu: ts.customNotes ? `શિક્ષકની નોંધ: ${ts.customNotes}` : ts.activity?.whyThisWorksGu || "૫-મિનિટનો રોજિંદી વસ્તુઓ સાથેનો ઘર-મહાવરો.",
+      estimatedMinutes: ts.activity?.durationMinutes || 5,
+      materialsEn: ts.activity?.commonHouseholdMaterials || ["Common household objects"],
+      materialsGu: ts.activity?.commonHouseholdMaterialsGu || ts.activity?.commonHouseholdMaterials || ["રોજિંદી ઘરની વસ્તુઓ"],
+      steps: [
+        {
+          stepNumber: 1,
+          instructionEn: ts.activity?.whatParentDoes || "Sit together and demonstrate the concept using household objects.",
+          instructionGu: ts.activity?.whatParentDoesGu || "બાળક સાથે બેસીને ઘરની વસ્તુઓથી રીત સમજાવો.",
+        },
+        {
+          stepNumber: 2,
+          instructionEn: `Ask: "${ts.activity?.conversationalPrompt || "Can you show me how this works?"}"`,
+          instructionGu: `પૂછો: "${ts.activity?.conversationalPromptGu || "મને બતાવો કે આ કેવી રીતે ગણાય?"}"`,
+        },
+      ],
+      completed: completedActivityIds.has(ts.id),
+      completedAt: completions.find((c: any) => c.activityId === ts.id)?.completedAt || null,
+      isTeacherSent: true,
+      teacherNotes: ts.customNotes,
+    }));
+
+    const allParentHomeActivities = [...teacherSentFormatted, ...homeActivities];
+
     return NextResponse.json({
       success: true,
       student,
       results,
       learningGaps,
       remedialPlans,
-      homeActivities,
+      homeActivities: allParentHomeActivities,
+      teacherSentHomeActivities,
       activityCompletions: completions,
       notices: studentNotices,
       subjectBreakdown,

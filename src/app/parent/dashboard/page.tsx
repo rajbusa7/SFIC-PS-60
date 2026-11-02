@@ -7,11 +7,12 @@ import { BrandLogo } from "@/components/shared/BrandLogo";
 import { LanguageSelector } from "@/components/shared/LanguageSelector";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { Badge, type BadgeVariant } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { BridgeProgress } from "@/components/ui/BridgeProgress";
 import { useLanguage } from "@/context/LanguageContext";
 import { normalizePriority } from "@/lib/learningGapFormatters";
+import { getRoleAwareGapInterpretation } from "@/lib/engine/roleAwareGapEngine";
 import {
   Users,
   GraduationCap,
@@ -1004,53 +1005,119 @@ function ParentDashboardContent() {
                     <div className="space-y-4">
                       {learningGaps.map((gap: any) => {
                         const matchingPlan = remedialPlans.find((p: any) => p.gapId === gap.id || p.conceptId === gap.conceptId);
+                        const interp = getRoleAwareGapInterpretation(
+                          {
+                            ...gap,
+                            studentName: activeStudent?.displayName || gap.studentName,
+                          },
+                          "parent",
+                          language === "gu" ? "gu" : "en"
+                        );
+                        const act = interp.parentHomeActivity;
+
                         return (
                           <div
                             key={gap.id}
-                            className="p-5 rounded-3xl bg-[#FAF6E9]/60 border border-[#49352F]/15 space-y-3"
+                            className="p-5 rounded-3xl bg-[#FAF6E9]/60 border border-[#49352F]/15 space-y-4"
                           >
+                            {/* Card Header: Topic & Supportive Status */}
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#49352F]/10 pb-3">
                               <div>
-                                <span className="text-[11px] uppercase tracking-wider font-extrabold text-[#C54738] block">
-                                  Foundational Concept Gap
+                                <span className="text-[10.5px] uppercase tracking-wider font-extrabold text-[#B26A1B] block">
+                                  {language === "gu" ? "વર્તમાન અભ્યાસ ક્ષેત્ર" : "Current Learning Focus"}
                                 </span>
                                 <h3 className="text-base font-black text-[#49352F]">
-                                  {gap.conceptName || "Concept Mastery Roadblock"}
+                                  {interp.growthFocus || gap.conceptName || "Curricular Concept"}
                                 </h3>
                               </div>
                               <div className="flex items-center gap-2">
-                                <Badge variant="needsSupport" size="sm">
-                                  Score: {gap.latestPercentage || gap.scoreRecorded || 35}% (&lt;60% threshold)
-                                </Badge>
-                                <Badge
-                                  variant={
-                                    normalizePriority(gap.priority) === "High Priority"
-                                      ? "high"
-                                      : normalizePriority(gap.priority) === "Medium Priority"
-                                      ? "medium"
-                                      : "low"
-                                  }
-                                  size="sm"
-                                >
-                                  {formatPriority(gap.priority)}
+                                <Badge variant={interp.badgeVariant as BadgeVariant} size="sm">
+                                  {interp.badgeLabel}
                                 </Badge>
                               </div>
                             </div>
 
-                            {/* Why Flagged (Pedagogical Root Cause) */}
-                            <div className="p-3.5 rounded-2xl bg-white border border-[#49352F]/10 space-y-1">
-                              <span className="text-[11px] font-bold text-[#B26A1B] flex items-center gap-1.5">
-                                <BrainCircuit className="w-3.5 h-3.5" />
-                                <span>{language === "gu" ? "શા માટે ફ્લેગ થયું (શિક્ષણશાસ્ત્રીય કારણ):" : "Why Flagged (Pedagogical Root Cause):"}</span>
+                            {/* Section 1: Strengths & What child does well */}
+                            <div className="p-4 rounded-2xl bg-white border border-[#2E7D5E]/20 space-y-1.5 shadow-xs">
+                              <span className="text-xs font-bold text-[#2E7D5E] flex items-center gap-1.5">
+                                <CheckCircle2 className="w-4 h-4 text-[#2E7D5E] shrink-0" />
+                                <span>{language === "gu" ? `બાળક શું સરસ રીતે કરી રહ્યું છે (શક્તિઓ):` : `What ${activeStudent?.displayName || "your child"} is doing well:`}</span>
                               </span>
                               <p className="text-xs text-[#49352F] leading-relaxed">
-                                {gap.reason || "Recent assessment score indicates that student requires structured foundational reinforcement."}
+                                {interp.strengthsSummary}
                               </p>
                             </div>
 
-                            {/* 5-Step Remedial Plan Steps */}
+                            {/* Section 2: Progress & Teacher Guidance */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                              <div className="p-3.5 rounded-2xl bg-white border border-[#49352F]/10 space-y-1">
+                                <span className="text-[11px] font-bold text-[#49352F] flex items-center gap-1.5">
+                                  <TrendingUp className="w-3.5 h-3.5 text-[#B26A1B]" />
+                                  <span>{language === "gu" ? "વર્ગખંડમાં પ્રગતિ:" : "Classroom Progress & Practice:"}</span>
+                                </span>
+                                <p className="text-xs text-[#7A6862] leading-relaxed">
+                                  {interp.progressNarrative}
+                                </p>
+                              </div>
+
+                              <div className="p-3.5 rounded-2xl bg-white border border-[#49352F]/10 space-y-1">
+                                <span className="text-[11px] font-bold text-[#49352F] flex items-center gap-1.5">
+                                  <GraduationCap className="w-3.5 h-3.5 text-[#2E7D5E]" />
+                                  <span>{language === "gu" ? "શિક્ષકની ભલામણ:" : "Teacher Recommendation:"}</span>
+                                </span>
+                                <p className="text-xs text-[#49352F] leading-relaxed">
+                                  {interp.teacherRecommendation}
+                                </p>
+                                {interp.reassessmentUpdate && (
+                                  <div className="text-[11px] text-[#B26A1B] font-semibold pt-1">
+                                    🔄 {interp.reassessmentUpdate}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Section 3: One Simple 5-Minute Home Activity */}
+                            {act && (
+                              <div className="p-4 rounded-2xl bg-gradient-to-r from-[#FAF6E9] to-white border border-[#B26A1B]/30 space-y-2.5">
+                                <div className="flex items-center justify-between border-b border-[#49352F]/10 pb-1.5">
+                                  <span className="font-heading font-extrabold text-xs text-[#B26A1B] flex items-center gap-1.5">
+                                    <Home className="w-4 h-4 text-[#B26A1B]" />
+                                    <span>{language === "gu" ? "૫-મિનિટનો સરળ ઘર-મહાવરો" : "One 5-Minute Home Activity"}</span>
+                                  </span>
+                                  <Badge variant="mint" size="sm">
+                                    <Clock className="w-3 h-3 mr-1" />
+                                    {act.durationMinutes} {language === "gu" ? "મિનિટ" : "mins"}
+                                  </Badge>
+                                </div>
+
+                                <div>
+                                  <h4 className="font-bold text-xs text-[#49352F]">{act.title}</h4>
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {act.commonHouseholdMaterials.map((m: string, mIdx: number) => (
+                                      <span
+                                        key={mIdx}
+                                        className="px-2 py-0.5 rounded-full bg-white border border-[#49352F]/10 text-[10.5px] text-[#7A6862]"
+                                      >
+                                        🛠️ {m}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+
+                                <div className="space-y-1.5 text-xs text-[#49352F]">
+                                  <p className="leading-snug">
+                                    <strong>{language === "gu" ? "વાલીએ શું કરવું:" : "What to do:"}</strong> {act.whatParentDoes}
+                                  </p>
+                                  <p className="italic text-[#8D4E10] text-[11px] bg-white/70 p-2 rounded-xl border border-[#49352F]/8">
+                                    🗣️ <strong>{language === "gu" ? "પૂછવા માટે સંવાદ:" : "Conversational Prompt:"}</strong> {act.conversationalPrompt}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Section 4: Teacher-Approved 5-Step Remedial Plan Steps (if active) */}
                             {matchingPlan && matchingPlan.steps && matchingPlan.steps.length > 0 && (
-                              <div className="space-y-2 pt-2">
+                              <div className="space-y-2 pt-1 border-t border-[#49352F]/10">
                                 <span className="text-xs font-extrabold text-[#49352F] flex items-center gap-1.5">
                                   <Layers className="w-3.5 h-3.5 text-[#2E7D5E]" />
                                   <span>{language === "gu" ? "શિક્ષક-માન્ય ૫-પગલાંની ઉપચાર યોજના:" : "Teacher-Approved 5-Step Concrete Remedial Plan:"}</span>

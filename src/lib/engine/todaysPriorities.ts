@@ -26,6 +26,8 @@ export interface PriorityGapRecord {
   remedialPlanId?: string;
   remedialPlanStatus?: string;
   reassessmentDue?: boolean;
+  gapReopened?: boolean;
+  trend?: string;
 }
 
 export interface TodaysPrioritiesResult {
@@ -33,10 +35,17 @@ export interface TodaysPrioritiesResult {
   developingCount: number;
   readyToReassessCount: number;
   recentlyMasteredCount: number;
+  reopenedGapsCount: number;
   immediateSupportStudentIds: string[];
   developingStudentIds: string[];
   readyToReassessStudentIds: string[];
   recentlyMasteredStudentIds: string[];
+  reopenedStudentIds: string[];
+  immediateSupportGapIds: string[];
+  developingGapIds: string[];
+  readyToReassessGapIds: string[];
+  recentlyMasteredGapIds: string[];
+  reopenedGapIds: string[];
   totalActionableStudents: number;
 }
 
@@ -110,6 +119,13 @@ export function calculateTodaysPriorities(
   const developingStudents = new Set<string>();
   const readyToReassessStudents = new Set<string>();
   const recentlyMasteredStudents = new Set<string>();
+  const reopenedStudents = new Set<string>();
+
+  const immediateSupportGapIds: string[] = [];
+  const developingGapIds: string[] = [];
+  const readyToReassessGapIds: string[] = [];
+  const recentlyMasteredGapIds: string[] = [];
+  const reopenedGapIds: string[] = [];
 
   for (const gap of gaps) {
     if (!gap || !gap.studentId) continue;
@@ -117,29 +133,38 @@ export function calculateTodaysPriorities(
     const studentId = String(gap.studentId).trim();
     if (!studentId) continue;
 
+    const isReopened = gap.gapReopened === true || gap.status === "Gap Reopened";
+    if (isReopened) {
+      reopenedStudents.add(studentId);
+      if (gap.id) reopenedGapIds.push(gap.id);
+    }
+
     const effectiveStatus = resolveGapCategoryStatus(gap, supportThreshold, masteryThreshold);
     if (!effectiveStatus) continue;
 
     const isResolved =
-      effectiveStatus === "Mastered" ||
-      gap.status === "Resolved" ||
-      gap.dynamicStatus === "Mastered" ||
-      gap.masteryStatus === "Mastered";
+      !isReopened &&
+      (effectiveStatus === "Mastered" ||
+        gap.status === "Resolved" ||
+        gap.dynamicStatus === "Mastered" ||
+        gap.masteryStatus === "Mastered");
 
     // -------------------------------------------------------------
     // 1. Need Immediate Support
-    // Active, unresolved records with Needs Support status
+    // Active, unresolved records with Needs Support status (or Reopened Gaps)
     // -------------------------------------------------------------
-    if (effectiveStatus === "Needs Support" && !isResolved) {
+    if ((effectiveStatus === "Needs Support" || isReopened) && !isResolved) {
       immediateSupportStudents.add(studentId);
+      if (gap.id) immediateSupportGapIds.push(gap.id);
     }
 
     // -------------------------------------------------------------
     // 2. Developing
     // Active, unresolved records with Developing status
     // -------------------------------------------------------------
-    if (effectiveStatus === "Developing" && !isResolved) {
+    if (effectiveStatus === "Developing" && !isResolved && !isReopened) {
       developingStudents.add(studentId);
+      if (gap.id) developingGapIds.push(gap.id);
     }
 
     // -------------------------------------------------------------
@@ -153,6 +178,7 @@ export function calculateTodaysPriorities(
 
     if (hasCompletedIntervention && !isResolved) {
       readyToReassessStudents.add(studentId);
+      if (gap.id) readyToReassessGapIds.push(gap.id);
     }
 
     // -------------------------------------------------------------
@@ -161,6 +187,7 @@ export function calculateTodaysPriorities(
     // -------------------------------------------------------------
     if (isResolved && isWithinRecentDays(gap.updatedAt, 7, referenceTime)) {
       recentlyMasteredStudents.add(studentId);
+      if (gap.id) recentlyMasteredGapIds.push(gap.id);
     }
   }
 
@@ -169,6 +196,7 @@ export function calculateTodaysPriorities(
     ...immediateSupportStudents,
     ...developingStudents,
     ...readyToReassessStudents,
+    ...reopenedStudents,
   ]);
 
   return {
@@ -176,10 +204,17 @@ export function calculateTodaysPriorities(
     developingCount: developingStudents.size,
     readyToReassessCount: readyToReassessStudents.size,
     recentlyMasteredCount: recentlyMasteredStudents.size,
+    reopenedGapsCount: reopenedStudents.size,
     immediateSupportStudentIds: Array.from(immediateSupportStudents),
     developingStudentIds: Array.from(developingStudents),
     readyToReassessStudentIds: Array.from(readyToReassessStudents),
     recentlyMasteredStudentIds: Array.from(recentlyMasteredStudents),
+    reopenedStudentIds: Array.from(reopenedStudents),
+    immediateSupportGapIds,
+    developingGapIds,
+    readyToReassessGapIds,
+    recentlyMasteredGapIds,
+    reopenedGapIds,
     totalActionableStudents: allActionableStudents.size,
   };
 }

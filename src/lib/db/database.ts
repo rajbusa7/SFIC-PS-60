@@ -20,6 +20,7 @@ import {
   SEED_AI_CONFIGS,
   SEED_USERS,
   SEED_TEACHER_ASSIGNMENTS,
+  SEED_INTERVENTION_RECORDS,
 } from "./seedData";
 import { detectLearningGap } from "../engine/gapDetection";
 import { generateRemedialPlan } from "../engine/remedialEngine";
@@ -61,6 +62,7 @@ import type {
   TeacherAssignment,
   AuditLogEntry,
   SubjectCode,
+  InterventionRecord,
 } from "../types";
 
 interface DataStore {
@@ -92,6 +94,8 @@ interface DataStore {
   worksheetSubmissions?: any[];
   teacherAssignments?: TeacherAssignment[];
   auditLogs?: AuditLogEntry[];
+  interventionRecords?: InterventionRecord[];
+  parentHomeActivities?: any[];
 }
 
 const DEFAULT_DATA_DIR = path.join(process.cwd(), "data");
@@ -142,6 +146,8 @@ function getInitialStore(): DataStore {
     feedback: [],
     teacherAssignments: JSON.parse(JSON.stringify(SEED_TEACHER_ASSIGNMENTS)),
     auditLogs: [],
+    interventionRecords: JSON.parse(JSON.stringify(SEED_INTERVENTION_RECORDS)),
+    parentHomeActivities: [],
   };
 }
 
@@ -656,20 +662,85 @@ export const db = {
     const store = loadStore();
     const gaps = !studentId ? store.learningGaps : store.learningGaps.filter((g) => g.studentId === studentId);
     return gaps.map((g) => {
-      if (g.remedialPlanId) {
-        const plan = store.remedialPlans?.find((p) => p.id === g.remedialPlanId);
-        if (plan) {
-          const isCompleted =
-            plan.status === "Completed" ||
-            (Array.isArray(plan.completedSteps) && Array.isArray(plan.steps) && plan.completedSteps.length >= plan.steps.length);
-          return {
-            ...g,
-            remedialPlanStatus: plan.status,
-            reassessmentDue: (isCompleted || (plan as any).reassessmentDue === true) && !plan.reassessmentResult,
-          };
-        }
+      let enriched = { ...g };
+
+      const plan = g.remedialPlanId
+        ? store.remedialPlans?.find((p) => p.id === g.remedialPlanId)
+        : store.remedialPlans?.find((p) => p.studentId === g.studentId && p.conceptId === g.conceptId);
+
+      if (plan) {
+        enriched.remedialPlanId = plan.id;
+        const isCompleted =
+          plan.status === "Completed" ||
+          (Array.isArray(plan.completedSteps) && Array.isArray(plan.steps) && plan.completedSteps.length >= plan.steps.length);
+        enriched.remedialPlanStatus = plan.status;
+        enriched.reassessmentDue = (isCompleted || (plan as any).reassessmentDue === true) && !plan.reassessmentResult;
       }
-      return g;
+
+      // Longitudinal assessment history lookup from recorded results
+      const cResults = (store.results || [])
+        .filter((r) => r.studentId === g.studentId && r.conceptId === g.conceptId)
+        .sort((a, b) => new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime());
+
+      if (cResults.length > 0) {
+        enriched.assessmentHistory = cResults.map((r, idx) => {
+          const score = r.percentage;
+          const prevScore = idx > 0 ? cResults[idx - 1].percentage : undefined;
+          const scoreDelta = prevScore !== undefined ? Math.round((score - prevScore) * 10) / 10 : undefined;
+          const status = score >= 80 ? "Mastered" : score >= 60 ? "Developing" : "Needs Support";
+          const assessmentTitle =
+            idx === 0
+              ? "Initial Assessment"
+              : idx === cResults.length - 1
+              ? "Latest Reassessment"
+              : `Progress Check #${idx}`;
+          return {
+            id: r.id,
+            assessmentId: r.assessmentId,
+            date: r.recordedAt,
+            score,
+            marks: `${r.marksObtained}/${r.maximumMarks}`,
+            assessment: r.notes?.includes("Assessment") ? r.notes : assessmentTitle,
+            intervention: idx > 0 ? (g.remedialPlanId ? "Targeted 5-Step Remedial Plan" : "Guided Practice Session") : undefined,
+            status,
+            scoreDelta,
+            notes: r.notes || "",
+          };
+        });
+
+        enriched.numberOfAssessments = cResults.length;
+        enriched.totalImprovement =
+          cResults.length >= 2
+            ? Math.round((cResults[cResults.length - 1].percentage - cResults[0].percentage) * 10) / 10
+            : 0;
+        enriched.latestScoreDelta =
+          cResults.length >= 2
+            ? Math.round((cResults[cResults.length - 1].percentage - cResults[cResults.length - 2].percentage) * 10) / 10
+            : g.deltaPercentagePoints;
+
+        // Gap Reopening Evaluation
+        const priorMasteryIndex = cResults.slice(0, -1).findIndex((r) => r.percentage >= 80);
+        if (priorMasteryIndex !== -1 && (cResults[cResults.length - 1]?.percentage ?? g.latestPercentage) < 80) {
+          enriched.gapReopened = true;
+          enriched.previousMasteryScore = cResults[priorMasteryIndex].percentage;
+          enriched.masteryDate = cResults[priorMasteryIndex].recordedAt;
+        }
+      } else {
+        // If zero result records exist, format single observation cleanly without fabricating history
+        enriched.assessmentHistory = [
+          {
+            score: g.latestPercentage,
+            date: g.updatedAt,
+            assessment: "Initial Assessment",
+            status: g.masteryStatus,
+          },
+        ];
+        enriched.numberOfAssessments = 1;
+        enriched.totalImprovement = 0;
+        enriched.latestScoreDelta = undefined;
+      }
+
+      return enriched;
     });
   },
 
@@ -797,7 +868,7 @@ export const db = {
     return loadStore().remedialPlans.find((p) => p.id === id);
   },
 
-  createRemedialPlanForGap(gapId: string, customNotes?: string): RemedialPlan | null {
+  createRemedialPlanForGap(gapId: string, customNotes?: string, extraOptions?: any): RemedialPlan | null {
     const store = loadStore();
     const gap = store.learningGaps.find((g) => g.id === gapId);
     if (!gap) return null;
@@ -838,6 +909,14 @@ export const db = {
       gap.reason ||
       `Student scored ${baselineScore}% on assessment. Prior results show persistent conceptual gap.`;
 
+    const rootConceptName = extraOptions?.rootConceptName || (gap as any).rootConcept?.name || (gap as any).dynamicRootConcept?.name;
+    const isRootGapIdentified = extraOptions?.isRootGapIdentified ?? (gap as any).isRootGapIdentified ?? (gap as any).dynamicIsRootGapIdentified;
+    const errorPattern = extraOptions?.errorPattern || (gap as any).errorPatternDetected || (gap as any).dynamicErrorPatternDetected || (gap as any).reason;
+    const suggestedModality = extraOptions?.suggestedModality || (gap as any).dynamicPrescription?.suggestedModality;
+    const approximateDuration = extraOptions?.approximateDuration || (gap as any).dynamicPrescription?.approximateDuration;
+    const pedagogicalRationale = extraOptions?.pedagogicalRationale || (gap as any).dynamicPrescription?.reason;
+    const recommendedAction = extraOptions?.recommendedAction || (gap as any).dynamicPrescription?.recommendedAction || gap.suggestedAction;
+
     const plan = generateRemedialPlan(
       student.id,
       student.displayName,
@@ -851,9 +930,17 @@ export const db = {
         studentSection: student.section,
         baselineScore,
         baselineEvidence,
-        knownMisconceptions: detection.reason,
+        knownMisconceptions: errorPattern || detection.reason,
         confirmedOrInferred,
         masteryBenchmark: store.settings.masteryThreshold || 80,
+        rootConceptName,
+        isRootGapIdentified,
+        errorPattern,
+        suggestedModality,
+        approximateDuration,
+        pedagogicalRationale,
+        recommendedAction,
+        language: extraOptions?.language || "en",
       }
     );
 
@@ -2342,6 +2429,156 @@ export const db = {
 
   async getAuditLogsAsync(filter?: { teacherId?: string; studentId?: string; subjectCode?: SubjectCode }): Promise<AuditLogEntry[]> {
     return this.getAuditLogs(filter);
+  },
+
+  // --- Phase 6: Intervention Effectiveness Tracking ---
+  getInterventionRecords(filter?: {
+    conceptId?: string;
+    studentId?: string;
+    interventionType?: string;
+  }): InterventionRecord[] {
+    const store = loadStore();
+    let list = store.interventionRecords || [];
+    if (filter?.conceptId) {
+      list = list.filter((r: InterventionRecord) => r.conceptId === filter.conceptId);
+    }
+    if (filter?.studentId) {
+      list = list.filter((r: InterventionRecord) => r.studentId === filter.studentId);
+    }
+    if (filter?.interventionType) {
+      list = list.filter(
+        (r: InterventionRecord) => r.interventionType.toLowerCase() === filter.interventionType?.toLowerCase()
+      );
+    }
+    return list;
+  },
+
+  recordIntervention(record: Omit<InterventionRecord, "id">): InterventionRecord {
+    const store = loadStore();
+    if (!store.interventionRecords) store.interventionRecords = [];
+    const newRecord: InterventionRecord = {
+      ...record,
+      id: `int-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      date: record.date || new Date().toISOString(),
+    };
+    store.interventionRecords.push(newRecord);
+    saveStore(store);
+    return newRecord;
+  },
+
+  // --- Phase 6: Parent Bridge Home Practice ---
+  async sendHomePracticeToParentAsync(data: {
+    studentId: string;
+    activity: any;
+    customNotes?: string;
+    language?: "en" | "gu" | "hi";
+  }): Promise<{ success: boolean; messageId?: string; parentName?: string }> {
+    const store = loadStore();
+    const student = this.getStudentById(data.studentId);
+    if (!student) return { success: false };
+
+    const parents = this.getParentsByStudentId(data.studentId);
+    const parent = parents[0];
+    const parentId = parent?.id || `par-${data.studentId}`;
+    const parentName = parent?.name || `Parent of ${student.displayName}`;
+
+    const lang = data.language || "en";
+    const title =
+      lang === "gu" && data.activity.titleGu
+        ? data.activity.titleGu
+        : lang === "hi" && data.activity.titleHi
+        ? data.activity.titleHi
+        : data.activity.title || data.activity.conceptName;
+
+    const whatParentDoes =
+      lang === "gu" && data.activity.whatParentDoesGu
+        ? data.activity.whatParentDoesGu
+        : lang === "hi" && data.activity.whatParentDoesHi
+        ? data.activity.whatParentDoesHi
+        : data.activity.whatParentDoes;
+
+    const whatChildPractices =
+      lang === "gu" && data.activity.whatChildPracticesGu
+        ? data.activity.whatChildPracticesGu
+        : lang === "hi" && data.activity.whatChildPracticesHi
+        ? data.activity.whatChildPracticesHi
+        : data.activity.whatChildPractices;
+
+    const conversationalPrompt =
+      lang === "gu" && data.activity.conversationalPromptGu
+        ? data.activity.conversationalPromptGu
+        : lang === "hi" && data.activity.conversationalPromptHi
+        ? data.activity.conversationalPromptHi
+        : data.activity.conversationalPrompt;
+
+    const subject =
+      lang === "gu"
+        ? `ઘર-મહાવરો: ${title}`
+        : lang === "hi"
+        ? `गृह-अभ्यास: ${title}`
+        : `Home Practice: ${title}`;
+
+    const greeting =
+      lang === "gu"
+        ? `નમસ્તે વાલીશ્રી,`
+        : lang === "hi"
+        ? `नमस्ते अभिभावक,`
+        : `Dear Parent,`;
+
+    const intro =
+      lang === "gu"
+        ? `શિક્ષક તરફથી ${student.displayName} માટે ૫-મિનિટની સરળ ઘર-પ્રવૃત્તિ:`
+        : lang === "hi"
+        ? `शिक्षक की ओर से ${student.displayName} के लिए ५-मिनट का सरल गृह-अभ्यास:`
+        : `Here is a short ${data.activity.durationMinutes || 5}-minute home practice recommended by teacher for ${student.displayName}:`;
+
+    const formattedMessage = [
+      greeting,
+      intro,
+      ``,
+      `📌 ${lang === "gu" ? "પ્રવૃત્તિ" : lang === "hi" ? "गतिविधि" : "Activity"}: ${title}`,
+      `🛠️ ${lang === "gu" ? "જરૂરી સાધન" : lang === "hi" ? "जरूरी सामग्री" : "Materials"}: ${(data.activity.commonHouseholdMaterials || ["Household objects"]).join(", ")}`,
+      ``,
+      `👉 ${lang === "gu" ? "વાલીએ શું કરવું" : lang === "hi" ? "अभिभावक क्या करें" : "What to do"}: ${whatParentDoes}`,
+      `💡 ${lang === "gu" ? "બાળક શું શીખશે" : lang === "hi" ? "बच्चा क्या सीखेगा" : "What it helps"}: ${whatChildPractices}`,
+      `🗣️ ${lang === "gu" ? "પૂછવાનો સંવાદ" : lang === "hi" ? "पूछने का सवाल" : "Question to ask"}: ${conversationalPrompt}`,
+      data.customNotes ? `\n📝 ${lang === "gu" ? "શિક્ષકની નોંધ" : lang === "hi" ? "शिक्षक की टिप्पणी" : "Teacher Note"}: ${data.customNotes}` : "",
+    ].filter(Boolean).join("\n");
+
+    const newMsg = await this.createParentMessageAsync(
+      parentId,
+      data.studentId,
+      subject,
+      formattedMessage
+    );
+
+    if (!store.parentHomeActivities) store.parentHomeActivities = [];
+    store.parentHomeActivities.push({
+      id: `pha-${Date.now()}`,
+      studentId: data.studentId,
+      parentId,
+      activity: data.activity,
+      sentAt: new Date().toISOString(),
+      customNotes: data.customNotes,
+      status: "Sent",
+      messageId: newMsg.id,
+    });
+    saveStore(store);
+
+    return {
+      success: true,
+      messageId: newMsg.id,
+      parentName,
+    };
+  },
+
+  getParentHomeActivities(studentId?: string): any[] {
+    const store = loadStore();
+    let list = store.parentHomeActivities || [];
+    if (studentId) {
+      list = list.filter((a: any) => a.studentId === studentId);
+    }
+    return list;
   },
 
   resetToDemoData(): void {

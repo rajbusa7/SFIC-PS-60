@@ -17,6 +17,11 @@ import { diagnoseLearningGap } from "@/lib/engine/diagnosisEngine";
 import { analyzeRootCause } from "@/lib/engine/prerequisiteEngine";
 import { LearningGapMap } from "@/components/learning-gaps/LearningGapMap";
 import { ClassLearningGapHeatmap } from "@/components/learning-gaps/ClassLearningGapHeatmap";
+import { SmartRemediationGroups } from "@/components/learning-gaps/SmartRemediationGroups";
+import {
+  getSmartRemediationGroups,
+  SmartRemediationGroup,
+} from "@/lib/engine/smartGroupingEngine";
 import {
   getClassLearningGapHeatmap,
   filterGapsByHeatmap,
@@ -70,6 +75,17 @@ export default function LearningGapsPage() {
   // Class Learning Gap Heatmap filter state
   const [heatmapFilter, setHeatmapFilter] = useState<ClassHeatmapFilter | null>(null);
   const [selectedClass, setSelectedClass] = useState<string>("cls-4a");
+
+  // Smart Remediation Groups state (AI Cohort Assistant with Teacher Control)
+  const [smartGroups, setSmartGroups] = useState<SmartRemediationGroup[]>(() =>
+    getSmartRemediationGroups()
+  );
+
+  const handleUpdateGroup = (updatedGroup: SmartRemediationGroup) => {
+    setSmartGroups((prev) =>
+      prev.map((g) => (g.id === updatedGroup.id ? updatedGroup : g))
+    );
+  };
 
   const toggleGapMap = (gapId: string) => {
     setExpandedMapGapIds((prev) => ({
@@ -500,6 +516,12 @@ export default function LearningGapsPage() {
           onSelectFilter={setHeatmapFilter}
           selectedClass={selectedClass}
           onSelectClass={setSelectedClass}
+        />
+
+        {/* 3. SMART REMEDIATION GROUPING (Teacher in Control) */}
+        <SmartRemediationGroups
+          groups={smartGroups}
+          onUpdateGroup={handleUpdateGroup}
         />
 
         {/* Filter Controls */}

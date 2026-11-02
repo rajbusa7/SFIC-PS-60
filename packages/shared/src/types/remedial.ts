@@ -90,6 +90,20 @@ export interface RemedialPlan {
   followUpRecommendations?: string;
   isFollowUp?: boolean;
   updatedAt?: string;
+  // Personalized Student & Root Cause Attributes
+  rootConceptName?: string;
+  isRootGapIdentified?: boolean;
+  errorPattern?: string;
+  suggestedModality?: string;
+  pedagogicalRationale?: string;
+  recommendedAction?: string;
+  parentHomeSupport?: {
+    title: string;
+    durationMinutes: number;
+    householdMaterials: string[];
+    whatParentDoes: string;
+    conversationalPrompt: string;
+  };
 }
 
 export interface InterventionEvent {

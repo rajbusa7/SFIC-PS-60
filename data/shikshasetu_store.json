@@ -1238,7 +1238,7 @@
       "baselineScore": 35,
       "masteryBenchmark": 80,
       "recommendationReason": "Recent assessment performance (35%) is below the configured support threshold (60%), and previous result (40%) also showed persistent difficulty.",
-      "status": "Completed",
+      "status": "Approved",
       "estimatedMinutes": 20,
       "difficulty": "Beginner",
       "requiredMaterials": [
@@ -3976,40 +3976,7 @@
       "createdAt": "2026-09-01T10:00:00Z"
     }
   ],
-  "attempts": [
-    {
-      "studentId": "std-aarav",
-      "activityId": "act-div-01",
-      "score": 4,
-      "maximumScore": 4,
-      "percentage": 100,
-      "answers": {
-        "q-div-1": "4 laddus",
-        "q-div-2": "5 × 4 = 20",
-        "q-div-3": "True",
-        "q-div-4": "3 boxes"
-      },
-      "incorrectQuestions": [],
-      "id": "att-1793603672733",
-      "completedAt": "2026-11-02T07:14:32.733Z"
-    },
-    {
-      "studentId": "std-aarav",
-      "activityId": "act-div-01",
-      "score": 4,
-      "maximumScore": 4,
-      "percentage": 100,
-      "answers": {
-        "q-div-1": "4 laddus",
-        "q-div-2": "5 × 4 = 20",
-        "q-div-3": "True",
-        "q-div-4": "3 boxes"
-      },
-      "incorrectQuestions": [],
-      "id": "att-1793605120748",
-      "completedAt": "2026-11-02T07:38:40.748Z"
-    }
-  ],
+  "attempts": [],
   "parents": [
     {
       "id": "par-aarav",
@@ -4077,17 +4044,17 @@
       "id": "plc-demo-aarav",
       "studentId": "std-aarav",
       "code": "PAR-4892",
-      "expiresAt": "2026-11-09T06:56:40.273Z",
+      "expiresAt": "2026-11-09T15:47:59.271Z",
       "status": "active",
-      "createdAt": "2026-11-02T06:56:40.274Z"
+      "createdAt": "2026-11-02T15:47:59.271Z"
     },
     {
       "id": "plc-demo-diya",
       "studentId": "std-diya",
       "code": "PAR-5219",
-      "expiresAt": "2026-11-09T06:56:40.274Z",
+      "expiresAt": "2026-11-09T15:47:59.271Z",
       "status": "active",
-      "createdAt": "2026-11-02T06:56:40.274Z"
+      "createdAt": "2026-11-02T15:47:59.271Z"
     }
   ],
   "parentMessages": [],
@@ -5607,45 +5574,5 @@
       "outcome": "Developing"
     }
   ],
-  "parentHomeActivities": [],
-  "worksheetSubmissions": [
-    {
-      "id": "sub-1793605121279-872",
-      "worksheetId": "ws-demo-aarav-div",
-      "studentId": "std-aarav",
-      "studentName": "Aarav Patel",
-      "answers": {},
-      "scoresPerQuestion": {
-        "1": 2,
-        "2": 3,
-        "3": 5
-      },
-      "marksObtained": 10,
-      "totalMarks": 10,
-      "percentage": 100,
-      "incorrectQuestions": [],
-      "teacherComments": "Excellent application on word problems!",
-      "evaluatedAt": "2026-11-02T07:38:41.279Z",
-      "timeSpentMinutes": 18
-    },
-    {
-      "id": "sub-1793603673111-291",
-      "worksheetId": "ws-demo-aarav-div",
-      "studentId": "std-aarav",
-      "studentName": "Aarav Patel",
-      "answers": {},
-      "scoresPerQuestion": {
-        "1": 2,
-        "2": 3,
-        "3": 5
-      },
-      "marksObtained": 10,
-      "totalMarks": 10,
-      "percentage": 100,
-      "incorrectQuestions": [],
-      "teacherComments": "Excellent application on word problems!",
-      "evaluatedAt": "2026-11-02T07:14:33.111Z",
-      "timeSpentMinutes": 18
-    }
-  ]
+  "parentHomeActivities": []
 }

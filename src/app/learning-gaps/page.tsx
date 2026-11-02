@@ -28,6 +28,7 @@ import { generatePedagogicalPrescription } from "@/lib/engine/prescriptionEngine
 import {
   getSmartRemediationGroups,
   SmartRemediationGroup,
+  generateGroup5StepPlan,
 } from "@/lib/engine/smartGroupingEngine";
 import {
   getClassLearningGapHeatmap,
@@ -37,6 +38,7 @@ import {
 import { InterventionEffectivenessSection } from "@/components/learning-gaps/InterventionEffectivenessSection";
 import { RoleAwareGapCard } from "@/components/learning-gaps/RoleAwareGapCard";
 import { SendHomePracticeModal } from "@/components/learning-gaps/SendHomePracticeModal";
+import { RemedialPlanModal } from "@/components/learning-gaps/RemedialPlanModal";
 import {
   calculateInterventionEffectiveness,
   getInterventionFeedbackForPrescription,
@@ -218,6 +220,11 @@ export default function LearningGapsPage() {
   const [homePracticeModalOpen, setHomePracticeModalOpen] = useState<boolean>(false);
   const [targetGapForHomePractice, setTargetGapForHomePractice] = useState<any>(null);
 
+  // 5-Step Remedial Plan Modal State
+  const [remedialPlans, setRemedialPlans] = useState<any[]>([]);
+  const [selectedPlanForModal, setSelectedPlanForModal] = useState<any | null>(null);
+  const [isPlanModalOpen, setIsPlanModalOpen] = useState<boolean>(false);
+
   // Phase 6: Intervention Effectiveness State
   const [interventionRecords, setInterventionRecords] = useState<InterventionRecord[]>([]);
 
@@ -240,6 +247,18 @@ export default function LearningGapsPage() {
     }
   };
 
+  const fetchRemedialPlans = async () => {
+    try {
+      const res = await fetch("/api/remedial-plans");
+      const data = await res.json();
+      if (data.success && data.plans) {
+        setRemedialPlans(data.plans);
+      }
+    } catch (e) {
+      console.error("Failed to load remedial plans", e);
+    }
+  };
+
   const fetchInterventions = async () => {
     try {
       const res = await fetch("/api/learning-gaps/interventions");
@@ -254,26 +273,86 @@ export default function LearningGapsPage() {
 
   useEffect(() => {
     fetchGaps();
+    fetchRemedialPlans();
     fetchInterventions();
   }, []);
 
-  const handleGeneratePlan = async (gapId: string) => {
+  const handleGeneratePlan = async (gapId: string, gapContext?: any) => {
     setGeneratingPlanId(gapId);
     try {
       const res = await fetch("/api/remedial-plans", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ gapId }),
+        body: JSON.stringify({
+          gapId,
+          rootConceptName: gapContext?.dynamicRootConcept?.name || gapContext?.rootConcept?.name,
+          isRootGapIdentified: gapContext?.dynamicIsRootGapIdentified ?? gapContext?.isRootGapIdentified,
+          errorPattern: gapContext?.dynamicErrorPatternDetected || gapContext?.errorPatternDetected || gapContext?.reason,
+          suggestedModality: gapContext?.dynamicPrescription?.suggestedModality,
+          approximateDuration: gapContext?.dynamicPrescription?.approximateDuration,
+          pedagogicalRationale: gapContext?.dynamicPrescription?.reason,
+          recommendedAction: gapContext?.dynamicPrescription?.recommendedAction || gapContext?.suggestedAction,
+          language: language === "gu" ? "gu" : "en",
+        }),
       });
       const data = await res.json();
-      if (data.success) {
+      if (data.success && data.plan) {
+        setSelectedPlanForModal(data.plan);
+        setIsPlanModalOpen(true);
         fetchGaps();
+        fetchRemedialPlans();
       }
     } catch (e) {
       console.error("Error creating plan", e);
     } finally {
       setGeneratingPlanId(null);
     }
+  };
+
+  const handleOpenPlan = async (gapOrGroup: any) => {
+    // If it's a small-remediation group
+    if (gapOrGroup.students && gapOrGroup.suggestedIntervention) {
+      const group = gapOrGroup;
+      if (group.generatedPlanId) {
+        const found = remedialPlans.find((p) => p.id === group.generatedPlanId);
+        if (found) {
+          setSelectedPlanForModal(found);
+          setIsPlanModalOpen(true);
+          return;
+        }
+      }
+      const groupPlan = generateGroup5StepPlan(group);
+      setSelectedPlanForModal(groupPlan);
+      setIsPlanModalOpen(true);
+      return;
+    }
+
+    const gap = gapOrGroup;
+    const existing = remedialPlans.find(
+      (p) => p.id === gap.remedialPlanId || (p.studentId === gap.studentId && p.conceptId === gap.conceptId)
+    );
+    if (existing) {
+      setSelectedPlanForModal(existing);
+      setIsPlanModalOpen(true);
+      return;
+    }
+
+    if (gap.remedialPlanId) {
+      try {
+        const res = await fetch(`/api/remedial-plans?id=${gap.remedialPlanId}`);
+        const data = await res.json();
+        if (data.success && data.plan) {
+          setSelectedPlanForModal(data.plan);
+          setIsPlanModalOpen(true);
+          return;
+        }
+      } catch (e) {
+        console.error("Error fetching plan", e);
+      }
+    }
+
+    // If not found yet, generate it directly!
+    handleGeneratePlan(gap.id, gap);
   };
 
   // Safe text and priority formatting helpers with normalized severity score (0-100)
@@ -920,6 +999,14 @@ export default function LearningGapsPage() {
         <SmartRemediationGroups
           groups={smartGroups}
           onUpdateGroup={handleUpdateGroup}
+          onOpenPlan={(planOrGroup) => {
+            if (planOrGroup?.steps) {
+              setSelectedPlanForModal(planOrGroup);
+              setIsPlanModalOpen(true);
+            } else {
+              handleOpenPlan(planOrGroup);
+            }
+          }}
         />
 
         {/* 5. INTERVENTION EFFECTIVENESS & EMPIRICAL TRACKING */}
@@ -1343,7 +1430,8 @@ export default function LearningGapsPage() {
                       setTargetGapForHomePractice(g);
                       setHomePracticeModalOpen(true);
                     }}
-                    onGeneratePlan={handleGeneratePlan}
+                    onGeneratePlan={(id) => handleGeneratePlan(id, gap)}
+                    onOpenPlan={() => handleOpenPlan(gap)}
                     onToggleTimeline={toggleTimeline}
                     onToggleMap={toggleGapMap}
                     onReassess={(g) => {
@@ -1359,6 +1447,10 @@ export default function LearningGapsPage() {
 
               const isResolved = gap.status === "Closed Gap" || gap.status === "Resolved" || gap.dynamicStatus === "Mastered";
               const isExpanded = Boolean(expandedCardIds[gap.id]);
+              const existingPlan = remedialPlans.find(
+                (p) => p.id === gap.remedialPlanId || (p.studentId === gap.studentId && p.conceptId === gap.conceptId)
+              );
+              const hasExistingPlan = Boolean(gap.remedialPlanId || existingPlan);
 
               return (
                 <Card
@@ -1461,13 +1553,25 @@ export default function LearningGapsPage() {
                           <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
                           <span>Mastery Certified</span>
                         </Button>
+                      ) : hasExistingPlan ? (
+                        <Button
+                          variant="saffron"
+                          size="sm"
+                          onClick={() => handleOpenPlan(gap)}
+                          className="rounded-full text-xs font-bold"
+                          title="View and print personalized 5-step remedial plan"
+                        >
+                          <Layers className="w-3.5 h-3.5 mr-1" />
+                          <span>View 5-Step Plan</span>
+                        </Button>
                       ) : (
                         <Button
                           variant="saffron"
                           size="sm"
-                          onClick={() => handleGeneratePlan(gap.id)}
+                          onClick={() => handleGeneratePlan(gap.id, gap)}
                           disabled={generatingPlanId === gap.id}
                           className="rounded-full text-xs font-bold"
+                          title="Generate personalized 5-step remedial plan"
                         >
                           <Layers className="w-3.5 h-3.5 mr-1" />
                           <span>{generatingPlanId === gap.id ? "Generating..." : "Generate 5-Step Plan"}</span>
@@ -1543,6 +1647,24 @@ export default function LearningGapsPage() {
                         </span>
                       </div>
                       <div className="flex items-center gap-3 shrink-0">
+                        {gap.dynamicStatus !== "Mastered" && (
+                          <button
+                            type="button"
+                            onClick={() => (hasExistingPlan ? handleOpenPlan(gap) : handleGeneratePlan(gap.id, gap))}
+                            disabled={generatingPlanId === gap.id}
+                            className="text-[11px] font-semibold text-[#B26A1B] hover:underline cursor-pointer flex items-center gap-1"
+                            title="View or generate personalized 5-step remedial plan"
+                          >
+                            <Layers className="w-3 h-3" />
+                            <span>
+                              {generatingPlanId === gap.id
+                                ? "Generating..."
+                                : hasExistingPlan
+                                ? "5-Step Plan"
+                                : "Generate Plan"}
+                            </span>
+                          </button>
+                        )}
                         <button
                           type="button"
                           onClick={() => toggleTimeline(gap.id)}
@@ -2047,17 +2169,38 @@ export default function LearningGapsPage() {
                             </div>
                           )}
 
-                          {/* Plan Status / Eligibility Label */}
-                          <div className="text-[11px] text-[#2E7D5E] pt-1 font-semibold flex items-center gap-1">
-                            <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                            <span>
-                              {gap.dynamicPrescription?.planStatusLabel ||
-                                (gap.dynamicStatus === "Mastered"
-                                  ? "Mastery achieved — continue periodic retrieval practice."
-                                  : (gap.dynamicGapType === "Insufficient Evidence" || gap.gapType === "Insufficient Evidence")
-                                  ? "Recommend 3-5 Item Diagnostic Exit Ticket"
-                                  : "Ready for 5-Step Concrete Remedial Plan")}
-                            </span>
+                          {/* Plan Status / Eligibility Label & Action */}
+                          <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-[#49352F]/10">
+                            <div className="text-[11px] text-[#2E7D5E] font-semibold flex items-center gap-1">
+                              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                              <span>
+                                {gap.dynamicPrescription?.planStatusLabel ||
+                                  (gap.dynamicStatus === "Mastered"
+                                    ? "Mastery achieved — continue periodic retrieval practice."
+                                    : (gap.dynamicGapType === "Insufficient Evidence" || gap.gapType === "Insufficient Evidence")
+                                    ? "Recommend 3-5 Item Diagnostic Exit Ticket"
+                                    : "Ready for 5-Step Concrete Remedial Plan")}
+                              </span>
+                            </div>
+                            {gap.dynamicStatus !== "Mastered" && (
+                              <Button
+                                variant="saffron"
+                                size="sm"
+                                onClick={() => (hasExistingPlan ? handleOpenPlan(gap) : handleGeneratePlan(gap.id, gap))}
+                                disabled={generatingPlanId === gap.id}
+                                className="rounded-full text-xs font-bold shadow-xs"
+                                title="View or generate personalized 5-step remedial plan"
+                              >
+                                <Layers className="w-3.5 h-3.5 mr-1" />
+                                <span>
+                                  {generatingPlanId === gap.id
+                                    ? "Generating..."
+                                    : hasExistingPlan
+                                    ? "View 5-Step Plan"
+                                    : "Generate 5-Step Plan"}
+                                </span>
+                              </Button>
+                            )}
                           </div>
 
                           {/* Phase 6: Historical Intervention Effectiveness Insight (Feedback Loop) */}
@@ -2144,6 +2287,29 @@ export default function LearningGapsPage() {
           gap={targetGapForHomePractice}
           onSuccess={() => {
             fetchGaps();
+          }}
+        />
+      )}
+
+      {/* 5-Step Remedial Plan Modal */}
+      {isPlanModalOpen && selectedPlanForModal && (
+        <RemedialPlanModal
+          isOpen={isPlanModalOpen}
+          onClose={() => setIsPlanModalOpen(false)}
+          plan={selectedPlanForModal}
+          onPlanUpdated={(updated) => {
+            setSelectedPlanForModal(updated);
+            fetchRemedialPlans();
+          }}
+          onStartReassessment={(plan) => {
+            setIsPlanModalOpen(false);
+            const matchingGap = gaps.find(
+              (g) => g.studentId === plan.studentId && g.conceptId === plan.conceptId
+            );
+            if (matchingGap) {
+              setTargetGapForReassessment(matchingGap);
+              setReassessModalOpen(true);
+            }
           }}
         />
       )}

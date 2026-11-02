@@ -103,7 +103,16 @@ export async function POST(request: Request) {
       );
     }
 
-    const createdPlan = db.createRemedialPlanForGap(gapId, customNotes);
+    const createdPlan = db.createRemedialPlanForGap(gapId, customNotes, {
+      rootConceptName: body.rootConceptName,
+      isRootGapIdentified: body.isRootGapIdentified,
+      errorPattern: body.errorPattern,
+      suggestedModality: body.suggestedModality,
+      approximateDuration: body.approximateDuration,
+      pedagogicalRationale: body.pedagogicalRationale,
+      recommendedAction: body.recommendedAction,
+      language: body.language,
+    });
     if (!createdPlan) {
       return NextResponse.json(
         { success: false, error: "Could not create plan: Gap or student not found" },

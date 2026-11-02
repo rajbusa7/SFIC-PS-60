@@ -664,15 +664,17 @@ export const db = {
     return gaps.map((g) => {
       let enriched = { ...g };
 
-      if (g.remedialPlanId) {
-        const plan = store.remedialPlans?.find((p) => p.id === g.remedialPlanId);
-        if (plan) {
-          const isCompleted =
-            plan.status === "Completed" ||
-            (Array.isArray(plan.completedSteps) && Array.isArray(plan.steps) && plan.completedSteps.length >= plan.steps.length);
-          enriched.remedialPlanStatus = plan.status;
-          enriched.reassessmentDue = (isCompleted || (plan as any).reassessmentDue === true) && !plan.reassessmentResult;
-        }
+      const plan = g.remedialPlanId
+        ? store.remedialPlans?.find((p) => p.id === g.remedialPlanId)
+        : store.remedialPlans?.find((p) => p.studentId === g.studentId && p.conceptId === g.conceptId);
+
+      if (plan) {
+        enriched.remedialPlanId = plan.id;
+        const isCompleted =
+          plan.status === "Completed" ||
+          (Array.isArray(plan.completedSteps) && Array.isArray(plan.steps) && plan.completedSteps.length >= plan.steps.length);
+        enriched.remedialPlanStatus = plan.status;
+        enriched.reassessmentDue = (isCompleted || (plan as any).reassessmentDue === true) && !plan.reassessmentResult;
       }
 
       // Longitudinal assessment history lookup from recorded results
@@ -866,7 +868,7 @@ export const db = {
     return loadStore().remedialPlans.find((p) => p.id === id);
   },
 
-  createRemedialPlanForGap(gapId: string, customNotes?: string): RemedialPlan | null {
+  createRemedialPlanForGap(gapId: string, customNotes?: string, extraOptions?: any): RemedialPlan | null {
     const store = loadStore();
     const gap = store.learningGaps.find((g) => g.id === gapId);
     if (!gap) return null;
@@ -907,6 +909,14 @@ export const db = {
       gap.reason ||
       `Student scored ${baselineScore}% on assessment. Prior results show persistent conceptual gap.`;
 
+    const rootConceptName = extraOptions?.rootConceptName || (gap as any).rootConcept?.name || (gap as any).dynamicRootConcept?.name;
+    const isRootGapIdentified = extraOptions?.isRootGapIdentified ?? (gap as any).isRootGapIdentified ?? (gap as any).dynamicIsRootGapIdentified;
+    const errorPattern = extraOptions?.errorPattern || (gap as any).errorPatternDetected || (gap as any).dynamicErrorPatternDetected || (gap as any).reason;
+    const suggestedModality = extraOptions?.suggestedModality || (gap as any).dynamicPrescription?.suggestedModality;
+    const approximateDuration = extraOptions?.approximateDuration || (gap as any).dynamicPrescription?.approximateDuration;
+    const pedagogicalRationale = extraOptions?.pedagogicalRationale || (gap as any).dynamicPrescription?.reason;
+    const recommendedAction = extraOptions?.recommendedAction || (gap as any).dynamicPrescription?.recommendedAction || gap.suggestedAction;
+
     const plan = generateRemedialPlan(
       student.id,
       student.displayName,
@@ -920,9 +930,17 @@ export const db = {
         studentSection: student.section,
         baselineScore,
         baselineEvidence,
-        knownMisconceptions: detection.reason,
+        knownMisconceptions: errorPattern || detection.reason,
         confirmedOrInferred,
         masteryBenchmark: store.settings.masteryThreshold || 80,
+        rootConceptName,
+        isRootGapIdentified,
+        errorPattern,
+        suggestedModality,
+        approximateDuration,
+        pedagogicalRationale,
+        recommendedAction,
+        language: extraOptions?.language || "en",
       }
     );
 

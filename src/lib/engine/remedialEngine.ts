@@ -49,10 +49,20 @@ export interface RemedialPlanGenerationOptions {
   masteryBenchmark?: number;
   isFollowUp?: boolean;
   parentPlanId?: string;
-  language?: "en" | "gu";
+  language?: "en" | "gu" | "hi";
   startDate?: string;
   targetDate?: string;
   reviewDate?: string;
+  // Personalization fields unique to each student
+  rootConceptName?: string;
+  isRootGapIdentified?: boolean;
+  prerequisiteConcepts?: string[];
+  errorPattern?: string;
+  suggestedModality?: string;
+  approximateDuration?: string;
+  pedagogicalRationale?: string;
+  recommendedAction?: string;
+  questionEvidence?: any[];
 }
 
 // Built-in deterministic pedagogical templates aligned with Gujarat primary curriculum
@@ -1258,7 +1268,7 @@ function createDefault5StepTemplate(
   conceptName: string,
   subjectCode: SubjectCode,
   gapDetection: GapDetectionResult,
-  language: "en" | "gu" = "en"
+  language: "en" | "gu" | "hi" = "en"
 ): ConceptCurriculumTemplate {
   const isGujarati = language === "gu";
 
@@ -1617,6 +1627,65 @@ export function generateRemedialPlan(
     steps[2].teacherInstructions = isGujarati
       ? `અગાઉ જે ભૂલ થઈ હતી તેનું કારણ તપાસી વધારાના ઉદાહરણો સાથે ધીરજપૂર્વક માર્ગદર્શન આપો.`
       : `Focus specifically on the remaining error patterns from the previous reassessment. Provide guided scaffolding before independent work.`;
+  } else {
+    // Student-Specific Personalization based on root cause, error pattern, and pedagogical prescription
+    if (options?.isRootGapIdentified && options?.rootConceptName) {
+      steps[0].title = isGujarati
+        ? `પગલું ૧ — પૂર્વજરૂરી પાયાની સંકલ્પના સ્પષ્ટીકરણ (${options.rootConceptName})`
+        : `STEP 1 — Prerequisite Root-Gap Anchor: ${options.rootConceptName}`;
+      steps[0].description = isGujarati
+        ? `${studentName} માટે ${conceptName} માં મુશ્કેલીનું મુખ્ય કારણ પૂર્વજરૂરી સંકલ્પના (${options.rootConceptName}) માં રહેલી કચાશ છે. મુખ્ય સંકલ્પના શરૂ કરતાં પહેલાં ${options.rootConceptName} ની પાયાની સમજ મૂર્ત ઉદાહરણોથી સ્પષ્ટ કરવી.`
+        : `Diagnosed Root Cause: ${studentName}'s difficulty in ${conceptName} stems from an unmastered prerequisite in ${options.rootConceptName}. Anchor ${options.rootConceptName} using concrete examples first to eliminate cognitive overload.`;
+      steps[0].learningObjective = isGujarati
+        ? `${options.rootConceptName} ની પાયાની સમજ પાકી કરી ${conceptName} માટે પૂર્વતૈયારી કરવી.`
+        : `Master foundational prerequisite ${options.rootConceptName} before advancing to procedural ${conceptName}.`;
+      steps[0].teacherInstructions = isGujarati
+        ? `${studentName} સાથે બેસી ${options.rootConceptName} ના સરળ વ્યવહારુ ઉદાહરણો પૂછો. બાળકને પોતાના શબ્દોમાં સમજાવવા પ્રોત્સાહિત કરો.`
+        : `Work 1-on-1 with ${studentName}. Review ${options.rootConceptName} with simple tactile models before attempting symbolic division or multi-digit operations.`;
+    } else if (options?.errorPattern) {
+      steps[0].description = isGujarati
+        ? `${studentName} ની ચોક્કસ મુશ્કેલી (${options.errorPattern}) ઓળખી તેને ધ્યાનમાં રાખી પાયાની સંકલ્પના સ્પષ્ટ કરવી.`
+        : `Targeted Diagnostic Focus: Address ${studentName}'s specific identified error pattern (${options.errorPattern}) with targeted clarification.`;
+    }
+
+    if (options?.suggestedModality) {
+      steps[1].title = isGujarati
+        ? `પગલું ૨ — પ્રત્યક્ષ મૂર્ત સાધનો દ્વારા નિદર્શન (${options.suggestedModality})`
+        : `STEP 2 — Concrete Demonstration: ${options.suggestedModality}`;
+      steps[1].description = isGujarati
+        ? `${options.suggestedModality} નો ઉપયોગ કરી ${studentName} સમક્ષ ${conceptName} નું પ્રત્યક્ષ નિદર્શન કરવું જેથી અમૂર્ત ગણતરી મૂર્ત સ્વરૂપે સમજાઈ શકે.`
+        : `Deploy ${options.suggestedModality} specifically for ${studentName} to transform symbolic operations into tangible, visual, and spatial understanding.`;
+      steps[1].requiredMaterials = [options.suggestedModality, ...(template.materials || ["Notebook", "Pencil"])];
+      if (options.recommendedAction) {
+        steps[1].teacherInstructions = options.recommendedAction;
+      }
+    }
+
+    if (options?.errorPattern) {
+      steps[2].title = isGujarati
+        ? `પગલું ૩ — માર્ગદર્શિત મહાવરો અને ભૂલ નિવારણ`
+        : `STEP 3 — Guided Scaffolding: Targeted Worked Examples`;
+      steps[2].description = isGujarati
+        ? `${studentName} સાથે મળી ૩–૪ ઉદાહરણો હલ કરવા, ખાસ કરીને જ્યાં ભૂલ (${options.errorPattern}) થતી હતી ત્યાં તબક્કાવાર માર્ગદર્શન આપવું.`
+        : `Walk through 3–4 calibrated examples together with ${studentName}, explicitly resolving the detected error pattern: "${options.errorPattern}". Have the student verbalize each step aloud.`;
+      steps[2].teacherInstructions = isGujarati
+        ? `${studentName} ને દરેક પગથિયું મોટેથી બોલવા કહો. જ્યાં અગાઉની ભૂલ (${options.errorPattern}) દેખાય ત્યાં તરત જ મૂર્ત સાધનથી સાચી રીત બતાવો.`
+        : `Ask ${studentName} to explain their thinking step-by-step. Intervene immediately when the known error pattern ("${options.errorPattern}") appears and guide using concrete manipulatives.`;
+    }
+
+    steps[3].title = isGujarati
+      ? `પગલું ૪ — સ્વતંત્ર લક્ષિત મહાવરો`
+      : `STEP 4 — Independent Student Practice: 4 Calibrated Problems`;
+    steps[3].description = isGujarati
+      ? `${studentName} સ્વતંત્ર રીતે ૪ ક્રમિક દાખલા ગણશે. પ્રત્યક્ષ સાધનોની મદદ ધીમે-ધીમે ઘટાડી પ્રતીકાત્મક ગણતરી તરફ લઈ જવું.`
+      : `${studentName} independently solves 4 calibrated exercises using the concrete strategies learned in Steps 2 & 3, gradually transitioning from physical manipulatives to abstract representations.`;
+
+    steps[4].title = isGujarati
+      ? `પગલું ૫ — પુનઃમૂલ્યાંકન અને સિદ્ધિ ચકાસણી (લક્ષ્યાંક: ૮૦%)`
+      : `STEP 5 — Formative Exit Reassessment (Target: ≥ 80%)`;
+    steps[4].description = isGujarati
+      ? `${studentName} નો ૫-પ્રશ્નોનો રચનાત્મક એક્ઝિટ ટેસ્ટ લેવો જેથી પ્રારંભિક સ્કોર (${options?.baselineScore || 35}%) થી ૮૦% સિદ્ધિ માપદંડ પાર કર્યો છે કે નહીં તે સુનિશ્ચિત થઈ શકે.`
+      : `Administer the 5-item exit reassessment to measure percentage-point growth over baseline (${options?.baselineScore || 35}%) and verify that ${studentName} achieves independent mastery (≥ 80%).`;
   }
 
   // Generate targeted practice worksheet data compatible with Worksheet Generator
@@ -1695,5 +1764,25 @@ export function generateRemedialPlan(
     startDate: options?.startDate || now.split("T")[0],
     targetDate: options?.targetDate || new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
     teacherObservations: customNotes || "",
+    // Personalized Root Cause & Home Support Attributes
+    rootConceptName: options?.rootConceptName,
+    isRootGapIdentified: options?.isRootGapIdentified,
+    errorPattern: options?.errorPattern,
+    suggestedModality: options?.suggestedModality,
+    pedagogicalRationale: options?.pedagogicalRationale,
+    recommendedAction: options?.recommendedAction,
+    parentHomeSupport: {
+      title: isGujarati ? `વાલીઓ માટે ૫-મિનિટનો ઘર-મહાવરો (${template.conceptName})` : `5-Minute Home Support Guide for ${studentName}'s Parents`,
+      durationMinutes: 5,
+      householdMaterials: options?.suggestedModality?.toLowerCase().includes("block") || options?.suggestedModality?.toLowerCase().includes("counter")
+        ? ["Dry beans / Chana", "Coins", "Pencils"]
+        : ["Paper & Pencil", "Everyday household items"],
+      whatParentDoes: isGujarati
+        ? `ઘરે પડેલી વસ્તુઓ (જેમ કે સિક્કા કે કઠોળ) નો ઉપયોગ કરી ${studentName} સાથે ૫ મિનિટ પ્રેક્ટિસ કરો.`
+        : `Use small household items (coins, buttons, or dry beans) to practice ${template.conceptName} with ${studentName}. Ask them to show how they group or solve it using physical items.`,
+      conversationalPrompt: isGujarati
+        ? `"${studentName}, મને બતાવો તમે આ કેવી રીતે વહેંચો છો? દરેક પગલા પર શું થાય છે?"`
+        : `"Can you show me how you solve this using these items? What happens at each step?"`,
+    },
   };
 }

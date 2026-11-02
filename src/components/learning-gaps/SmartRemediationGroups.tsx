@@ -35,6 +35,7 @@ interface SmartRemediationGroupsProps {
   groups: SmartRemediationGroup[];
   onUpdateGroup: (updatedGroup: SmartRemediationGroup) => void;
   availableClassStudents?: Array<{ id: string; name: string }>;
+  onOpenPlan?: (planOrGroup: any) => void;
 }
 
 export function SmartRemediationGroups({
@@ -51,6 +52,7 @@ export function SmartRemediationGroups({
     { id: "std-anvi", name: "Anvi Bhatt" },
     { id: "std-yash", name: "Yash Trivedi" },
   ],
+  onOpenPlan,
 }: SmartRemediationGroupsProps) {
   const [isSectionOpen, setIsSectionOpen] = useState(true);
   const [addingToGroupId, setAddingToGroupId] = useState<string | null>(null);
@@ -118,6 +120,10 @@ export function SmartRemediationGroups({
         ...prev,
         [group.id]: true,
       }));
+
+      if (onOpenPlan) {
+        onOpenPlan(groupPlan);
+      }
     } catch (e) {
       console.error("Failed to generate group plan", e);
     } finally {
@@ -392,22 +398,37 @@ export function SmartRemediationGroups({
                           </Button>
                         )}
 
-                        <Button
-                          variant="saffron"
-                          size="sm"
-                          onClick={() => handleGeneratePlan(group)}
-                          disabled={generatingForGroupId === group.id || isPlanDone}
-                          className="rounded-full text-xs font-bold shadow-xs"
-                        >
-                          <Layers className="w-3.5 h-3.5 mr-1" />
-                          <span>
-                            {generatingForGroupId === group.id
-                              ? "Generating Plan..."
-                              : isPlanDone
-                              ? "✓ 5-Step Plan Generated"
-                              : "Generate Group 5-Step Plan"}
-                          </span>
-                        </Button>
+                        {isPlanDone ? (
+                          <Button
+                            variant="saffron"
+                            size="sm"
+                            onClick={() => {
+                              if (onOpenPlan) {
+                                onOpenPlan(group);
+                              }
+                            }}
+                            className="rounded-full text-xs font-bold shadow-xs"
+                            title="View and print group 5-step remedial plan"
+                          >
+                            <Layers className="w-3.5 h-3.5 mr-1" />
+                            <span>View / Print Group Plan</span>
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="saffron"
+                            size="sm"
+                            onClick={() => handleGeneratePlan(group)}
+                            disabled={generatingForGroupId === group.id}
+                            className="rounded-full text-xs font-bold shadow-xs"
+                          >
+                            <Layers className="w-3.5 h-3.5 mr-1" />
+                            <span>
+                              {generatingForGroupId === group.id
+                                ? "Generating Plan..."
+                                : "Generate Group 5-Step Plan"}
+                            </span>
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>

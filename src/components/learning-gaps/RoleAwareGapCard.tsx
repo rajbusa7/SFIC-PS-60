@@ -26,6 +26,7 @@ import {
   Heart,
   ChevronDown,
   ChevronUp,
+  Printer,
 } from "lucide-react";
 import {
   getRoleAwareGapInterpretation,
@@ -48,6 +49,7 @@ interface RoleAwareGapCardProps {
   activeRole: AudienceRole;
   onSendHomePractice?: (gap: any) => void;
   onGeneratePlan?: (gapId: string) => void;
+  onOpenPlan?: (gap: any) => void;
   onToggleTimeline?: (gapId: string) => void;
   onToggleMap?: (gapId: string) => void;
   onReassess?: (gap: any) => void;
@@ -61,6 +63,7 @@ export function RoleAwareGapCard({
   activeRole,
   onSendHomePractice,
   onGeneratePlan,
+  onOpenPlan,
   onToggleTimeline,
   onToggleMap,
   onReassess,
@@ -106,7 +109,19 @@ export function RoleAwareGapCard({
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {(onOpenPlan || onGeneratePlan) && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => (onOpenPlan ? onOpenPlan(gap) : onGeneratePlan!(gap.id))}
+                className="rounded-full text-xs font-bold bg-white hover:bg-[#FAF6E9] text-[#49352F] border border-[#49352F]/15"
+                title="View and print personalized step-by-step learning roadmap and worksheet"
+              >
+                <Printer className="w-3.5 h-3.5 mr-1 text-[#B26A1B]" />
+                <span>Print My Learning Sheet</span>
+              </Button>
+            )}
             <Link href="/activities">
               <Button variant="saffron" size="sm" className="rounded-full text-xs font-bold">
                 <Sparkles className="w-3.5 h-3.5 mr-1" />
@@ -193,7 +208,19 @@ export function RoleAwareGapCard({
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {(onOpenPlan || onGeneratePlan) && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => (onOpenPlan ? onOpenPlan(gap) : onGeneratePlan!(gap.id))}
+                className="rounded-full text-xs font-bold bg-white hover:bg-[#FAF6E9] text-[#49352F] border border-[#49352F]/15"
+                title="View and print 5-step remedial plan for home support"
+              >
+                <Printer className="w-3.5 h-3.5 mr-1 text-[#B26A1B]" />
+                <span>View & Print 5-Step Plan</span>
+              </Button>
+            )}
             {onSendHomePractice && (
               <Button
                 variant="saffron"

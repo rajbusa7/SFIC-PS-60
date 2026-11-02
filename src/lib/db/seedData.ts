@@ -18,6 +18,7 @@ import type {
   ParentProfile,
   AiProviderConfig,
   TeacherAssignment,
+  InterventionRecord,
 } from "../types";
 
 export const SEED_SCHOOL: School = {
@@ -1728,5 +1729,126 @@ export const SEED_TEACHER_ASSIGNMENTS: TeacherAssignment[] = [
     classroomIds: ["cls-1a"],
     grades: [1],
     assignedAt: "2026-01-01T00:00:00Z",
+  },
+];
+
+// =========================================================================
+// PHASE 6: AUTHENTIC HISTORICAL INTERVENTION RECORDS
+// =========================================================================
+
+export const SEED_INTERVENTION_RECORDS: InterventionRecord[] = [
+  // Base-10 Blocks: 18 records (avg improvement: ~+17 pp)
+  ...Array.from({ length: 18 }).map((_, i) => {
+    const pre = 35 + (i % 6) * 3;
+    const delta = 15 + (i % 5); // deltas between 15 and 19 (avg ~17)
+    const post = pre + delta;
+    return {
+      id: `int-b10-${i + 1}`,
+      interventionType: "Base-10 Blocks",
+      conceptId: i % 2 === 0 ? "c-pv-01" : "c-add-01",
+      conceptName: i % 2 === 0 ? "Place Value (Tens and Ones)" : "3-Digit Addition with Regrouping",
+      subjectCode: "MATH",
+      gapType: i % 2 === 0 ? "Conceptual Gap" : "Procedural Error",
+      studentId: `std-${["aarav", "diya", "meera", "kabir", "ananya", "rohan"][i % 6]}`,
+      studentName: ["Aarav Patel", "Diya Sharma", "Meera Shah", "Kabir Joshi", "Ananya Verma", "Rohan Mehta"][i % 6],
+      preInterventionScore: pre,
+      postInterventionScore: post,
+      scoreDelta: delta,
+      date: `2026-09-${10 + (i % 15)}T10:00:00Z`,
+      durationMinutes: 12,
+      teacherFeedback: "Student showed strong understanding of bundling tens into rods.",
+      outcome: (post >= 80 ? "Mastered" : post >= 60 ? "Developing" : "Needs Further Support") as any,
+    };
+  }),
+
+  // Guided Worksheet Practice: 21 records (avg improvement: ~+6 pp)
+  ...Array.from({ length: 21 }).map((_, i) => {
+    const pre = 50 + (i % 5) * 3;
+    const delta = 4 + (i % 5); // deltas between 4 and 8 (avg ~6)
+    const post = pre + delta;
+    return {
+      id: `int-gwp-${i + 1}`,
+      interventionType: "Guided Worksheet Practice",
+      conceptId: ["c-pv-01", "c-add-01", "c-mult-01", "c-div-01"][i % 4],
+      conceptName: ["Place Value", "3-Digit Addition", "Multiplication", "Division"][i % 4],
+      subjectCode: "MATH",
+      gapType: "Procedural Error",
+      studentId: `std-${["aarav", "diya", "meera", "kabir", "ananya"][i % 5]}`,
+      studentName: ["Aarav Patel", "Diya Sharma", "Meera Shah", "Kabir Joshi", "Ananya Verma"][i % 5],
+      preInterventionScore: pre,
+      postInterventionScore: post,
+      scoreDelta: delta,
+      date: `2026-09-${5 + (i % 20)}T11:00:00Z`,
+      durationMinutes: 15,
+      teacherFeedback: "Completed worksheet with paired peer verification.",
+      outcome: (post >= 80 ? "Mastered" : post >= 60 ? "Developing" : "Needs Further Support") as any,
+    };
+  }),
+
+  // Skip Counting & Arrays: 15 records (avg improvement: ~+22 pp)
+  ...Array.from({ length: 15 }).map((_, i) => {
+    const pre = 40 + (i % 4) * 4;
+    const delta = 20 + (i % 5); // deltas 20-24 (avg ~22)
+    const post = pre + delta;
+    return {
+      id: `int-sca-${i + 1}`,
+      interventionType: "Skip Counting & Arrays",
+      conceptId: "c-mult-01",
+      conceptName: "Multiplication Tables (2 to 9)",
+      subjectCode: "MATH",
+      gapType: "Conceptual Gap",
+      studentId: `std-${["meera", "aarav", "diya", "kabir"][i % 4]}`,
+      studentName: ["Meera Shah", "Aarav Patel", "Diya Sharma", "Kabir Joshi"][i % 4],
+      preInterventionScore: pre,
+      postInterventionScore: post,
+      scoreDelta: delta,
+      date: `2026-09-${12 + (i % 12)}T09:30:00Z`,
+      durationMinutes: 10,
+      teacherFeedback: "Physical array arrangement built rapid recall.",
+      outcome: (post >= 80 ? "Mastered" : "Developing") as any,
+    };
+  }),
+
+  // Concrete Equal Groups Partitioning: 12 records (avg improvement: ~+25 pp)
+  ...Array.from({ length: 12 }).map((_, i) => {
+    const pre = 35 + (i % 4) * 3;
+    const delta = 23 + (i % 5); // deltas 23-27 (avg ~25)
+    const post = pre + delta;
+    return {
+      id: `int-div-${i + 1}`,
+      interventionType: "Concrete Equal Groups",
+      conceptId: "c-div-01",
+      conceptName: "Division Basics (Equal Sharing)",
+      subjectCode: "MATH",
+      gapType: "Conceptual Gap",
+      studentId: `std-${["aarav", "kabir", "diya"][i % 3]}`,
+      studentName: ["Aarav Patel", "Kabir Joshi", "Diya Sharma"][i % 3],
+      preInterventionScore: pre,
+      postInterventionScore: post,
+      scoreDelta: delta,
+      date: `2026-09-${15 + (i % 10)}T11:00:00Z`,
+      durationMinutes: 12,
+      teacherFeedback: "Fair sharing with physical counters eliminated conceptual hesitation.",
+      outcome: (post >= 80 ? "Mastered" : "Developing") as any,
+    };
+  }),
+
+  // Tactile Sand Trays: Exactly 1 record (Tests "Insufficient historical evidence")
+  {
+    id: "int-sand-01",
+    interventionType: "Tactile Sand Trays",
+    conceptId: "c-guj-01",
+    conceptName: "Gujarati Matras",
+    subjectCode: "GUJ",
+    gapType: "Language / Comprehension Barrier",
+    studentId: "std-aarav",
+    studentName: "Aarav Patel",
+    preInterventionScore: 50,
+    postInterventionScore: 65,
+    scoreDelta: 15,
+    date: "2026-10-01T10:00:00Z",
+    durationMinutes: 10,
+    teacherFeedback: "Initial trial with sand tracing for vowels.",
+    outcome: "Developing",
   },
 ];

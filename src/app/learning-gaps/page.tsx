@@ -34,6 +34,18 @@ import {
   filterGapsByHeatmap,
   ClassHeatmapFilter,
 } from "@/lib/engine/classHeatmapEngine";
+import { InterventionEffectivenessSection } from "@/components/learning-gaps/InterventionEffectivenessSection";
+import { RoleAwareGapCard } from "@/components/learning-gaps/RoleAwareGapCard";
+import { SendHomePracticeModal } from "@/components/learning-gaps/SendHomePracticeModal";
+import {
+  calculateInterventionEffectiveness,
+  getInterventionFeedbackForPrescription,
+} from "@/lib/engine/interventionEffectiveness";
+import type {
+  AudienceRole,
+  InterventionRecord,
+  InterventionEffectivenessSummary,
+} from "@shared/types";
 import {
   AlertTriangle,
   ClipboardList,
@@ -55,6 +67,10 @@ import {
   ChevronUp,
   FileText,
   GitFork,
+  User,
+  GraduationCap,
+  Home,
+  Send,
 } from "lucide-react";
 
 export default function LearningGapsPage() {
@@ -128,6 +144,16 @@ export default function LearningGapsPage() {
   const [supportThreshold, setSupportThreshold] = useState<number>(60);
   const [masteryThreshold, setMasteryThreshold] = useState<number>(80);
 
+  // Phase 6: Role-Aware Lens View ("teacher" | "student" | "parent")
+  const [activeRole, setActiveRole] = useState<AudienceRole>("teacher");
+
+  // Phase 6: Send Home Practice to Parent Bridge State
+  const [homePracticeModalOpen, setHomePracticeModalOpen] = useState<boolean>(false);
+  const [targetGapForHomePractice, setTargetGapForHomePractice] = useState<any>(null);
+
+  // Phase 6: Intervention Effectiveness State
+  const [interventionRecords, setInterventionRecords] = useState<InterventionRecord[]>([]);
+
   // Reassessment modal state
   const [reassessModalOpen, setReassessModalOpen] = useState(false);
   const [targetGapForReassessment, setTargetGapForReassessment] = useState<any>(null);
@@ -147,8 +173,21 @@ export default function LearningGapsPage() {
     }
   };
 
+  const fetchInterventions = async () => {
+    try {
+      const res = await fetch("/api/learning-gaps/interventions");
+      const data = await res.json();
+      if (data.success && data.records) {
+        setInterventionRecords(data.records);
+      }
+    } catch (e) {
+      console.error("Failed to load intervention records", e);
+    }
+  };
+
   useEffect(() => {
     fetchGaps();
+    fetchInterventions();
   }, []);
 
   const handleGeneratePlan = async (gapId: string) => {
@@ -416,6 +455,11 @@ export default function LearningGapsPage() {
     return calculateTodaysPriorities(processedGaps);
   }, [processedGaps]);
 
+  // Phase 6: Calculate Empirical Intervention Effectiveness
+  const interventionSummaries = React.useMemo(() => {
+    return calculateInterventionEffectiveness(interventionRecords);
+  }, [interventionRecords]);
+
   const heatmapData = React.useMemo(() => {
     return getClassLearningGapHeatmap(gaps, selectedClass);
   }, [gaps, selectedClass]);
@@ -484,6 +528,49 @@ export default function LearningGapsPage() {
             <p className="text-xs sm:text-sm text-[#7A6862] mt-1">
               Transparent, explainable pedagogical rule engine identifying student conceptual roadblocks with plain-language reasons.
             </p>
+          </div>
+
+          {/* Phase 6: Role-Aware Lens View Selector (Teacher / Student / Parent) */}
+          <div className="flex items-center gap-1.5 p-1 rounded-full bg-white border border-[#49352F]/15 shadow-xs self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={() => setActiveRole("teacher")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                activeRole === "teacher"
+                  ? "bg-[#49352F] text-white shadow-xs"
+                  : "text-[#7A6862] hover:text-[#49352F] hover:bg-[#FAF6E9]"
+              }`}
+              title="Teacher professional diagnosis & intervention controls"
+            >
+              <GraduationCap className="w-3.5 h-3.5" />
+              <span>Teacher View</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveRole("student")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                activeRole === "student"
+                  ? "bg-[#2E7D5E] text-white shadow-xs"
+                  : "text-[#7A6862] hover:text-[#49352F] hover:bg-[#FAF6E9]"
+              }`}
+              title="Growth-oriented, supportive student interpretation"
+            >
+              <User className="w-3.5 h-3.5" />
+              <span>Student View</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveRole("parent")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                activeRole === "parent"
+                  ? "bg-[#B26A1B] text-white shadow-xs"
+                  : "text-[#7A6862] hover:text-[#49352F] hover:bg-[#FAF6E9]"
+              }`}
+              title="Simple parent-friendly view with 5-minute home activities"
+            >
+              <Home className="w-3.5 h-3.5" />
+              <span>Parent View</span>
+            </button>
           </div>
         </div>
 
@@ -600,6 +687,14 @@ export default function LearningGapsPage() {
           onUpdateGroup={handleUpdateGroup}
         />
 
+        {/* 5. INTERVENTION EFFECTIVENESS & EMPIRICAL TRACKING */}
+        {activeRole === "teacher" && (
+          <InterventionEffectivenessSection
+            summaries={interventionSummaries}
+            records={interventionRecords}
+          />
+        )}
+
         {/* Filter Controls */}
         <Card variant="glass" className="p-3.5 flex flex-wrap items-center justify-between gap-3 border-[#49352F]/15 bg-white text-[#49352F] shadow-xs">
           <div className="flex flex-wrap items-center gap-3">
@@ -684,6 +779,30 @@ export default function LearningGapsPage() {
         {/* 2. EXPLAINABLE AI GAP CARDS LIST */}
         <div className="space-y-4">
           {filteredGaps.map((gap) => {
+            if (activeRole !== "teacher") {
+              return (
+                <RoleAwareGapCard
+                  key={gap.id}
+                  gap={gap}
+                  activeRole={activeRole}
+                  onSendHomePractice={(g) => {
+                    setTargetGapForHomePractice(g);
+                    setHomePracticeModalOpen(true);
+                  }}
+                  onGeneratePlan={handleGeneratePlan}
+                  onToggleTimeline={toggleTimeline}
+                  onToggleMap={toggleGapMap}
+                  onReassess={(g) => {
+                    setTargetGapForReassessment(g);
+                    setReassessModalOpen(true);
+                  }}
+                  isTimelineExpanded={Boolean(expandedTimelineGapIds[gap.id])}
+                  isMapExpanded={Boolean(expandedMapGapIds[gap.id])}
+                  isGeneratingPlan={generatingPlanId === gap.id}
+                />
+              );
+            }
+
             const isResolved = gap.status === "Closed Gap" || gap.status === "Resolved" || gap.dynamicStatus === "Mastered";
 
             return (
@@ -839,6 +958,20 @@ export default function LearningGapsPage() {
                       ) : (
                         <ChevronDown className="w-3.5 h-3.5 ml-1" />
                       )}
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setTargetGapForHomePractice(gap);
+                        setHomePracticeModalOpen(true);
+                      }}
+                      className="rounded-full text-xs bg-white hover:bg-[#FAF6E9] text-[#49352F] border border-[#49352F]/15"
+                      title="Send parent-friendly 5-minute home activity to Parent Bridge"
+                    >
+                      <Home className="w-3.5 h-3.5 mr-1 text-[#B26A1B]" />
+                      <span>Send Home Practice</span>
                     </Button>
 
                     <Button
@@ -1288,6 +1421,44 @@ export default function LearningGapsPage() {
                             : "Ready for 5-Step Concrete Remedial Plan")}
                       </span>
                     </div>
+
+                    {/* Phase 6: Historical Intervention Effectiveness Insight (Feedback Loop) */}
+                    {(() => {
+                      const feedback = getInterventionFeedbackForPrescription(
+                        gap.dynamicPrescription?.suggestedModality || "",
+                        gap.conceptName,
+                        interventionRecords
+                      );
+                      if (!feedback) return null;
+                      return (
+                        <div
+                          className={`p-2.5 rounded-xl text-[11px] border space-y-1 mt-1 ${
+                            feedback.hasHistoricalEvidence
+                              ? "bg-[#EAF4EE] border-[#2E7D5E]/25 text-[#1D4E3A]"
+                              : "bg-white/80 border-[#49352F]/10 text-[#7A6862]"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold flex items-center gap-1">
+                              <Sparkles className="w-3.5 h-3.5 text-[#B26A1B]" />
+                              <span>
+                                {feedback.hasHistoricalEvidence
+                                  ? "Historical Intervention Effectiveness"
+                                  : "Intervention Evidence Status"}
+                              </span>
+                            </span>
+                            {feedback.hasHistoricalEvidence && feedback.averageObservedImprovement !== undefined && (
+                              <span className="font-mono font-bold text-[#2E7D5E]">
+                                +{feedback.averageObservedImprovement} pp
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[10.5px] leading-relaxed">
+                            {feedback.feedbackText}
+                          </p>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
 
@@ -1321,6 +1492,18 @@ export default function LearningGapsPage() {
           conceptName={targetGapForReassessment.conceptName}
           previousPercentage={targetGapForReassessment.latestPercentage || 35}
           onSuccess={() => fetchGaps()}
+        />
+      )}
+
+      {/* Phase 6: Send Home Practice to Parent Bridge Modal */}
+      {homePracticeModalOpen && targetGapForHomePractice && (
+        <SendHomePracticeModal
+          isOpen={homePracticeModalOpen}
+          onClose={() => setHomePracticeModalOpen(false)}
+          gap={targetGapForHomePractice}
+          onSuccess={() => {
+            fetchGaps();
+          }}
         />
       )}
       {/* Guided Tour */}

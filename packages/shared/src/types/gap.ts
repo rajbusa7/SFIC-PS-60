@@ -206,3 +206,115 @@ export interface LearningGapMapData {
   totalNodes: number;
   subjectCode?: string;
 }
+
+// =========================================================================
+// PHASE 6: ROLE-AWARE INTERPRETATION & PARENT BRIDGE
+// =========================================================================
+
+export type AudienceRole = "teacher" | "student" | "parent";
+
+export interface ParentHomeActivity {
+  id?: string;
+  conceptId?: string;
+  conceptName: string;
+  title: string;
+  titleGu?: string;
+  titleHi?: string;
+  durationMinutes: number; // 5-10 min
+  commonHouseholdMaterials: string[];
+  whatParentDoes: string;
+  whatParentDoesGu?: string;
+  whatParentDoesHi?: string;
+  whatChildPractices: string;
+  whatChildPracticesGu?: string;
+  whatChildPracticesHi?: string;
+  conversationalPrompt: string;
+  conversationalPromptGu?: string;
+  conversationalPromptHi?: string;
+  language?: "en" | "gu" | "hi";
+  status: "Suggested" | "Sent" | "Completed";
+  sentAt?: string;
+  completedAt?: string;
+  teacherNotes?: string;
+}
+
+export interface RoleAwareGapInterpretation {
+  role: AudienceRole;
+  language: "en" | "gu" | "hi";
+  // Headline & Badging
+  badgeLabel: string;
+  badgeVariant: "mint" | "saffron" | "coral" | "default" | "mastered" | "developing" | "needsSupport";
+  headline: string;
+  subheadline?: string;
+  // Student & Parent: What the child is doing well (Strengths)
+  strengthsSummary?: string;
+  // What the child is currently practising (Focus)
+  currentFocus: string;
+  growthFocus?: string;
+  currentGoal?: string;
+  // Progress & Improvement
+  progressNarrative: string;
+  observedGrowth?: string;
+  // Parent: One Simple Home Activity (5-10 min)
+  homeActivity?: ParentHomeActivity;
+  parentHomeActivity?: ParentHomeActivity;
+  // Teacher / Parent recommendation
+  teacherRecommendation: string;
+  reassessmentUpdate?: string;
+  // Student-facing supportive encouragement & positive milestones
+  studentEncouragement?: string;
+  nextActivityPrompt?: string;
+  nextLearningStep?: string;
+  skillsMastered?: string[];
+  milestones?: string[];
+  // Teacher professional deep-dive (retained for full professional transparency)
+  professionalDiagnosis?: {
+    severityScore?: number;
+    severityLevel?: string;
+    gapType?: string;
+    triggerRule?: string;
+    rootConceptName?: string;
+    prerequisiteCount?: number;
+    evidenceCount?: number;
+    confidenceLevel?: string;
+  };
+}
+
+// =========================================================================
+// PHASE 6: INTERVENTION EFFECTIVENESS TRACKING
+// =========================================================================
+
+export interface InterventionRecord {
+  id: string;
+  interventionType: string;
+  conceptId: string;
+  conceptName: string;
+  subjectCode: string;
+  gapType?: string;
+  studentId: string;
+  studentName: string;
+  groupId?: string;
+  preInterventionScore: number;
+  postInterventionScore: number;
+  scoreDelta: number; // post - pre
+  date: string;
+  durationMinutes: number;
+  teacherFeedback?: string;
+  outcome: "Mastered" | "Developing" | "Needs Further Support";
+}
+
+export interface InterventionEffectivenessSummary {
+  interventionType: string;
+  timesUsed: number;
+  averageObservedImprovement: number; // in percentage points
+  masteryCount: number;
+  masteryRate: number; // 0 - 100 percentage
+  masteryAchievementRate?: number;
+  averageDurationMinutes?: number;
+  associatedConcepts: string[];
+  sampleObservationText: string;
+  evidenceConfidence: "High" | "Moderate" | "Insufficient";
+  hasSufficientEvidence: boolean; // >= 2 observations
+  recommendedWording: string;
+  nonCausalStatement?: string;
+}

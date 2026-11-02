@@ -4303,5 +4303,97 @@
       "assignedAt": "2026-01-01T00:00:00Z"
     }
   ],
-  "auditLogs": []
+  "auditLogs": [
+    {
+      "teacherId": "usr-1793563264008-aovq",
+      "teacherName": "Kavita S. Dave",
+      "studentId": "system",
+      "studentName": "Teacher Directory",
+      "subjectCode": "MATH",
+      "assessmentId": "admin",
+      "previousMarks": 2,
+      "updatedMarks": 0,
+      "action": "DELETE_TEACHER_usr-1793563264008-aovq",
+      "id": "audit-1793563264084-wgs0g3",
+      "timestamp": "2026-11-01T20:01:04.084Z"
+    },
+    {
+      "teacherId": "usr-1793563264008-aovq",
+      "teacherName": "Kavita S. Dave",
+      "studentId": "system",
+      "studentName": "Teacher Directory",
+      "subjectCode": "MATH",
+      "assessmentId": "admin",
+      "previousMarks": 0,
+      "updatedMarks": 1,
+      "action": "UPDATE_TEACHER_usr-1793563264008-aovq_STATUS_active",
+      "id": "audit-1793563264064-4qhfgf",
+      "timestamp": "2026-11-01T20:01:04.064Z"
+    },
+    {
+      "teacherId": "usr-1793563264008-aovq",
+      "teacherName": "Kavita S. Dave",
+      "studentId": "system",
+      "studentName": "Teacher Directory",
+      "subjectCode": "MATH",
+      "assessmentId": "admin",
+      "previousMarks": 0,
+      "updatedMarks": 1,
+      "action": "UPDATE_TEACHER_usr-1793563264008-aovq_STATUS_disabled",
+      "id": "audit-1793563264057-riym8h",
+      "timestamp": "2026-11-01T20:01:04.057Z"
+    },
+    {
+      "teacherId": "usr-1793563264008-aovq",
+      "teacherName": "Kavita Dave",
+      "studentId": "system",
+      "studentName": "Teacher Assignment",
+      "subjectCode": "MATH",
+      "assessmentId": "mgmt",
+      "previousMarks": 0,
+      "updatedMarks": 3,
+      "action": "ASSIGN_SUBJECT_MATH_CLASSES_3,4,5",
+      "id": "audit-1793563264046-j4ktcy",
+      "timestamp": "2026-11-01T20:01:04.046Z"
+    },
+    {
+      "teacherId": "usr-1793563264008-aovq",
+      "teacherName": "Kavita Dave",
+      "studentId": "system",
+      "studentName": "Teacher Assignment",
+      "subjectCode": "ENG",
+      "assessmentId": "mgmt",
+      "previousMarks": 0,
+      "updatedMarks": 2,
+      "action": "ASSIGN_SUBJECT_ENG_CLASSES_2,3",
+      "id": "audit-1793563264038-53qzzn",
+      "timestamp": "2026-11-01T20:01:04.038Z"
+    },
+    {
+      "teacherId": "usr-1793563264008-aovq",
+      "teacherName": "Kavita Dave",
+      "studentId": "system",
+      "studentName": "Teacher Assignment",
+      "subjectCode": "MATH",
+      "assessmentId": "mgmt",
+      "previousMarks": 0,
+      "updatedMarks": 2,
+      "action": "ASSIGN_SUBJECT_MATH_CLASSES_4,5",
+      "id": "audit-1793563264031-l51jwn",
+      "timestamp": "2026-11-01T20:01:04.031Z"
+    },
+    {
+      "teacherId": "usr-1793563264008-aovq",
+      "teacherName": "Kavita Dave",
+      "studentId": "system",
+      "studentName": "Teacher Directory",
+      "subjectCode": "MATH",
+      "assessmentId": "admin",
+      "previousMarks": 0,
+      "updatedMarks": 1,
+      "action": "CREATE_TEACHER_usr-1793563264008-aovq_STATUS_active",
+      "id": "audit-1793563264016-ghqae3",
+      "timestamp": "2026-11-01T20:01:04.016Z"
+    }
+  ]
 }

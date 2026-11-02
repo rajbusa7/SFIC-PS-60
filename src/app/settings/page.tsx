@@ -270,11 +270,10 @@ export default function SettingsPage() {
               <button
                 type="button"
                 onClick={() => setTheme("light")}
-                className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer relative ${
-                  theme === "light"
+                className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer relative ${theme === "light"
                     ? "border-[#49352F] bg-[#FAF6E9] ring-2 ring-[#F2CAB3] shadow-xs"
                     : "border-[#49352F]/12 bg-white hover:border-[#49352F]/25"
-                }`}
+                  }`}
               >
                 {/* Mini UI Mockup */}
                 <div className="w-full h-16 rounded-xl border border-[#49352F]/12 bg-[#FAF6E9] p-1.5 flex flex-col justify-between mb-3 shadow-2xs">
@@ -314,11 +313,10 @@ export default function SettingsPage() {
               <button
                 type="button"
                 onClick={() => setTheme("dark")}
-                className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer relative ${
-                  theme === "dark"
+                className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer relative ${theme === "dark"
                     ? "border-[#49352F] bg-[#FAF6E9] ring-2 ring-[#F2CAB3] shadow-xs"
                     : "border-[#49352F]/12 bg-white hover:border-[#49352F]/25"
-                }`}
+                  }`}
               >
                 {/* Mini UI Mockup */}
                 <div className="w-full h-16 rounded-xl border border-slate-800 bg-[#14123D] p-1.5 flex flex-col justify-between mb-3 shadow-2xs">
@@ -358,11 +356,10 @@ export default function SettingsPage() {
               <button
                 type="button"
                 onClick={() => setTheme("system")}
-                className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer relative ${
-                  theme === "system"
+                className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer relative ${theme === "system"
                     ? "border-[#49352F] bg-[#FAF6E9] ring-2 ring-[#F2CAB3] shadow-xs"
                     : "border-[#49352F]/12 bg-white hover:border-[#49352F]/25"
-                }`}
+                  }`}
               >
                 {/* Mini UI Mockup */}
                 <div className="w-full h-16 rounded-xl border border-[#49352F]/12 bg-gradient-to-r from-[#FAF6E9] to-slate-800 p-1.5 flex flex-col justify-between mb-3 shadow-2xs">
@@ -713,8 +710,8 @@ export default function SettingsPage() {
                     ? "સાચવી રહ્યું છે..."
                     : "સેટિંગ્સ સાચવો"
                   : isSaving
-                  ? "Saving..."
-                  : "Save Settings"}
+                    ? "Saving..."
+                    : "Save Settings"}
               </span>
             </button>
           </div>
@@ -752,8 +749,8 @@ export default function SettingsPage() {
                     ? "રીસેટ થઈ રહ્યું છે..."
                     : "Resetting..."
                   : language === "gu"
-                  ? "પુષ્ટિ કરો અને રીસેટ કરો"
-                  : "Confirm Reset"}
+                    ? "પુષ્ટિ કરો અને રીસેટ કરો"
+                    : "Confirm Reset"}
               </button>
             </div>
           </div>

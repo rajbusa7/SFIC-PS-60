@@ -15,6 +15,10 @@ import {
   type ConfidenceLevel,
   type QuestionEvidenceItem,
 } from "./diagnosisEngine";
+import {
+  analyzeRootCause,
+  type LearningPathStep,
+} from "./prerequisiteEngine";
 import type {
   MasteryStatus,
   GapPriority,
@@ -121,6 +125,19 @@ export interface GapDetectionResult {
   hasQuestionLevelEvidence?: boolean;
   lowConfidenceDisclaimer?: string;
   recommendedDiagnosticAction?: string;
+
+  // Prerequisite & Root-Cause Analysis Engine
+  isRootGapIdentified?: boolean;
+  rootConcept?: { id: string; name: string; nameGujarati?: string };
+  affectedConcept?: { id: string; name: string; nameGujarati?: string };
+  prerequisiteConcepts?: string[];
+  dependentConcepts?: string[];
+  recommendedLearningOrder?: string[];
+  learningPath?: LearningPathStep[];
+  rootCauseConfidence?: number;
+  rootCauseConfidenceLevel?: ConfidenceLevel;
+  rootCauseExplanation?: string;
+  insufficientEvidenceWarning?: string;
 }
 
 /**
@@ -281,6 +298,16 @@ export function evaluateStudentGapTrajectory(params: {
       hasQuestionLevelEvidence: false,
       lowConfidenceDisclaimer: "Insufficient evidence — run a short diagnostic check.",
       recommendedDiagnosticAction: "Conduct an initial diagnostic assessment.",
+      isRootGapIdentified: false,
+      rootConcept: undefined,
+      affectedConcept: { id: conceptId, name: conceptName },
+      prerequisiteConcepts: [],
+      dependentConcepts: [],
+      recommendedLearningOrder: [conceptName],
+      learningPath: [],
+      rootCauseConfidence: 0.35,
+      rootCauseConfidenceLevel: "Low",
+      insufficientEvidenceWarning: "Insufficient evidence — run a short prerequisite diagnostic check.",
     };
   }
 
@@ -353,6 +380,20 @@ export function evaluateStudentGapTrajectory(params: {
     prerequisitesMastered,
     hasRepeatedErrors,
     recencyDays,
+  });
+
+  // Analyze prerequisite dependencies & root cause
+  const rootCause = analyzeRootCause({
+    affectedConceptId: conceptId,
+    affectedConceptName: conceptName,
+    studentScore: currentScore,
+    prerequisitesMastered,
+    errorPattern: diagnosis.errorPatternDetected,
+    questionEvidence: diagnosis.questionEvidence,
+    attemptCount,
+    evidenceCount,
+    supportThreshold,
+    masteryThreshold,
   });
 
   // Multi-dimensional Trajectory Evaluation
@@ -544,6 +585,17 @@ export function evaluateStudentGapTrajectory(params: {
     hasQuestionLevelEvidence: diagnosis.hasQuestionLevelEvidence,
     lowConfidenceDisclaimer: diagnosis.lowConfidenceDisclaimer,
     recommendedDiagnosticAction: diagnosis.recommendedDiagnosticAction,
+    isRootGapIdentified: rootCause.isRootGapIdentified,
+    rootConcept: rootCause.rootConcept,
+    affectedConcept: rootCause.affectedConcept,
+    prerequisiteConcepts: rootCause.prerequisiteConcepts,
+    dependentConcepts: rootCause.dependentConcepts,
+    recommendedLearningOrder: rootCause.recommendedLearningOrder,
+    learningPath: rootCause.learningPath,
+    rootCauseConfidence: rootCause.rootCauseConfidence,
+    rootCauseConfidenceLevel: rootCause.rootCauseConfidenceLevel,
+    rootCauseExplanation: rootCause.rootCauseExplanation,
+    insufficientEvidenceWarning: rootCause.insufficientEvidenceWarning,
   };
 }
 

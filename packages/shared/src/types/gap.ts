@@ -24,6 +24,48 @@ export interface QuestionEvidenceItem {
   relatedConcept?: string;
 }
 
+export interface ConceptDependencyNode {
+  id: string;
+  name: string;
+  nameGujarati?: string;
+  subjectCode?: SubjectCode;
+  prerequisites: string[];
+  grade?: number;
+  description?: string;
+}
+
+export interface LearningPathStep {
+  stepNumber: number;
+  conceptId: string;
+  conceptName: string;
+  isRoot: boolean;
+  isTarget: boolean;
+  status: "Mastered" | "Root Gap" | "In Progress" | "Target Gap";
+  note?: string;
+}
+
+export interface PrerequisiteAnalysisResult {
+  isRootGapIdentified: boolean;
+  rootConcept?: {
+    id: string;
+    name: string;
+    nameGujarati?: string;
+  };
+  affectedConcept: {
+    id: string;
+    name: string;
+    nameGujarati?: string;
+  };
+  prerequisiteConcepts: string[];
+  dependentConcepts: string[];
+  recommendedLearningOrder: string[];
+  learningPath: LearningPathStep[];
+  rootCauseConfidence: number;
+  rootCauseConfidenceLevel: ConfidenceLevel;
+  rootCauseExplanation: string;
+  insufficientEvidenceWarning?: string;
+}
+
 export type GapStatus =
   | "Active Gap"
   | "Monitoring/Developing"
@@ -86,6 +128,19 @@ export interface LearningGap {
   supportingEvidence?: string[];
   questionEvidence?: QuestionEvidenceItem[];
   lowConfidenceDisclaimer?: string;
+
+  // Prerequisite & Root-Cause Analysis Engine
+  isRootGapIdentified?: boolean;
+  rootConcept?: { id: string; name: string; nameGujarati?: string };
+  affectedConcept?: { id: string; name: string; nameGujarati?: string };
+  prerequisiteConcepts?: string[];
+  dependentConcepts?: string[];
+  recommendedLearningOrder?: string[];
+  learningPath?: LearningPathStep[];
+  rootCauseConfidence?: number;
+  rootCauseConfidenceLevel?: ConfidenceLevel;
+  rootCauseExplanation?: string;
+  insufficientEvidenceWarning?: string;
 
   updatedAt: string;
   remedialPlanId?: string;

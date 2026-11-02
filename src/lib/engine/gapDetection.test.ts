@@ -248,4 +248,29 @@ describe("Learning Gap Detection Engine", () => {
     assert.ok(result.severityReasons.some((r) => r.includes("deficit") || r.includes("benchmark")));
     assert.ok(result.severityReasons.some((r) => r.includes("prerequisite")));
   });
+
+  it("identifies root-cause prerequisite concept and ordered learning path", () => {
+    const history = [
+      { marksObtained: 10, maximumMarks: 25 },
+      { marksObtained: 8, maximumMarks: 25 },
+    ];
+
+    const result = detectLearningGap(
+      "c-place-01",
+      "Place Value & 3-Digit Addition",
+      history,
+      DEFAULT_THRESHOLDS,
+      {
+        prerequisitesMastered: false,
+      }
+    );
+
+    assert.equal(result.isRootGapIdentified, true);
+    assert.ok(result.rootConcept);
+    assert.equal(result.rootConcept?.name, "Regrouping");
+    assert.ok(result.recommendedLearningOrder && result.recommendedLearningOrder.length >= 2);
+    assert.ok(result.recommendedLearningOrder.includes("Regrouping"));
+    assert.ok(result.recommendedLearningOrder.includes("3-Digit Addition"));
+    assert.ok(result.rootCauseConfidence && result.rootCauseConfidence >= 0.8);
+  });
 });

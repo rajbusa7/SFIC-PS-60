@@ -14,6 +14,7 @@ import { SpotlightTour } from "@/components/tutorial/SpotlightTour";
 import { ContextualHelp } from "@/components/shared/ContextualHelp";
 import { calculateGapSeverity } from "@/lib/engine/severityEngine";
 import { diagnoseLearningGap } from "@/lib/engine/diagnosisEngine";
+import { analyzeRootCause } from "@/lib/engine/prerequisiteEngine";
 import {
   AlertTriangle,
   ClipboardList,
@@ -31,6 +32,7 @@ import {
   ChevronDown,
   ChevronUp,
   FileText,
+  GitFork,
 } from "lucide-react";
 
 export default function LearningGapsPage() {
@@ -47,6 +49,16 @@ export default function LearningGapsPage() {
 
   const toggleEvidence = (gapId: string) => {
     setExpandedEvidenceGapIds((prev) => ({
+      ...prev,
+      [gapId]: !prev[gapId],
+    }));
+  };
+
+  // Expandable prerequisite root-cause & learning path state
+  const [expandedLearningPathGapIds, setExpandedLearningPathGapIds] = useState<Record<string, boolean>>({});
+
+  const toggleLearningPath = (gapId: string) => {
+    setExpandedLearningPathGapIds((prev) => ({
       ...prev,
       [gapId]: !prev[gapId],
     }));
@@ -240,6 +252,32 @@ export default function LearningGapsPage() {
     const dynamicLowConfidenceDisclaimer = diagnosis.lowConfidenceDisclaimer;
     const dynamicRecommendedDiagnosticAction = diagnosis.recommendedDiagnosticAction;
 
+    // Prerequisite Dependency & Root-Cause Analysis
+    const rootCause = analyzeRootCause({
+      affectedConceptId: g.conceptId,
+      affectedConceptName: g.conceptName,
+      studentScore: score,
+      prerequisitesMastered: g.prerequisitesMastered ?? (dynamicGapType === "Prerequisite Gap" ? false : undefined),
+      errorPattern: dynamicErrorPatternDetected || g.reason,
+      questionEvidence: dynamicQuestionEvidence,
+      attemptCount: g.attemptCount || g.attemptsCount || 1,
+      evidenceCount: g.evidenceCount || g.attemptsCount || 1,
+      supportThreshold,
+      masteryThreshold,
+    });
+
+    const dynamicIsRootGapIdentified = g.isRootGapIdentified ?? rootCause.isRootGapIdentified;
+    const dynamicRootConcept = g.rootConcept ?? rootCause.rootConcept;
+    const dynamicAffectedConcept = g.affectedConcept ?? rootCause.affectedConcept;
+    const dynamicPrerequisiteConcepts = g.prerequisiteConcepts ?? rootCause.prerequisiteConcepts;
+    const dynamicDependentConcepts = g.dependentConcepts ?? rootCause.dependentConcepts;
+    const dynamicRecommendedLearningOrder = g.recommendedLearningOrder ?? rootCause.recommendedLearningOrder;
+    const dynamicLearningPath = g.learningPath ?? rootCause.learningPath;
+    const dynamicRootCauseConfidence = g.rootCauseConfidence ?? rootCause.rootCauseConfidence;
+    const dynamicRootCauseConfidenceLevel = g.rootCauseConfidenceLevel ?? rootCause.rootCauseConfidenceLevel;
+    const dynamicRootCauseExplanation = g.rootCauseExplanation ?? rootCause.rootCauseExplanation;
+    const dynamicInsufficientEvidenceWarning = g.insufficientEvidenceWarning ?? rootCause.insufficientEvidenceWarning;
+
     // A concept reaching mastery should no longer be treated as an unresolved active learning gap
     const dynamicIsGap = dynamicLifecycle === "Active Gap";
 
@@ -266,6 +304,17 @@ export default function LearningGapsPage() {
       dynamicHasQuestionLevelEvidence,
       dynamicLowConfidenceDisclaimer,
       dynamicRecommendedDiagnosticAction,
+      dynamicIsRootGapIdentified,
+      dynamicRootConcept,
+      dynamicAffectedConcept,
+      dynamicPrerequisiteConcepts,
+      dynamicDependentConcepts,
+      dynamicRecommendedLearningOrder,
+      dynamicLearningPath,
+      dynamicRootCauseConfidence,
+      dynamicRootCauseConfidenceLevel,
+      dynamicRootCauseExplanation,
+      dynamicInsufficientEvidenceWarning,
       dynamicIsGap,
     };
   });
@@ -511,6 +560,12 @@ export default function LearningGapsPage() {
                           {gap.trendText}
                         </Badge>
                       )}
+                      {gap.dynamicIsRootGapIdentified && gap.dynamicRootConcept && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-[#F2CAB3]/40 border border-[#B26A1B]/30 text-[#8D4E10]">
+                          <GitFork className="w-3 h-3 text-[#B26A1B] shrink-0" />
+                          <span>Root Gap: <strong>{gap.dynamicRootConcept.name}</strong></span>
+                        </span>
+                      )}
                     </div>
 
                     <div className="flex flex-wrap items-center gap-3 text-xs text-[#7A6862] mt-1">
@@ -751,6 +806,171 @@ export default function LearningGapsPage() {
                               </p>
                             </div>
                           )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Expandable "Learning Path & Root-Cause" Interaction */}
+                    <div className="pt-1.5 border-t border-[#49352F]/10">
+                      <button
+                        type="button"
+                        onClick={() => toggleLearningPath(gap.id)}
+                        className="w-full flex items-center justify-between py-1 text-[11px] font-bold text-[#2E7D5E] hover:text-[#215A43] transition-colors cursor-pointer"
+                        aria-expanded={Boolean(expandedLearningPathGapIds[gap.id])}
+                      >
+                        <span className="flex items-center gap-1.5">
+                          <GitFork className="w-3.5 h-3.5 text-[#2E7D5E]" />
+                          <span>
+                            {expandedLearningPathGapIds[gap.id]
+                              ? "Hide Learning Path & Root Cause"
+                              : "Why this happened & Recommended Learning Path"}
+                          </span>
+                          {gap.dynamicIsRootGapIdentified ? (
+                            <span className="px-1.5 py-0.2 rounded-full bg-[#2E7D5E]/15 text-[10px] font-semibold text-[#2E7D5E]">
+                              Root Identified
+                            </span>
+                          ) : (
+                            <span className="px-1.5 py-0.2 rounded-full bg-[#7A6862]/10 text-[10px] font-mono text-[#7A6862]">
+                              {gap.dynamicPrerequisiteConcepts?.length || 0} Prereqs
+                            </span>
+                          )}
+                        </span>
+                        {expandedLearningPathGapIds[gap.id] ? (
+                          <ChevronUp className="w-3.5 h-3.5" />
+                        ) : (
+                          <ChevronDown className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+
+                      {expandedLearningPathGapIds[gap.id] && (
+                        <div className="mt-2 p-3 rounded-xl bg-white border border-[#49352F]/10 space-y-2.5">
+                          {/* Diagnostic Summary Header */}
+                          <div className="space-y-1.5 pb-2 border-b border-[#49352F]/10">
+                            <div className="flex flex-wrap items-center justify-between gap-1 text-[11px]">
+                              <span className="font-bold text-[#49352F] flex items-center gap-1.5">
+                                <Layers className="w-3.5 h-3.5 text-[#B26A1B]" />
+                                <span>Prerequisite Root-Cause Analysis</span>
+                              </span>
+                              <Badge
+                                variant={
+                                  gap.dynamicRootCauseConfidenceLevel === "High"
+                                    ? "mint"
+                                    : gap.dynamicRootCauseConfidenceLevel === "Medium"
+                                    ? "amber"
+                                    : "coral"
+                                }
+                                size="sm"
+                              >
+                                {gap.dynamicRootCauseConfidenceLevel} Confidence ({Math.round((gap.dynamicRootCauseConfidence || 0.85) * 100)}%)
+                              </Badge>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[10.5px] pt-0.5">
+                              <div className="p-1.5 rounded-lg bg-[#FAF6E9] border border-[#49352F]/10">
+                                <span className="text-[#7A6862] font-semibold block text-[9.5px] uppercase">Detected Difficulty:</span>
+                                <span className="font-bold text-[#C54738]">{gap.dynamicAffectedConcept?.name || gap.conceptName}</span>
+                              </div>
+                              <div className="p-1.5 rounded-lg bg-[#FAF6E9] border border-[#49352F]/10">
+                                <span className="text-[#7A6862] font-semibold block text-[9.5px] uppercase">Root Cause:</span>
+                                <span className="font-bold text-[#8D4E10]">
+                                  {gap.dynamicIsRootGapIdentified && gap.dynamicRootConcept
+                                    ? `${gap.dynamicRootConcept.name} (Prerequisite Gap)`
+                                    : "Direct Roadblock (No Prerequisite Deficit)"}
+                                </span>
+                              </div>
+                            </div>
+
+                            <p className="text-[11px] text-[#49352F] leading-relaxed pt-0.5">
+                              {gap.dynamicRootCauseExplanation}
+                            </p>
+
+                            {gap.dynamicInsufficientEvidenceWarning && (
+                              <div className="p-1.5 rounded-lg bg-[#FBECE9] border border-[#C54738]/25 text-[#A93327] text-[10.5px] font-semibold flex items-center gap-1.5 mt-1">
+                                <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                                <span>{gap.dynamicInsufficientEvidenceWarning}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Step-by-Step Recommended Learning Path */}
+                          <div className="space-y-1.5">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#7A6862] block">
+                              Recommended Learning Path:
+                            </span>
+
+                            <div className="space-y-1.5">
+                              {gap.dynamicLearningPath && gap.dynamicLearningPath.length > 0 ? (
+                                gap.dynamicLearningPath.map((step: any, sIdx: number) => {
+                                  const isRoot = step.isRoot;
+                                  const isTarget = step.isTarget;
+                                  return (
+                                    <div
+                                      key={sIdx}
+                                      className={`p-2 rounded-lg border text-[11px] flex items-center justify-between gap-2 ${
+                                        isRoot
+                                          ? "bg-[#FBECE9] border-[#C54738]/30 text-[#49352F]"
+                                          : isTarget
+                                          ? "bg-[#FAF6E9] border-[#B26A1B]/30 text-[#49352F]"
+                                          : step.status === "Mastered"
+                                          ? "bg-[#EAF4EE] border-[#2E7D5E]/20 text-[#49352F]"
+                                          : "bg-white border-[#49352F]/10 text-[#49352F]"
+                                      }`}
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
+                                          isRoot
+                                            ? "bg-[#C54738] text-white"
+                                            : isTarget
+                                            ? "bg-[#B26A1B] text-white"
+                                            : step.status === "Mastered"
+                                            ? "bg-[#2E7D5E] text-white"
+                                            : "bg-[#7A6862] text-white"
+                                        }`}>
+                                          {step.stepNumber}
+                                        </span>
+                                        <div>
+                                          <span className="font-bold">{step.conceptName}</span>
+                                          {step.note && (
+                                            <span className="text-[10px] text-[#7A6862] block leading-tight">
+                                              {step.note}
+                                            </span>
+                                          )}
+                                        </div>
+                                      </div>
+
+                                      <Badge
+                                        variant={
+                                          isRoot
+                                            ? "coral"
+                                            : isTarget
+                                            ? "amber"
+                                            : step.status === "Mastered"
+                                            ? "mint"
+                                            : "default"
+                                        }
+                                        size="sm"
+                                      >
+                                        {isRoot ? "Root Gap (Remediate First)" : isTarget ? "Target Concept" : step.status}
+                                      </Badge>
+                                    </div>
+                                  );
+                                })
+                              ) : (
+                                <div className="flex flex-wrap items-center gap-1.5 text-xs text-[#49352F]">
+                                  {gap.dynamicRecommendedLearningOrder?.map((cName: string, cIdx: number) => (
+                                    <div key={cIdx} className="flex items-center gap-1.5">
+                                      <span className="px-2 py-0.5 rounded-lg bg-[#FAF6E9] border border-[#49352F]/10 font-medium">
+                                        {cName}
+                                      </span>
+                                      {cIdx < (gap.dynamicRecommendedLearningOrder?.length || 1) - 1 && (
+                                        <ArrowRight className="w-3.5 h-3.5 text-[#B26A1B]" />
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       )}
                     </div>

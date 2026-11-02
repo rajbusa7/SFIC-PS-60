@@ -402,6 +402,7 @@ export function TeacherManagementSection() {
 
   // Delete Individual Assignment
   const handleDeleteAssignment = async (asgId: string) => {
+    if (typeof window !== "undefined" && !window.confirm(language === "gu" ? "શું તમે આ વિષય સોંપણી રદ કરવા માંગો છો? શિક્ષક ખાતું સુરક્ષિત રહેશે." : "Are you sure you want to remove this subject assignment? The teacher account will remain intact.")) return;
     try {
       const res = await fetch(`/api/admin/teachers/assignments/${asgId}`, {
         method: "DELETE",
@@ -639,50 +640,41 @@ export function TeacherManagementSection() {
         <div className="flex items-center justify-between pb-3 border-b border-[#49352F]/10">
           <div>
             <div className="flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-[#B26A1B]" />
-              <h3 className="font-heading text-base sm:text-lg font-bold text-[#49352F]">
+              <h3 className="font-heading text-base font-bold text-[#49352F]">
                 {language === "gu"
-                  ? "શિક્ષક વિષય અને વર્ગ સોંપણી સંચાલન"
-                  : "Teacher Subject & Class Assignment Management"}
+                  ? "શિક્ષક વિષય અને વર્ગ સોંપણી સંચાલન (Admin RBAC)"
+                  : "Teacher Subject & Class Assignment Management (Admin RBAC)"}
               </h3>
               <Badge variant="saffron" size="sm">
-                {assignments.length} {language === "gu" ? "સોંપણીઓ" : "Assignments"}
+                {language === "gu" ? "સંચાલક નિયંત્રણ" : "Administrator Control"}
               </Badge>
             </div>
             <p className="text-xs text-[#7A6862] mt-0.5">
               {language === "gu"
-                ? "ચોક્કસ શિક્ષક માટે વિષય અને ધોરણ ૧ થી ૫ સુધીના વર્ગો સોંપો અથવા સુધારો."
-                : "Assign specific subjects and Classes 1 to 5 to registered teachers. Enforced server-side."}
+                ? "શિક્ષકો માટે વિષયો અને વર્ગો સોંપો, સંપાદિત કરો અથવા રદ કરો. તમામ ફેરફારો ડેટાબેઝમાં સાચવવામાં આવે છે."
+                : "Assign, update, or remove subjects and classes for teachers. All assignments are enforced server-side."}
             </p>
           </div>
         </div>
 
-        {/* Assignment Creation & Update Form */}
+        {/* Assignment Creation Form */}
         <div className="p-4 rounded-2xl bg-[#FAF6E9] border border-[#49352F]/12 space-y-4">
-          <div className="flex items-center justify-between">
-            <h4 className="font-bold text-xs uppercase tracking-wider text-[#B26A1B]">
-              {language === "gu" ? "વિષય અને વર્ગ સોંપણી ફોર્મ" : "Configure Subject & Class Assignment"}
-            </h4>
-            {selectedTeacherObj && (
-              <span className="text-[11px] font-medium text-[#7A6862]">
-                Selected: <strong className="text-[#49352F]">{selectedTeacherObj.name}</strong>
-              </span>
-            )}
-          </div>
+          <h4 className="font-bold text-xs uppercase tracking-wider text-[#B26A1B]">
+            {language === "gu" ? "નવી વિષય-વર્ગ સોંપણી ઉમેરો" : "ASSIGN SUBJECT & CLASSES TO TEACHER"}
+          </h4>
 
           {assignError && (
-            <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-700 text-xs font-semibold">
+            <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 text-xs">
               {assignError}
             </div>
           )}
           {assignSuccess && (
-            <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 text-xs font-semibold">
+            <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 text-xs font-semibold">
               {assignSuccess}
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
-            {/* 1. Teacher Selector */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
               <label className="block text-[11px] font-semibold text-[#7A6862] mb-1">
                 {language === "gu" ? "શિક્ષક પસંદ કરો:" : "Select Teacher:"}
@@ -690,7 +682,7 @@ export function TeacherManagementSection() {
               <select
                 value={selectedTeacherId}
                 onChange={(e) => setSelectedTeacherId(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-[#49352F]/20 bg-white text-xs font-semibold text-[#49352F] focus:outline-hidden cursor-pointer"
+                className="w-full px-3 py-1.5 rounded-xl border border-[#49352F]/20 bg-white text-xs font-semibold text-[#49352F] cursor-pointer"
               >
                 {teachers.length === 0 ? (
                   <option value="">No teachers available - Add one first</option>
@@ -702,42 +694,32 @@ export function TeacherManagementSection() {
                   ))
                 )}
               </select>
-              {selectedTeacherObj?.assignments && selectedTeacherObj.assignments.length > 0 && (
-                <div className="mt-1.5 flex flex-wrap gap-1">
-                  <span className="text-[10px] text-[#7A6862]">Current:</span>
-                  {selectedTeacherObj.assignments.map((a) => (
-                    <span key={a.id} className="text-[9px] bg-white border border-[#49352F]/15 px-1 rounded font-mono">
-                      {a.subjectCode} ({a.grades?.join(",")})
-                    </span>
-                  ))}
-                </div>
-              )}
             </div>
 
-            {/* 2. Subject Selector */}
             <div>
               <label className="block text-[11px] font-semibold text-[#7A6862] mb-1">
-                {language === "gu" ? "વિષય પસંદ કરો:" : "Select Subject:"}
+                {language === "gu" ? "વિષય:" : "Subject:"}
               </label>
               <select
                 value={assignSubject}
                 onChange={(e) => setAssignSubject(e.target.value as SubjectCode)}
-                className="w-full px-3 py-2 rounded-xl border border-[#49352F]/20 bg-white text-xs font-semibold text-[#49352F] focus:outline-hidden cursor-pointer"
+                className="w-full px-3 py-1.5 rounded-xl border border-[#49352F]/20 bg-white text-xs font-semibold text-[#49352F] cursor-pointer"
               >
-                {AVAILABLE_SUBJECTS.map((sub) => (
-                  <option key={sub.code} value={sub.code}>
-                    {sub.nameEn} ({sub.nameGu})
-                  </option>
-                ))}
+                <option value="MATH">Mathematics (ગણિત)</option>
+                <option value="ENG">English (અંગ્રેજી)</option>
+                <option value="GUJ">Gujarati (ગુજરાતી)</option>
+                <option value="EVS">Environmental Studies (પર્યાવરણ)</option>
+                <option value="SCI">Science (વિજ્ઞાન)</option>
+                <option value="SST">Social Science (સામાજિક વિજ્ઞાન)</option>
+                <option value="HIN">Hindi (હિન્દી)</option>
               </select>
             </div>
 
-            {/* 3. Class Selector (1 to 5) */}
             <div>
               <label className="block text-[11px] font-semibold text-[#7A6862] mb-1">
-                {language === "gu" ? "સોંપેલ વર્ગો પસંદ કરો (ધોરણ ૧ થી ૫):" : "Permitted Classes (Classes 1-5):"}
+                {language === "gu" ? "સોંપેલ વર્ગો પસંદ કરો:" : "Assigned Classes (1-5):"}
               </label>
-              <div className="flex items-center gap-1.5 pt-0.5">
+              <div className="flex items-center gap-1.5 pt-1">
                 {[1, 2, 3, 4, 5].map((g) => {
                   const isChecked = assignGrades.includes(g);
                   return (
@@ -745,13 +727,13 @@ export function TeacherManagementSection() {
                       key={g}
                       type="button"
                       onClick={() => handleToggleAssignGrade(g)}
-                      className={`flex-1 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
                         isChecked
-                          ? "bg-[#B26A1B] text-white border-[#B26A1B] shadow-xs"
+                          ? "bg-[#B26A1B] text-white border-[#B26A1B]"
                           : "bg-white text-[#7A6862] border-[#49352F]/15 hover:border-[#B26A1B]"
                       }`}
                     >
-                      Class {g}
+                      C{g}
                     </button>
                   );
                 })}
@@ -759,19 +741,14 @@ export function TeacherManagementSection() {
             </div>
           </div>
 
-          <div className="flex items-center justify-between pt-2 border-t border-[#49352F]/10">
-            <span className="text-[11px] text-[#7A6862]">
-              {language === "gu"
-                ? "નોંધ: એક જ શિક્ષકને વિવિધ વિષયો અને વર્ગો સોંપી શકાય છે. કોઈ ડુપ્લિકેટ રેકોર્ડ બનશે નહીં."
-                : "Note: Saving updates existing assignments for this subject or adds new permissions cleanly."}
-            </span>
+          <div className="flex justify-end pt-1">
             <Button
               type="button"
               variant="primary"
               size="sm"
               disabled={assignSaving || teachers.length === 0}
               onClick={handleSaveAssignment}
-              className="rounded-xl text-xs font-bold px-5 py-2 cursor-pointer shadow-sm"
+              className="rounded-xl text-xs font-bold px-4 py-2 cursor-pointer"
             >
               {assignSaving
                 ? "Saving..."
@@ -782,105 +759,66 @@ export function TeacherManagementSection() {
           </div>
         </div>
 
-        {/* Current Teacher Assignments Table */}
+        {/* Current Assignments Table */}
         <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <h4 className="font-bold text-xs uppercase tracking-wider text-[#7A6862]">
-              {language === "gu" ? "હાલની સક્રિય સોંપણીઓ" : "Current Teacher Assignments"}
-            </h4>
-            <span className="text-xs text-[#7A6862]">
-              Total Active: <strong>{assignments.length}</strong>
-            </span>
-          </div>
-
-          <div className="overflow-x-auto rounded-xl border border-[#49352F]/10 bg-white/70 dark:bg-[#26201C]/60">
+          <h4 className="font-bold text-xs uppercase tracking-wider text-[#7A6862]">
+            {language === "gu" ? "હાલની સક્રિય સોંપણીઓ" : "CURRENT TEACHER ASSIGNMENTS"}
+          </h4>
+          <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-[#49352F]/10 bg-[#FAF6E9]/60 dark:bg-[#1E1916]/60 text-[#7A6862] font-semibold">
-                  <th className="py-2.5 px-3.5">{language === "gu" ? "શિક્ષક" : "Teacher"}</th>
-                  <th className="py-2.5 px-3">{language === "gu" ? "વિષય" : "Subject"}</th>
-                  <th className="py-2.5 px-3">{language === "gu" ? "સોંપેલ વર્ગો" : "Assigned Classes"}</th>
-                  <th className="py-2.5 px-3">{language === "gu" ? "સ્થિતિ" : "Account Status"}</th>
-                  <th className="py-2.5 px-3 text-right">{language === "gu" ? "ક્રિયા" : "Actions"}</th>
+                <tr className="border-b border-[#49352F]/10 text-[#7A6862] font-semibold">
+                  <th className="py-2 px-3">{language === "gu" ? "શિક્ષક" : "Teacher"}</th>
+                  <th className="py-2 px-3">{language === "gu" ? "સોંપેલ વિષય" : "Subject"}</th>
+                  <th className="py-2 px-3">{language === "gu" ? "સોંપેલ વર્ગો" : "Assigned Classes"}</th>
+                  <th className="py-2 px-3 text-right">{language === "gu" ? "ક્રિયા" : "Action"}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#49352F]/8">
                 {assignments.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="py-6 text-center text-[#7A6862]">
-                      No teacher assignments configured yet.
+                    <td colSpan={4} className="py-4 text-center text-[#7A6862]">
+                      No assignments found.
                     </td>
                   </tr>
                 ) : (
                   assignments.map((asg) => {
                     const teacherObj = teachers.find((t) => t.id === asg.teacherId);
-                    const subObj = AVAILABLE_SUBJECTS.find((s) => s.code === asg.subjectCode);
                     return (
-                      <tr key={asg.id} className="hover:bg-[#FAF6E9]/50 transition-colors">
-                        <td className="py-2.5 px-3.5">
+                      <tr key={asg.id} className="hover:bg-[#FAF6E9]/40">
+                        <td className="py-2.5 px-3">
                           <span className="font-bold text-[#49352F] block">
                             {teacherObj?.name || asg.teacherName || asg.teacherId}
                           </span>
-                          <span className="text-[10px] text-[#7A6862] font-mono block">
+                          <span className="block text-[10px] text-[#7A6862] font-mono">
                             {teacherObj?.email || asg.teacherEmail}
                           </span>
                         </td>
-                        <td className="py-2.5 px-3">
-                          <span
-                            className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${
-                              subObj?.color || "text-[#B26A1B] bg-[#B26A1B]/10 border-[#B26A1B]/20"
-                            }`}
-                          >
-                            {subObj ? `${subObj.nameEn} (${subObj.nameGu})` : asg.subjectCode}
-                          </span>
+                        <td className="py-2.5 px-3 font-semibold text-[#B26A1B]">
+                          {asg.subjectCode}
                         </td>
                         <td className="py-2.5 px-3 text-[#49352F]">
-                          {asg.grades && asg.grades.length > 0 ? (
-                            <div className="flex flex-wrap gap-1">
-                              {asg.grades
-                                .slice()
-                                .sort((a, b) => a - b)
-                                .map((g) => (
-                                  <span
-                                    key={g}
-                                    className="px-1.5 py-0.5 rounded bg-[#FAF6E9] border border-[#49352F]/15 font-bold text-[10px]"
-                                  >
-                                    Class {g}
-                                  </span>
-                                ))}
-                            </div>
-                          ) : (
-                            <span className="text-[#7A6862] italic">None</span>
-                          )}
-                        </td>
-                        <td className="py-2.5 px-3">
-                          <span
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                              teacherObj?.status === "disabled"
-                                ? "bg-slate-500/15 text-slate-700 border-slate-500/30"
-                                : "bg-emerald-500/15 text-emerald-800 border-emerald-500/30"
-                            }`}
-                          >
-                            {teacherObj?.status === "disabled" ? "Deactivated" : "Active"}
-                          </span>
+                          {asg.grades && asg.grades.length > 0
+                            ? asg.grades.slice().sort((a, b) => a - b).map((g) => `Class ${g}`).join(", ")
+                            : asg.classes && asg.classes.length > 0
+                            ? asg.classes.join(", ")
+                            : "None"}
                         </td>
                         <td className="py-2.5 px-3 text-right">
                           <div className="flex items-center justify-end gap-1.5">
                             <button
                               type="button"
                               onClick={() => handleEditAssignment(asg)}
-                              title={language === "gu" ? "સોંપણી સુધારો" : "Edit assignment"}
-                              className="px-2 py-1 text-xs text-blue-700 hover:bg-blue-50 rounded-lg border border-blue-200 font-semibold transition-all cursor-pointer"
+                              className="px-2 py-1 text-xs text-blue-700 hover:bg-blue-50 rounded-lg border border-blue-200 font-bold transition-all cursor-pointer"
                             >
                               Edit
                             </button>
                             <button
                               type="button"
                               onClick={() => handleDeleteAssignment(asg.id)}
-                              title={language === "gu" ? "સોંપણી રદ કરો" : "Remove assignment"}
-                              className="px-2 py-1 text-xs text-rose-700 hover:bg-rose-50 rounded-lg border border-rose-200 font-semibold transition-all cursor-pointer"
+                              className="px-2.5 py-1 text-xs text-rose-700 hover:bg-rose-50 rounded-lg border border-rose-200 font-bold transition-all cursor-pointer"
                             >
-                              Remove
+                              {language === "gu" ? "રદ કરો" : "Delete"}
                             </button>
                           </div>
                         </td>

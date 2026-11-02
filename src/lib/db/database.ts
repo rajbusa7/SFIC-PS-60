@@ -2000,65 +2000,114 @@ export const db = {
 
   async getUsersAsync(): Promise<User[]> {
     if (isPostgresConfigured()) {
-      return postgresUserDb.getAllUsers();
+      try {
+        const users = await postgresUserDb.getAllUsers();
+        if (users && users.length > 0) return users;
+      } catch (err) {
+        console.warn("[Database] PostgreSQL getAllUsers failed, falling back to persistent store:", (err as any)?.message);
+      }
     }
     return this.getUsers();
   },
 
   async getUserByIdAsync(id: string): Promise<User | null> {
     if (isPostgresConfigured()) {
-      return postgresUserDb.getUserById(id);
+      try {
+        const user = await postgresUserDb.getUserById(id);
+        if (user) return user;
+      } catch (err) {
+        console.warn("[Database] PostgreSQL getUserById failed, falling back to persistent store:", (err as any)?.message);
+      }
     }
     return this.getUserById(id);
   },
 
   async getUserByEmailAsync(email: string): Promise<User | null> {
     if (isPostgresConfigured()) {
-      return postgresUserDb.getUserByEmail(email);
+      try {
+        const user = await postgresUserDb.getUserByEmail(email);
+        if (user) return user;
+      } catch (err) {
+        console.warn("[Database] PostgreSQL getUserByEmail failed, falling back to persistent store:", (err as any)?.message);
+      }
     }
     return this.getUserByEmail(email);
   },
 
   async getUserByGoogleIdAsync(googleId: string): Promise<User | null> {
     if (isPostgresConfigured()) {
-      return postgresUserDb.getUserByGoogleId(googleId);
+      try {
+        const user = await postgresUserDb.getUserByGoogleId(googleId);
+        if (user) return user;
+      } catch (err) {
+        console.warn("[Database] PostgreSQL getUserByGoogleId failed, falling back to persistent store:", (err as any)?.message);
+      }
     }
     return this.getUserByGoogleId(googleId);
   },
 
   async getUserByPhoneAsync(phone: string): Promise<User | null> {
     if (isPostgresConfigured()) {
-      return postgresUserDb.getUserByPhone(phone);
+      try {
+        const user = await postgresUserDb.getUserByPhone(phone);
+        if (user) return user;
+      } catch (err) {
+        console.warn("[Database] PostgreSQL getUserByPhone failed, falling back to persistent store:", (err as any)?.message);
+      }
     }
     return this.getUserByPhone(phone);
   },
 
   async createUserAsync(userData: Partial<User> & { email: string; name: string }): Promise<User> {
+    let pgUser: User | null = null;
     if (isPostgresConfigured()) {
-      return postgresUserDb.createUser(userData);
+      try {
+        pgUser = await postgresUserDb.createUser(userData);
+      } catch (err) {
+        console.warn("[Database] PostgreSQL createUser failed, writing to persistent store:", (err as any)?.message);
+      }
     }
-    return this.createUser(userData);
+    const localUser = this.createUser(userData);
+    return pgUser || localUser;
   },
 
   async updateUserAsync(id: string, updates: Partial<User>): Promise<User | null> {
+    let pgUser: User | null = null;
     if (isPostgresConfigured()) {
-      return postgresUserDb.updateUser(id, updates);
+      try {
+        pgUser = await postgresUserDb.updateUser(id, updates);
+      } catch (err) {
+        console.warn("[Database] PostgreSQL updateUser failed, falling back to persistent store:", (err as any)?.message);
+      }
     }
-    return this.updateUser(id, updates);
+    const localUser = this.updateUser(id, updates);
+    return pgUser || localUser;
   },
 
   async deleteUserAsync(id: string): Promise<boolean> {
+    let pgDeleted = false;
     if (isPostgresConfigured()) {
-      return postgresUserDb.deleteUser(id);
+      try {
+        pgDeleted = await postgresUserDb.deleteUser(id);
+      } catch (err) {
+        console.warn("[Database] PostgreSQL deleteUser failed, falling back to persistent store:", (err as any)?.message);
+      }
     }
-    return this.deleteUser(id);
+    const localDeleted = this.deleteUser(id);
+    return pgDeleted || localDeleted;
   },
 
   async upsertUserAsync(userData: Partial<User> & { email: string }): Promise<User> {
+    let pgUser: User | null = null;
     if (isPostgresConfigured()) {
-      return postgresUserDb.upsertUser(userData);
+      try {
+        pgUser = await postgresUserDb.upsertUser(userData);
+      } catch (err) {
+        console.warn("[Database] PostgreSQL upsertUser failed, falling back to persistent store:", (err as any)?.message);
+      }
     }
-    return this.upsertUser(userData);
+    const localUser = this.upsertUser(userData);
+    return pgUser || localUser;
   },
 
   getGmailConnection(): GmailConnection | null {
@@ -2161,16 +2210,41 @@ export const db = {
   setTeacherAssignment(assignment: Omit<TeacherAssignment, "id" | "assignedAt"> & { id?: string }): TeacherAssignment {
     const store = loadStore();
     if (!store.teacherAssignments) store.teacherAssignments = [];
-    
+
+    // Auto-resolve teacher details if missing
+    const userObj = (store.users || []).find(
+      (u) =>
+        u.id === assignment.teacherId ||
+        u.email.toLowerCase() === assignment.teacherId.toLowerCase()
+    );
+    const resolvedTeacherId = userObj ? userObj.id : assignment.teacherId;
+    const resolvedName = assignment.teacherName || userObj?.name || assignment.teacherId;
+    const resolvedEmail = assignment.teacherEmail || userObj?.email || "";
+
     const existingIndex = assignment.id
       ? store.teacherAssignments.findIndex((a) => a.id === assignment.id)
       : store.teacherAssignments.findIndex(
-          (a) => a.teacherId === assignment.teacherId && a.subjectCode === assignment.subjectCode
+          (a) => a.teacherId === resolvedTeacherId && a.subjectCode === assignment.subjectCode
         );
+
+    const parsedGrades = assignment.grades && assignment.grades.length > 0
+      ? Array.from(new Set(assignment.grades.map(Number))).filter((g) => g >= 1 && g <= 5).sort((a, b) => a - b)
+      : [];
+    const parsedClasses = parsedGrades.map((g) => `Class ${g}`);
+    const parsedClassroomIds = assignment.classroomIds && assignment.classroomIds.length > 0
+      ? assignment.classroomIds
+      : parsedGrades.map((g) => `cls-${g}a`);
+
     if (existingIndex >= 0) {
       const updated: TeacherAssignment = {
         ...store.teacherAssignments[existingIndex],
         ...assignment,
+        teacherId: resolvedTeacherId,
+        teacherName: resolvedName,
+        teacherEmail: resolvedEmail,
+        grades: parsedGrades,
+        classes: parsedClasses,
+        classroomIds: parsedClassroomIds,
         updatedAt: new Date().toISOString(),
       };
       store.teacherAssignments[existingIndex] = updated;
@@ -2179,15 +2253,15 @@ export const db = {
     } else {
       const newAssignment: TeacherAssignment = {
         id: assignment.id || `asg-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
-        teacherId: assignment.teacherId,
-        teacherName: assignment.teacherName,
-        teacherEmail: assignment.teacherEmail,
-        schoolId: assignment.schoolId,
+        teacherId: resolvedTeacherId,
+        teacherName: resolvedName,
+        teacherEmail: resolvedEmail,
+        schoolId: assignment.schoolId || userObj?.schoolId || "sch-gn-01",
         subjectCode: assignment.subjectCode,
-        classroomIds: assignment.classroomIds || [],
-        grades: assignment.grades || [],
-        classes: assignment.classes || (assignment.grades ? assignment.grades.map((g) => `Class ${g}`) : []),
-        isClassTeacher: assignment.isClassTeacher,
+        classroomIds: parsedClassroomIds,
+        grades: parsedGrades,
+        classes: parsedClasses,
+        isClassTeacher: Boolean(assignment.isClassTeacher),
         assignedAt: new Date().toISOString(),
       };
       store.teacherAssignments.push(newAssignment);

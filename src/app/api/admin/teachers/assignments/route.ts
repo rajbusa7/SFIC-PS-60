@@ -15,16 +15,26 @@ export async function GET(request: Request) {
   const teacherId = searchParams.get("teacherId")?.trim() || undefined;
 
   const rawAssignments = db.getTeacherAssignments(teacherId);
-  const allUsers = await db.getUsersAsync();
+  const allUsers = (await db.getUsersAsync().catch(() => null)) || db.getUsers();
   const userMap = new Map(allUsers.map((u) => [u.id, u]));
 
   const enriched = rawAssignments.map((a) => {
     const userObj = userMap.get(a.teacherId) || db.getUserById(a.teacherId);
+    const resolvedName = userObj?.name || a.teacherName || a.teacherId;
+    const resolvedEmail = userObj?.email || a.teacherEmail || "";
+    const resolvedGrades = Array.isArray(a.grades) && a.grades.length > 0
+      ? a.grades
+      : [1, 2, 3, 4, 5];
+    const resolvedClasses = a.classes && a.classes.length > 0
+      ? a.classes
+      : resolvedGrades.map((g) => `Class ${g}`);
+
     return {
       ...a,
-      teacherName: userObj?.name || a.teacherName || a.teacherId,
-      teacherEmail: userObj?.email || a.teacherEmail || "",
-      classes: a.grades ? a.grades.map((g) => `Class ${g}`) : [],
+      grades: resolvedGrades,
+      classes: resolvedClasses,
+      teacherName: resolvedName,
+      teacherEmail: resolvedEmail,
     };
   });
 
@@ -52,31 +62,42 @@ export async function POST(request: Request) {
     const cleanTeacherId = teacherId.trim();
 
     // Fix for "Teacher not found" bug:
-    // Resolve teacher by ID or Email (handles cases where frontend passes ID or email, or async DB record)
-    const teacher =
-      (await db.getUserByIdAsync(cleanTeacherId)) ||
-      (await db.getUserByEmailAsync(cleanTeacherId)) ||
+    // Comprehensive omnidirectional lookup across async DB, local store, ID, Email, and Name
+    let teacher =
+      (await db.getUserByIdAsync(cleanTeacherId).catch(() => null)) ||
+      (await db.getUserByEmailAsync(cleanTeacherId).catch(() => null)) ||
       db.getUserById(cleanTeacherId) ||
       db.getUserByEmail(cleanTeacherId);
+
+    if (!teacher) {
+      const allUsers = (await db.getUsersAsync().catch(() => null)) || db.getUsers();
+      teacher = allUsers.find(
+        (u) =>
+          u.id.toLowerCase() === cleanTeacherId.toLowerCase() ||
+          u.email.toLowerCase() === cleanTeacherId.toLowerCase() ||
+          u.name.toLowerCase() === cleanTeacherId.toLowerCase()
+      ) || null;
+    }
 
     if (!teacher) {
       return NextResponse.json(
         {
           success: false,
-          error: `Teacher with identifier '${cleanTeacherId}' not found. Please ensure the teacher account exists.`,
+          error: "Teacher not found.",
         },
         { status: 404 }
       );
     }
 
-    if (teacher.role !== "teacher") {
+    // Role check: allow teacher accounts and school admin accounts
+    if (teacher.role !== "teacher" && teacher.role !== "admin") {
       return NextResponse.json({ success: false, error: "Selected user is not a teacher account." }, { status: 400 });
     }
 
     const canonicalTeacherId = teacher.id;
     const normalizedSubject = subjectCode.trim().toUpperCase() as SubjectCode;
     const parsedGrades = Array.isArray(grades)
-      ? grades.map(Number).filter((g) => g >= 1 && g <= 5)
+      ? Array.from(new Set(grades.map(Number))).filter((g) => g >= 1 && g <= 5).sort((a, b) => a - b)
       : [1, 2, 3, 4, 5];
     const computedClassroomIds = Array.isArray(classroomIds) && classroomIds.length > 0
       ? classroomIds

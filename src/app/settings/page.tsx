@@ -51,105 +51,25 @@ export default function SettingsPage() {
   const { user, role } = useAuth();
   const isAdmin = user?.role === "admin" || role === "admin";
 
-  const [teachersList, setTeachersList] = useState<any[]>([]);
-  const [adminAssignments, setAdminAssignments] = useState<TeacherAssignment[]>([]);
   const [auditLogsList, setAuditLogsList] = useState<AuditLogEntry[]>([]);
-  const [assignTeacherId, setAssignTeacherId] = useState("");
-  const [assignSubject, setAssignSubject] = useState<SubjectCode>("MATH");
-  const [assignGrades, setAssignGrades] = useState<number[]>([1, 2, 3]);
-  const [assignSaving, setAssignSaving] = useState(false);
-  const [assignError, setAssignError] = useState<string | null>(null);
-  const [assignSuccess, setAssignSuccess] = useState<string | null>(null);
 
-  const fetchAdminData = async () => {
+  const fetchAuditLogs = async () => {
     try {
-      const [uRes, aRes, logRes] = await Promise.all([
-        fetch("/api/admin/users", { cache: "no-store" }),
-        fetch("/api/admin/teachers/assignments", { cache: "no-store" }),
-        fetch("/api/admin/audit-logs", { cache: "no-store" }),
-      ]);
-      const [uData, aData, logData] = await Promise.all([uRes.json(), aRes.json(), logRes.json()]);
-      if (uData.success) {
-        const teachers = (uData.users || []).filter((u: any) => u.role === "teacher");
-        setTeachersList(teachers);
-        if (teachers.length > 0 && !assignTeacherId) {
-          setAssignTeacherId(teachers[0].id);
-        }
-      }
-      if (aData.success) {
-        setAdminAssignments(aData.assignments || []);
-      }
+      const logRes = await fetch("/api/admin/audit-logs", { cache: "no-store" });
+      const logData = await logRes.json();
       if (logData.success) {
         setAuditLogsList(logData.auditLogs || []);
       }
     } catch (e) {
-      console.warn("Failed to fetch admin data", e);
+      console.warn("Failed to fetch audit logs", e);
     }
   };
 
   useEffect(() => {
-    fetchAdminData();
-  }, []);
-
-  const handleToggleGrade = (gradeNum: number) => {
-    setAssignGrades((prev) =>
-      prev.includes(gradeNum) ? prev.filter((g) => g !== gradeNum) : [...prev, gradeNum].sort((a, b) => a - b)
-    );
-  };
-
-  const handleCreateAssignment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!assignTeacherId) {
-      setAssignError("Please select a teacher.");
-      return;
+    if (isAdmin) {
+      fetchAuditLogs();
     }
-    if (assignGrades.length === 0) {
-      setAssignError("Please select at least one class.");
-      return;
-    }
-    setAssignSaving(true);
-    setAssignError(null);
-    setAssignSuccess(null);
-
-    try {
-      const classroomIds = assignGrades.map((g) => `cls-${g}a`);
-      const res = await fetch("/api/admin/teachers/assignments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          teacherId: assignTeacherId,
-          subjectCode: assignSubject,
-          classroomIds,
-          grades: assignGrades,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || "Failed to create assignment.");
-      }
-      setAssignSuccess("Teacher assignment saved successfully.");
-      fetchAdminData();
-      setTimeout(() => setAssignSuccess(null), 3500);
-    } catch (err: any) {
-      setAssignError(err.message || "Failed to save assignment.");
-    } finally {
-      setAssignSaving(false);
-    }
-  };
-
-  const handleDeleteAssignment = async (assignmentId: string) => {
-    try {
-      const res = await fetch(`/api/admin/teachers/assignments/${assignmentId}`, {
-        method: "DELETE",
-      });
-      const data = await res.json();
-      if (data.success) {
-        fetchAdminData();
-      }
-    } catch (e) {
-      console.error("Failed to delete assignment", e);
-    }
-  };
+  }, [isAdmin]);
 
   const handleResetTutorial = () => {
     resetTutorial();

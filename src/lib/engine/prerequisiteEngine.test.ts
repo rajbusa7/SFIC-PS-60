@@ -5,6 +5,7 @@ import {
   getAllPrerequisites,
   getAllDependents,
   resolveConceptNode,
+  buildLearningGapMap,
   CONCEPT_DEPENDENCY_GRAPH,
 } from "./prerequisiteEngine";
 
@@ -160,5 +161,68 @@ test("Prerequisite & Root-Cause Analysis Engine - Comprehensive Test Suite", asy
     const names = dependents.map((d) => d.name);
     assert.ok(names.includes("Regrouping"));
     assert.ok(names.includes("3-Digit Addition"));
+  });
+  await t.test("8. Learning Gap Map: constructs Skip Counting -> Multiplication Tables -> Multiplication -> Division graph with statuses & roles", () => {
+    const map = buildLearningGapMap({
+      conceptId: "c-div-01",
+      conceptName: "Division Basics & Equal Sharing",
+      currentScore: 35,
+      dynamicRootConcept: { id: "c-mult-01", name: "Multiplication Tables" },
+      dynamicIsRootGapIdentified: true,
+      dynamicStatus: "Needs Support",
+    });
+
+    assert.ok(map.nodes.length >= 4);
+    const nodeNames = map.nodes.map((n) => n.name);
+    assert.ok(nodeNames.includes("Skip Counting"));
+    assert.ok(nodeNames.includes("Multiplication Tables"));
+    assert.ok(nodeNames.includes("Multiplication"));
+    assert.ok(nodeNames.includes("Division"));
+
+    // Check roles
+    const rootNode = map.nodes.find((n) => n.role === "ROOT GAP");
+    assert.ok(rootNode);
+    assert.equal(rootNode.name, "Multiplication Tables");
+    assert.equal(rootNode.status, "Needs Support");
+
+    const currentNode = map.nodes.find((n) => n.role === "CURRENT GAP");
+    assert.ok(currentNode);
+    assert.equal(currentNode.name, "Division");
+    assert.equal(currentNode.status, "Needs Support");
+
+    // Check upstream prerequisite before root
+    const skipCounting = map.nodes.find((n) => n.name === "Skip Counting");
+    assert.ok(skipCounting);
+    assert.equal(skipCounting.status, "Mastered");
+
+    // Check recommended learning order
+    assert.ok(map.recommendedLearningOrder.length >= 3);
+    assert.equal(map.recommendedLearningOrder[0], "Multiplication Tables");
+    assert.ok(map.recommendedLearningOrder.includes("Division"));
+  });
+
+  await t.test("9. Learning Gap Map: models 3-Digit Addition with Regrouping as ROOT GAP and downstream affected concepts", () => {
+    const map = buildLearningGapMap({
+      conceptId: "c-place-01",
+      conceptName: "3-Digit Addition",
+      currentScore: 48,
+      dynamicRootConcept: { id: "c-math-regroup", name: "Regrouping" },
+      dynamicIsRootGapIdentified: true,
+      dynamicStatus: "Needs Support",
+    });
+
+    const root = map.rootGap;
+    assert.ok(root);
+    assert.equal(root.name, "Regrouping");
+    assert.equal(root.status, "Needs Support");
+
+    const current = map.currentGap;
+    assert.ok(current);
+    assert.equal(current.name, "3-Digit Addition");
+
+    // Check statuses on each node
+    for (const node of map.nodes) {
+      assert.ok(["Needs Support", "Developing", "Mastered"].includes(node.status));
+    }
   });
 });

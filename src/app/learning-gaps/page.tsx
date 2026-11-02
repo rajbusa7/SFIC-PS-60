@@ -15,6 +15,7 @@ import { ContextualHelp } from "@/components/shared/ContextualHelp";
 import { calculateGapSeverity } from "@/lib/engine/severityEngine";
 import { diagnoseLearningGap } from "@/lib/engine/diagnosisEngine";
 import { analyzeRootCause } from "@/lib/engine/prerequisiteEngine";
+import { LearningGapMap } from "@/components/learning-gaps/LearningGapMap";
 import {
   AlertTriangle,
   ClipboardList,
@@ -56,6 +57,16 @@ export default function LearningGapsPage() {
 
   // Expandable prerequisite root-cause & learning path state
   const [expandedLearningPathGapIds, setExpandedLearningPathGapIds] = useState<Record<string, boolean>>({});
+
+  // Expandable Learning Gap Map state
+  const [expandedMapGapIds, setExpandedMapGapIds] = useState<Record<string, boolean>>({});
+
+  const toggleGapMap = (gapId: string) => {
+    setExpandedMapGapIds((prev) => ({
+      ...prev,
+      [gapId]: !prev[gapId],
+    }));
+  };
 
   const toggleLearningPath = (gapId: string) => {
     setExpandedLearningPathGapIds((prev) => ({
@@ -604,6 +615,26 @@ export default function LearningGapsPage() {
                     <Button
                       variant="outline"
                       size="sm"
+                      onClick={() => toggleGapMap(gap.id)}
+                      className={`rounded-full text-xs transition-colors border ${
+                        expandedMapGapIds[gap.id]
+                          ? "bg-[#F2CAB3] text-[#49352F] border-[#B26A1B]/40 font-bold"
+                          : "bg-white hover:bg-[#F2CAB3]/40 text-[#49352F] border-[#49352F]/15"
+                      }`}
+                      aria-expanded={Boolean(expandedMapGapIds[gap.id])}
+                    >
+                      <GitFork className="w-3.5 h-3.5 mr-1 text-[#B26A1B]" />
+                      <span>{expandedMapGapIds[gap.id] ? "Hide Gap Map" : "Learning Gap Map"}</span>
+                      {expandedMapGapIds[gap.id] ? (
+                        <ChevronUp className="w-3.5 h-3.5 ml-1" />
+                      ) : (
+                        <ChevronDown className="w-3.5 h-3.5 ml-1" />
+                      )}
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => {
                         setTargetGapForReassessment(gap);
                         setReassessModalOpen(true);
@@ -1001,6 +1032,13 @@ export default function LearningGapsPage() {
                     </div>
                   </div>
                 </div>
+
+                {/* Expandable Learning Gap Map */}
+                {expandedMapGapIds[gap.id] && (
+                  <div className="pt-2 border-t border-[#49352F]/10">
+                    <LearningGapMap gap={gap} studentName={gap.studentName} />
+                  </div>
+                )}
               </Card>
             );
           })}

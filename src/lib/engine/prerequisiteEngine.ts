@@ -21,9 +21,20 @@ import type {
   LearningPathStep,
   ConfidenceLevel,
   QuestionEvidenceItem,
+  LearningGapMapNode,
+  LearningGapMapData,
+  MapNodeRole,
+  MasteryStatus,
 } from "../types";
 
-export type { ConceptDependencyNode, PrerequisiteAnalysisResult, LearningPathStep };
+export type {
+  ConceptDependencyNode,
+  PrerequisiteAnalysisResult,
+  LearningPathStep,
+  LearningGapMapNode,
+  LearningGapMapData,
+  MapNodeRole,
+};
 
 /**
  * Standardized Concept Dependency Graph
@@ -601,5 +612,201 @@ export function analyzeRootCause(input: RootCauseAnalysisInput): PrerequisiteAna
     rootCauseExplanation: `Prerequisites exist (${prerequisiteConcepts.join(", ")}), but student assessment history has no verified evaluations on them. Do not assume prerequisite failure without diagnostic testing.`,
     insufficientEvidenceWarning:
       "Insufficient evidence to isolate root cause — run a short 3-question prerequisite diagnostic before prescribing multi-step remediation.",
+  };
+}
+
+
+/**
+ * Options accepted by buildLearningGapMap
+ */
+export interface BuildGapMapOptions {
+  conceptId?: string;
+  conceptName?: string;
+  subjectCode?: any;
+  currentScore?: number;
+  latestPercentage?: number;
+  previousScore?: number;
+  previousPercentage?: number;
+  dynamicStatus?: string;
+  masteryStatus?: string;
+  dynamicRootConcept?: { id: string; name: string; nameGujarati?: string };
+  rootConcept?: { id: string; name: string; nameGujarati?: string };
+  dynamicAffectedConcept?: { id: string; name: string; nameGujarati?: string };
+  affectedConcept?: { id: string; name: string; nameGujarati?: string };
+  dynamicPrerequisiteConcepts?: string[];
+  prerequisiteConcepts?: string[];
+  dynamicDependentConcepts?: string[];
+  dependentConcepts?: string[];
+  dynamicRecommendedLearningOrder?: string[];
+  recommendedLearningOrder?: string[];
+  dynamicLearningPath?: LearningPathStep[];
+  learningPath?: LearningPathStep[];
+  dynamicIsRootGapIdentified?: boolean;
+  isRootGapIdentified?: boolean;
+  errorPatternDetected?: string;
+  reason?: string;
+  gapType?: string;
+  dynamicGapType?: string;
+}
+
+/**
+ * Builds a visual Learning Gap Map data structure for a student gap.
+ * Identifies:
+ * 1. ROOT GAP (the unmastered foundational prerequisite)
+ * 2. CURRENT GAP (the flagged target concept)
+ * 3. AFFECTED CONCEPTS (downstream dependent competencies blocked by the gap)
+ * 4. RECOMMENDED LEARNING ORDER (topological remediation order)
+ * 5. STATUS on each node (Needs Support, Developing, Mastered)
+ */
+export function buildLearningGapMap(gap: BuildGapMapOptions): LearningGapMapData {
+  const conceptName = gap.conceptName || gap.affectedConcept?.name || gap.dynamicAffectedConcept?.name || "";
+  const conceptId = gap.conceptId || gap.affectedConcept?.id || gap.dynamicAffectedConcept?.id || "";
+
+  // 1. Resolve Target Concept in Graph
+  let targetNode = resolveConceptNode(conceptId) || resolveConceptNode(conceptName);
+  if (!targetNode) {
+    targetNode = {
+      id: conceptId || "c-target",
+      name: conceptName || "Target Concept",
+      subjectCode: gap.subjectCode,
+      prerequisites: [],
+      grade: 3,
+      description: "Target curricular concept.",
+    };
+  }
+
+  // 2. Resolve Prerequisites & Downstream Dependents
+  const prereqNodes = getAllPrerequisites(targetNode.id);
+  const dependentNodes = getAllDependents(targetNode.id);
+
+  // 3. Resolve Root Gap (if identified)
+  let rootNodeId: string | undefined =
+    gap.dynamicRootConcept?.id || gap.rootConcept?.id;
+  let rootNodeName: string | undefined =
+    gap.dynamicRootConcept?.name || gap.rootConcept?.name;
+
+  if (!rootNodeId && !rootNodeName && (gap.dynamicIsRootGapIdentified ?? gap.isRootGapIdentified)) {
+    const analysis = analyzeRootCause({
+      affectedConceptId: targetNode.id,
+      affectedConceptName: targetNode.name,
+      studentScore: gap.currentScore ?? gap.latestPercentage ?? 40,
+      errorPattern: gap.errorPatternDetected || gap.reason,
+    });
+    if (analysis.isRootGapIdentified && analysis.rootConcept) {
+      rootNodeId = analysis.rootConcept.id;
+      rootNodeName = analysis.rootConcept.name;
+    }
+  }
+
+  // Check if target itself or one of the prereq nodes is the identified root
+  let identifiedRootPrereq: ConceptDependencyNode | undefined;
+  if (rootNodeId || rootNodeName) {
+    identifiedRootPrereq = prereqNodes.find(
+      (p) => p.id === rootNodeId || (rootNodeName && p.name.toLowerCase() === rootNodeName.toLowerCase())
+    );
+  }
+
+  // Determine Current Gap status
+  const currentStatusRaw = gap.dynamicStatus || gap.masteryStatus;
+  let currentStatus: MasteryStatus = "Needs Support";
+  if (currentStatusRaw === "Mastered") {
+    currentStatus = "Mastered";
+  } else if (currentStatusRaw === "Developing") {
+    currentStatus = "Developing";
+  } else {
+    currentStatus = "Needs Support";
+  }
+
+  // 4. Construct complete ordered node sequence:
+  // [...prereqs, targetNode, ...dependents]
+  const allChainNodes: ConceptDependencyNode[] = [...prereqNodes, targetNode, ...dependentNodes];
+
+  const rootIndex = identifiedRootPrereq
+    ? allChainNodes.findIndex((n) => n.id === identifiedRootPrereq!.id)
+    : -1;
+  const targetIndex = allChainNodes.findIndex((n) => n.id === targetNode.id);
+
+  const nodes: LearningGapMapNode[] = allChainNodes.map((node, idx) => {
+    const isRoot = Boolean(identifiedRootPrereq && node.id === identifiedRootPrereq.id);
+    const isCurrent = node.id === targetNode.id;
+    const isAffected = idx > targetIndex;
+
+    let role: MapNodeRole;
+    if (isRoot) {
+      role = "ROOT GAP";
+    } else if (isCurrent) {
+      role = "CURRENT GAP";
+    } else if (isAffected) {
+      role = "AFFECTED CONCEPT";
+    } else {
+      role = "FOUNDATIONAL PREREQUISITE";
+    }
+
+    let status: MasteryStatus;
+    let note: string | undefined;
+
+    if (isRoot) {
+      status = "Needs Support";
+      note = "Root obstacle: Unmastered foundational prerequisite causing downstream failure. Remediate first.";
+    } else if (isCurrent) {
+      status = currentStatus;
+      note =
+        status === "Mastered"
+          ? "Target concept mastered with verified classroom retention."
+          : `Current roadblock flagged for intervention (${gap.currentScore ?? gap.latestPercentage ?? 35}%).`;
+    } else if (isAffected) {
+      status = "Needs Support";
+      note = "Downstream competency currently blocked or impaired by upstream gaps.";
+    } else if (rootIndex >= 0 && idx < rootIndex) {
+      status = "Mastered";
+      note = "Foundational competency verified intact.";
+    } else if (rootIndex >= 0 && idx > rootIndex && idx < targetIndex) {
+      status = "Developing";
+      note = "Intermediate bridge competency requiring reinforcement once root is fixed.";
+    } else {
+      status = "Mastered";
+      note = "Prerequisite concept supporting this curricular strand.";
+    }
+
+    return {
+      id: node.id,
+      name: node.name,
+      nameGujarati: node.nameGujarati,
+      role,
+      status,
+      grade: node.grade,
+      orderIndex: idx + 1,
+      note,
+      isRoot,
+      isCurrent,
+      isAffected,
+      prerequisites: node.prerequisites || [],
+    };
+  });
+
+  const rootGap = nodes.find((n) => n.isRoot);
+  const currentGap = nodes.find((n) => n.isCurrent) || nodes[0];
+  const affectedConcepts = nodes.filter((n) => n.isAffected);
+
+  // 5. Generate "Recommended Learning Order"
+  let recommendedLearningOrder: string[] = [];
+  if (rootGap) {
+    const rootPos = nodes.findIndex((n) => n.id === rootGap.id);
+    const pathNodes = nodes.slice(rootPos);
+    recommendedLearningOrder = pathNodes.map((n) => n.name);
+  } else {
+    recommendedLearningOrder = nodes.map((n) => n.name);
+  }
+
+  recommendedLearningOrder = Array.from(new Set(recommendedLearningOrder));
+
+  return {
+    nodes,
+    rootGap,
+    currentGap,
+    affectedConcepts,
+    recommendedLearningOrder,
+    totalNodes: nodes.length,
+    subjectCode: targetNode.subjectCode || gap.subjectCode,
   };
 }

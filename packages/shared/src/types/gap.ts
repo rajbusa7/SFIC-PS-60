@@ -148,3 +148,35 @@ export interface LearningGap {
   diagnosisType?: any;
   trendLabel?: string;
 }
+
+export type MapNodeRole =
+  | "ROOT GAP"
+  | "CURRENT GAP"
+  | "AFFECTED CONCEPT"
+  | "FOUNDATIONAL PREREQUISITE";
+
+export interface LearningGapMapNode {
+  id: string;
+  name: string;
+  nameGujarati?: string;
+  role: MapNodeRole;
+  status: MasteryStatus;
+  statusScore?: number;
+  grade?: number;
+  orderIndex: number;
+  note?: string;
+  isRoot: boolean;
+  isCurrent: boolean;
+  isAffected: boolean;
+  prerequisites: string[];
+}
+
+export interface LearningGapMapData {
+  nodes: LearningGapMapNode[];
+  rootGap?: LearningGapMapNode;
+  currentGap: LearningGapMapNode;
+  affectedConcepts: LearningGapMapNode[];
+  recommendedLearningOrder: string[];
+  totalNodes: number;
+  subjectCode?: string;
+}

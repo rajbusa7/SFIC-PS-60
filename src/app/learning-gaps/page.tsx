@@ -16,6 +16,12 @@ import { calculateGapSeverity } from "@/lib/engine/severityEngine";
 import { diagnoseLearningGap } from "@/lib/engine/diagnosisEngine";
 import { analyzeRootCause } from "@/lib/engine/prerequisiteEngine";
 import { LearningGapMap } from "@/components/learning-gaps/LearningGapMap";
+import { ClassLearningGapHeatmap } from "@/components/learning-gaps/ClassLearningGapHeatmap";
+import {
+  getClassLearningGapHeatmap,
+  filterGapsByHeatmap,
+  ClassHeatmapFilter,
+} from "@/lib/engine/classHeatmapEngine";
 import {
   AlertTriangle,
   ClipboardList,
@@ -60,6 +66,10 @@ export default function LearningGapsPage() {
 
   // Expandable Learning Gap Map state
   const [expandedMapGapIds, setExpandedMapGapIds] = useState<Record<string, boolean>>({});
+
+  // Class Learning Gap Heatmap filter state
+  const [heatmapFilter, setHeatmapFilter] = useState<ClassHeatmapFilter | null>(null);
+  const [selectedClass, setSelectedClass] = useState<string>("cls-4a");
 
   const toggleGapMap = (gapId: string) => {
     setExpandedMapGapIds((prev) => ({
@@ -330,7 +340,16 @@ export default function LearningGapsPage() {
     };
   });
 
-  const filteredGaps = processedGaps.filter((g) => {
+  const heatmapData = React.useMemo(() => {
+    return getClassLearningGapHeatmap(gaps, selectedClass);
+  }, [gaps, selectedClass]);
+
+  // When a heatmap cell is active, use the students from that competency/status cohort
+  const baseGapsToDisplay = React.useMemo(() => {
+    return filterGapsByHeatmap(heatmapFilter, heatmapData, processedGaps);
+  }, [heatmapFilter, heatmapData, processedGaps]);
+
+  const filteredGaps = baseGapsToDisplay.filter((g) => {
     if (priorityFilter !== "all") {
       const cleanFilter = priorityFilter.toLowerCase().replace(/\s*priority$/i, "");
       const gapPriority = String(g.dynamicPriority || g.severityLevel || g.priority || "").toLowerCase().replace(/\s*priority$/i, "");
@@ -474,6 +493,15 @@ export default function LearningGapsPage() {
           </div>
         </Card>
 
+        {/* 2. CLASS LEARNING GAP HEATMAP (Cross-competency cohort distribution) */}
+        <ClassLearningGapHeatmap
+          heatmapData={heatmapData}
+          activeFilter={heatmapFilter}
+          onSelectFilter={setHeatmapFilter}
+          selectedClass={selectedClass}
+          onSelectClass={setSelectedClass}
+        />
+
         {/* Filter Controls */}
         <Card variant="glass" className="p-3.5 flex flex-wrap items-center justify-between gap-3 border-[#49352F]/15 bg-white text-[#49352F] shadow-xs">
           <div className="flex flex-wrap items-center gap-3">
@@ -509,9 +537,24 @@ export default function LearningGapsPage() {
             </div>
           </div>
 
-          <span className="text-xs text-[#7A6862]">
-            Showing {filteredGaps.length} detected learning gaps
-          </span>
+          <div className="flex items-center gap-2">
+            {heatmapFilter && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-[#FAF6E9] border border-[#B26A1B]/30 text-[#8D4E10]">
+                <span>Heatmap Filter: <strong>{heatmapFilter.competencyName}</strong> ({heatmapFilter.status})</span>
+                <button
+                  type="button"
+                  onClick={() => setHeatmapFilter(null)}
+                  className="ml-1 text-[#C54738] hover:text-[#991B1B] cursor-pointer"
+                  title="Clear heatmap filter"
+                >
+                  ✕
+                </button>
+              </span>
+            )}
+            <span className="text-xs text-[#7A6862]">
+              Showing {filteredGaps.length} detected learning {filteredGaps.length === 1 ? "gap" : "gaps"}
+            </span>
+          </div>
         </Card>
 
         {/* 2. EXPLAINABLE AI GAP CARDS LIST */}

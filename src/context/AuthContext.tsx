@@ -91,15 +91,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const saveUserStorage = useCallback((u: User | null) => {
+  const saveUserStorage = useCallback((u: User | null, asgs?: TeacherAssignment[]) => {
     if (typeof window === "undefined") return;
     if (u) {
       const serialized = JSON.stringify(u);
       localStorage.setItem("studysaathi_user", serialized);
       localStorage.setItem("shikshasetu_user", serialized);
+      if (asgs) {
+        localStorage.setItem("studysaathi_assignments", JSON.stringify(asgs));
+      }
     } else {
       localStorage.removeItem("studysaathi_user");
       localStorage.removeItem("shikshasetu_user");
+      localStorage.removeItem("studysaathi_assignments");
       localStorage.removeItem("shikshasetu_selected_subject");
     }
   }, []);
@@ -128,6 +132,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             if (data.assignments && Array.isArray(data.assignments)) {
               setAssignments(data.assignments);
+              saveUserStorage(resolvedUser, data.assignments);
               const storedSub = typeof window !== "undefined" ? (localStorage.getItem("shikshasetu_selected_subject") as SubjectCode) : null;
               if (storedSub && data.assignments.some((a: TeacherAssignment) => a.subjectCode === storedSub)) {
                 setSelectedSubjectState(storedSub);
@@ -157,6 +162,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const resolvedUser = { ...parsed, has_seen_tutorial: stored !== null ? stored === "true" : (parsed.has_seen_tutorial ?? false) };
             setUser(resolvedUser);
             setIsDemoMode(false);
+
+            // Hydrate assignments immediately to prevent empty state flicker
+            const savedAsgs = localStorage.getItem("studysaathi_assignments");
+            if (savedAsgs) {
+              try {
+                const parsedAsgs = JSON.parse(savedAsgs);
+                if (Array.isArray(parsedAsgs) && parsedAsgs.length > 0) {
+                  setAssignments(parsedAsgs);
+                  if (parsedAsgs.length === 1) {
+                    setSelectedSubjectState(parsedAsgs[0].subjectCode);
+                  }
+                }
+              } catch {}
+            }
           } else {
             setUser(null);
           }
@@ -200,7 +219,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const resolvedUser = { ...realUser, has_seen_tutorial: stored !== null ? stored === "true" : (realUser.has_seen_tutorial ?? false) };
     setUser(resolvedUser);
     setIsDemoMode(false);
-    saveUserStorage(resolvedUser);
+    saveUserStorage(resolvedUser, realAssignments);
 
     if (realAssignments.length === 1) {
       setSelectedSubject(realAssignments[0].subjectCode);
@@ -271,7 +290,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     (sessionUser: User, newAssignments?: TeacherAssignment[]) => {
       setUser(sessionUser);
       setIsDemoMode(false);
-      saveUserStorage(sessionUser);
+      saveUserStorage(sessionUser, newAssignments);
       if (newAssignments) {
         setAssignments(newAssignments);
         if (newAssignments.length === 1) {

@@ -112,7 +112,10 @@ export async function authorizeTeacherAccess(
   }
 
   // Retrieve teacher assignments from trusted database
-  const assignments = db.getTeacherAssignments(user.id);
+  let assignments = db.getTeacherAssignments(user.id);
+  if ((!assignments || assignments.length === 0) && user.email) {
+    assignments = db.getTeacherAssignments(user.email);
+  }
   if (!assignments || assignments.length === 0) {
     return {
       authorized: false,

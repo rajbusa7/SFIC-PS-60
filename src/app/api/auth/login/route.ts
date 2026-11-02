@@ -45,11 +45,14 @@ export async function POST(request: Request) {
       updatedAt: user.updatedAt,
     };
 
-    const assignments = user.role === "teacher"
+    let assignments = user.role === "teacher"
       ? db.getTeacherAssignments(user.id)
       : user.role === "admin"
       ? db.getTeacherAssignments()
       : [];
+    if (user.role === "teacher" && assignments.length === 0 && user.email) {
+      assignments = db.getTeacherAssignments(user.email);
+    }
 
     const response = NextResponse.json({
       success: true,

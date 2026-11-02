@@ -369,12 +369,15 @@ export function TeacherManagementSection() {
     setAssignSuccess(null);
 
     try {
+      const targetTeacher = teachers.find((t) => t.id === selectedTeacherId);
       const classroomIds = assignGrades.map((g) => `cls-${g}a`);
       const res = await fetch("/api/admin/teachers/assignments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           teacherId: selectedTeacherId,
+          teacherEmail: targetTeacher?.email,
+          teacherName: targetTeacher?.name,
           subjectCode: assignSubject,
           classroomIds,
           grades: assignGrades,

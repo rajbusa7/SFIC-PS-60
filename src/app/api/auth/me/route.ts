@@ -27,11 +27,14 @@ export async function GET(request: Request) {
   }
 
   const effectiveUser = liveUser || session;
-  const assignments = effectiveUser.role === "teacher"
+  let assignments = effectiveUser.role === "teacher"
     ? db.getTeacherAssignments(effectiveUser.id)
     : effectiveUser.role === "admin"
     ? db.getTeacherAssignments()
     : [];
+  if (effectiveUser.role === "teacher" && assignments.length === 0 && effectiveUser.email) {
+    assignments = db.getTeacherAssignments(effectiveUser.email);
+  }
 
   return NextResponse.json({
     authenticated: true,

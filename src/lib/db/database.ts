@@ -1948,11 +1948,21 @@ export const db = {
   },
 
   getUserById(id: string): User | null {
+    if (!id || typeof id !== "string") return null;
     const store = loadStore();
-    return (store.users || []).find((u) => u.id === id) || null;
+    const clean = id.trim().toLowerCase();
+    return (
+      (store.users || []).find(
+        (u) =>
+          u.id.toLowerCase() === clean ||
+          (u.email && u.email.toLowerCase() === clean) ||
+          (u.googleId && u.googleId.toLowerCase() === clean)
+      ) || null
+    );
   },
 
   getUserByEmail(email: string): User | null {
+    if (!email || typeof email !== "string") return null;
     const store = loadStore();
     const normalized = email.trim().toLowerCase();
     return (store.users || []).find((u) => u.email.toLowerCase() === normalized) || null;
@@ -2285,8 +2295,82 @@ export const db = {
   getTeacherAssignments(teacherId?: string): TeacherAssignment[] {
     const store = loadStore();
     const assignments = store.teacherAssignments || [];
-    if (!teacherId) return assignments;
-    return assignments.filter((a) => a.teacherId === teacherId);
+    const users = store.users || [];
+
+    const SUBJECT_METADATA: Record<string, { nameEn: string; nameGu: string }> = {
+      MATH: { nameEn: "Mathematics", nameGu: "ગણિત" },
+      ENG: { nameEn: "English", nameGu: "અંગ્રેજી" },
+      GUJ: { nameEn: "Gujarati", nameGu: "ગુજરાતી" },
+      EVS: { nameEn: "Environmental Studies", nameGu: "પર્યાવરણ" },
+      SCI: { nameEn: "Science", nameGu: "વિજ્ઞાન" },
+      SST: { nameEn: "Social Science", nameGu: "સામાજિક વિજ્ઞાન" },
+      HIN: { nameEn: "Hindi", nameGu: "હિન્દી" },
+    };
+
+    const enrich = (a: TeacherAssignment): TeacherAssignment => {
+      const code = (a.subjectCode || "").toUpperCase() as SubjectCode;
+      const meta = SUBJECT_METADATA[code];
+      const subjectName = a.subjectName || (meta ? `${meta.nameEn} (${meta.nameGu})` : code);
+      const grades = Array.isArray(a.grades) && a.grades.length > 0 ? a.grades : [1, 2, 3, 4, 5];
+      const classes = a.classes && a.classes.length > 0 ? a.classes : grades.map((g) => `Class ${g}`);
+      const classroomIds = a.classroomIds && a.classroomIds.length > 0 ? a.classroomIds : grades.map((g) => `cls-${g}a`);
+
+      const userObj = users.find(
+        (u) =>
+          u.id.toLowerCase() === (a.teacherId || "").toLowerCase() ||
+          (u.email && u.email.toLowerCase() === (a.teacherEmail || "").toLowerCase()) ||
+          (u.email && u.email.toLowerCase() === (a.teacherId || "").toLowerCase())
+      );
+
+      return {
+        ...a,
+        subjectCode: code,
+        subjectName,
+        grades,
+        classes,
+        classroomIds,
+        teacherName: a.teacherName || userObj?.name || a.teacherId,
+        teacherEmail: a.teacherEmail || userObj?.email || "",
+      };
+    };
+
+    if (!teacherId) {
+      return assignments.map(enrich);
+    }
+
+    const cleanId = teacherId.trim().toLowerCase();
+    const validIds = new Set<string>([cleanId]);
+
+    // Find any user matching this ID, email, or googleId
+    const matchedUsers = users.filter(
+      (u) =>
+        u.id.toLowerCase() === cleanId ||
+        (u.email && u.email.toLowerCase() === cleanId) ||
+        (u.googleId && u.googleId.toLowerCase() === cleanId) ||
+        (u.name && u.name.toLowerCase() === cleanId)
+    );
+
+    for (const u of matchedUsers) {
+      validIds.add(u.id.toLowerCase());
+      if (u.email) validIds.add(u.email.toLowerCase());
+      if (u.googleId) validIds.add(u.googleId.toLowerCase());
+    }
+
+    // Also collect teacher emails/ids from assignments that match
+    for (const a of assignments) {
+      const aId = (a.teacherId || "").toLowerCase();
+      const aEmail = (a.teacherEmail || "").toLowerCase();
+      if (validIds.has(aId) && aEmail) validIds.add(aEmail);
+      if (validIds.has(aEmail) && aId) validIds.add(aId);
+    }
+
+    return assignments
+      .filter((a) => {
+        const aId = (a.teacherId || "").toLowerCase();
+        const aEmail = (a.teacherEmail || "").toLowerCase();
+        return validIds.has(aId) || validIds.has(aEmail);
+      })
+      .map(enrich);
   },
 
   getTeacherAssignmentById(id: string): TeacherAssignment | null {
@@ -2297,26 +2381,66 @@ export const db = {
   setTeacherAssignment(assignment: Omit<TeacherAssignment, "id" | "assignedAt"> & { id?: string }): TeacherAssignment {
     const store = loadStore();
     if (!store.teacherAssignments) store.teacherAssignments = [];
+    const users = store.users || [];
+
+    const SUBJECT_METADATA: Record<string, { nameEn: string; nameGu: string }> = {
+      MATH: { nameEn: "Mathematics", nameGu: "ગણિત" },
+      ENG: { nameEn: "English", nameGu: "અંગ્રેજી" },
+      GUJ: { nameEn: "Gujarati", nameGu: "ગુજરાતી" },
+      EVS: { nameEn: "Environmental Studies", nameGu: "પર્યાવરણ" },
+      SCI: { nameEn: "Science", nameGu: "વિજ્ઞાન" },
+      SST: { nameEn: "Social Science", nameGu: "સામાજિક વિજ્ઞાન" },
+      HIN: { nameEn: "Hindi", nameGu: "હિન્દી" },
+    };
 
     // Auto-resolve teacher details if missing
-    const userObj = (store.users || []).find(
-      (u) =>
-        u.id === assignment.teacherId ||
-        u.email.toLowerCase() === assignment.teacherId.toLowerCase()
-    );
+    const cleanInputId = (assignment.teacherId || "").trim().toLowerCase();
+    const cleanInputEmail = (assignment.teacherEmail || "").trim().toLowerCase();
+
+    // Priority 1: Exact ID match
+    const exactIdUser = users.find((u) => u.id.toLowerCase() === cleanInputId);
+
+    // Priority 2: Canonical teacher ID preference
+    const canonicalRaj =
+      (cleanInputId === "usr-teacher-raj" || cleanInputEmail === "rajbusa63@gmail.com" || cleanInputId === "rajbusa63@gmail.com")
+        ? users.find((u) => u.id === "usr-teacher-raj")
+        : null;
+
+    const userObj =
+      exactIdUser ||
+      canonicalRaj ||
+      users.find(
+        (u) =>
+          (u.email && u.email.toLowerCase() === cleanInputId) ||
+          (cleanInputEmail && u.email && u.email.toLowerCase() === cleanInputEmail)
+      );
+
     const resolvedTeacherId = userObj ? userObj.id : assignment.teacherId;
     const resolvedName = assignment.teacherName || userObj?.name || assignment.teacherId;
     const resolvedEmail = assignment.teacherEmail || userObj?.email || "";
 
+    const normalizedSubject = (assignment.subjectCode || "").trim().toUpperCase() as SubjectCode;
+    const meta = SUBJECT_METADATA[normalizedSubject];
+    const resolvedSubjectName = assignment.subjectName || (meta ? `${meta.nameEn} (${meta.nameGu})` : normalizedSubject);
+
+    // Find if assignment already exists for this teacher and subject
     const existingIndex = assignment.id
       ? store.teacherAssignments.findIndex((a) => a.id === assignment.id)
-      : store.teacherAssignments.findIndex(
-          (a) => a.teacherId === resolvedTeacherId && a.subjectCode === assignment.subjectCode
-        );
+      : store.teacherAssignments.findIndex((a) => {
+          if (a.subjectCode !== normalizedSubject) return false;
+          const aId = (a.teacherId || "").toLowerCase();
+          const aEmail = (a.teacherEmail || "").toLowerCase();
+          return (
+            aId === resolvedTeacherId.toLowerCase() ||
+            aId === cleanInputId ||
+            (resolvedEmail && aEmail === resolvedEmail.toLowerCase()) ||
+            (cleanInputEmail && aEmail === cleanInputEmail)
+          );
+        });
 
     const parsedGrades = assignment.grades && assignment.grades.length > 0
       ? Array.from(new Set(assignment.grades.map(Number))).filter((g) => g >= 1 && g <= 5).sort((a, b) => a - b)
-      : [];
+      : [1, 2, 3, 4, 5];
     const parsedClasses = parsedGrades.map((g) => `Class ${g}`);
     const parsedClassroomIds = assignment.classroomIds && assignment.classroomIds.length > 0
       ? assignment.classroomIds
@@ -2329,6 +2453,8 @@ export const db = {
         teacherId: resolvedTeacherId,
         teacherName: resolvedName,
         teacherEmail: resolvedEmail,
+        subjectCode: normalizedSubject,
+        subjectName: resolvedSubjectName,
         grades: parsedGrades,
         classes: parsedClasses,
         classroomIds: parsedClassroomIds,
@@ -2344,7 +2470,8 @@ export const db = {
         teacherName: resolvedName,
         teacherEmail: resolvedEmail,
         schoolId: assignment.schoolId || userObj?.schoolId || "sch-gn-01",
-        subjectCode: assignment.subjectCode,
+        subjectCode: normalizedSubject,
+        subjectName: resolvedSubjectName,
         classroomIds: parsedClassroomIds,
         grades: parsedGrades,
         classes: parsedClasses,

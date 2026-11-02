@@ -49,7 +49,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { teacherId, subjectCode, classroomIds, grades, isClassTeacher } = body;
+    const { teacherId, teacherEmail, teacherName, subjectCode, classroomIds, grades, isClassTeacher } = body;
 
     if (!teacherId || typeof teacherId !== "string" || !teacherId.trim()) {
       return NextResponse.json({ success: false, error: "Teacher ID is required." }, { status: 400 });
@@ -60,14 +60,18 @@ export async function POST(request: Request) {
     }
 
     const cleanTeacherId = teacherId.trim();
+    const cleanTeacherEmail = typeof teacherEmail === "string" ? teacherEmail.trim().toLowerCase() : "";
+    const cleanTeacherName = typeof teacherName === "string" ? teacherName.trim().toLowerCase() : "";
 
     // Fix for "Teacher not found" bug:
     // Comprehensive omnidirectional lookup across async DB, local store, ID, Email, and Name
     let teacher =
       (await db.getUserByIdAsync(cleanTeacherId).catch(() => null)) ||
       (await db.getUserByEmailAsync(cleanTeacherId).catch(() => null)) ||
+      (cleanTeacherEmail ? await db.getUserByEmailAsync(cleanTeacherEmail).catch(() => null) : null) ||
       db.getUserById(cleanTeacherId) ||
-      db.getUserByEmail(cleanTeacherId);
+      db.getUserByEmail(cleanTeacherId) ||
+      (cleanTeacherEmail ? db.getUserByEmail(cleanTeacherEmail) : null);
 
     if (!teacher) {
       const allUsers = (await db.getUsersAsync().catch(() => null)) || db.getUsers();
@@ -75,7 +79,9 @@ export async function POST(request: Request) {
         (u) =>
           u.id.toLowerCase() === cleanTeacherId.toLowerCase() ||
           u.email.toLowerCase() === cleanTeacherId.toLowerCase() ||
-          u.name.toLowerCase() === cleanTeacherId.toLowerCase()
+          (cleanTeacherEmail && u.email.toLowerCase() === cleanTeacherEmail) ||
+          u.name.toLowerCase() === cleanTeacherId.toLowerCase() ||
+          (cleanTeacherName && u.name.toLowerCase() === cleanTeacherName)
       ) || null;
     }
 

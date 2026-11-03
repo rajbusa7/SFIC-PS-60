@@ -20,10 +20,12 @@ export async function GET(request: Request) {
   try {
     const allUsers = await db.getUsersAsync();
     const rawTeachers = allUsers.filter((u) => u.role === "teacher");
-    const allAssignments = db.getTeacherAssignments();
+    const allAssignments = await db.getTeacherAssignmentsAsync();
 
     const teachers = rawTeachers.map((t) => {
-      const teacherAssignments = allAssignments.filter((a) => a.teacherId === t.id);
+      const teacherAssignments = allAssignments.filter(
+        (a) => a.teacherId === t.id || (t.email && a.teacherEmail && a.teacherEmail.toLowerCase() === t.email.toLowerCase())
+      );
       return {
         id: t.id,
         name: t.name,

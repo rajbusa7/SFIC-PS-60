@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { authorizeAdminOnly } from "@/lib/auth/authorization";
 import { db } from "@/lib/db/database";
+import { broadcastAssignmentChange } from "@/lib/realtime/assignmentBroadcaster";
 import type { SubjectCode } from "@shared/types";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +16,7 @@ export async function PUT(
   }
 
   const { id } = await params;
-  const existing = db.getTeacherAssignmentById(id);
+  const existing = (await db.getTeacherAssignmentByIdAsync(id)) || db.getTeacherAssignmentById(id);
   if (!existing) {
     return NextResponse.json({ success: false, error: "Teacher assignment not found." }, { status: 404 });
   }
@@ -24,12 +25,33 @@ export async function PUT(
     const body = await request.json();
     const { subjectCode, classroomIds, grades } = body;
 
-    const updated = db.setTeacherAssignment({
+    const normalizedSubject = (subjectCode ? subjectCode.toUpperCase() : existing.subjectCode) as SubjectCode;
+    const parsedGrades = Array.isArray(grades)
+      ? Array.from(new Set(grades.map(Number))).filter((g) => g >= 1 && g <= 5).sort((a, b) => a - b)
+      : existing.grades;
+    const computedClassroomIds = Array.isArray(classroomIds) && classroomIds.length > 0
+      ? classroomIds
+      : existing.classroomIds;
+
+    const updated = await db.setTeacherAssignmentAsync({
       id,
       teacherId: existing.teacherId,
-      subjectCode: (subjectCode ? subjectCode.toUpperCase() : existing.subjectCode) as SubjectCode,
-      classroomIds: Array.isArray(classroomIds) ? classroomIds : existing.classroomIds,
-      grades: Array.isArray(grades) ? grades.map(Number).filter((g) => g >= 1 && g <= 5) : existing.grades,
+      teacherName: existing.teacherName,
+      teacherEmail: existing.teacherEmail,
+      schoolId: existing.schoolId,
+      subjectCode: normalizedSubject,
+      classroomIds: computedClassroomIds,
+      grades: parsedGrades,
+      classes: parsedGrades.map((g) => `Class ${g}`),
+    });
+
+    broadcastAssignmentChange({
+      type: "ASSIGNMENT_SAVED",
+      teacherId: existing.teacherId,
+      teacherEmail: existing.teacherEmail,
+      subjectCode: normalizedSubject,
+      classroomIds: computedClassroomIds,
+      grades: parsedGrades,
     });
 
     return NextResponse.json({ success: true, assignment: updated });
@@ -48,11 +70,20 @@ export async function DELETE(
   }
 
   const { id } = await params;
-  const deleted = db.deleteTeacherAssignment(id);
+  const existing = (await db.getTeacherAssignmentByIdAsync(id)) || db.getTeacherAssignmentById(id);
+  const deleted = await db.deleteTeacherAssignmentAsync(id);
   if (!deleted) {
     return NextResponse.json({ success: false, error: "Assignment not found." }, { status: 404 });
   }
 
+  if (existing) {
+    broadcastAssignmentChange({
+      type: "ASSIGNMENT_REMOVED",
+      teacherId: existing.teacherId,
+      teacherEmail: existing.teacherEmail,
+      subjectCode: existing.subjectCode,
+    });
+  }
+
   return NextResponse.json({ success: true, message: "Assignment deleted successfully." });
 }
-

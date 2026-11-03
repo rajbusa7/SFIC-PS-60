@@ -14,6 +14,7 @@ import type {
   ParentProfile,
   ParentLinkingCode,
   ParentMessage,
+  TeacherAssignment,
 } from "../types";
 import {
   SEED_SCHOOL,
@@ -29,6 +30,7 @@ import {
   SEED_ACTIVITIES,
   SEED_USERS,
   SEED_PARENTS,
+  SEED_TEACHER_ASSIGNMENTS,
 } from "./seedData";
 
 // Resolve PostgreSQL connection string from standard environment variables
@@ -369,6 +371,29 @@ export async function ensurePostgresSchema(): Promise<void> {
         UPDATE users SET phone = '+919876543211' WHERE id = 'usr-admin-01' AND phone IS NULL;
         UPDATE users SET phone = '+919825012345' WHERE id = 'par-001' AND phone IS NULL;
         UPDATE parent_profiles SET phone = '+919825012345' WHERE id = 'par-001' AND phone IS NULL;
+
+        -- Teacher Assignments Table
+        CREATE TABLE IF NOT EXISTS teacher_assignments (
+            id VARCHAR(64) PRIMARY KEY,
+            teacher_id VARCHAR(64) NOT NULL,
+            teacher_name VARCHAR(255) NOT NULL,
+            teacher_email VARCHAR(255) NOT NULL,
+            school_id VARCHAR(64) DEFAULT 'sch-gn-01',
+            subject_code VARCHAR(16) NOT NULL,
+            subject_name VARCHAR(255) NOT NULL,
+            classroom_ids JSONB DEFAULT '[]'::jsonb,
+            grades JSONB DEFAULT '[]'::jsonb,
+            classes JSONB DEFAULT '[]'::jsonb,
+            is_class_teacher BOOLEAN DEFAULT FALSE,
+            assigned_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(teacher_id, subject_code)
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_teacher_assignments_teacher_id ON teacher_assignments(teacher_id);
+        CREATE INDEX IF NOT EXISTS idx_teacher_assignments_teacher_email ON teacher_assignments(LOWER(teacher_email));
+        CREATE INDEX IF NOT EXISTS idx_teacher_assignments_subject_code ON teacher_assignments(subject_code);
+        CREATE INDEX IF NOT EXISTS idx_teacher_assignments_updated_at ON teacher_assignments(updated_at DESC);
       `);
 
       // Seed baseline School if empty
@@ -462,6 +487,33 @@ export async function ensurePostgresSchema(): Promise<void> {
               usr.provider || "local",
               usr.passwordHash || null,
               usr.status || "active",
+            ]
+          );
+        }
+      }
+
+      // Seed baseline teacher assignments if empty
+      const asgCheck = await client.query('SELECT COUNT(*) FROM teacher_assignments');
+      if (parseInt(asgCheck.rows[0].count, 10) === 0) {
+        for (const asg of SEED_TEACHER_ASSIGNMENTS) {
+          await client.query(
+            `INSERT INTO teacher_assignments (
+              id, teacher_id, teacher_name, teacher_email, school_id, subject_code, subject_name,
+              classroom_ids, grades, classes, is_class_teacher, assigned_at, updated_at
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
+            ON CONFLICT (teacher_id, subject_code) DO NOTHING`,
+            [
+              asg.id,
+              asg.teacherId,
+              asg.teacherName || "Pooja Sharma",
+              asg.teacherEmail || "teacher@studysaathi.edu.in",
+              asg.schoolId || "sch-gn-01",
+              asg.subjectCode,
+              asg.subjectName || asg.subjectCode,
+              JSON.stringify(asg.classroomIds || []),
+              JSON.stringify(asg.grades || []),
+              JSON.stringify(asg.classes || []),
+              Boolean(asg.isClassTeacher),
             ]
           );
         }
@@ -1748,6 +1800,157 @@ export const postgresParentDb = {
       [studentId]
     );
     return rows;
+  },
+};
+
+
+export const postgresTeacherAssignmentDb = {
+  async getAllAssignments(): Promise<TeacherAssignment[]> {
+    const pool = getPostgresPool();
+    if (!pool) return [];
+    await ensurePostgresSchema();
+    const { rows } = await pool.query(
+      `SELECT id, teacher_id as "teacherId", teacher_name as "teacherName", teacher_email as "teacherEmail",
+              school_id as "schoolId", subject_code as "subjectCode", subject_name as "subjectName",
+              classroom_ids as "classroomIds", grades, classes, is_class_teacher as "isClassTeacher",
+              assigned_at as "assignedAt", updated_at as "updatedAt"
+       FROM teacher_assignments
+       ORDER BY updated_at DESC`
+    );
+    return rows.map((r) => ({
+      ...r,
+      classroomIds: Array.isArray(r.classroomIds) ? r.classroomIds : typeof r.classroomIds === "string" ? JSON.parse(r.classroomIds) : [],
+      grades: Array.isArray(r.grades) ? r.grades : typeof r.grades === "string" ? JSON.parse(r.grades) : [],
+      classes: Array.isArray(r.classes) ? r.classes : typeof r.classes === "string" ? JSON.parse(r.classes) : [],
+    }));
+  },
+
+  async getAssignmentsByTeacher(teacherId: string): Promise<TeacherAssignment[]> {
+    const pool = getPostgresPool();
+    if (!pool) return [];
+    await ensurePostgresSchema();
+    const clean = (teacherId || "").trim().toLowerCase();
+    const { rows } = await pool.query(
+      `SELECT id, teacher_id as "teacherId", teacher_name as "teacherName", teacher_email as "teacherEmail",
+              school_id as "schoolId", subject_code as "subjectCode", subject_name as "subjectName",
+              classroom_ids as "classroomIds", grades, classes, is_class_teacher as "isClassTeacher",
+              assigned_at as "assignedAt", updated_at as "updatedAt"
+       FROM teacher_assignments
+       WHERE LOWER(teacher_id) = $1 OR LOWER(teacher_email) = $1
+       ORDER BY updated_at DESC`,
+      [clean]
+    );
+    return rows.map((r) => ({
+      ...r,
+      classroomIds: Array.isArray(r.classroomIds) ? r.classroomIds : typeof r.classroomIds === "string" ? JSON.parse(r.classroomIds) : [],
+      grades: Array.isArray(r.grades) ? r.grades : typeof r.grades === "string" ? JSON.parse(r.grades) : [],
+      classes: Array.isArray(r.classes) ? r.classes : typeof r.classes === "string" ? JSON.parse(r.classes) : [],
+    }));
+  },
+
+  async getAssignmentById(id: string): Promise<TeacherAssignment | null> {
+    const pool = getPostgresPool();
+    if (!pool) return null;
+    await ensurePostgresSchema();
+    const { rows } = await pool.query(
+      `SELECT id, teacher_id as "teacherId", teacher_name as "teacherName", teacher_email as "teacherEmail",
+              school_id as "schoolId", subject_code as "subjectCode", subject_name as "subjectName",
+              classroom_ids as "classroomIds", grades, classes, is_class_teacher as "isClassTeacher",
+              assigned_at as "assignedAt", updated_at as "updatedAt"
+       FROM teacher_assignments
+       WHERE id = $1 LIMIT 1`,
+      [id]
+    );
+    if (rows.length === 0) return null;
+    const r = rows[0];
+    return {
+      ...r,
+      classroomIds: Array.isArray(r.classroomIds) ? r.classroomIds : typeof r.classroomIds === "string" ? JSON.parse(r.classroomIds) : [],
+      grades: Array.isArray(r.grades) ? r.grades : typeof r.grades === "string" ? JSON.parse(r.grades) : [],
+      classes: Array.isArray(r.classes) ? r.classes : typeof r.classes === "string" ? JSON.parse(r.classes) : [],
+    };
+  },
+
+  async upsertAssignment(
+    assignment: Omit<TeacherAssignment, "id" | "assignedAt"> & { id?: string }
+  ): Promise<TeacherAssignment> {
+    const pool = getPostgresPool();
+    if (!pool) throw new Error("Database pool is not available");
+    await ensurePostgresSchema();
+
+    const id = assignment.id || `asg-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+    const subjectCode = (assignment.subjectCode || "").trim().toUpperCase();
+    const grades = Array.isArray(assignment.grades) && assignment.grades.length > 0
+      ? Array.from(new Set(assignment.grades.map(Number))).filter((g) => g >= 1 && g <= 5).sort((a, b) => a - b)
+      : [1, 2, 3, 4, 5];
+    const classes = Array.isArray(assignment.classes) && assignment.classes.length > 0
+      ? assignment.classes
+      : grades.map((g) => `Class ${g}`);
+    const classroomIds = Array.isArray(assignment.classroomIds) && assignment.classroomIds.length > 0
+      ? assignment.classroomIds
+      : grades.map((g) => `cls-${g}a`);
+
+    const { rows } = await pool.query(
+      `INSERT INTO teacher_assignments (
+        id, teacher_id, teacher_name, teacher_email, school_id, subject_code, subject_name,
+        classroom_ids, grades, classes, is_class_teacher, assigned_at, updated_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
+      ON CONFLICT (teacher_id, subject_code) DO UPDATE SET
+        teacher_name = EXCLUDED.teacher_name,
+        teacher_email = EXCLUDED.teacher_email,
+        school_id = EXCLUDED.school_id,
+        subject_name = EXCLUDED.subject_name,
+        classroom_ids = EXCLUDED.classroom_ids,
+        grades = EXCLUDED.grades,
+        classes = EXCLUDED.classes,
+        is_class_teacher = EXCLUDED.is_class_teacher,
+        updated_at = NOW()
+      RETURNING id, teacher_id as "teacherId", teacher_name as "teacherName", teacher_email as "teacherEmail",
+                school_id as "schoolId", subject_code as "subjectCode", subject_name as "subjectName",
+                classroom_ids as "classroomIds", grades, classes, is_class_teacher as "isClassTeacher",
+                assigned_at as "assignedAt", updated_at as "updatedAt"`,
+      [
+        id,
+        assignment.teacherId,
+        assignment.teacherName || assignment.teacherId,
+        assignment.teacherEmail || "",
+        assignment.schoolId || "sch-gn-01",
+        subjectCode,
+        assignment.subjectName || subjectCode,
+        JSON.stringify(classroomIds),
+        JSON.stringify(grades),
+        JSON.stringify(classes),
+        Boolean(assignment.isClassTeacher),
+      ]
+    );
+
+    const r = rows[0];
+    return {
+      ...r,
+      classroomIds: Array.isArray(r.classroomIds) ? r.classroomIds : typeof r.classroomIds === "string" ? JSON.parse(r.classroomIds) : [],
+      grades: Array.isArray(r.grades) ? r.grades : typeof r.grades === "string" ? JSON.parse(r.grades) : [],
+      classes: Array.isArray(r.classes) ? r.classes : typeof r.classes === "string" ? JSON.parse(r.classes) : [],
+    };
+  },
+
+  async deleteAssignment(id: string): Promise<boolean> {
+    const pool = getPostgresPool();
+    if (!pool) return false;
+    await ensurePostgresSchema();
+    const res = await pool.query(`DELETE FROM teacher_assignments WHERE id = $1`, [id]);
+    return (res.rowCount ?? 0) > 0;
+  },
+
+  async deleteAssignmentsByTeacher(teacherId: string): Promise<number> {
+    const pool = getPostgresPool();
+    if (!pool) return 0;
+    await ensurePostgresSchema();
+    const clean = (teacherId || "").trim().toLowerCase();
+    const res = await pool.query(
+      `DELETE FROM teacher_assignments WHERE LOWER(teacher_id) = $1 OR LOWER(teacher_email) = $1`,
+      [clean]
+    );
+    return res.rowCount ?? 0;
   },
 };
 

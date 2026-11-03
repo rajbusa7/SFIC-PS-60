@@ -28,12 +28,12 @@ export async function GET(request: Request) {
 
   const effectiveUser = liveUser || session;
   let assignments = effectiveUser.role === "teacher"
-    ? db.getTeacherAssignments(effectiveUser.id)
+    ? await db.getTeacherAssignmentsAsync(effectiveUser.id)
     : effectiveUser.role === "admin"
-    ? db.getTeacherAssignments()
+    ? await db.getTeacherAssignmentsAsync()
     : [];
   if (effectiveUser.role === "teacher" && assignments.length === 0 && effectiveUser.email) {
-    assignments = db.getTeacherAssignments(effectiveUser.email);
+    assignments = await db.getTeacherAssignmentsAsync(effectiveUser.email);
   }
 
   return NextResponse.json({

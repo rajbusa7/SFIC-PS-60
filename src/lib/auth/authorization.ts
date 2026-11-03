@@ -36,6 +36,21 @@ export function getTeacherAuthorizedScope(teacherId: string): TeacherScope {
   };
 }
 
+export async function getTeacherAuthorizedScopeAsync(teacherId: string): Promise<TeacherScope> {
+  const assignments = await db.getTeacherAssignmentsAsync(teacherId);
+  const subjectCodes = Array.from(new Set(assignments.map((a) => a.subjectCode)));
+  const classroomIds = Array.from(new Set(assignments.flatMap((a) => a.classroomIds || [])));
+  const grades = Array.from(new Set(assignments.flatMap((a) => a.grades || [])));
+
+  return {
+    teacherId,
+    assignments,
+    subjectCodes,
+    classroomIds,
+    grades,
+  };
+}
+
 /**
  * Validates whether the authenticated user has administrative privileges.
  */
@@ -98,7 +113,7 @@ export async function authorizeTeacherAccess(
       authorized: true,
       status: 200,
       user,
-      assignments: db.getTeacherAssignments(),
+      assignments: await db.getTeacherAssignmentsAsync(),
     };
   }
 
@@ -112,9 +127,9 @@ export async function authorizeTeacherAccess(
   }
 
   // Retrieve teacher assignments from trusted database
-  let assignments = db.getTeacherAssignments(user.id);
+  let assignments = await db.getTeacherAssignmentsAsync(user.id);
   if ((!assignments || assignments.length === 0) && user.email) {
-    assignments = db.getTeacherAssignments(user.email);
+    assignments = await db.getTeacherAssignmentsAsync(user.email);
   }
   if (!assignments || assignments.length === 0) {
     return {

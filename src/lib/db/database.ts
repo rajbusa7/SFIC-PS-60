@@ -35,6 +35,7 @@ import {
   postgresSettingsDb,
   postgresUserDb,
   postgresParentDb,
+  postgresTeacherAssignmentDb,
 } from "./postgres";
 import type {
   School,
@@ -2497,7 +2498,16 @@ export const db = {
   },
 
   async deleteTeacherAssignmentsByTeacherIdAsync(teacherId: string): Promise<number> {
-    return this.deleteTeacherAssignmentsByTeacherId(teacherId);
+    const local = this.deleteTeacherAssignmentsByTeacherId(teacherId);
+    if (isPostgresConfigured()) {
+      try {
+        const count = await postgresTeacherAssignmentDb.deleteAssignmentsByTeacher(teacherId);
+        return count;
+      } catch (err) {
+        console.warn("[Database] PostgreSQL deleteAssignmentsByTeacher failed:", (err as any)?.message);
+      }
+    }
+    return local;
   },
 
   deleteTeacherAssignment(id: string): boolean {
@@ -2535,19 +2545,66 @@ export const db = {
   },
 
   async getTeacherAssignmentsAsync(teacherId?: string): Promise<TeacherAssignment[]> {
+    if (isPostgresConfigured()) {
+      try {
+        const assignments = teacherId
+          ? await postgresTeacherAssignmentDb.getAssignmentsByTeacher(teacherId)
+          : await postgresTeacherAssignmentDb.getAllAssignments();
+        
+        // Mirror into memory store for synchronous fallbacks
+        const store = loadStore();
+        if (store.teacherAssignments && !teacherId && assignments.length > 0) {
+          store.teacherAssignments = assignments;
+          saveStore(store);
+        }
+        return assignments;
+      } catch (err) {
+        console.warn("[Database] PostgreSQL getTeacherAssignmentsAsync failed, falling back to local store:", (err as any)?.message);
+      }
+    }
     return this.getTeacherAssignments(teacherId);
   },
 
   async getTeacherAssignmentByIdAsync(id: string): Promise<TeacherAssignment | null> {
+    if (isPostgresConfigured()) {
+      try {
+        const asg = await postgresTeacherAssignmentDb.getAssignmentById(id);
+        if (asg) return asg;
+      } catch (err) {
+        console.warn("[Database] PostgreSQL getTeacherAssignmentByIdAsync failed:", (err as any)?.message);
+      }
+    }
     return this.getTeacherAssignmentById(id);
   },
 
   async setTeacherAssignmentAsync(assignment: Omit<TeacherAssignment, "id" | "assignedAt"> & { id?: string }): Promise<TeacherAssignment> {
-    return this.setTeacherAssignment(assignment);
+    // Keep local sync store up-to-date
+    const local = this.setTeacherAssignment(assignment);
+    if (isPostgresConfigured()) {
+      try {
+        const pgResult = await postgresTeacherAssignmentDb.upsertAssignment({
+          ...local,
+          id: assignment.id || local.id,
+        });
+        return pgResult;
+      } catch (err) {
+        console.warn("[Database] PostgreSQL setTeacherAssignmentAsync failed, saved to local store:", (err as any)?.message);
+      }
+    }
+    return local;
   },
 
   async deleteTeacherAssignmentAsync(id: string): Promise<boolean> {
-    return this.deleteTeacherAssignment(id);
+    const local = this.deleteTeacherAssignment(id);
+    if (isPostgresConfigured()) {
+      try {
+        await postgresTeacherAssignmentDb.deleteAssignment(id);
+        return true;
+      } catch (err) {
+        console.warn("[Database] PostgreSQL deleteTeacherAssignmentAsync failed:", (err as any)?.message);
+      }
+    }
+    return local;
   },
 
   async recordAuditLogAsync(entry: Omit<AuditLogEntry, "id" | "timestamp">): Promise<AuditLogEntry> {
@@ -2663,13 +2720,13 @@ export const db = {
       greeting,
       intro,
       ``,
-      `📌 ${lang === "gu" ? "પ્રવૃત્તિ" : lang === "hi" ? "गतिविधि" : "Activity"}: ${title}`,
-      `🛠️ ${lang === "gu" ? "જરૂરી સાધન" : lang === "hi" ? "जरूरी सामग्री" : "Materials"}: ${(data.activity.commonHouseholdMaterials || ["Household objects"]).join(", ")}`,
+      `${lang === "gu" ? "પ્રવૃત્તિ" : lang === "hi" ? "गतिविधि" : "Activity"}: ${title}`,
+      `️ ${lang === "gu" ? "જરૂરી સાધન" : lang === "hi" ? "जरूरी सामग्री" : "Materials"}: ${(data.activity.commonHouseholdMaterials || ["Household objects"]).join(", ")}`,
       ``,
-      `👉 ${lang === "gu" ? "વાલીએ શું કરવું" : lang === "hi" ? "अभिभावक क्या करें" : "What to do"}: ${whatParentDoes}`,
-      `💡 ${lang === "gu" ? "બાળક શું શીખશે" : lang === "hi" ? "बच्चा क्या सीखेगा" : "What it helps"}: ${whatChildPractices}`,
-      `🗣️ ${lang === "gu" ? "પૂછવાનો સંવાદ" : lang === "hi" ? "पूछने का सवाल" : "Question to ask"}: ${conversationalPrompt}`,
-      data.customNotes ? `\n📝 ${lang === "gu" ? "શિક્ષકની નોંધ" : lang === "hi" ? "शिक्षक की टिप्पणी" : "Teacher Note"}: ${data.customNotes}` : "",
+      ` ${lang === "gu" ? "વાલીએ શું કરવું" : lang === "hi" ? "अभिभावक क्या करें" : "What to do"}: ${whatParentDoes}`,
+      ` ${lang === "gu" ? "બાળક શું શીખશે" : lang === "hi" ? "बच्चा क्या सीखेगा" : "What it helps"}: ${whatChildPractices}`,
+      `️ ${lang === "gu" ? "પૂછવાનો સંવાદ" : lang === "hi" ? "पूछने का सवाल" : "Question to ask"}: ${conversationalPrompt}`,
+      data.customNotes ? `\n ${lang === "gu" ? "શિક્ષકની નોંધ" : lang === "hi" ? "शिक्षक की टिप्पणी" : "Teacher Note"}: ${data.customNotes}` : "",
     ].filter(Boolean).join("\n");
 
     const newMsg = await this.createParentMessageAsync(

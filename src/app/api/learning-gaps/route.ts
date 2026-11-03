@@ -18,13 +18,17 @@ export async function GET(request: Request) {
     const studentId = searchParams.get("studentId") || undefined;
     const priority = searchParams.get("priority") || undefined;
     const status = searchParams.get("status") || undefined;
-    const subjectParam = (searchParams.get("subjectCode")?.toUpperCase() as SubjectCode) || undefined;
+    const rawSubject = searchParams.get("subjectCode") || searchParams.get("subject");
+    const subjectParam = (rawSubject?.toUpperCase() as SubjectCode) || undefined;
 
     const token = await extractSessionToken(request);
     const session = token ? await verifySession(token) : null;
 
     if (session && session.role === "teacher") {
-      const assignments = db.getTeacherAssignments(session.id);
+      let assignments = await db.getTeacherAssignmentsAsync(session.id);
+      if ((!assignments || assignments.length === 0) && session.email) {
+        assignments = await db.getTeacherAssignmentsAsync(session.email);
+      }
       if (!assignments || assignments.length === 0) {
         return NextResponse.json(
           { success: false, error: "No subjects have been assigned to your account. Please contact your administrator." },

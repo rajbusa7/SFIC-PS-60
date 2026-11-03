@@ -4044,17 +4044,17 @@
       "id": "plc-demo-aarav",
       "studentId": "std-aarav",
       "code": "PAR-4892",
-      "expiresAt": "2026-11-09T20:21:59.460Z",
+      "expiresAt": "2026-11-10T13:10:11.153Z",
       "status": "active",
-      "createdAt": "2026-11-02T20:21:59.461Z"
+      "createdAt": "2026-11-03T13:10:11.155Z"
     },
     {
       "id": "plc-demo-diya",
       "studentId": "std-diya",
       "code": "PAR-5219",
-      "expiresAt": "2026-11-09T20:21:59.461Z",
+      "expiresAt": "2026-11-10T13:10:11.155Z",
       "status": "active",
-      "createdAt": "2026-11-02T20:21:59.461Z"
+      "createdAt": "2026-11-03T13:10:11.155Z"
     }
   ],
   "parentMessages": [],
@@ -4444,85 +4444,9 @@
         1
       ],
       "assignedAt": "2026-01-01T00:00:00Z"
-    },
-    {
-      "id": "asg-1793650919475-e03j4v",
-      "teacherId": "usr-teacher-raj",
-      "teacherName": "Raj",
-      "teacherEmail": "rajbusa63@gmail.com",
-      "schoolId": "sch-gn-01",
-      "subjectCode": "MATH",
-      "subjectName": "Mathematics (ગણિત)",
-      "classroomIds": [
-        "cls-1a",
-        "cls-2a",
-        "cls-3a"
-      ],
-      "grades": [
-        1,
-        2,
-        3
-      ],
-      "classes": [
-        "Class 1",
-        "Class 2",
-        "Class 3"
-      ],
-      "isClassTeacher": false,
-      "assignedAt": "2026-11-02T20:21:59.475Z"
-    },
-    {
-      "id": "asg-1793650919497-z1yf53",
-      "teacherId": "usr-teacher-raj",
-      "teacherName": "Raj",
-      "teacherEmail": "rajbusa63@gmail.com",
-      "schoolId": "sch-gn-01",
-      "subjectCode": "ENG",
-      "subjectName": "English (અંગ્રેજી)",
-      "classroomIds": [
-        "cls-1a",
-        "cls-2a"
-      ],
-      "grades": [
-        1,
-        2
-      ],
-      "classes": [
-        "Class 1",
-        "Class 2"
-      ],
-      "isClassTeacher": false,
-      "assignedAt": "2026-11-02T20:21:59.497Z"
     }
   ],
-  "auditLogs": [
-    {
-      "teacherId": "usr-teacher-raj",
-      "teacherName": "Raj",
-      "studentId": "system",
-      "studentName": "Teacher Assignment",
-      "subjectCode": "ENG",
-      "assessmentId": "mgmt",
-      "previousMarks": 0,
-      "updatedMarks": 2,
-      "action": "ASSIGN_SUBJECT_ENG_CLASSES_1,2",
-      "id": "audit-1793650919500-jrcrd3",
-      "timestamp": "2026-11-02T20:21:59.500Z"
-    },
-    {
-      "teacherId": "usr-teacher-raj",
-      "teacherName": "Raj",
-      "studentId": "system",
-      "studentName": "Teacher Assignment",
-      "subjectCode": "MATH",
-      "assessmentId": "mgmt",
-      "previousMarks": 0,
-      "updatedMarks": 3,
-      "action": "ASSIGN_SUBJECT_MATH_CLASSES_1,2,3",
-      "id": "audit-1793650919478-d1h3w0",
-      "timestamp": "2026-11-02T20:21:59.478Z"
-    }
-  ],
+  "auditLogs": [],
   "interventionRecords": [
     {
       "id": "int-b10-1",

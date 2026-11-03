@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { authorizeAdminOnly } from "@/lib/auth/authorization";
 import { db } from "@/lib/db/database";
+import { broadcastAssignmentChange } from "@/lib/realtime/assignmentBroadcaster";
 import type { SubjectCode } from "@shared/types";
 
 export const dynamic = "force-dynamic";
@@ -14,7 +15,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const teacherId = searchParams.get("teacherId")?.trim() || undefined;
 
-  const rawAssignments = db.getTeacherAssignments(teacherId);
+  const rawAssignments = await db.getTeacherAssignmentsAsync(teacherId);
   const allUsers = (await db.getUsersAsync().catch(() => null)) || db.getUsers();
   const userMap = new Map(allUsers.map((u) => [u.id, u]));
 
@@ -109,7 +110,7 @@ export async function POST(request: Request) {
       ? classroomIds
       : parsedGrades.map((g) => `cls-${g}a`);
 
-    const assigned = db.setTeacherAssignment({
+    const assigned = await db.setTeacherAssignmentAsync({
       teacherId: canonicalTeacherId,
       teacherName: teacher.name,
       teacherEmail: teacher.email,
@@ -131,6 +132,17 @@ export async function POST(request: Request) {
       previousMarks: 0,
       updatedMarks: parsedGrades.length,
       action: `ASSIGN_SUBJECT_${normalizedSubject}_CLASSES_${parsedGrades.join(",")}`,
+    });
+
+    // Broadcast real-time assignment update to connected teachers and admins
+    broadcastAssignmentChange({
+      type: "ASSIGNMENT_SAVED",
+      teacherId: canonicalTeacherId,
+      teacherEmail: teacher.email,
+      teacherName: teacher.name,
+      subjectCode: normalizedSubject,
+      classroomIds: computedClassroomIds,
+      grades: parsedGrades,
     });
 
     return NextResponse.json({ success: true, assignment: assigned }, { status: 201 });

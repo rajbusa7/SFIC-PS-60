@@ -105,9 +105,10 @@ export function TeacherManagementSection() {
 
       if (tData.success && Array.isArray(tData.teachers)) {
         setTeachers(tData.teachers);
-        if (tData.teachers.length > 0 && !selectedTeacherId) {
-          setSelectedTeacherId(tData.teachers[0].id);
-        }
+        setSelectedTeacherId((prev) => {
+          if (prev && tData.teachers.some((t: ManagedTeacher) => t.id === prev)) return prev;
+          return tData.teachers[0]?.id || "";
+        });
       }
       if (aData.success && Array.isArray(aData.assignments)) {
         setAssignments(aData.assignments);
@@ -118,10 +119,34 @@ export function TeacherManagementSection() {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedTeacherId]);
+  }, []);
 
   useEffect(() => {
     loadData();
+
+    // Real-time SSE listener
+    let es: EventSource | null = null;
+    try {
+      es = new EventSource("/api/admin/teachers/assignments/stream");
+      es.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === "ASSIGNMENT_SAVED" || data.type === "ASSIGNMENT_REMOVED") {
+            loadData();
+          }
+        } catch {}
+      };
+    } catch {}
+
+    // 15-second polling fallback
+    const interval = setInterval(() => {
+      loadData();
+    }, 15000);
+
+    return () => {
+      clearInterval(interval);
+      if (es) es.close();
+    };
   }, [loadData]);
 
   // Compute filtered teachers
@@ -369,13 +394,13 @@ export function TeacherManagementSection() {
     setAssignSuccess(null);
 
     try {
-      const targetTeacher = teachers.find((t) => t.id === selectedTeacherId);
+      const targetTeacher = teachers.find((t) => t.id === selectedTeacherId) || teachers[0];
       const classroomIds = assignGrades.map((g) => `cls-${g}a`);
       const res = await fetch("/api/admin/teachers/assignments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          teacherId: selectedTeacherId,
+          teacherId: selectedTeacherId || targetTeacher?.id,
           teacherEmail: targetTeacher?.email,
           teacherName: targetTeacher?.name,
           subjectCode: assignSubject,
@@ -387,6 +412,21 @@ export function TeacherManagementSection() {
       const data = await res.json();
       if (!res.ok || !data.success) {
         throw new Error(data.error || "Failed to save teacher assignment.");
+      }
+
+      // Optimistically update local assignments list immediately
+      if (data.assignment) {
+        setAssignments((prev) => {
+          const existingIdx = prev.findIndex(
+            (a) => a.id === data.assignment.id || (a.teacherId === data.assignment.teacherId && a.subjectCode === data.assignment.subjectCode)
+          );
+          if (existingIdx >= 0) {
+            const next = [...prev];
+            next[existingIdx] = data.assignment;
+            return next;
+          }
+          return [data.assignment, ...prev];
+        });
       }
 
       setAssignSuccess(
@@ -414,6 +454,7 @@ export function TeacherManagementSection() {
       if (!res.ok || !data.success) {
         throw new Error(data.error || "Failed to remove assignment.");
       }
+      setAssignments((prev) => prev.filter((a) => a.id !== asgId));
       setGlobalSuccess(
         language === "gu" ? "વિષય સોંપણી રદ કરવામાં આવી." : "Subject assignment removed successfully."
       );

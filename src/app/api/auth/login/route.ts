@@ -46,12 +46,12 @@ export async function POST(request: Request) {
     };
 
     let assignments = user.role === "teacher"
-      ? db.getTeacherAssignments(user.id)
+      ? await db.getTeacherAssignmentsAsync(user.id)
       : user.role === "admin"
-      ? db.getTeacherAssignments()
+      ? await db.getTeacherAssignmentsAsync()
       : [];
     if (user.role === "teacher" && assignments.length === 0 && user.email) {
-      assignments = db.getTeacherAssignments(user.email);
+      assignments = await db.getTeacherAssignmentsAsync(user.email);
     }
 
     const response = NextResponse.json({

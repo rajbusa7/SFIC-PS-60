@@ -97,7 +97,7 @@ function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t, language, formatSubject, formatClass, formatPriority } = useLanguage();
-  const { user, role, assignments, selectedSubject: authSelectedSubject, setSelectedSubject: setAuthSelectedSubject } = useAuth();
+  const { user, role, assignments, selectedSubject: authSelectedSubject, setSelectedSubject: setAuthSelectedSubject, assignmentNotice } = useAuth();
   const isTeacher = user?.role === "teacher" || role === "teacher";
   const isAdmin = user?.role === "admin" || role === "admin";
   const urlSubjectParam = searchParams.get("subject")?.toUpperCase() as SubjectCode | null;
@@ -626,6 +626,13 @@ function DashboardContent() {
                     <span>{language === "gu" ? "શિક્ષક વ્યવસ્થાપન ખોલો" : "Open Teacher Management"}</span>
                   </Button>
                 </div>
+              </div>
+            )}
+
+            {assignmentNotice && (
+              <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 text-xs font-semibold flex items-center gap-2.5">
+                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>{assignmentNotice}</span>
               </div>
             )}
 

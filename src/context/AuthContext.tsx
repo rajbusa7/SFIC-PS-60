@@ -9,6 +9,7 @@ interface AuthContextType {
   assignments: TeacherAssignment[];
   selectedSubject: SubjectCode | null;
   setSelectedSubject: (subject: SubjectCode | null) => void;
+  assignmentNotice?: string | null;
   isDemoMode: boolean;
   isLoading: boolean;
   login: (email: string, password?: string, role?: UserRole) => Promise<{ success: boolean; user: User; assignments: TeacherAssignment[] }>;
@@ -79,6 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [selectedSubject, setSelectedSubjectState] = useState<SubjectCode | null>(null);
   const [isDemoMode, setIsDemoMode] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [assignmentNotice, setAssignmentNotice] = useState<string | null>(null);
 
   const setSelectedSubject = useCallback((sub: SubjectCode | null) => {
     setSelectedSubjectState(sub);
@@ -313,8 +315,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(data.user);
           setIsDemoMode(false);
           saveUserStorage(data.user);
-          if (data.assignments) {
+          if (data.assignments && Array.isArray(data.assignments)) {
             setAssignments(data.assignments);
+            saveUserStorage(data.user, data.assignments);
+
+            // Re-validate active selected subject
+            setSelectedSubjectState((prevSub) => {
+              if (!prevSub) {
+                return data.assignments.length === 1 ? data.assignments[0].subjectCode : null;
+              }
+              const isStillAuthorized = data.assignments.some(
+                (a: TeacherAssignment) => a.subjectCode === prevSub
+              );
+              if (!isStillAuthorized) {
+                const fallback = data.assignments.length > 0 ? data.assignments[0].subjectCode : null;
+                setAssignmentNotice(
+                  "Your subject assignment has changed. Please select an available subject or contact your administrator."
+                );
+                setTimeout(() => setAssignmentNotice(null), 6000);
+                if (typeof window !== "undefined") {
+                  if (fallback) {
+                    localStorage.setItem("shikshasetu_selected_subject", fallback);
+                  } else {
+                    localStorage.removeItem("shikshasetu_selected_subject");
+                  }
+                }
+                return fallback;
+              }
+              return prevSub;
+            });
           }
           return data.user;
         }
@@ -324,6 +353,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     return null;
   }, [saveUserStorage]);
+
+  // Real-time SSE synchronization with 15-second polling fallback
+  useEffect(() => {
+    if (!user || user.role === "parent") return;
+
+    let es: EventSource | null = null;
+    let isSubscribed = true;
+
+    try {
+      es = new EventSource("/api/admin/teachers/assignments/stream");
+      es.onmessage = (event) => {
+        if (!isSubscribed) return;
+        try {
+          const payload = JSON.parse(event.data);
+          if (payload.type === "ASSIGNMENT_SAVED" || payload.type === "ASSIGNMENT_REMOVED") {
+            const isRelevant =
+              user.role === "admin" ||
+              payload.teacherId === user.id ||
+              (user.email && payload.teacherEmail && payload.teacherEmail.toLowerCase() === user.email.toLowerCase());
+            if (isRelevant) {
+              refreshSession();
+            }
+          }
+        } catch {}
+      };
+    } catch {}
+
+    const interval = setInterval(() => {
+      if (isSubscribed) {
+        refreshSession();
+      }
+    }, 15000);
+
+    return () => {
+      isSubscribed = false;
+      clearInterval(interval);
+      if (es) es.close();
+    };
+  }, [user?.id, user?.email, user?.role, refreshSession]);
 
   const logout = async () => {
     try {
@@ -369,6 +437,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         assignments,
         selectedSubject,
         setSelectedSubject,
+        assignmentNotice,
         isDemoMode,
         isLoading,
         login,

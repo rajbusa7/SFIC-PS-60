@@ -197,10 +197,10 @@ export function LandingNavbar() {
                   setIsMobileMenuOpen(false);
                 }
               }}
-              className="cursor-pointer group flex items-center gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-2xl bg-[#FAF6E9] hover:bg-white border border-[#49352F]/15 shadow-sm hover:shadow-md transition-all duration-200 active:scale-95 shrink-0"
+              className="cursor-pointer group flex items-center gap-2.5 sm:gap-3 px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-2xl bg-[#FAF6E9] hover:bg-[#FFFDF9] border border-[#49352F]/15 hover:border-[#B26A1B]/35 shadow-[0_2px_8px_rgba(73,53,47,0.06)] hover:shadow-[0_4px_16px_rgba(73,53,47,0.10)] transition-all duration-200 active:scale-[0.98] shrink-0"
               aria-label="StudySaathi AI - Home"
             >
-              <BrandLogo size={isScrolled ? 32 : 36} variant="navbar" />
+              <BrandLogo size={isScrolled ? 26 : 28} variant="navbar" />
             </Link>
 
             {/* Live Hackathon Status Indicator */}

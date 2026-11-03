@@ -186,3 +186,4 @@ test("Complete Assigned Subjects Flow: Admin Assignment -> Persistence -> Teache
     assert.deepEqual(meData.assignments, [], "Unassigned teacher must have empty assignments array");
   });
 });
+

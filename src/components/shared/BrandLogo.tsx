@@ -90,37 +90,38 @@ export function BrandLogo({
         <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#2E7D5E] shadow-[0_0_6px_rgba(46,125,94,0.4)]" />
       </div>
 
-      {showText && (
-        <div className="flex flex-col text-left">
-          <div className="flex items-center gap-1.5">
-            <span
-              className={`font-heading font-black tracking-tight leading-none ${
-                isNavbar ? "text-base sm:text-lg" : "text-base"
-              } ${titleStudyClass}`}
-            >
-              Study<span className={titleSaathiClass}>Saathi</span>
+      {showText &&
+        (isNavbar ? (
+          <div className="flex items-center gap-1.5 sm:gap-2 leading-none select-none">
+            <span className="font-heading font-[800] text-[18px] sm:text-[21px] lg:text-[24px] tracking-[0.025em] text-[#49352F] uppercase">
+              STUDYSAATHI
             </span>
-            <span
-              className={`border font-black rounded-md uppercase tracking-wider ${
-                isNavbar
-                  ? "text-[10px] sm:text-[11px] px-2 py-0.5"
-                  : "text-[10px] px-1.5 py-0.5"
-              } ${badgeClass}`}
-            >
+            <span className="relative inline-flex items-center font-heading font-[850] text-[18px] sm:text-[21px] lg:text-[24px] tracking-[0.035em] text-[#B26A1B] uppercase">
               AI
+              <span className="absolute -bottom-0.5 left-0 right-0 h-[2px] rounded-full bg-[#B26A1B]/40" />
             </span>
           </div>
-          <span
-            className={`font-bold tracking-wider uppercase ${
-              isNavbar
-                ? "text-[9px] sm:text-[10px] mt-0.5"
-                : "text-[10px] mt-1"
-            } ${subtitleClass}`}
-          >
-            Learning Gap Bridge
-          </span>
-        </div>
-      )}
+        ) : (
+          <div className="flex flex-col text-left">
+            <div className="flex items-center gap-1.5">
+              <span
+                className={`font-heading font-black tracking-tight leading-none text-base ${titleStudyClass}`}
+              >
+                Study<span className={titleSaathiClass}>Saathi</span>
+              </span>
+              <span
+                className={`border font-black rounded-md uppercase tracking-wider text-[10px] px-1.5 py-0.5 ${badgeClass}`}
+              >
+                AI
+              </span>
+            </div>
+            <span
+              className={`font-bold tracking-wider uppercase text-[10px] mt-1 ${subtitleClass}`}
+            >
+              Learning Gap Bridge
+            </span>
+          </div>
+        ))}
     </div>
   );
 }

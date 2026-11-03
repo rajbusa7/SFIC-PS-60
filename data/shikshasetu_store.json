@@ -378,49 +378,6 @@
   ],
   "students": [
     {
-      "id": "std-arjun",
-      "studentCode": "MPS-1A-01",
-      "displayName": "Arjun Pandya",
-      "classroomId": "cls-1a",
-      "grade": 1,
-      "section": "A",
-      "enrollmentStatus": "active",
-      "notes": "Enthusiastic learner. Strong at number recognition up to 50.",
-      "createdAt": "2026-06-14T09:00:00Z"
-    },
-    {
-      "id": "std-krisha",
-      "studentCode": "MPS-1A-02",
-      "displayName": "Krisha Modi",
-      "classroomId": "cls-1a",
-      "grade": 1,
-      "section": "A",
-      "enrollmentStatus": "active",
-      "notes": "Needs support with phonics sound mapping.",
-      "createdAt": "2026-06-14T09:05:00Z"
-    },
-    {
-      "id": "std-hetvi",
-      "studentCode": "MPS-2A-01",
-      "displayName": "Hetvi Raval",
-      "classroomId": "cls-2a",
-      "grade": 2,
-      "section": "A",
-      "enrollmentStatus": "active",
-      "notes": "Good grasp of addition. Needs practice with 2-digit subtraction.",
-      "createdAt": "2026-06-14T09:10:00Z"
-    },
-    {
-      "id": "std-neel",
-      "studentCode": "MPS-2A-02",
-      "displayName": "Neel Parmar",
-      "classroomId": "cls-2a",
-      "grade": 2,
-      "section": "A",
-      "enrollmentStatus": "active",
-      "createdAt": "2026-06-14T09:15:00Z"
-    },
-    {
       "id": "std-aarav",
       "studentCode": "MPS-4A-01",
       "displayName": "Aarav Patel",
@@ -429,40 +386,7 @@
       "section": "A",
       "enrollmentStatus": "active",
       "notes": "Attentive student. Shows great creativity in drawing, needs visual reinforcement for math division.",
-      "createdAt": "2026-06-15T09:00:00Z"
-    },
-    {
-      "id": "std-meera",
-      "studentCode": "MPS-4A-02",
-      "displayName": "Meera Shah",
-      "classroomId": "cls-4a",
-      "grade": 4,
-      "section": "A",
-      "enrollmentStatus": "active",
-      "notes": "Strong in English reading. Practicing speed recall on multiplication facts.",
-      "createdAt": "2026-06-15T09:05:00Z"
-    },
-    {
-      "id": "std-riya",
-      "studentCode": "MPS-4A-03",
-      "displayName": "Riya Desai",
-      "classroomId": "cls-4a",
-      "grade": 4,
-      "section": "A",
-      "enrollmentStatus": "active",
-      "notes": "Consistent high achiever across Mathematics and Science.",
-      "createdAt": "2026-06-15T09:10:00Z"
-    },
-    {
-      "id": "std-dev",
-      "studentCode": "MPS-4A-04",
-      "displayName": "Dev Shah",
-      "classroomId": "cls-4a",
-      "grade": 4,
-      "section": "A",
-      "enrollmentStatus": "active",
-      "notes": "Benefit from structured step-by-step checklists.",
-      "createdAt": "2026-06-15T09:15:00Z"
+      "createdAt": "2026-10-28T18:06:27.777Z"
     },
     {
       "id": "std-anaya",
@@ -473,17 +397,40 @@
       "section": "A",
       "enrollmentStatus": "active",
       "notes": "Active participant in Gujarati storytelling activities.",
-      "createdAt": "2026-06-15T09:20:00Z"
+      "createdAt": "2026-10-28T18:06:27.777Z"
     },
     {
-      "id": "std-vihaan",
-      "studentCode": "MPS-4A-06",
-      "displayName": "Vihaan Mehta",
+      "id": "std-anvi",
+      "studentCode": "MPS-3A-05",
+      "displayName": "Anvi Bhatt",
+      "classroomId": "cls-3a",
+      "grade": 3,
+      "section": "A",
+      "enrollmentStatus": "active",
+      "notes": "",
+      "createdAt": "2026-10-28T18:06:27.777Z"
+    },
+    {
+      "id": "std-1793345960597-9b0a",
+      "studentCode": "MPS-1A-730",
+      "displayName": "Bhakti Barvaliya",
+      "classroomId": "cls-1a",
+      "grade": 1,
+      "section": "A",
+      "enrollmentStatus": "active",
+      "notes": "",
+      "createdAt": "2026-10-30T07:39:20.672Z"
+    },
+    {
+      "id": "std-dev",
+      "studentCode": "MPS-4A-04",
+      "displayName": "Dev Shah",
       "classroomId": "cls-4a",
       "grade": 4,
       "section": "A",
       "enrollmentStatus": "active",
-      "createdAt": "2026-06-15T09:25:00Z"
+      "notes": "Benefit from structured step-by-step checklists.",
+      "createdAt": "2026-10-28T18:06:27.777Z"
     },
     {
       "id": "std-diya",
@@ -494,27 +441,18 @@
       "section": "A",
       "enrollmentStatus": "active",
       "notes": "Needs support with place value regrouping.",
-      "createdAt": "2026-06-16T09:00:00Z"
+      "createdAt": "2026-10-28T18:06:27.777Z"
     },
     {
-      "id": "std-kabir",
-      "studentCode": "MPS-3A-02",
-      "displayName": "Kabir Varma",
-      "classroomId": "cls-3a",
-      "grade": 3,
+      "id": "std-1793278399623-z3al",
+      "studentCode": "01",
+      "displayName": "Hetvi Soni",
+      "classroomId": "cls-2a",
+      "grade": 2,
       "section": "A",
       "enrollmentStatus": "active",
-      "createdAt": "2026-06-16T09:05:00Z"
-    },
-    {
-      "id": "std-sanvi",
-      "studentCode": "MPS-3A-03",
-      "displayName": "Sanvi Parekh",
-      "classroomId": "cls-3a",
-      "grade": 3,
-      "section": "A",
-      "enrollmentStatus": "active",
-      "createdAt": "2026-06-16T09:10:00Z"
+      "notes": "",
+      "createdAt": "2026-10-29T12:53:19.628Z"
     },
     {
       "id": "std-ishaan",
@@ -524,47 +462,30 @@
       "grade": 3,
       "section": "A",
       "enrollmentStatus": "active",
-      "createdAt": "2026-06-16T09:15:00Z"
+      "notes": "",
+      "createdAt": "2026-10-28T18:06:27.777Z"
     },
     {
-      "id": "std-anvi",
-      "studentCode": "MPS-3A-05",
-      "displayName": "Anvi Bhatt",
+      "id": "std-kabir",
+      "studentCode": "MPS-3A-02",
+      "displayName": "Kabir Varma",
       "classroomId": "cls-3a",
       "grade": 3,
       "section": "A",
       "enrollmentStatus": "active",
-      "createdAt": "2026-06-16T09:20:00Z"
+      "notes": "",
+      "createdAt": "2026-10-28T18:06:27.777Z"
     },
     {
-      "id": "std-yash",
-      "studentCode": "MPS-5A-01",
-      "displayName": "Yash Trivedi",
+      "id": "std-1793278081280-o0xo",
+      "studentCode": "ABC-123-66",
+      "displayName": "Kashvi Javia",
       "classroomId": "cls-5a",
       "grade": 5,
       "section": "A",
       "enrollmentStatus": "active",
-      "createdAt": "2026-06-17T09:00:00Z"
-    },
-    {
-      "id": "std-tanvi",
-      "studentCode": "MPS-5A-02",
-      "displayName": "Tanvi Dave",
-      "classroomId": "cls-5a",
-      "grade": 5,
-      "section": "A",
-      "enrollmentStatus": "active",
-      "createdAt": "2026-06-17T09:05:00Z"
-    },
-    {
-      "id": "std-rohan",
-      "studentCode": "MPS-5A-03",
-      "displayName": "Rohan Prajapati",
-      "classroomId": "cls-5a",
-      "grade": 5,
-      "section": "A",
-      "enrollmentStatus": "active",
-      "createdAt": "2026-06-17T09:10:00Z"
+      "notes": "Responsive in class, needs to work more on mathematics",
+      "createdAt": "2026-10-29T12:48:01.369Z"
     },
     {
       "id": "std-kavya",
@@ -574,7 +495,107 @@
       "grade": 5,
       "section": "A",
       "enrollmentStatus": "active",
-      "createdAt": "2026-06-17T09:15:00Z"
+      "notes": "",
+      "createdAt": "2026-10-28T18:06:27.777Z"
+    },
+    {
+      "id": "std-meera",
+      "studentCode": "MPS-4A-02",
+      "displayName": "Meera Shah",
+      "classroomId": "cls-4a",
+      "grade": 4,
+      "section": "A",
+      "enrollmentStatus": "active",
+      "notes": "Strong in English reading. Practicing speed recall on multiplication facts.",
+      "createdAt": "2026-10-28T18:06:27.777Z"
+    },
+    {
+      "id": "std-riya",
+      "studentCode": "MPS-4A-03",
+      "displayName": "Riya Desai",
+      "classroomId": "cls-4a",
+      "grade": 4,
+      "section": "A",
+      "enrollmentStatus": "active",
+      "notes": "Consistent high achiever across Mathematics and Science.",
+      "createdAt": "2026-10-28T18:06:27.777Z"
+    },
+    {
+      "id": "std-rohan",
+      "studentCode": "MPS-5A-03",
+      "displayName": "Rohan Prajapati",
+      "classroomId": "cls-5a",
+      "grade": 5,
+      "section": "A",
+      "enrollmentStatus": "active",
+      "notes": "",
+      "createdAt": "2026-10-28T18:06:27.777Z"
+    },
+    {
+      "id": "std-sanvi",
+      "studentCode": "MPS-3A-03",
+      "displayName": "Sanvi Parekh",
+      "classroomId": "cls-3a",
+      "grade": 3,
+      "section": "A",
+      "enrollmentStatus": "active",
+      "notes": "",
+      "createdAt": "2026-10-28T18:06:27.777Z"
+    },
+    {
+      "id": "std-1793278357925-js0e",
+      "studentCode": "MPS-1A-316",
+      "displayName": "Shreya Bhoraniya",
+      "classroomId": "cls-1a",
+      "grade": 1,
+      "section": "A",
+      "enrollmentStatus": "active",
+      "notes": "",
+      "createdAt": "2026-10-29T12:52:38.013Z"
+    },
+    {
+      "id": "std-tanvi",
+      "studentCode": "MPS-5A-02",
+      "displayName": "Tanvi Dave",
+      "classroomId": "cls-5a",
+      "grade": 5,
+      "section": "A",
+      "enrollmentStatus": "active",
+      "notes": "",
+      "createdAt": "2026-10-28T18:06:27.777Z"
+    },
+    {
+      "id": "std-vihaan",
+      "studentCode": "MPS-4A-06",
+      "displayName": "Vihaan Mehta",
+      "classroomId": "cls-4a",
+      "grade": 4,
+      "section": "A",
+      "enrollmentStatus": "active",
+      "notes": "",
+      "createdAt": "2026-10-28T18:06:27.777Z"
+    },
+    {
+      "id": "std-yash",
+      "studentCode": "MPS-5A-01",
+      "displayName": "Yash Trivedi",
+      "classroomId": "cls-5a",
+      "grade": 5,
+      "section": "A",
+      "enrollmentStatus": "active",
+      "notes": "",
+      "createdAt": "2026-10-28T18:06:27.777Z"
+    },
+    {
+      "id": "std-1793210979752-b2jf",
+      "studentCode": "MPS-4A-975",
+      "displayName": "raj busa",
+      "classroomId": "cls-4a",
+      "grade": 4,
+      "section": "A",
+      "enrollmentStatus": "active",
+      "notes": "",
+      "createdAt": "2026-10-28T18:09:39.757Z"
     }
   ],
   "assessments": [
@@ -4044,17 +4065,17 @@
       "id": "plc-demo-aarav",
       "studentId": "std-aarav",
       "code": "PAR-4892",
-      "expiresAt": "2026-11-10T13:10:11.153Z",
+      "expiresAt": "2026-11-10T13:35:36.321Z",
       "status": "active",
-      "createdAt": "2026-11-03T13:10:11.155Z"
+      "createdAt": "2026-11-03T13:35:36.322Z"
     },
     {
       "id": "plc-demo-diya",
       "studentId": "std-diya",
       "code": "PAR-5219",
-      "expiresAt": "2026-11-10T13:10:11.155Z",
+      "expiresAt": "2026-11-10T13:35:36.322Z",
       "status": "active",
-      "createdAt": "2026-11-03T13:10:11.155Z"
+      "createdAt": "2026-11-03T13:35:36.322Z"
     }
   ],
   "parentMessages": [],
@@ -4402,9 +4423,46 @@
   "feedback": [],
   "teacherAssignments": [
     {
+      "id": "asg-1793712436037-q8ctnc",
+      "teacherId": "usr-1793276409027-bvlf",
+      "teacherName": "Raj Busa",
+      "teacherEmail": "rajbusa5435@gmail.com",
+      "schoolId": "sch-gn-01",
+      "subjectCode": "MATH",
+      "subjectName": "Mathematics (ગણિત)",
+      "classroomIds": [
+        "cls-1a",
+        "cls-2a",
+        "cls-3a",
+        "cls-4a",
+        "cls-5a"
+      ],
+      "grades": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "classes": [
+        "Class 1",
+        "Class 2",
+        "Class 3",
+        "Class 4",
+        "Class 5"
+      ],
+      "isClassTeacher": false,
+      "assignedAt": "2026-11-03T13:27:16.042Z",
+      "updatedAt": "2026-11-03T13:27:16.042Z"
+    },
+    {
       "id": "asg-01",
       "teacherId": "usr-teacher-01",
+      "teacherName": "Pooja Sharma",
+      "teacherEmail": "teacher@studysaathi.edu.in",
+      "schoolId": "sch-gn-01",
       "subjectCode": "MATH",
+      "subjectName": "Mathematics (ગણિત)",
       "classroomIds": [
         "cls-1a",
         "cls-2a",
@@ -4417,12 +4475,24 @@
         3,
         4
       ],
-      "assignedAt": "2026-01-01T00:00:00Z"
+      "classes": [
+        "Class 1",
+        "Class 2",
+        "Class 3",
+        "Class 4"
+      ],
+      "isClassTeacher": false,
+      "assignedAt": "2026-11-03T12:42:21.969Z",
+      "updatedAt": "2026-11-03T12:42:21.969Z"
     },
     {
       "id": "asg-02",
       "teacherId": "usr-teacher-01",
+      "teacherName": "Pooja Sharma",
+      "teacherEmail": "teacher@studysaathi.edu.in",
+      "schoolId": "sch-gn-01",
       "subjectCode": "GUJ",
+      "subjectName": "Gujarati (ગુજરાતી)",
       "classroomIds": [
         "cls-3a",
         "cls-4a"
@@ -4431,19 +4501,13 @@
         3,
         4
       ],
-      "assignedAt": "2026-01-01T00:00:00Z"
-    },
-    {
-      "id": "asg-03",
-      "teacherId": "usr-teacher-02",
-      "subjectCode": "ENG",
-      "classroomIds": [
-        "cls-1a"
+      "classes": [
+        "Class 3",
+        "Class 4"
       ],
-      "grades": [
-        1
-      ],
-      "assignedAt": "2026-01-01T00:00:00Z"
+      "isClassTeacher": false,
+      "assignedAt": "2026-11-03T12:42:21.969Z",
+      "updatedAt": "2026-11-03T12:42:21.969Z"
     }
   ],
   "auditLogs": [],

@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AppSidebar } from "./AppSidebar";
 import { AppHeader } from "./AppHeader";
-import { HackathonDemoBanner } from "./HackathonDemoBanner";
 import { GlobalShikshaBot } from "@/components/shared/GlobalShikshaBot";
 import { SpotlightTour } from "@/components/tutorial/SpotlightTour";
 import { useFilter } from "@/context/FilterContext";
@@ -22,7 +21,7 @@ interface AppLayoutProps {
   showDemoBanner?: boolean;
 }
 
-export function AppLayout({ children, showDemoBanner = true }: AppLayoutProps) {
+export function AppLayout({ children }: AppLayoutProps) {
   const pathname = usePathname();
   const { selectedClass, setSelectedClass, searchTerm, setSearchTerm } = useFilter();
 
@@ -50,7 +49,6 @@ export function AppLayout({ children, showDemoBanner = true }: AppLayoutProps) {
 
         {/* Page body */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto min-w-0 box-border">
-          {showDemoBanner && <HackathonDemoBanner />}
           {children}
         </main>
       </div>

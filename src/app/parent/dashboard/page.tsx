@@ -13,6 +13,7 @@ import { BridgeProgress } from "@/components/ui/BridgeProgress";
 import { useLanguage } from "@/context/LanguageContext";
 import { normalizePriority } from "@/lib/learningGapFormatters";
 import { getRoleAwareGapInterpretation } from "@/lib/engine/roleAwareGapEngine";
+import { LinkChildModal, type LinkedChildSummary } from "@/components/parent/LinkChildModal";
 import {
   Users,
   GraduationCap,
@@ -78,7 +79,9 @@ function ParentDashboardContent() {
   const [linkingCodeInput, setLinkingCodeInput] = useState("");
   const [linkLoading, setLinkLoading] = useState(false);
   const [linkError, setLinkError] = useState<string | null>(null);
+  const [linkErrorCode, setLinkErrorCode] = useState<string | null>(null);
   const [linkSuccess, setLinkSuccess] = useState<string | null>(null);
+  const [newlyLinkedChild, setNewlyLinkedChild] = useState<LinkedChildSummary | null>(null);
 
   // Teacher inquiry message form
   const [msgSubject, setMsgSubject] = useState("");
@@ -89,11 +92,11 @@ function ParentDashboardContent() {
   const [pastMessages, setPastMessages] = useState<any[]>([]);
 
   // 1. Fetch authenticated parent profile and linked students
-  const fetchParentProfile = async () => {
+  const fetchParentProfile = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       setError(null);
-      const res = await fetch("/api/parent/me");
+      const res = await fetch("/api/parent/me", { cache: "no-store" });
       const data = await res.json();
 
       if (!res.ok || !data.success) {
@@ -114,7 +117,7 @@ function ParentDashboardContent() {
     } catch (err: any) {
       setError(err.message || pp.loadInfoError);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -198,42 +201,69 @@ function ParentDashboardContent() {
   // Handle Linking Code Redemption
   const handleRedeemCode = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!linkingCodeInput.trim()) return;
+    const cleanedCode = linkingCodeInput.trim().toUpperCase().replace(/\s+/g, "");
+    if (!cleanedCode) {
+      setLinkErrorCode("INVALID_CODE");
+      setLinkError(
+        language === "gu"
+          ? "કૃપા કરીને શાળા દ્વારા આપવામાં આવેલ વેરિફિકેશન કોડ દાખલ કરો."
+          : "Please enter the verification code provided by your school."
+      );
+      return;
+    }
 
     setLinkLoading(true);
     setLinkError(null);
+    setLinkErrorCode(null);
     setLinkSuccess(null);
+    setNewlyLinkedChild(null);
 
     try {
       const res = await fetch("/api/parent/link-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: linkingCodeInput.trim().toUpperCase() }),
+        body: JSON.stringify({ code: cleanedCode }),
       });
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        throw new Error(data.error || "Failed to redeem code.");
+        setLinkErrorCode(data.errorCode || "INVALID_CODE");
+        throw new Error(data.error || "Invalid verification code. Please check the code provided by your school.");
       }
 
+      const linkedSummary: LinkedChildSummary | null = data.student
+        ? {
+            id: data.student.id,
+            displayName: data.student.displayName,
+            studentCode: data.student.studentCode,
+            grade: data.student.grade,
+            section: data.student.section,
+            schoolName: data.school?.name || "Model Primary School, Gandhinagar",
+          }
+        : null;
+
+      setNewlyLinkedChild(linkedSummary);
       setLinkSuccess(tr("parentPortal.linkSuccessMsg", { name: data.student?.displayName || pp.studentFallback }));
       setLinkingCodeInput("");
 
-      // Refresh list
-      await fetchParentProfile();
+      // Refresh parent profile & linked students silently so UI updates smoothly
+      await fetchParentProfile(true);
       if (data.studentId) {
         setSelectedStudentId(data.studentId);
       }
-
-      setTimeout(() => {
-        setLinkModalOpen(false);
-        setLinkSuccess(null);
-      }, 1500);
     } catch (err: any) {
       setLinkError(err.message || pp.redeemCodeFailError);
     } finally {
       setLinkLoading(false);
     }
+  };
+
+  const openLinkChildModal = () => {
+    setLinkError(null);
+    setLinkErrorCode(null);
+    setLinkSuccess(null);
+    setNewlyLinkedChild(null);
+    setLinkModalOpen(true);
   };
 
   // Handle Home Activity Completion Toggle
@@ -448,11 +478,8 @@ function ParentDashboardContent() {
 
               {/* Link Another Child Button */}
               <button
-                onClick={() => {
-                  setLinkError(null);
-                  setLinkSuccess(null);
-                  setLinkModalOpen(true);
-                }}
+                type="button"
+                onClick={openLinkChildModal}
                 className="px-3 py-1.5 rounded-xl text-xs font-bold border border-dashed border-[#B26A1B]/50 hover:border-[#B26A1B] bg-[#FAF6E9] hover:bg-[#F2CAB3]/30 text-[#B26A1B] transition-all flex items-center gap-1.5 cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
@@ -523,32 +550,62 @@ function ParentDashboardContent() {
           </div>
         ) : linkedStudents.length === 0 ? (
           /* Empty State: No child linked yet */
-          <div className="p-8 sm:p-12 rounded-3xl bg-white border border-[#49352F]/15 shadow-sm text-center max-w-xl mx-auto space-y-4">
+          <div className="p-6 sm:p-10 rounded-3xl bg-white border border-[#49352F]/15 shadow-sm text-center max-w-xl mx-auto space-y-5">
             <div className="w-16 h-16 rounded-3xl bg-[#FAF6E9] border border-[#49352F]/15 mx-auto flex items-center justify-center text-[#B26A1B]">
               <KeyRound className="w-8 h-8" />
             </div>
-            <h2 className="text-xl font-black text-[#49352F]">
-              {pp.linkProfileHeading}
-            </h2>
-            <p className="text-xs text-[#7A6862] leading-relaxed">
-              {pp.linkProfileDesc}
-            </p>
-            <form onSubmit={handleRedeemCode} className="space-y-3 pt-2">
+            <div className="space-y-1.5">
+              <h2 className="text-xl font-black text-[#49352F]">
+                {pp.linkProfileHeading}
+              </h2>
+              <p className="text-xs text-[#7A6862] leading-relaxed">
+                {pp.linkProfileDesc}
+              </p>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-[#FAF6E9] border border-[#49352F]/12 text-left text-[11px] text-[#49352F] space-y-1">
+              <p className="font-bold">
+                {language === "gu" ? "કોડ કેવી રીતે મેળવવો?" : "How to obtain your verification code:"}
+              </p>
+              <p className="text-[#7A6862] leading-relaxed">
+                {language === "gu"
+                  ? "તમારા બાળકના વર્ગ શિક્ષક StudySaathi માં વિદ્યાર્થીની પ્રોફાઇલ ખોલીને 'Parent Link Code' બટન પરથી કોડ બનાવી આપશે."
+                  : "Ask your child's teacher or school administrator to open your child's Student Profile in StudySaathi and click \"Parent Link Code\" → \"+ Generate Code\"."}
+              </p>
+            </div>
+
+            <form onSubmit={handleRedeemCode} className="space-y-3 pt-1">
+              <label htmlFor="empty-state-link-code" className="sr-only">
+                {language === "gu" ? "શાળા ચકાસણી કોડ" : "School Verification Code"}
+              </label>
               <input
+                id="empty-state-link-code"
                 type="text"
                 required
+                autoComplete="off"
+                spellCheck={false}
+                maxLength={32}
+                disabled={linkLoading}
                 value={linkingCodeInput}
                 onChange={(e) => setLinkingCodeInput(e.target.value.toUpperCase())}
                 placeholder="PAR-XXXX"
-                className="w-full max-w-xs mx-auto text-center px-4 py-3 rounded-2xl border-2 border-[#B26A1B] font-mono text-base font-bold text-[#B26A1B] uppercase tracking-widest placeholder:font-sans placeholder:normal-case placeholder:text-xs"
+                className="w-full max-w-xs mx-auto text-center px-4 py-3 rounded-2xl border-2 border-[#B26A1B] bg-[#FAF6E9]/40 font-mono text-base font-bold text-[#B26A1B] uppercase tracking-widest placeholder:font-sans placeholder:normal-case placeholder:text-xs focus:outline-none focus:ring-4 focus:ring-[#B26A1B]/20 disabled:opacity-60"
               />
-              {linkError && <p className="text-xs text-rose-600 font-semibold">{linkError}</p>}
-              {linkSuccess && <p className="text-xs text-emerald-600 font-semibold">{linkSuccess}</p>}
+              {linkError && (
+                <p role="alert" className="text-xs text-rose-700 font-semibold max-w-sm mx-auto bg-rose-50 border border-rose-200 rounded-xl px-3 py-2">
+                  {linkError}
+                </p>
+              )}
+              {linkSuccess && (
+                <p role="status" className="text-xs text-emerald-700 font-semibold max-w-sm mx-auto bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2">
+                  {linkSuccess}
+                </p>
+              )}
               <div>
                 <Button
                   type="submit"
-                  disabled={linkLoading}
-                  className="rounded-xl px-6 py-2.5 text-xs font-bold bg-[#B26A1B] text-white hover:bg-[#8F4E10]"
+                  disabled={linkLoading || !linkingCodeInput.trim()}
+                  className="rounded-xl px-6 py-2.5 text-xs font-bold bg-[#B26A1B] text-white hover:bg-[#8F4E10] disabled:opacity-50"
                 >
                   {linkLoading ? pp.verifyingBtn : pp.verifyConnectBtn}
                 </Button>
@@ -1293,11 +1350,8 @@ function ParentDashboardContent() {
                     </p>
                   </div>
                   <Button
-                    onClick={() => {
-                      setLinkError(null);
-                      setLinkSuccess(null);
-                      setLinkModalOpen(true);
-                    }}
+                    type="button"
+                    onClick={openLinkChildModal}
                     className="rounded-xl text-xs font-bold bg-[#B26A1B] text-white hover:bg-[#8F4E10]"
                   >
                     <Plus className="w-3.5 h-3.5 mr-1" />
@@ -1543,58 +1597,35 @@ function ParentDashboardContent() {
       </main>
 
       {/* LINK CHILD MODAL */}
-      {linkModalOpen && (
-        <div className="fixed inset-0 z-50 bg-[#49352F]/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-white rounded-3xl p-6 shadow-xl border border-[#49352F]/15 space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-black text-[#49352F] flex items-center gap-2">
-                <KeyRound className="w-4 h-4 text-[#B26A1B]" />
-                <span>{pp.linkAnotherChildBtn}</span>
-              </h3>
-              <button
-                onClick={() => setLinkModalOpen(false)}
-                className="p-1 rounded-lg text-[#7A6862] hover:bg-neutral-100"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <p className="text-xs text-[#7A6862]">
-              {pp.linkModalDescription}
-            </p>
-
-            <form onSubmit={handleRedeemCode} className="space-y-3">
-              <input
-                type="text"
-                required
-                value={linkingCodeInput}
-                onChange={(e) => setLinkingCodeInput(e.target.value.toUpperCase())}
-                placeholder={pp.linkingCodePlaceholder}
-                className="w-full text-center px-4 py-3 rounded-2xl border-2 border-[#B26A1B] font-mono text-base font-bold text-[#B26A1B] uppercase tracking-widest placeholder:font-sans placeholder:normal-case placeholder:text-xs"
-              />
-              {linkError && <p className="text-xs text-rose-600 font-semibold">{linkError}</p>}
-              {linkSuccess && <p className="text-xs text-emerald-600 font-semibold">{linkSuccess}</p>}
-              <div className="flex justify-end gap-2 pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setLinkModalOpen(false)}
-                  className="rounded-xl text-xs"
-                >
-                  {pp.cancelBtn}
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={linkLoading}
-                  className="rounded-xl text-xs font-bold bg-[#B26A1B] text-white hover:bg-[#8F4E10]"
-                >
-                  {linkLoading ? pp.verifyingBtn : pp.verifyAndLinkBtn}
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <LinkChildModal
+        isOpen={linkModalOpen}
+        onClose={() => {
+          setLinkModalOpen(false);
+          setNewlyLinkedChild(null);
+          setLinkSuccess(null);
+          setLinkError(null);
+          setLinkErrorCode(null);
+        }}
+        language={language}
+        codeValue={linkingCodeInput}
+        onCodeChange={setLinkingCodeInput}
+        onSubmit={handleRedeemCode}
+        loading={linkLoading}
+        error={linkError}
+        errorCode={linkErrorCode}
+        successMessage={linkSuccess}
+        linkedChild={newlyLinkedChild}
+        onViewLinkedChild={() => {
+          if (newlyLinkedChild?.id) {
+            setSelectedStudentId(newlyLinkedChild.id);
+          }
+          setActiveTab("overview");
+          setLinkModalOpen(false);
+          setNewlyLinkedChild(null);
+          setLinkSuccess(null);
+        }}
+        formatClass={formatClass}
+      />
     </div>
   );
 }

@@ -13,6 +13,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useFilter } from "@/context/FilterContext";
 import { StudentFormModal } from "@/components/student/StudentFormModal";
 import { StudentCsvModal } from "@/components/student/StudentCsvModal";
+import { ParentLinkCodeModal } from "@/components/student/ParentLinkCodeModal";
 import { broadcastDataUpdate, subscribeToDataUpdates } from "@/lib/events";
 import { fetchWithCache, getCachedDataSync } from "@/lib/cache/localCache";
 import {
@@ -32,6 +33,7 @@ import {
   AlertCircle,
   Clock,
   Building,
+  KeyRound,
 } from "lucide-react";
 
 function StudentsPageContent() {
@@ -53,6 +55,7 @@ function StudentsPageContent() {
   const [editingStudent, setEditingStudent] = useState<any | null>(null);
   const [showCsvModal, setShowCsvModal] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [linkingTarget, setLinkingTarget] = useState<{ id: string; name: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const router = useRouter();
@@ -503,6 +506,21 @@ function StudentsPageContent() {
                   </div>
 
                   <div className="flex items-center gap-1">
+                    {/* Parent Link Code Button */}
+                    <button
+                      type="button"
+                      onClick={() => setLinkingTarget({ id: std.id, name: std.displayName })}
+                      className="p-1.5 rounded-lg text-[#7A6862]/60 hover:text-[#B26A1B] hover:bg-[#F2CAB3]/30 transition-colors cursor-pointer"
+                      title={
+                        language === "gu"
+                          ? `${std.displayName} માટે વાલી કોડ જનરેટ કરો`
+                          : `Parent Link Code for ${std.displayName}`
+                      }
+                      aria-label={`Parent Link Code for ${std.displayName}`}
+                    >
+                      <KeyRound className="w-3.5 h-3.5" />
+                    </button>
+
                     {/* Inline Edit Button */}
                     <button
                       type="button"
@@ -621,6 +639,16 @@ function StudentsPageContent() {
             </Button>
           </div>
         </Dialog>
+      )}
+
+      {/* Parent Linking Code Modal */}
+      {linkingTarget && (
+        <ParentLinkCodeModal
+          isOpen={Boolean(linkingTarget)}
+          onClose={() => setLinkingTarget(null)}
+          studentId={linkingTarget.id}
+          studentName={linkingTarget.name}
+        />
       )}
 
       {/* Guided Tour */}

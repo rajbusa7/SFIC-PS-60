@@ -13,6 +13,7 @@ import { StudentSkillTree3D, type SkillNode } from "@/components/3d/StudentSkill
 import { useLanguage } from "@/context/LanguageContext";
 import { ContextualHelp } from "@/components/shared/ContextualHelp";
 import { LearningGapMap } from "@/components/learning-gaps/LearningGapMap";
+import { ParentLinkCodeModal } from "@/components/student/ParentLinkCodeModal";
 import { subscribeToDataUpdates } from "@/lib/events";
 import { formatDate } from "@/lib/utils";
 import {
@@ -107,37 +108,9 @@ export default function StudentDetailPage({
 
   // Parent linking code modal state
   const [showLinkingModal, setShowLinkingModal] = useState(false);
-  const [linkingCodes, setLinkingCodes] = useState<any[]>([]);
-  const [connectedParents, setConnectedParents] = useState<any[]>([]);
-  const [generatingCode, setGeneratingCode] = useState(false);
 
-  const fetchAndOpenLinkingModal = async () => {
+  const fetchAndOpenLinkingModal = () => {
     setShowLinkingModal(true);
-    try {
-      const res = await fetch(`/api/students/${id}/link-code`);
-      const data = await res.json();
-      if (data.success) {
-        setLinkingCodes(data.linkingCodes || []);
-        setConnectedParents(data.connectedParents || []);
-      }
-    } catch (e) {
-      console.error("Failed to load linking codes:", e);
-    }
-  };
-
-  const handleGenerateCode = async () => {
-    setGeneratingCode(true);
-    try {
-      const res = await fetch(`/api/students/${id}/link-code`, { method: "POST" });
-      const data = await res.json();
-      if (data.success && data.linkingCode) {
-        setLinkingCodes((prev) => [data.linkingCode, ...prev]);
-      }
-    } catch (e) {
-      console.error("Failed to generate code:", e);
-    } finally {
-      setGeneratingCode(false);
-    }
   };
 
   const fetchStudentData = async () => {
@@ -871,94 +844,12 @@ export default function StudentDetailPage({
       )}
 
       {showLinkingModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-          <div className="max-w-lg w-full rounded-3xl bg-white border border-[#49352F]/15 p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-[#49352F]/10 pb-3">
-              <div className="flex items-center gap-2">
-                <KeyRound className="w-5 h-5 text-[#B26A1B]" />
-                <h3 className="font-heading text-base font-black text-[#49352F]">
-                  Parent Linking Code &bull; {student.displayName}
-                </h3>
-              </div>
-              <button
-                onClick={() => setShowLinkingModal(false)}
-                className="text-[#7A6862] hover:text-[#49352F] p-1 rounded-lg"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <p className="text-xs text-[#7A6862] leading-relaxed">
-              Generate a secure 7-day single-use verification code to hand to {student.displayName}&apos;s parent. When entered on the Parent Portal, it authorizes access to their child&apos;s real academic progress docket.
-            </p>
-
-            <div className="flex items-center justify-between p-3 rounded-2xl bg-[#FAF6E9] border border-[#49352F]/15">
-              <div>
-                <span className="text-[10px] uppercase font-bold text-[#7A6862] block">Generate New 7-Day Code</span>
-                <span className="text-xs font-semibold text-[#49352F]">Expiring invitation token</span>
-              </div>
-              <Button
-                size="sm"
-                disabled={generatingCode}
-                onClick={handleGenerateCode}
-                className="rounded-xl text-xs font-bold bg-[#B26A1B] text-white hover:bg-[#8F4E10]"
-              >
-                {generatingCode ? "Generating..." : "+ Generate Code"}
-              </Button>
-            </div>
-
-            {/* Existing Codes */}
-            <div className="space-y-2">
-              <span className="text-xs font-bold text-[#49352F]">Active & Recent Linking Codes:</span>
-              {linkingCodes.length === 0 ? (
-                <p className="text-xs text-[#7A6862] p-3 text-center rounded-xl bg-slate-50">
-                  No linking codes generated yet. Click &quot;+ Generate Code&quot; above.
-                </p>
-              ) : (
-                <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {linkingCodes.map((codeItem: any) => (
-                    <div
-                      key={codeItem.id}
-                      className="p-3 rounded-xl border border-[#49352F]/10 bg-white flex items-center justify-between text-xs"
-                    >
-                      <div>
-                        <span className="font-mono font-black text-sm text-[#B26A1B] tracking-wider block">
-                          {codeItem.code}
-                        </span>
-                        <span className="text-[10px] text-[#7A6862]" suppressHydrationWarning>
-                          Expires: {formatDate(codeItem.expiresAt)}
-                        </span>
-                      </div>
-                      <Badge
-                        variant={
-                          codeItem.status === "used" ? "default" : codeItem.status === "expired" ? "needsSupport" : "mastered"
-                        }
-                        size="sm"
-                      >
-                        {codeItem.status === "used" ? "Redeemed" : codeItem.status === "expired" ? "Expired" : "Active (Ready)"}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Connected Parents */}
-            {connectedParents.length > 0 && (
-              <div className="pt-2 border-t border-[#49352F]/10 space-y-1.5">
-                <span className="text-xs font-bold text-[#49352F]">Currently Linked Parents:</span>
-                <div className="space-y-1">
-                  {connectedParents.map((parent: any) => (
-                    <div key={parent.id} className="text-xs text-[#7A6862] flex items-center justify-between">
-                      <span className="font-medium text-[#49352F]">{parent.name} ({parent.relationship || "Guardian"})</span>
-                      <span>{parent.phone || parent.email}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+        <ParentLinkCodeModal
+          isOpen={showLinkingModal}
+          onClose={() => setShowLinkingModal(false)}
+          studentId={id}
+          studentName={student.displayName}
+        />
       )}
 
       {/* Guided Tour */}

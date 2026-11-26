@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import type { Pool, PoolClient, QueryResult, QueryResultRow } from "pg";
 import type {
   Student,
@@ -408,6 +409,76 @@ export async function ensurePostgresSchema(): Promise<void> {
         CREATE INDEX IF NOT EXISTS idx_teacher_assignments_teacher_email ON teacher_assignments(LOWER(teacher_email));
         CREATE INDEX IF NOT EXISTS idx_teacher_assignments_subject_code ON teacher_assignments(subject_code);
         CREATE INDEX IF NOT EXISTS idx_teacher_assignments_updated_at ON teacher_assignments(updated_at DESC);
+
+        -- Row-Level Security (RLS) policies for parent linking & records isolation
+        ALTER TABLE parent_profiles ENABLE ROW LEVEL SECURITY;
+        ALTER TABLE parent_students ENABLE ROW LEVEL SECURITY;
+        ALTER TABLE parent_linking_codes ENABLE ROW LEVEL SECURITY;
+        ALTER TABLE parent_messages ENABLE ROW LEVEL SECURITY;
+        ALTER TABLE parent_activity_completions ENABLE ROW LEVEL SECURITY;
+
+        DROP POLICY IF EXISTS parent_profiles_owner_policy ON parent_profiles;
+        CREATE POLICY parent_profiles_owner_policy ON parent_profiles
+          USING (
+            current_setting('app.current_user_role', true) IN ('admin', 'teacher')
+            OR user_id = current_setting('app.current_user_id', true)
+          )
+          WITH CHECK (
+            current_setting('app.current_user_role', true) = 'admin'
+            OR user_id = current_setting('app.current_user_id', true)
+          );
+
+        DROP POLICY IF EXISTS parent_students_isolation_policy ON parent_students;
+        CREATE POLICY parent_students_isolation_policy ON parent_students
+          USING (
+            current_setting('app.current_user_role', true) IN ('admin', 'teacher')
+            OR EXISTS (
+              SELECT 1 FROM parent_profiles pp
+              WHERE pp.id = parent_students.parent_id
+                AND pp.user_id = current_setting('app.current_user_id', true)
+            )
+          )
+          WITH CHECK (
+            current_setting('app.current_user_role', true) IN ('admin', 'teacher')
+            OR EXISTS (
+              SELECT 1 FROM parent_profiles pp
+              WHERE pp.id = parent_students.parent_id
+                AND pp.user_id = current_setting('app.current_user_id', true)
+            )
+          );
+
+        DROP POLICY IF EXISTS parent_linking_codes_staff_policy ON parent_linking_codes;
+        CREATE POLICY parent_linking_codes_staff_policy ON parent_linking_codes
+          USING (
+            current_setting('app.current_user_role', true) IN ('admin', 'teacher')
+            OR status = 'active'
+          )
+          WITH CHECK (
+            current_setting('app.current_user_role', true) IN ('admin', 'teacher')
+            OR (status = 'used' AND used_by_user_id = current_setting('app.current_user_id', true))
+          );
+
+        DROP POLICY IF EXISTS parent_messages_isolation_policy ON parent_messages;
+        CREATE POLICY parent_messages_isolation_policy ON parent_messages
+          USING (
+            current_setting('app.current_user_role', true) IN ('admin', 'teacher')
+            OR EXISTS (
+              SELECT 1 FROM parent_profiles pp
+              WHERE pp.id = parent_messages.parent_id
+                AND pp.user_id = current_setting('app.current_user_id', true)
+            )
+          );
+
+        DROP POLICY IF EXISTS parent_activity_isolation_policy ON parent_activity_completions;
+        CREATE POLICY parent_activity_isolation_policy ON parent_activity_completions
+          USING (
+            current_setting('app.current_user_role', true) IN ('admin', 'teacher')
+            OR EXISTS (
+              SELECT 1 FROM parent_profiles pp
+              WHERE pp.id = parent_activity_completions.parent_id
+                AND pp.user_id = current_setting('app.current_user_id', true)
+            )
+          );
       `);
 
       // Seed baseline School if empty
@@ -532,6 +603,24 @@ export async function ensurePostgresSchema(): Promise<void> {
           );
         }
       }
+
+      // Seed baseline demo parent linking codes if not already created
+      await client.query(
+        `INSERT INTO parent_linking_codes (id, student_id, code, expires_at, status, created_by_user_id, created_at)
+         SELECT 'plc-demo-aarav', 'std-aarav', 'PAR-4892', NOW() + INTERVAL '30 days', 'active',
+                CASE WHEN EXISTS (SELECT 1 FROM users WHERE id = 'usr-teacher-01') THEN 'usr-teacher-01' ELSE NULL END,
+                NOW()
+         WHERE EXISTS (SELECT 1 FROM students WHERE id = 'std-aarav')
+           AND NOT EXISTS (SELECT 1 FROM parent_linking_codes WHERE id = 'plc-demo-aarav' OR UPPER(code) = 'PAR-4892')`
+      );
+      await client.query(
+        `INSERT INTO parent_linking_codes (id, student_id, code, expires_at, status, created_by_user_id, created_at)
+         SELECT 'plc-demo-diya', 'std-diya', 'PAR-5219', NOW() + INTERVAL '30 days', 'active',
+                CASE WHEN EXISTS (SELECT 1 FROM users WHERE id = 'usr-teacher-01') THEN 'usr-teacher-01' ELSE NULL END,
+                NOW()
+         WHERE EXISTS (SELECT 1 FROM students WHERE id = 'std-diya')
+           AND NOT EXISTS (SELECT 1 FROM parent_linking_codes WHERE id = 'plc-demo-diya' OR UPPER(code) = 'PAR-5219')`
+      );
 
       await client.query("COMMIT");
       schemaInitialized = true;
@@ -1537,6 +1626,34 @@ export const postgresUserDb = {
   },
 };
 
+const LINKING_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+function generateSecureLinkingCode(): string {
+  let suffix = "";
+  for (let i = 0; i < 6; i++) {
+    suffix += LINKING_CODE_ALPHABET[crypto.randomInt(0, LINKING_CODE_ALPHABET.length)];
+  }
+  return `PAR-${suffix}`;
+}
+
+function normalizeLinkingCode(code: string): string {
+  return String(code || "").trim().toUpperCase().replace(/\s+/g, "");
+}
+
+function mapLinkingCodeRow(row: any): ParentLinkingCode {
+  return {
+    id: row.id,
+    studentId: row.studentId,
+    code: row.code,
+    expiresAt: row.expiresAt ? new Date(row.expiresAt).toISOString() : new Date().toISOString(),
+    status: row.status,
+    createdByUserId: row.createdByUserId || undefined,
+    usedByUserId: row.usedByUserId || undefined,
+    usedAt: row.usedAt ? new Date(row.usedAt).toISOString() : undefined,
+    createdAt: row.createdAt ? new Date(row.createdAt).toISOString() : new Date().toISOString(),
+  };
+}
+
 export const postgresParentDb = {
   async updateParentPreferences(
     userId: string,
@@ -1555,26 +1672,31 @@ export const postgresParentDb = {
     return (res.rowCount ?? 0) > 0;
   },
   async getParentByUserId(userId: string): Promise<ParentProfile | null> {
+    await ensurePostgresSchema();
     const pool = getPostgresPool()!;
     const { rows: profileRows } = await pool.query(
       `SELECT id, user_id as "userId", name, email, phone, 
               preferred_language as "preferredLanguage", preferred_script as "preferredScript", relationship, 
               created_at as "createdAt", updated_at as "updatedAt"
-       FROM parent_profiles WHERE user_id = $1 LIMIT 1`,
+       FROM parent_profiles WHERE user_id = $1 ORDER BY created_at ASC LIMIT 1`,
       [userId]
     );
     if (!profileRows[0]) return null;
     const profile = profileRows[0];
 
     const { rows: studentRows } = await pool.query(
-      `SELECT student_id as "studentId" FROM parent_students WHERE parent_id = $1 ORDER BY linked_at ASC`,
-      [profile.id]
+      `SELECT DISTINCT ps.student_id as "studentId"
+       FROM parent_students ps
+       JOIN parent_profiles pp ON pp.id = ps.parent_id
+       WHERE pp.user_id = $1`,
+      [userId]
     );
     profile.studentIds = studentRows.map((r: any) => r.studentId);
     return profile;
   },
 
   async getParentByPhone(phone: string): Promise<ParentProfile | null> {
+    await ensurePostgresSchema();
     const pool = getPostgresPool();
     if (!pool) return null;
     const cleaned = phone.trim().replace(/[\s\-\(\)]/g, "");
@@ -1584,7 +1706,8 @@ export const postgresParentDb = {
               preferred_language as "preferredLanguage", preferred_script as "preferredScript", relationship, 
               created_at as "createdAt", updated_at as "updatedAt"
        FROM parent_profiles 
-       WHERE phone = $1 OR phone = $2 OR RIGHT(phone, 10) = $3 LIMIT 1`,
+       WHERE phone = $1 OR phone = $2 OR RIGHT(phone, 10) = $3
+       ORDER BY created_at ASC LIMIT 1`,
       [phone, cleaned, national]
     );
     if (!profileRows[0]) return null;
@@ -1599,6 +1722,7 @@ export const postgresParentDb = {
   },
 
   async getParentById(id: string): Promise<ParentProfile | null> {
+    await ensurePostgresSchema();
     const pool = getPostgresPool()!;
     const { rows: profileRows } = await pool.query(
       `SELECT id, user_id as "userId", name, email, phone, 
@@ -1618,6 +1742,25 @@ export const postgresParentDb = {
     return profile;
   },
 
+  async getParentsByStudentId(studentId: string): Promise<ParentProfile[]> {
+    await ensurePostgresSchema();
+    const pool = getPostgresPool()!;
+    const { rows } = await pool.query(
+      `SELECT pp.id, pp.user_id as "userId", pp.name, pp.email, pp.phone,
+              pp.preferred_language as "preferredLanguage",
+              COALESCE(ps.relationship, pp.relationship) as relationship
+       FROM parent_profiles pp
+       JOIN parent_students ps ON ps.parent_id = pp.id
+       WHERE ps.student_id = $1
+       ORDER BY ps.linked_at ASC`,
+      [studentId]
+    );
+    return rows.map((r: any) => ({
+      ...r,
+      studentIds: [studentId],
+    }));
+  },
+
   async createParentProfile(data: {
     id?: string;
     userId: string;
@@ -1628,18 +1771,22 @@ export const postgresParentDb = {
     relationship?: string;
     studentIds?: string[];
   }): Promise<ParentProfile> {
+    await ensurePostgresSchema();
     const pool = getPostgresPool()!;
-    const id = data.id || `par-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
     const prefLang = data.preferredLanguage || "gu";
     const rel = data.relationship || "guardian";
+
+    // Prevent duplicate parent_profiles rows for the same user_id
+    const existingByUser = await this.getParentByUserId(data.userId);
+    const id = existingByUser?.id || data.id || `par-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
 
     await pool.query(
       `INSERT INTO parent_profiles (id, user_id, name, email, phone, preferred_language, relationship)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
        ON CONFLICT (id) DO UPDATE SET
          name = EXCLUDED.name,
-         email = EXCLUDED.email,
-         phone = EXCLUDED.phone,
+         email = COALESCE(EXCLUDED.email, parent_profiles.email),
+         phone = COALESCE(EXCLUDED.phone, parent_profiles.phone),
          preferred_language = EXCLUDED.preferred_language,
          relationship = EXCLUDED.relationship,
          updated_at = CURRENT_TIMESTAMP`,
@@ -1657,19 +1804,21 @@ export const postgresParentDb = {
       }
     }
 
+    const mergedIds = Array.from(new Set([...(existingByUser?.studentIds || []), ...(data.studentIds || [])]));
     return {
       id,
       userId: data.userId,
       name: data.name,
-      email: data.email,
-      phone: data.phone,
+      email: data.email || existingByUser?.email,
+      phone: data.phone || existingByUser?.phone,
       preferredLanguage: prefLang as any,
       relationship: rel as any,
-      studentIds: data.studentIds || [],
+      studentIds: mergedIds,
     };
   },
 
   async linkParentToStudent(parentId: string, studentId: string, relationship = "guardian"): Promise<boolean> {
+    await ensurePostgresSchema();
     const pool = getPostgresPool()!;
     await pool.query(
       `INSERT INTO parent_students (parent_id, student_id, relationship)
@@ -1681,6 +1830,7 @@ export const postgresParentDb = {
   },
 
   async unlinkParentFromStudent(parentId: string, studentId: string): Promise<boolean> {
+    await ensurePostgresSchema();
     const pool = getPostgresPool()!;
     const res = await pool.query(
       `DELETE FROM parent_students WHERE parent_id = $1 AND student_id = $2`,
@@ -1690,93 +1840,261 @@ export const postgresParentDb = {
   },
 
   async getLinkedStudentsForParent(parentId: string): Promise<Student[]> {
+    await ensurePostgresSchema();
     const pool = getPostgresPool()!;
     const { rows } = await pool.query(
-      `SELECT s.id, s.roll_number as "rollNumber", s.first_name as "firstName", 
-              s.last_name as "lastName", s.display_name as "displayName", 
-              s.class_id as "classId", s.grade, s.section, s.gender, 
-              s.attendance_rate as "attendanceRate", s.performance_level as "performanceLevel",
-              s.preferred_language as "preferredLanguage", s.avatar_url as "avatarUrl"
+      `SELECT DISTINCT
+         s.id,
+         s.student_code AS "studentCode",
+         s.display_name AS "displayName",
+         s.classroom_id AS "classroomId",
+         s.grade,
+         s.section,
+         s.enrollment_status AS "enrollmentStatus",
+         s.notes,
+         s.created_at AS "createdAt"
        FROM students s
        JOIN parent_students ps ON ps.student_id = s.id
+       LEFT JOIN parent_profiles pp ON pp.id = ps.parent_id
        WHERE ps.parent_id = $1
-       ORDER BY s.roll_number ASC`,
+          OR (
+            pp.user_id IS NOT NULL
+            AND pp.user_id = (SELECT user_id FROM parent_profiles WHERE id = $1 LIMIT 1)
+          )
+       ORDER BY s.display_name ASC`,
       [parentId]
     );
-    return rows;
+    return rows.map(mapStudentRow);
   },
 
   async createLinkingCode(studentId: string, createdByUserId?: string, expiresInDays = 7): Promise<ParentLinkingCode> {
+    await ensurePostgresSchema();
     const pool = getPostgresPool()!;
-    const id = `plc-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
-    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-    const code = `PAR-${randomSuffix}`;
-    const expiresAt = new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000).toISOString();
 
-    const { rows } = await pool.query(
-      `INSERT INTO parent_linking_codes (id, student_id, code, expires_at, status, created_by_user_id)
-       VALUES ($1, $2, $3, $4, 'active', $5)
-       RETURNING id, student_id as "studentId", code, expires_at as "expiresAt", 
-                 status, created_by_user_id as "createdByUserId", created_at as "createdAt"`,
-      [id, studentId, code, expiresAt, createdByUserId || null]
-    );
-    return rows[0];
+    const studentRes = await pool.query(`SELECT id FROM students WHERE id = $1 LIMIT 1`, [studentId]);
+    if (studentRes.rows.length === 0) {
+      throw new Error("Student not found.");
+    }
+
+    const safeDays = Math.min(30, Math.max(1, Number(expiresInDays) || 7));
+    const expiresAt = new Date(Date.now() + safeDays * 24 * 60 * 60 * 1000).toISOString();
+
+    let validCreatorId: string | null = null;
+    if (createdByUserId) {
+      const creatorRes = await pool.query(`SELECT id FROM users WHERE id = $1 LIMIT 1`, [createdByUserId]);
+      if (creatorRes.rows.length > 0) {
+        validCreatorId = createdByUserId;
+      }
+    }
+
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const id = `plc-${Date.now()}-${crypto.randomBytes(3).toString("hex")}`;
+      const code = generateSecureLinkingCode();
+      try {
+        const { rows } = await pool.query(
+          `INSERT INTO parent_linking_codes (id, student_id, code, expires_at, status, created_by_user_id)
+           VALUES ($1, $2, $3, $4, 'active', $5)
+           RETURNING id, student_id as "studentId", code, expires_at as "expiresAt", 
+                     status, created_by_user_id as "createdByUserId", created_at as "createdAt"`,
+          [id, studentId, code, expiresAt, validCreatorId]
+        );
+        return mapLinkingCodeRow(rows[0]);
+      } catch (err: any) {
+        if (err?.code === "23505" && attempt < 4) continue;
+        throw err;
+      }
+    }
+    throw new Error("Failed to generate a unique verification code. Please try again.");
   },
 
   async getLinkingCode(code: string): Promise<ParentLinkingCode | null> {
+    await ensurePostgresSchema();
     const pool = getPostgresPool()!;
-    const normalized = code.trim().toUpperCase();
+    const normalized = normalizeLinkingCode(code);
+    if (!normalized) return null;
     const { rows } = await pool.query(
       `SELECT id, student_id as "studentId", code, expires_at as "expiresAt", 
               status, created_by_user_id as "createdByUserId", used_by_user_id as "usedByUserId",
               used_at as "usedAt", created_at as "createdAt"
-       FROM parent_linking_codes WHERE UPPER(code) = $1 LIMIT 1`,
+       FROM parent_linking_codes WHERE UPPER(TRIM(code)) = $1 LIMIT 1`,
       [normalized]
     );
-    return rows[0] || null;
+    return rows[0] ? mapLinkingCodeRow(rows[0]) : null;
   },
 
   async redeemLinkingCode(
     code: string,
     parentUserId: string,
     parentProfileId: string
-  ): Promise<{ success: boolean; studentId?: string; error?: string }> {
+  ): Promise<{ success: boolean; studentId?: string; error?: string; errorCode?: string }> {
+    await ensurePostgresSchema();
     const pool = getPostgresPool()!;
-    const linkingCode = await this.getLinkingCode(code);
-    if (!linkingCode) {
-      return { success: false, error: "Invalid verification code. Please check the code provided by your school." };
+    const normalized = normalizeLinkingCode(code);
+    if (!normalized) {
+      return {
+        success: false,
+        errorCode: "INVALID_CODE",
+        error: "Please enter a valid verification code.",
+      };
     }
 
-    if (linkingCode.status === "used") {
-      return { success: false, error: "This linking code has already been redeemed." };
-    }
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
 
-    if (new Date(linkingCode.expiresAt).getTime() < Date.now()) {
-      await pool.query(`UPDATE parent_linking_codes SET status = 'expired' WHERE id = $1`, [linkingCode.id]);
-      return { success: false, error: "This linking code has expired. Please request a new code from the school teacher." };
-    }
+      const codeRes = await client.query(
+        `SELECT id, student_id as "studentId", code, expires_at as "expiresAt",
+                status, created_by_user_id as "createdByUserId", used_by_user_id as "usedByUserId",
+                used_at as "usedAt", created_at as "createdAt"
+         FROM parent_linking_codes
+         WHERE UPPER(TRIM(code)) = $1
+         FOR UPDATE
+         LIMIT 1`,
+        [normalized]
+      );
 
-    // Mark as used
-    await pool.query(
-      `UPDATE parent_linking_codes 
-       SET status = 'used', used_by_user_id = $1, used_at = CURRENT_TIMESTAMP 
-       WHERE id = $2`,
-      [parentUserId, linkingCode.id]
+      if (codeRes.rows.length === 0) {
+        await client.query("ROLLBACK");
+        return {
+          success: false,
+          errorCode: "INVALID_CODE",
+          error: "Invalid verification code. Please check the code provided by your school.",
+        };
+      }
+
+      const linkingCode = mapLinkingCodeRow(codeRes.rows[0]);
+
+      if (linkingCode.status === "used") {
+        await client.query("ROLLBACK");
+        return {
+          success: false,
+          errorCode: "USED_CODE",
+          error: "This verification code has already been redeemed. Please ask your child's teacher for a new code.",
+        };
+      }
+
+      if (linkingCode.status === "revoked") {
+        await client.query("ROLLBACK");
+        return {
+          success: false,
+          errorCode: "REVOKED_CODE",
+          error: "This verification code is no longer active. Please request a new code from your child's teacher.",
+        };
+      }
+
+      if (linkingCode.status === "expired" || new Date(linkingCode.expiresAt).getTime() <= Date.now()) {
+        if (linkingCode.status !== "expired") {
+          await client.query(`UPDATE parent_linking_codes SET status = 'expired' WHERE id = $1`, [linkingCode.id]);
+        }
+        await client.query("COMMIT");
+        return {
+          success: false,
+          errorCode: "EXPIRED_CODE",
+          error: "This verification code has expired. Please request a new code from your child's teacher.",
+        };
+      }
+
+      // Ensure student exists and is active (never leak details on failure)
+      const studentRes = await client.query(
+        `SELECT id, enrollment_status as "enrollmentStatus" FROM students WHERE id = $1 LIMIT 1`,
+        [linkingCode.studentId]
+      );
+      if (studentRes.rows.length === 0 || studentRes.rows[0].enrollmentStatus === "transferred") {
+        await client.query("ROLLBACK");
+        return {
+          success: false,
+          errorCode: "INVALID_CODE",
+          error: "Invalid verification code. Please check the code provided by your school.",
+        };
+      }
+
+      // Verify parent profile ownership
+      const profileRes = await client.query(
+        `SELECT id, relationship FROM parent_profiles WHERE id = $1 AND user_id = $2 LIMIT 1`,
+        [parentProfileId, parentUserId]
+      );
+      if (profileRes.rows.length === 0) {
+        await client.query("ROLLBACK");
+        return {
+          success: false,
+          errorCode: "PROFILE_NOT_FOUND",
+          error: "Parent profile not found. Please sign in again.",
+        };
+      }
+
+      // Check if already linked before consuming the code
+      const existingLinkRes = await client.query(
+        `SELECT 1 FROM parent_students ps
+         JOIN parent_profiles pp ON pp.id = ps.parent_id
+         WHERE (ps.parent_id = $1 OR pp.user_id = $2) AND ps.student_id = $3
+         LIMIT 1`,
+        [parentProfileId, parentUserId, linkingCode.studentId]
+      );
+      if (existingLinkRes.rows.length > 0) {
+        await client.query("ROLLBACK");
+        return {
+          success: false,
+          errorCode: "ALREADY_LINKED",
+          error: "This child is already linked to your parent account.",
+        };
+      }
+
+      // Atomically mark code as used
+      const updateRes = await client.query(
+        `UPDATE parent_linking_codes
+         SET status = 'used', used_by_user_id = $1, used_at = CURRENT_TIMESTAMP
+         WHERE id = $2 AND status = 'active'
+         RETURNING id`,
+        [parentUserId, linkingCode.id]
+      );
+      if ((updateRes.rowCount ?? 0) === 0) {
+        await client.query("ROLLBACK");
+        return {
+          success: false,
+          errorCode: "USED_CODE",
+          error: "This verification code has already been redeemed. Please ask your child's teacher for a new code.",
+        };
+      }
+
+      const rel = profileRes.rows[0].relationship || "guardian";
+      await client.query(
+        `INSERT INTO parent_students (parent_id, student_id, relationship)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (parent_id, student_id) DO NOTHING`,
+        [parentProfileId, linkingCode.studentId, rel]
+      );
+
+      await client.query("COMMIT");
+      return { success: true, studentId: linkingCode.studentId };
+    } catch (err) {
+      await client.query("ROLLBACK");
+      throw err;
+    } finally {
+      client.release();
+    }
+  },
+
+  async revokeLinkingCode(codeId: string, studentId: string): Promise<boolean> {
+    await ensurePostgresSchema();
+    const pool = getPostgresPool()!;
+    const res = await pool.query(
+      `UPDATE parent_linking_codes
+       SET status = 'revoked'
+       WHERE id = $1 AND student_id = $2 AND status = 'active'`,
+      [codeId, studentId]
     );
-
-    // Link parent to student
-    await pool.query(
-      `INSERT INTO parent_students (parent_id, student_id, relationship)
-       VALUES ($1, $2, 'guardian')
-       ON CONFLICT (parent_id, student_id) DO NOTHING`,
-      [parentProfileId, linkingCode.studentId]
-    );
-
-    return { success: true, studentId: linkingCode.studentId };
+    return (res.rowCount ?? 0) > 0;
   },
 
   async getLinkingCodesForStudent(studentId: string): Promise<ParentLinkingCode[]> {
+    await ensurePostgresSchema();
     const pool = getPostgresPool()!;
+    await pool.query(
+      `UPDATE parent_linking_codes
+       SET status = 'expired'
+       WHERE student_id = $1 AND status = 'active' AND expires_at <= CURRENT_TIMESTAMP`,
+      [studentId]
+    );
     const { rows } = await pool.query(
       `SELECT id, student_id as "studentId", code, expires_at as "expiresAt", 
               status, created_by_user_id as "createdByUserId", used_by_user_id as "usedByUserId",
@@ -1784,7 +2102,7 @@ export const postgresParentDb = {
        FROM parent_linking_codes WHERE student_id = $1 ORDER BY created_at DESC`,
       [studentId]
     );
-    return rows;
+    return rows.map(mapLinkingCodeRow);
   },
 
   async createParentMessage(

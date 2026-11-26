@@ -62,7 +62,7 @@ export interface ParentLinkingCode {
   studentId: string;
   code: string;
   expiresAt: string;
-  status: "active" | "used" | "expired";
+  status: "active" | "used" | "expired" | "revoked";
   createdByUserId?: string;
   usedByUserId?: string;
   usedAt?: string;

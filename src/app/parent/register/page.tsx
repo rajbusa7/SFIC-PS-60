@@ -88,11 +88,19 @@ export default function ParentRegisterPage() {
         throw new Error(data.error || pp.registerFailFallback);
       }
 
-      setSuccessMsg(pp.registerSuccessMsg);
+      if (data.linkingWarning) {
+        setSuccessMsg(
+          language === "gu"
+            ? `એકાઉન્ટ બની ગયું! પરંતુ બાળક જોડાણ કોડ ચકાસી શકાયો નથી: ${data.linkingWarning}`
+            : `Account created! Note: ${data.linkingWarning}`
+        );
+      } else {
+        setSuccessMsg(pp.registerSuccessMsg);
+      }
 
       setTimeout(() => {
         router.push("/parent/dashboard");
-      }, 700);
+      }, data.linkingWarning ? 1800 : 700);
     } catch (err: any) {
       setError(err.message || pp.registerCreateFailFallback);
     } finally {

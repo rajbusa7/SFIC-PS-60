@@ -5759,21 +5759,21 @@
         "usr-admin-01"
       ],
       "lastMessageText": "Notice: School timing tomorrow will be 8:00 AM to 12:30 PM.",
-      "lastMessageAt": "2026-11-26T05:26:13.204Z",
+      "lastMessageAt": "2026-11-26T05:40:47.415Z",
       "lastMessageSenderName": "Pooja Sharma",
       "unreadCounts": {
         "usr-teacher-01": 0,
         "par-001": 0,
-        "usr-par-01": 6,
-        "par-aarav": 6,
-        "usr-admin-01": 6,
-        "par-pooja": 6,
-        "usr-par-03": 6
+        "usr-par-01": 8,
+        "par-aarav": 8,
+        "usr-admin-01": 8,
+        "par-pooja": 8,
+        "usr-par-03": 8
       },
       "isPinned": false,
       "allowParentReplies": true,
       "createdAt": "2026-01-15T09:00:00Z",
-      "updatedAt": "2026-11-26T05:26:13.204Z"
+      "updatedAt": "2026-11-26T05:40:47.415Z"
     },
     {
       "id": "conv-class-3a",
@@ -5879,17 +5879,17 @@
         "usr-teacher-01"
       ],
       "lastMessageText": "Thank you Pooja Madam, we are continuing the practice daily.",
-      "lastMessageAt": "2026-11-26T05:26:13.180Z",
+      "lastMessageAt": "2026-11-26T05:40:47.393Z",
       "lastMessageSenderName": "Dineshbhai Patel",
       "unreadCounts": {
-        "usr-teacher-01": 3,
-        "par-001": 3,
-        "usr-par-01": 6,
-        "par-aarav": 6
+        "usr-teacher-01": 4,
+        "par-001": 4,
+        "usr-par-01": 8,
+        "par-aarav": 8
       },
       "isPinned": false,
       "createdAt": "2026-02-01T10:00:00Z",
-      "updatedAt": "2026-11-26T05:26:13.180Z"
+      "updatedAt": "2026-11-26T05:40:47.393Z"
     }
   ],
   "chatMessages": [
@@ -6303,6 +6303,92 @@
         }
       ],
       "createdAt": "2026-11-26T05:26:13.204Z"
+    },
+    {
+      "id": "msg-test-1795671647382",
+      "conversationId": "conv-direct-pooja-aarav",
+      "senderId": "usr-teacher-01",
+      "senderName": "Pooja Sharma",
+      "senderRole": "teacher",
+      "text": "Aarav completed the remedial worksheet on division with 85% accuracy!",
+      "status": "sent",
+      "readBy": [
+        {
+          "userId": "usr-teacher-01",
+          "readAt": "2026-11-26T05:40:47.382Z"
+        }
+      ],
+      "createdAt": "2026-11-26T05:40:47.384Z"
+    },
+    {
+      "id": "msg-parent-1795671647393",
+      "conversationId": "conv-direct-pooja-aarav",
+      "senderId": "par-001",
+      "senderName": "Dineshbhai Patel",
+      "senderRole": "parent",
+      "text": "Thank you Pooja Madam, we are continuing the practice daily.",
+      "replyTo": {
+        "id": "msg-test-1795671647382",
+        "senderName": "Pooja Sharma",
+        "text": "Aarav completed the remedial worksheet on division"
+      },
+      "status": "sent",
+      "readBy": [
+        {
+          "userId": "par-001",
+          "readAt": "2026-11-26T05:40:47.393Z"
+        }
+      ],
+      "createdAt": "2026-11-26T05:40:47.393Z"
+    },
+    {
+      "id": "msg-ws-1795671647402",
+      "conversationId": "conv-class-4a",
+      "senderId": "usr-teacher-01",
+      "senderName": "Pooja Sharma",
+      "senderRole": "teacher",
+      "text": "Please find attached the homework worksheet for Class 4 Mathematics.",
+      "attachments": [
+        {
+          "id": "att-ws-math",
+          "name": "Std4_Math_Homework.pdf",
+          "url": "/docs/std4_math.pdf",
+          "size": 154000,
+          "mimeType": "application/pdf"
+        }
+      ],
+      "status": "read",
+      "readBy": [
+        {
+          "userId": "usr-teacher-01",
+          "readAt": "2026-11-26T05:40:47.402Z"
+        },
+        {
+          "userId": "par-001",
+          "readAt": "2026-11-26T05:40:47.420Z"
+        }
+      ],
+      "createdAt": "2026-11-26T05:40:47.402Z"
+    },
+    {
+      "id": "msg-unread-1795671647415",
+      "conversationId": "conv-class-4a",
+      "senderId": "usr-teacher-01",
+      "senderName": "Pooja Sharma",
+      "senderRole": "teacher",
+      "text": "Notice: School timing tomorrow will be 8:00 AM to 12:30 PM.",
+      "status": "read",
+      "readBy": [
+        {
+          "userId": "usr-teacher-01",
+          "readAt": "2026-11-26T05:40:47.415Z"
+        },
+        {
+          "userId": "par-001",
+          "readAt": "2026-11-26T05:40:47.420Z"
+        }
+      ],
+      "createdAt": "2026-11-26T05:40:47.415Z"
     }
   ]
 }

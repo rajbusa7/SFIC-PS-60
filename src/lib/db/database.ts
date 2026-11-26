@@ -280,7 +280,7 @@ function loadStore(): DataStore {
         } catch (e: any) {
           if ((e.code === "EBUSY" || e.code === "EPERM") && attempt < 3) {
             const start = Date.now();
-            while (Date.now() - start < 20 * (attempt + 1)) {}
+            while (Date.now() - start < 20 * (attempt + 1)) { }
             continue;
           }
           console.warn(`Could not read store from ${candidate}:`, e);
@@ -294,7 +294,7 @@ function loadStore(): DataStore {
   memoryStore = getInitialStore();
   try {
     saveStore(memoryStore);
-  } catch {}
+  } catch { }
   return memoryStore;
 }
 
@@ -313,18 +313,18 @@ function saveStore(store: DataStore) {
         fs.copyFileSync(tempFile, targetFile);
         try {
           fs.unlinkSync(tempFile);
-        } catch {}
+        } catch { }
       }
       try {
         const stat = fs.statSync(targetFile);
         lastLoadedMtime = stat.mtimeMs;
         lastLoadedPath = targetFile;
-      } catch {}
+      } catch { }
       return;
     } catch (primaryErr: any) {
       if ((primaryErr.code === "EBUSY" || primaryErr.code === "EPERM") && attempt < 3) {
         const start = Date.now();
-        while (Date.now() - start < 25 * (attempt + 1)) {}
+        while (Date.now() - start < 25 * (attempt + 1)) { }
         continue;
       }
 
@@ -336,7 +336,7 @@ function saveStore(store: DataStore) {
           const stat = fs.statSync(fallbackFile);
           lastLoadedMtime = stat.mtimeMs;
           lastLoadedPath = fallbackFile;
-        } catch {}
+        } catch { }
       } catch {
         // Memory store is already updated in memoryStore; do not crash serverless execution
         console.warn("Storage notice: Persistent disk write skipped, store held in active memory.");
@@ -713,8 +713,8 @@ export const db = {
             idx === 0
               ? "Initial Assessment"
               : idx === cResults.length - 1
-              ? "Latest Reassessment"
-              : `Progress Check #${idx}`;
+                ? "Latest Reassessment"
+                : `Progress Check #${idx}`;
           return {
             id: r.id,
             assessmentId: r.assessmentId,
@@ -2448,16 +2448,16 @@ export const db = {
     const existingIndex = assignment.id
       ? store.teacherAssignments.findIndex((a) => a.id === assignment.id)
       : store.teacherAssignments.findIndex((a) => {
-          if (a.subjectCode !== normalizedSubject) return false;
-          const aId = (a.teacherId || "").toLowerCase();
-          const aEmail = (a.teacherEmail || "").toLowerCase();
-          return (
-            aId === resolvedTeacherId.toLowerCase() ||
-            aId === cleanInputId ||
-            (resolvedEmail && aEmail === resolvedEmail.toLowerCase()) ||
-            (cleanInputEmail && aEmail === cleanInputEmail)
-          );
-        });
+        if (a.subjectCode !== normalizedSubject) return false;
+        const aId = (a.teacherId || "").toLowerCase();
+        const aEmail = (a.teacherEmail || "").toLowerCase();
+        return (
+          aId === resolvedTeacherId.toLowerCase() ||
+          aId === cleanInputId ||
+          (resolvedEmail && aEmail === resolvedEmail.toLowerCase()) ||
+          (cleanInputEmail && aEmail === cleanInputEmail)
+        );
+      });
 
     const parsedGrades = assignment.grades && assignment.grades.length > 0
       ? Array.from(new Set(assignment.grades.map(Number))).filter((g) => g >= 1 && g <= 5).sort((a, b) => a - b)
@@ -2570,7 +2570,7 @@ export const db = {
         const assignments = teacherId
           ? await postgresTeacherAssignmentDb.getAssignmentsByTeacher(teacherId)
           : await postgresTeacherAssignmentDb.getAllAssignments();
-        
+
         // Mirror into memory store for synchronous fallbacks
         const store = loadStore();
         if (store.teacherAssignments && !teacherId && assignments.length > 0) {
@@ -2691,50 +2691,50 @@ export const db = {
       lang === "gu" && data.activity.titleGu
         ? data.activity.titleGu
         : lang === "hi" && data.activity.titleHi
-        ? data.activity.titleHi
-        : data.activity.title || data.activity.conceptName;
+          ? data.activity.titleHi
+          : data.activity.title || data.activity.conceptName;
 
     const whatParentDoes =
       lang === "gu" && data.activity.whatParentDoesGu
         ? data.activity.whatParentDoesGu
         : lang === "hi" && data.activity.whatParentDoesHi
-        ? data.activity.whatParentDoesHi
-        : data.activity.whatParentDoes;
+          ? data.activity.whatParentDoesHi
+          : data.activity.whatParentDoes;
 
     const whatChildPractices =
       lang === "gu" && data.activity.whatChildPracticesGu
         ? data.activity.whatChildPracticesGu
         : lang === "hi" && data.activity.whatChildPracticesHi
-        ? data.activity.whatChildPracticesHi
-        : data.activity.whatChildPractices;
+          ? data.activity.whatChildPracticesHi
+          : data.activity.whatChildPractices;
 
     const conversationalPrompt =
       lang === "gu" && data.activity.conversationalPromptGu
         ? data.activity.conversationalPromptGu
         : lang === "hi" && data.activity.conversationalPromptHi
-        ? data.activity.conversationalPromptHi
-        : data.activity.conversationalPrompt;
+          ? data.activity.conversationalPromptHi
+          : data.activity.conversationalPrompt;
 
     const subject =
       lang === "gu"
         ? `ઘર-મહાવરો: ${title}`
         : lang === "hi"
-        ? `गृह-अभ्यास: ${title}`
-        : `Home Practice: ${title}`;
+          ? `गृह-अभ्यास: ${title}`
+          : `Home Practice: ${title}`;
 
     const greeting =
       lang === "gu"
         ? `નમસ્તે વાલીશ્રી,`
         : lang === "hi"
-        ? `नमस्ते अभिभावक,`
-        : `Dear Parent,`;
+          ? `नमस्ते अभिभावक,`
+          : `Dear Parent,`;
 
     const intro =
       lang === "gu"
         ? `શિક્ષક તરફથી ${student.displayName} માટે ૫-મિનિટની સરળ ઘર-પ્રવૃત્તિ:`
         : lang === "hi"
-        ? `शिक्षक की ओर से ${student.displayName} के लिए ५-मिनट का सरल गृह-अभ्यास:`
-        : `Here is a short ${data.activity.durationMinutes || 5}-minute home practice recommended by teacher for ${student.displayName}:`;
+          ? `शिक्षक की ओर से ${student.displayName} के लिए ५-मिनट का सरल गृह-अभ्यास:`
+          : `Here is a short ${data.activity.durationMinutes || 5}-minute home practice recommended by teacher for ${student.displayName}:`;
 
     const formattedMessage = [
       greeting,

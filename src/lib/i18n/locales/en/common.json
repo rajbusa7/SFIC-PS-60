@@ -29,7 +29,8 @@
     "logout": "Sign Out",
     "studentLearningView": "Student Learning Mode",
     "tutorial": "Tutorial & Help",
-    "parentBridgeNotices": "Parent Bridge & Notices"
+    "parentBridgeNotices": "Parent Bridge & Notices",
+    "connectChat": "Connect Chat"
   },
   "theme": {
     "theme": "Theme",
@@ -92,7 +93,8 @@
     "badgeMultilingual": "Multilingual",
     "badge5in1": "AI 5-in-1",
     "badge5Min": "5 Min",
-    "badgeUnified": "Unified"
+    "badgeUnified": "Unified",
+    "badgeLive": "Live"
   },
   "actions": {
     "addStudent": "Add Student",

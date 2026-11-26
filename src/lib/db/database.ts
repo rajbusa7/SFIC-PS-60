@@ -64,7 +64,12 @@ import type {
   AuditLogEntry,
   SubjectCode,
   InterventionRecord,
+  Conversation,
+  ChatMessage,
+  ChatNotification,
+  ConversationParticipant,
 } from "../types";
+import { SEED_CONVERSATIONS, SEED_CHAT_MESSAGES } from "../connect/seedConnect";
 
 interface DataStore {
   school: School;
@@ -97,6 +102,9 @@ interface DataStore {
   auditLogs?: AuditLogEntry[];
   interventionRecords?: InterventionRecord[];
   parentHomeActivities?: any[];
+  conversations?: Conversation[];
+  chatMessages?: ChatMessage[];
+  chatNotifications?: ChatNotification[];
 }
 
 const DEFAULT_DATA_DIR = path.join(process.cwd(), "data");
@@ -149,6 +157,9 @@ function getInitialStore(): DataStore {
     auditLogs: [],
     interventionRecords: JSON.parse(JSON.stringify(SEED_INTERVENTION_RECORDS)),
     parentHomeActivities: [],
+    conversations: JSON.parse(JSON.stringify(SEED_CONVERSATIONS)),
+    chatMessages: JSON.parse(JSON.stringify(SEED_CHAT_MESSAGES)),
+    chatNotifications: [],
   };
 }
 
@@ -247,6 +258,15 @@ function loadStore(): DataStore {
               storeNeedsSync = true;
             }
           }
+          // Auto-sync ShikshaSetu Connect conversations if missing
+          if (!memoryStore.conversations || memoryStore.conversations.length === 0) {
+            memoryStore.conversations = JSON.parse(JSON.stringify(SEED_CONVERSATIONS));
+            storeNeedsSync = true;
+          }
+          if (!memoryStore.chatMessages || memoryStore.chatMessages.length === 0) {
+            memoryStore.chatMessages = JSON.parse(JSON.stringify(SEED_CHAT_MESSAGES));
+            storeNeedsSync = true;
+          }
           if (storeNeedsSync) {
             try {
               saveStore(memoryStore);
@@ -260,7 +280,7 @@ function loadStore(): DataStore {
         } catch (e: any) {
           if ((e.code === "EBUSY" || e.code === "EPERM") && attempt < 3) {
             const start = Date.now();
-            while (Date.now() - start < 20 * (attempt + 1)) {}
+            while (Date.now() - start < 20 * (attempt + 1)) { }
             continue;
           }
           console.warn(`Could not read store from ${candidate}:`, e);
@@ -274,7 +294,7 @@ function loadStore(): DataStore {
   memoryStore = getInitialStore();
   try {
     saveStore(memoryStore);
-  } catch {}
+  } catch { }
   return memoryStore;
 }
 
@@ -293,18 +313,18 @@ function saveStore(store: DataStore) {
         fs.copyFileSync(tempFile, targetFile);
         try {
           fs.unlinkSync(tempFile);
-        } catch {}
+        } catch { }
       }
       try {
         const stat = fs.statSync(targetFile);
         lastLoadedMtime = stat.mtimeMs;
         lastLoadedPath = targetFile;
-      } catch {}
+      } catch { }
       return;
     } catch (primaryErr: any) {
       if ((primaryErr.code === "EBUSY" || primaryErr.code === "EPERM") && attempt < 3) {
         const start = Date.now();
-        while (Date.now() - start < 25 * (attempt + 1)) {}
+        while (Date.now() - start < 25 * (attempt + 1)) { }
         continue;
       }
 
@@ -316,7 +336,7 @@ function saveStore(store: DataStore) {
           const stat = fs.statSync(fallbackFile);
           lastLoadedMtime = stat.mtimeMs;
           lastLoadedPath = fallbackFile;
-        } catch {}
+        } catch { }
       } catch {
         // Memory store is already updated in memoryStore; do not crash serverless execution
         console.warn("Storage notice: Persistent disk write skipped, store held in active memory.");
@@ -693,8 +713,8 @@ export const db = {
             idx === 0
               ? "Initial Assessment"
               : idx === cResults.length - 1
-              ? "Latest Reassessment"
-              : `Progress Check #${idx}`;
+                ? "Latest Reassessment"
+                : `Progress Check #${idx}`;
           return {
             id: r.id,
             assessmentId: r.assessmentId,
@@ -2457,16 +2477,16 @@ export const db = {
     const existingIndex = assignment.id
       ? store.teacherAssignments.findIndex((a) => a.id === assignment.id)
       : store.teacherAssignments.findIndex((a) => {
-          if (a.subjectCode !== normalizedSubject) return false;
-          const aId = (a.teacherId || "").toLowerCase();
-          const aEmail = (a.teacherEmail || "").toLowerCase();
-          return (
-            aId === resolvedTeacherId.toLowerCase() ||
-            aId === cleanInputId ||
-            (resolvedEmail && aEmail === resolvedEmail.toLowerCase()) ||
-            (cleanInputEmail && aEmail === cleanInputEmail)
-          );
-        });
+        if (a.subjectCode !== normalizedSubject) return false;
+        const aId = (a.teacherId || "").toLowerCase();
+        const aEmail = (a.teacherEmail || "").toLowerCase();
+        return (
+          aId === resolvedTeacherId.toLowerCase() ||
+          aId === cleanInputId ||
+          (resolvedEmail && aEmail === resolvedEmail.toLowerCase()) ||
+          (cleanInputEmail && aEmail === cleanInputEmail)
+        );
+      });
 
     const parsedGrades = assignment.grades && assignment.grades.length > 0
       ? Array.from(new Set(assignment.grades.map(Number))).filter((g) => g >= 1 && g <= 5).sort((a, b) => a - b)
@@ -2579,7 +2599,7 @@ export const db = {
         const assignments = teacherId
           ? await postgresTeacherAssignmentDb.getAssignmentsByTeacher(teacherId)
           : await postgresTeacherAssignmentDb.getAllAssignments();
-        
+
         // Mirror into memory store for synchronous fallbacks
         const store = loadStore();
         if (store.teacherAssignments && !teacherId && assignments.length > 0) {
@@ -2700,50 +2720,50 @@ export const db = {
       lang === "gu" && data.activity.titleGu
         ? data.activity.titleGu
         : lang === "hi" && data.activity.titleHi
-        ? data.activity.titleHi
-        : data.activity.title || data.activity.conceptName;
+          ? data.activity.titleHi
+          : data.activity.title || data.activity.conceptName;
 
     const whatParentDoes =
       lang === "gu" && data.activity.whatParentDoesGu
         ? data.activity.whatParentDoesGu
         : lang === "hi" && data.activity.whatParentDoesHi
-        ? data.activity.whatParentDoesHi
-        : data.activity.whatParentDoes;
+          ? data.activity.whatParentDoesHi
+          : data.activity.whatParentDoes;
 
     const whatChildPractices =
       lang === "gu" && data.activity.whatChildPracticesGu
         ? data.activity.whatChildPracticesGu
         : lang === "hi" && data.activity.whatChildPracticesHi
-        ? data.activity.whatChildPracticesHi
-        : data.activity.whatChildPractices;
+          ? data.activity.whatChildPracticesHi
+          : data.activity.whatChildPractices;
 
     const conversationalPrompt =
       lang === "gu" && data.activity.conversationalPromptGu
         ? data.activity.conversationalPromptGu
         : lang === "hi" && data.activity.conversationalPromptHi
-        ? data.activity.conversationalPromptHi
-        : data.activity.conversationalPrompt;
+          ? data.activity.conversationalPromptHi
+          : data.activity.conversationalPrompt;
 
     const subject =
       lang === "gu"
         ? `ઘર-મહાવરો: ${title}`
         : lang === "hi"
-        ? `गृह-अभ्यास: ${title}`
-        : `Home Practice: ${title}`;
+          ? `गृह-अभ्यास: ${title}`
+          : `Home Practice: ${title}`;
 
     const greeting =
       lang === "gu"
         ? `નમસ્તે વાલીશ્રી,`
         : lang === "hi"
-        ? `नमस्ते अभिभावक,`
-        : `Dear Parent,`;
+          ? `नमस्ते अभिभावक,`
+          : `Dear Parent,`;
 
     const intro =
       lang === "gu"
         ? `શિક્ષક તરફથી ${student.displayName} માટે ૫-મિનિટની સરળ ઘર-પ્રવૃત્તિ:`
         : lang === "hi"
-        ? `शिक्षक की ओर से ${student.displayName} के लिए ५-मिनट का सरल गृह-अभ्यास:`
-        : `Here is a short ${data.activity.durationMinutes || 5}-minute home practice recommended by teacher for ${student.displayName}:`;
+          ? `शिक्षक की ओर से ${student.displayName} के लिए ५-मिनट का सरल गृह-अभ्यास:`
+          : `Here is a short ${data.activity.durationMinutes || 5}-minute home practice recommended by teacher for ${student.displayName}:`;
 
     const formattedMessage = [
       greeting,
@@ -2794,6 +2814,337 @@ export const db = {
     return list;
   },
 
+  // ==========================================
+  // SHIKSHASETU CONNECT (PARENT-TEACHER CHAT)
+  // ==========================================
+  getConversations(userId?: string, role?: string): Conversation[] {
+    const store = loadStore();
+    let convs = store.conversations || [];
+    if (!userId) return convs;
+
+    return convs.filter((c) => {
+      // 1. School announcements: visible to everyone in the school
+      if (c.type === "announcement") return true;
+
+      // 2. Direct participant
+      if (c.participantIds && c.participantIds.includes(userId)) return true;
+
+      // 3. Admin has global visibility
+      if (role === "admin") return true;
+
+      // 4. Teacher assigned to classroom
+      if (role === "teacher" && c.classroomId) {
+        const assignments = this.getTeacherAssignments(userId);
+        if (assignments.some((a) => a.classroomIds && a.classroomIds.includes(c.classroomId!))) {
+          return true;
+        }
+      }
+
+      // 5. Parent whose child is in this classroom
+      if (role === "parent" && c.classroomId) {
+        const parent = this.getParentByUserId(userId) || this.getParentById(userId);
+        if (parent && parent.studentIds) {
+          const students = this.getStudents().filter((s) => parent.studentIds.includes(s.id));
+          if (students.some((s) => s.classroomId === c.classroomId)) {
+            return true;
+          }
+        }
+      }
+
+      return false;
+    });
+  },
+
+  getConversationById(id: string, userId?: string, role?: string): Conversation | undefined {
+    const convs = this.getConversations(userId, role);
+    return convs.find((c) => c.id === id);
+  },
+
+  saveConversation(conv: Conversation): Conversation {
+    const store = loadStore();
+    if (!store.conversations) store.conversations = [];
+    const idx = store.conversations.findIndex((c) => c.id === conv.id);
+    if (idx >= 0) {
+      store.conversations[idx] = { ...store.conversations[idx], ...conv, updatedAt: new Date().toISOString() };
+    } else {
+      store.conversations.push(conv);
+    }
+    saveStore(store);
+    return conv;
+  },
+
+  deleteConversation(id: string): boolean {
+    const store = loadStore();
+    if (!store.conversations) return false;
+    const initialLen = store.conversations.length;
+    store.conversations = store.conversations.filter((c) => c.id !== id);
+    if (store.chatMessages) {
+      store.chatMessages = store.chatMessages.filter((m) => m.conversationId !== id);
+    }
+    saveStore(store);
+    return store.conversations.length < initialLen;
+  },
+
+  getMessages(
+    conversationId: string,
+    options?: { limit?: number; since?: string; before?: string } | number
+  ): ChatMessage[] & { messages: ChatMessage[]; hasMore: boolean; totalCount: number } {
+    const store = loadStore();
+    const allMsgs = (store.chatMessages || []).filter((m) => m.conversationId === conversationId);
+    allMsgs.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+    const totalCount = allMsgs.length;
+    const opts = typeof options === "number" ? { limit: options } : options || {};
+
+    let selectedSlice: ChatMessage[] = [];
+    let hasMore = false;
+
+    // Incremental polling: messages strictly after `since`
+    if (opts.since) {
+      const sinceTime = new Date(opts.since).getTime();
+      selectedSlice = allMsgs.filter((m) => new Date(m.createdAt).getTime() > sinceTime);
+      hasMore = false;
+    } else if (opts.before) {
+      const limit = opts.limit || 40;
+      const beforeTime = new Date(opts.before).getTime();
+      const olderCandidates = allMsgs.filter((m) => new Date(m.createdAt).getTime() < beforeTime);
+      selectedSlice = olderCandidates.slice(-limit);
+      hasMore = olderCandidates.length > selectedSlice.length;
+    } else {
+      const limit = opts.limit || 40;
+      selectedSlice = allMsgs.slice(-limit);
+      hasMore = allMsgs.length > selectedSlice.length;
+    }
+
+    const result = selectedSlice as any;
+    result.messages = selectedSlice;
+    result.hasMore = hasMore;
+    result.totalCount = totalCount;
+    return result;
+  },
+
+  saveMessage(msg: ChatMessage): ChatMessage {
+    const store = loadStore();
+    if (!store.chatMessages) store.chatMessages = [];
+    store.chatMessages.push(msg);
+
+    if (!store.conversations) store.conversations = [];
+    const conv = store.conversations.find((c) => c.id === msg.conversationId);
+    if (conv) {
+      conv.lastMessageText = msg.text;
+      conv.lastMessageAt = msg.createdAt;
+      conv.lastMessageSenderName = msg.senderName;
+      conv.updatedAt = msg.createdAt;
+
+      if (!conv.unreadCounts) conv.unreadCounts = {};
+      const targetParticipants = conv.participantIds || [];
+      for (const pId of targetParticipants) {
+        if (pId !== msg.senderId) {
+          conv.unreadCounts[pId] = (conv.unreadCounts[pId] || 0) + 1;
+        }
+      }
+    }
+
+    saveStore(store);
+    return msg;
+  },
+
+  markMessagesAsRead(conversationId: string, userId: string): number {
+    const store = loadStore();
+    if (!store.chatMessages) return 0;
+    let count = 0;
+    const now = new Date().toISOString();
+
+    for (const msg of store.chatMessages) {
+      if (msg.conversationId === conversationId && msg.senderId !== userId) {
+        if (!msg.readBy) msg.readBy = [];
+        if (!msg.readBy.some((r) => r.userId === userId)) {
+          msg.readBy.push({ userId, readAt: now });
+          msg.status = "read";
+          count++;
+        }
+      }
+    }
+
+    let unreadCountChanged = false;
+    if (store.conversations) {
+      const conv = store.conversations.find((c) => c.id === conversationId);
+      if (conv && conv.unreadCounts && conv.unreadCounts[userId] && conv.unreadCounts[userId] > 0) {
+        conv.unreadCounts[userId] = 0;
+        unreadCountChanged = true;
+      }
+    }
+
+    // ONLY write to disk if an actual message was marked or an unread count was reset!
+    if (count > 0 || unreadCountChanged) {
+      saveStore(store);
+    }
+    return count;
+  },
+
+  getUnreadChatCount(userId: string): number {
+    const store = loadStore();
+    let total = 0;
+    for (const conv of store.conversations || []) {
+      if (conv.unreadCounts && conv.unreadCounts[userId]) {
+        total += conv.unreadCounts[userId];
+      }
+    }
+    return total;
+  },
+
+  reportMessage(messageId: string, reason: string): boolean {
+    const store = loadStore();
+    if (!store.chatMessages) return false;
+    const msg = store.chatMessages.find((m) => m.id === messageId);
+    if (!msg) return false;
+    msg.isReported = true;
+    msg.reportReason = reason;
+    saveStore(store);
+    return true;
+  },
+
+  getConversationParticipants(conversationId: string): ConversationParticipant[] {
+    const store = loadStore();
+    const conv = (store.conversations || []).find((c) => c.id === conversationId);
+    if (!conv) return [];
+
+    const participants: ConversationParticipant[] = [];
+    const users = store.users || [];
+    const parents = store.parents || [];
+    const students = store.students || [];
+
+    for (const uid of conv.participantIds || []) {
+      const u = users.find((usr) => usr.id === uid);
+      const parent = parents.find((p) => p.userId === uid || p.id === uid);
+
+      if (u) {
+        let childName: string | undefined;
+        let childGrade: number | undefined;
+        let childSection: string | undefined;
+
+        if (parent && parent.studentIds && parent.studentIds.length > 0) {
+          const std = students.find((s) => parent.studentIds.includes(s.id));
+          if (std) {
+            childName = (std as any).name || std.displayName;
+            childGrade = std.grade;
+            childSection = std.section;
+          }
+        }
+
+        participants.push({
+          userId: u.id,
+          name: u.name,
+          role: u.role,
+          email: u.email,
+          childName,
+          childGrade,
+          childSection,
+          joinedAt: conv.createdAt,
+        });
+      } else if (parent) {
+        const std = students.find((s) => parent.studentIds.includes(s.id));
+        participants.push({
+          userId: parent.userId || parent.id,
+          name: parent.name,
+          role: "parent",
+          email: parent.email,
+          childName: (std as any)?.name || std?.displayName,
+          childGrade: std?.grade,
+          childSection: std?.section,
+          joinedAt: conv.createdAt,
+        });
+      }
+    }
+
+    return participants;
+  },
+
+  getAvailableChatContacts(userId: string, role: string): any[] {
+    const store = loadStore();
+    const students = store.students || [];
+    const parents = store.parents || [];
+    const users = store.users || [];
+    const classrooms = store.classrooms || [];
+
+    if (role === "parent") {
+      const parent = this.getParentByUserId(userId) || this.getParentById(userId);
+      const myStudentIds = parent ? parent.studentIds || [] : [];
+      const myStudents = students.filter((s) => myStudentIds.includes(s.id));
+      const myClassroomIds = myStudents.map((s) => s.classroomId);
+
+      const assignments = store.teacherAssignments || [];
+      const teacherIds = Array.from(
+        new Set(
+          assignments
+            .filter((a) => a.classroomIds && a.classroomIds.some((cid) => myClassroomIds.includes(cid)))
+            .map((a) => a.teacherId)
+        )
+      );
+
+      return users
+        .filter((u) => teacherIds.includes(u.id) || u.role === "admin")
+        .map((u) => ({
+          userId: u.id,
+          name: u.name,
+          role: u.role,
+          title: u.role === "admin" ? "Principal Office" : `${u.name} (Assigned Teacher)`,
+          subtitle: u.role === "admin" ? "School Administration" : "Class Teacher",
+          classroomId: myClassroomIds[0] || "",
+        }));
+    }
+
+    if (role === "teacher") {
+      const assignments = this.getTeacherAssignments(userId);
+      const assignedClassIds = Array.from(new Set(assignments.flatMap((a) => a.classroomIds || [])));
+      const assignedStudents = students.filter((s) => assignedClassIds.includes(s.classroomId));
+      const studentMap = new Map(assignedStudents.map((s) => [s.id, s]));
+
+      const contactParents: any[] = [];
+      for (const p of parents) {
+        const matchingStudents = (p.studentIds || [])
+          .map((sid) => studentMap.get(sid))
+          .filter(Boolean);
+
+        if (matchingStudents.length > 0) {
+          const firstStd = matchingStudents[0]!;
+          const stdName = (firstStd as any).name || firstStd.displayName;
+          contactParents.push({
+            userId: p.userId || p.id,
+            name: p.name,
+            role: "parent",
+            title: `${p.name} (Parent of ${stdName})`,
+            subtitle: `Class ${firstStd.grade}-${firstStd.section} • Code #${firstStd.studentCode || "N/A"}`,
+            studentId: firstStd.id,
+            studentName: stdName,
+            grade: firstStd.grade,
+            section: firstStd.section,
+            classroomId: firstStd.classroomId,
+          });
+        }
+      }
+
+      return contactParents;
+    }
+
+    // Admin sees all
+    return [
+      ...users.map((u) => ({
+        userId: u.id,
+        name: u.name,
+        role: u.role,
+        title: `${u.name} (${u.role.toUpperCase()})`,
+        subtitle: u.email,
+      })),
+      ...classrooms.map((c) => ({
+        classroomId: c.id,
+        name: `Class ${c.grade}-${c.section}`,
+        role: "classroom",
+        title: `Class ${c.grade}-${c.section} Group`,
+        subtitle: `${students.filter((s) => s.classroomId === c.id).length} Students`,
+      })),
+    ];
+  },
   resetToDemoData(): void {
     const fresh = getInitialStore();
     saveStore(fresh);

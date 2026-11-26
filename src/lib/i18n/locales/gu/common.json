@@ -29,7 +29,8 @@
     "logout": "બહાર નીકળો",
     "studentLearningView": "વિદ્યાર્થી અધ્યયન મોડ",
     "tutorial": "માર્ગદર્શિકા અને સહાય",
-    "parentBridgeNotices": "વાલી સેતુ અને સૂચનાઓ"
+    "parentBridgeNotices": "વાલી સેતુ અને સૂચનાઓ",
+    "connectChat": "સેતુ કનેક્ટ (ચેટ)"
   },
   "theme": {
     "theme": "થીમ",
@@ -92,7 +93,8 @@
     "badgeMultilingual": "દ્વિભાષી",
     "badge5in1": "AI ૫-ઇન-૧",
     "badge5Min": "૫ મિનિટ",
-    "badgeUnified": "સંકલિત સેતુ"
+    "badgeUnified": "સંકલિત સેતુ",
+    "badgeLive": "લાઇવ"
   },
   "actions": {
     "addStudent": "વિદ્યાર્થી ઉમેરો",

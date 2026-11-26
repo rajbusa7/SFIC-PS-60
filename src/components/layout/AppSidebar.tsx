@@ -23,6 +23,7 @@ import {
   BookOpen,
   Languages,
   Bell,
+  MessageSquare,
 } from "lucide-react";
 import { triggerPageTour } from "@/components/tutorial/SpotlightTour";
 
@@ -34,9 +35,36 @@ export function AppSidebar() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [unreadChatCount, setUnreadChatCount] = useState<number>(0);
+
+  React.useEffect(() => {
+    const fetchUnread = () => {
+      fetch("/api/connect/conversations?badgeOnly=1")
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.success && typeof d.unreadTotal === "number") {
+            setUnreadChatCount(d.unreadTotal);
+          }
+        })
+        .catch(() => {});
+    };
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 12000);
+    return () => clearInterval(interval);
+  }, []);
 
   const navItems = [
     { href: "/dashboard", label: t.nav.dashboard, icon: LayoutDashboard },
+    {
+      href: "/connect",
+      label: t.nav.connectChat,
+      icon: MessageSquare,
+      badge: unreadChatCount > 0 ? `${unreadChatCount}` : t.sidebar.badgeLive,
+      badgeColor:
+        unreadChatCount > 0
+          ? "bg-[#2E7D5E] text-white font-bold animate-pulse"
+          : "bg-[#2E7D5E]/15 text-[#2E7D5E] border border-[#2E7D5E]/20 font-semibold",
+    },
     {
       href: "/ai",
       label: t.nav.aiWorkspace || "AI Workspace",

@@ -37,7 +37,7 @@ import {
 } from "lucide-react";
 
 function StudentsPageContent() {
-  const { t, tr, formatClass } = useLanguage();
+  const { t, tr, language, formatClass } = useLanguage();
   const st = t.students;
   const { searchTerm, setSearchTerm, selectedClass, setSelectedClass, gradeNumber } = useFilter();
 

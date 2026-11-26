@@ -9,11 +9,12 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { StatTile } from "@/components/ui/StatTile";
 import { BridgeProgress } from "@/components/ui/BridgeProgress";
-import type { SkillNode } from "@/components/3d/StudentSkillTree3D";
+import { StudentSkillTree3D, type SkillNode } from "@/components/3d/StudentSkillTree3D";
 import { useLanguage } from "@/context/LanguageContext";
 import { ContextualHelp } from "@/components/shared/ContextualHelp";
 import { LearningGapMap } from "@/components/learning-gaps/LearningGapMap";
 import { subscribeToDataUpdates } from "@/lib/events";
+import { formatDate } from "@/lib/utils";
 import {
   Users,
   AlertTriangle,
@@ -52,19 +53,6 @@ import {
   LineChart,
   Line,
 } from "recharts";
-
-const StudentSkillTree3D = dynamic(
-  () => import("@/components/3d/StudentSkillTree3D").then((m) => m.StudentSkillTree3D),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="w-full h-[420px] rounded-3xl bg-[#FAF6E9] border border-[#49352F]/15 flex items-center justify-center text-[#7A6862] text-xs">
-        <Sparkles className="w-4 h-4 animate-spin text-[#B26A1B] mr-2" />
-        <span>Loading 3D Skill Graph...</span>
-      </div>
-    ),
-  }
-);
 
 const ReassessmentModal = dynamic(
   () => import("@/components/assessment/ReassessmentModal").then((m) => m.ReassessmentModal),
@@ -337,15 +325,6 @@ export default function StudentDetailPage({
               <KeyRound className="w-3 h-3 me-1" />
               <span>{sd.parentLinkCodeBtn}</span>
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowEditModal(true)}
-              className="rounded-full text-xs bg-white hover:bg-[#F2CAB3] text-[#49352F] border border-[#49352F]/15"
-            >
-              <Edit className="w-3 h-3 me-1" />
-              <span>{sd.editProfile}</span>
-            </Button>
           </div>
         </div>
 
@@ -365,18 +344,13 @@ export default function StudentDetailPage({
                     {formatClass(student.grade, student.section)}
                   </Badge>
                 )}
-                {student.id === "std-aarav" && (
-                  <Badge variant="saffron" size="sm" pulse>
-                    {sd.keyDemoBadge}
-                  </Badge>
-                )}
               </div>
               <p className="font-mono text-xs text-[#7A6862]">
                 {tr("studentDetail.rollCodeEnrolled", { code: student.studentCode })}
               </p>
               <div className="flex items-center gap-1.5 text-xs text-[#7A6862]">
                 <Building className="w-3.5 h-3.5 text-[#B26A1B] shrink-0" />
-                <span>Model Primary School, Gandhinagar (GUJ-GNR-042)</span>
+                <span>{(student as any).schoolName || "Primary School Campus"}</span>
               </div>
               {student.notes && (
                 <p className="text-xs text-[#7A6862] max-w-xl italic mt-1">
@@ -638,7 +612,7 @@ export default function StudentDetailPage({
                         <span>{sd.reassessDeltaBtn}</span>
                       </Button>
 
-                      <Link
+                      <Button
                         href="/remedial-plans"
                         data-tour="student-remedial-btn"
                         onClick={() => {
@@ -646,11 +620,12 @@ export default function StudentDetailPage({
                             window.dispatchEvent(new CustomEvent("shikshasetu_step_plan_generated"));
                           }
                         }}
+                        variant="outline"
+                        size="sm"
+                        className="rounded-full text-xs bg-white hover:bg-[#F2CAB3] text-[#49352F] border border-[#49352F]/15"
                       >
-                        <Button variant="outline" size="sm" className="rounded-full text-xs bg-white hover:bg-[#F2CAB3] text-[#49352F] border border-[#49352F]/15">
-                          <span>{sd.fiveStepPlanBtn}</span>
-                        </Button>
-                      </Link>
+                        <span>{sd.fiveStepPlanBtn}</span>
+                      </Button>
                       <ContextualHelp termKey="remedialPlan" />
                     </div>
                   </div>
@@ -774,11 +749,9 @@ export default function StudentDetailPage({
                 </div>
               </div>
 
-              <Link href="/reports">
-                <Button variant="outline" size="sm" className="w-full rounded-xl text-xs mt-4 bg-white hover:bg-[#F2CAB3] text-[#49352F] border border-[#49352F]/15">
-                  {sd.generatePrintableCard}
-                </Button>
-              </Link>
+              <Button href="/reports" variant="outline" size="sm" className="w-full rounded-xl text-xs mt-4 bg-white hover:bg-[#F2CAB3] text-[#49352F] border border-[#49352F]/15">
+                {sd.generatePrintableCard}
+              </Button>
             </Card>
           </div>
         )}
@@ -818,7 +791,7 @@ export default function StudentDetailPage({
                     return (
                       <tr key={res.id} className="border-b border-[#49352F]/8 hover:bg-[#FAF6E9]/60">
                         <td className="p-3 text-[#7A6862]">
-                          {new Date(res.recordedAt || Date.now()).toLocaleDateString()}
+                          <span suppressHydrationWarning>{res.recordedAt ? formatDate(res.recordedAt) : "—"}</span>
                         </td>
                         <td className="p-3 font-bold text-[#49352F]">
                           {res.assessmentTitle || sd.defaultDiagnosticTitle}
@@ -952,8 +925,8 @@ export default function StudentDetailPage({
                         <span className="font-mono font-black text-sm text-[#B26A1B] tracking-wider block">
                           {codeItem.code}
                         </span>
-                        <span className="text-[10px] text-[#7A6862]">
-                          Expires: {new Date(codeItem.expiresAt).toLocaleDateString()}
+                        <span className="text-[10px] text-[#7A6862]" suppressHydrationWarning>
+                          Expires: {formatDate(codeItem.expiresAt)}
                         </span>
                       </div>
                       <Badge

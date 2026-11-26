@@ -10,7 +10,6 @@ import { BridgeProgress } from "@/components/ui/BridgeProgress";
 import { StatTile } from "@/components/ui/StatTile";
 import { useLanguage } from "@/context/LanguageContext";
 import { ReassessmentModal } from "@/components/assessment/ReassessmentModal";
-import { SpotlightTour } from "@/components/tutorial/SpotlightTour";
 import { ContextualHelp } from "@/components/shared/ContextualHelp";
 import { calculateGapSeverity } from "@/lib/engine/severityEngine";
 import { diagnoseLearningGap } from "@/lib/engine/diagnosisEngine";
@@ -18,6 +17,7 @@ import { analyzeRootCause } from "@/lib/engine/prerequisiteEngine";
 import { LearningGapMap } from "@/components/learning-gaps/LearningGapMap";
 import { ClassLearningGapHeatmap } from "@/components/learning-gaps/ClassLearningGapHeatmap";
 import { SmartRemediationGroups } from "@/components/learning-gaps/SmartRemediationGroups";
+import { fetchWithCache, getCachedDataSync } from "@/lib/cache/localCache";
 import {
   TodaysPrioritiesSection,
   PriorityQueueCategory,
@@ -95,7 +95,7 @@ export default function LearningGapsPage() {
   const lg = t.learningGaps;
 
   const [gaps, setGaps] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
 
   // Search state
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -234,12 +234,11 @@ export default function LearningGapsPage() {
   const [targetGapForReassessment, setTargetGapForReassessment] = useState<any>(null);
 
   const fetchGaps = async () => {
-    setLoading(true);
+    if (gaps.length === 0) setLoading(true);
     try {
-      const res = await fetch("/api/learning-gaps");
-      const data = await res.json();
-      if (data.success) {
-        setGaps(data.gaps || []);
+      const res = await fetchWithCache<any>("/api/learning-gaps", { ttlMs: 25000 });
+      if (res.data?.success) {
+        setGaps(res.data.gaps || []);
       }
     } catch (e) {
       console.error("Failed to load learning gaps", e);
@@ -273,6 +272,11 @@ export default function LearningGapsPage() {
   };
 
   useEffect(() => {
+    const cachedGaps = getCachedDataSync<any>("/api/learning-gaps", 30000);
+    if (cachedGaps?.gaps && cachedGaps.gaps.length > 0) {
+      setGaps(cachedGaps.gaps);
+      setLoading(false);
+    }
     fetchGaps();
     fetchRemedialPlans();
     fetchInterventions();
@@ -891,97 +895,6 @@ export default function LearningGapsPage() {
             </button>
           </div>
         </div>
-
-        {/* 1. THRESHOLD SLIDER SANDBOX DEMO (Signature Feature) */}
-        <Card data-tour="gaps-threshold" variant="glass" className="p-5 border-[#49352F]/15 bg-gradient-to-r from-[#F2DCB5]/80 via-[#FAF6E9] to-[#F2CAB3]/70 shadow-[0_8px_24px_rgba(73,53,47,0.06)] space-y-4 text-[#49352F]">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#49352F]/10 pb-3">
-            <div className="flex items-center gap-2">
-              <Sliders className="w-5 h-5 text-[#B26A1B]" />
-              <h3 className="font-heading text-sm font-bold text-[#49352F]">
-                {lg.sandboxTitle}
-              </h3>
-              <Badge variant="mint" size="sm">
-                {lg.jurySandboxBadge}
-              </Badge>
-            </div>
-            <span className="text-[11px] text-[#7A6862]">
-              {lg.sandboxHint}
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-1">
-            {/* Slider 1: Needs Support Threshold */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold text-[#C54738] flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#C54738]" />
-                  <span>{lg.supportThresholdLabel}</span>
-                  <ContextualHelp termKey="masteryThreshold" />
-                </span>
-                <span className="font-heading font-black text-[#C54738] text-sm">
-                  {tr("learningGaps.supportBenchmark", { val: supportThreshold })}
-                </span>
-              </div>
-              <input
-                type="range"
-                min="40"
-                max="75"
-                step="1"
-                value={supportThreshold}
-                onChange={(e) => setSupportThreshold(Number(e.target.value))}
-                className="w-full h-2 bg-white rounded-lg appearance-none cursor-pointer accent-[#C54738] border border-[#49352F]/15"
-              />
-              <p className="text-[11px] text-[#7A6862]">
-                {tr("learningGaps.supportExplanation", { val: supportThreshold })}
-              </p>
-            </div>
-
-            {/* Slider 2: Mastery Benchmark Threshold */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold text-[#2E7D5E] flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#2E7D5E]" />
-                  {lg.masteryThresholdLabel}
-                </span>
-                <span className="font-heading font-black text-[#2E7D5E] text-sm">
-                  {tr("learningGaps.masteryBenchmark", { val: masteryThreshold })}
-                </span>
-              </div>
-              <input
-                type="range"
-                min="70"
-                max="95"
-                step="1"
-                value={masteryThreshold}
-                onChange={(e) => setMasteryThreshold(Number(e.target.value))}
-                className="w-full h-2 bg-white rounded-lg appearance-none cursor-pointer accent-[#2E7D5E] border border-[#49352F]/15"
-              />
-              <p className="text-[11px] text-[#7A6862]">
-                {tr("learningGaps.masteryExplanation", { val: masteryThreshold })}
-              </p>
-            </div>
-          </div>
-
-          {/* Sandbox Live Impact Stat Banner */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-[#49352F]/10 text-xs">
-            <div className="p-2.5 rounded-xl bg-white/90 border border-[#49352F]/10 text-center shadow-xs">
-              <span className="text-[10px] text-[#7A6862] block font-semibold">{lg.flaggedUnderThreshold}</span>
-              <span className="text-lg font-black text-[#C54738]">{tr("learningGaps.gapsCount", { count: flaggedCount })}</span>
-            </div>
-            <div className="p-2.5 rounded-xl bg-white/90 border border-[#49352F]/10 text-center shadow-xs">
-              <span className="text-[10px] text-[#7A6862] block font-semibold">{lg.overMasteryThreshold}</span>
-              <span className="text-lg font-black text-[#2E7D5E]">{tr("learningGaps.conceptsCount", { count: masteredCount })}</span>
-            </div>
-            <div className="p-2.5 rounded-xl bg-white/90 border border-[#49352F]/10 text-center shadow-xs">
-              <span className="text-[10px] text-[#7A6862] block font-semibold">{lg.decisionEngineLabel}</span>
-              <span className="text-lg font-black text-[#B26A1B]">{lg.deterministicLabel}</span>
-            </div>
-            <div className="p-2.5 rounded-xl bg-white/90 border border-[#49352F]/10 text-center shadow-xs">
-              <span className="text-[10px] text-[#7A6862] block font-semibold">{lg.apiLatencyCostLabel}</span>
-              <span className="text-lg font-black text-[#2E7D5E]">{lg.zeroCostLabel}</span>
-            </div>
-          </div>
-        </Card>
 
         {/* 2. TODAY'S PRIORITIES / ACTION QUEUE */}
         <TodaysPrioritiesSection
@@ -2320,8 +2233,6 @@ export default function LearningGapsPage() {
           }}
         />
       )}
-      {/* Guided Tour */}
-      <SpotlightTour page="learningGaps" />
     </AppLayout>
   );
 }

@@ -1351,7 +1351,7 @@ window.__seek   = v => { clock = v; drawn = null; };
     initDock();
     /* the wipes are done — drop the clips so nothing keeps a stacking
        context alive (the About knob has to stay above the moss) */
-    safeTimeout(function () { rootEl.classList.add('intro-done'); }, REDUCED ? 0 : 2900);
+    safeTimeout(function () { rootEl.classList.add('intro-done'); }, REDUCED ? 0 : 500);
   }
 
   /* pointer in NDC, read by the moss shaders through a plane raycast */
@@ -2581,9 +2581,9 @@ window.__seek   = v => { clock = v; drawn = null; };
   function build() {
     var narrow = NARROW.matches;
     var small = narrow || (window.innerWidth * window.innerHeight) < 620000;
-    // 120 FPS optimized blade count: dense lush moss arch calibrated to lock 120 FPS (<8.3ms GPU budget)
-    var BLADES_NEAR = small ? 55000 : 135000;
-    var BLADES_FAR  = small ? 16000 :  42000;
+    // High-performance calibrated blade count for buttery smooth 60-120 FPS
+    var BLADES_NEAR = small ? 9000 : 22000;
+    var BLADES_FAR  = small ? 2500 :  5000;
 
     var q = /[?&]blades=(\d+)/.exec(location.search);
     if (q) { BLADES_NEAR = +q[1]; BLADES_FAR = Math.round(+q[1] * 0.21); }
@@ -2591,14 +2591,13 @@ window.__seek   = v => { clock = v; drawn = null; };
     renderer = new THREE.WebGLRenderer({
       canvas: canvas,
       alpha: true,
-      antialias: !small,
+      antialias: false,
       powerPreference: "high-performance",
-      precision: "highp",
+      precision: "mediump",
       stencil: false
     });
     renderer.setClearColor(0x000000, 0);
-    // 120 FPS high-refresh rate optimization: cap pixel ratio at 1.5 to stay strictly within 8.33ms GPU render time
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, small ? 1.25 : 1.5));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.2));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.30;
     if ('sRGBEncoding' in THREE) renderer.outputEncoding = THREE.sRGBEncoding;

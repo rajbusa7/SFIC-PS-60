@@ -355,41 +355,6 @@ export function AppHeader({
           <Search className="w-4 h-4" />
         </button>
 
-        {/* AI Workspace Quick Launch */}
-        <Link
-          href="/ai"
-          aria-label={t.header?.aiHub || "AI Hub Workspace"}
-          className="hidden sm:inline-flex h-9 items-center gap-1.5 bg-[#F2CAB3] dark:bg-[#F2CAB3]/25 hover:bg-white dark:hover:bg-[#26201C] text-[#49352F] dark:text-[#F4F1E1] border border-[#49352F]/15 dark:border-[#F2CAB3]/30 px-2 sm:px-2.5 rounded-xl text-xs font-bold shadow-xs transition-all whitespace-nowrap shrink-0"
-        >
-          <Sparkles className="w-3.5 h-3.5 text-[#B26A1B] dark:text-[#F2CAB3] shrink-0" aria-hidden="true" />
-          <span className="hidden md:inline">{t.header?.aiHub || "AI Hub"}</span>
-        </Link>
-
-        {/* Replay Tour Button (Only on 2xl, left sidebar provides it permanently on desktop) */}
-        <button
-          type="button"
-          onClick={() => {
-            router.push("/dashboard?tour=full");
-          }}
-          className="hidden 2xl:inline-flex h-9 items-center gap-1.5 px-2.5 rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/20 bg-white dark:bg-[#26201C] hover:bg-[#F2CAB3] dark:hover:bg-[#F2CAB3]/20 text-[#49352F] dark:text-[#F4F1E1] text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-95 whitespace-nowrap shrink-0"
-          aria-label={t.tutorial?.replayTour || "Start Page Guided Tour"}
-          title={t.tutorial?.replayTour || "Start Page Guided Tour"}
-        >
-          <RotateCcw className="w-3.5 h-3.5 text-[#B26A1B] dark:text-[#F2CAB3] shrink-0" aria-hidden="true" />
-          <span className="whitespace-nowrap">{t.tutorial?.replayTour || "Replay Tour"}</span>
-        </button>
-
-        {/* Tutorial & Help Center Link (Only on 2xl, left sidebar provides it permanently on desktop) */}
-        <Link
-          href="/tutorial"
-          aria-label={t.tutorial?.pageTitle || "Help & Tutorial Center"}
-          className="hidden 2xl:inline-flex h-9 items-center gap-1.5 px-2.5 rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/20 bg-white dark:bg-[#26201C] hover:bg-[#F2CAB3] dark:hover:bg-[#F2CAB3]/20 text-[#49352F] dark:text-[#F4F1E1] text-xs font-bold transition-all shadow-xs whitespace-nowrap shrink-0"
-          title={t.tutorial?.pageTitle || "Help & Tutorial Center"}
-        >
-          <HelpCircle className="w-3.5 h-3.5 text-[#B26A1B] dark:text-[#F2CAB3] shrink-0" aria-hidden="true" />
-          <span className="whitespace-nowrap">{t.nav?.tutorial || "Tutorial & Help"}</span>
-        </Link>
-
         {/* Language Selector */}
         <div className="shrink-0">
           <LanguageSelector />
@@ -427,7 +392,7 @@ export function AppHeader({
                 boxSizing: "border-box",
                 zIndex: 9999,
               }}
-              className="rounded-2xl bg-white dark:bg-[#26201C] p-3 shadow-2xl border border-[#49352F]/15 dark:border-[#F2CAB3]/20 animate-in fade-in-50 zoom-in-95 duration-100"
+              className="rounded-2xl bg-white dark:bg-[#26201C] p-3 shadow-2xl border border-[#49352F]/15 dark:border-[#F2CAB3]/20 animate-grow-top-right origin-top-right"
             >
               <div className="flex items-center justify-between pb-2 border-b border-[#49352F]/10 dark:border-[#F2CAB3]/15">
                 <span className="font-semibold text-xs text-[#49352F] dark:text-[#F4F1E1]">
@@ -485,6 +450,10 @@ export function AppHeader({
               <img
                 src={user.avatarUrl}
                 alt={user.name || "User Avatar"}
+                loading="lazy"
+                decoding="async"
+                width={24}
+                height={24}
                 className="w-6 h-6 rounded-full object-cover border border-[#49352F]/15 dark:border-[#F2CAB3]/30 shrink-0"
               />
             ) : (
@@ -515,7 +484,7 @@ export function AppHeader({
                 boxSizing: "border-box",
                 zIndex: 9999,
               }}
-              className="rounded-2xl bg-white dark:bg-[#26201C] p-2.5 shadow-2xl border border-[#49352F]/15 dark:border-[#F2CAB3]/20 animate-in fade-in-50 zoom-in-95 duration-100"
+              className="rounded-2xl bg-white dark:bg-[#26201C] p-2.5 shadow-2xl border border-[#49352F]/15 dark:border-[#F2CAB3]/20 animate-grow-top-right origin-top-right"
             >
               {/* Authenticated user profile summary */}
               <div className="px-3 py-2.5 border-b border-[#49352F]/10 dark:border-[#F2CAB3]/15 mb-2 flex items-center gap-3">
@@ -524,6 +493,10 @@ export function AppHeader({
                   <img
                     src={user.avatarUrl}
                     alt={user.name || "User Avatar"}
+                    loading="lazy"
+                    decoding="async"
+                    width={40}
+                    height={40}
                     className="w-10 h-10 rounded-full object-cover border border-[#49352F]/15 dark:border-[#F2CAB3]/30 shrink-0"
                   />
                 ) : (

@@ -14,6 +14,7 @@ import { useFilter } from "@/context/FilterContext";
 import { StudentFormModal } from "@/components/student/StudentFormModal";
 import { StudentCsvModal } from "@/components/student/StudentCsvModal";
 import { broadcastDataUpdate, subscribeToDataUpdates } from "@/lib/events";
+import { fetchWithCache, getCachedDataSync } from "@/lib/cache/localCache";
 import {
   Users,
   Search,
@@ -41,7 +42,7 @@ function StudentsPageContent() {
   const [students, setStudents] = useState<any[]>([]);
   const [gaps, setGaps] = useState<any[]>([]);
   const [results, setResults] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
   const [notification, setNotification] = useState<{
     type: "success" | "error";
     message: string;
@@ -102,21 +103,18 @@ function StudentsPageContent() {
   };
 
   const fetchStudents = async () => {
-    setLoading(true);
+    if (students.length === 0) {
+      setLoading(true);
+    }
     try {
-      const [stdRes, gapsRes, resultsRes] = await Promise.all([
-        fetch("/api/students", { cache: "no-store" }),
-        fetch("/api/learning-gaps", { cache: "no-store" }),
-        fetch("/api/assessments/results", { cache: "no-store" }),
-      ]);
       const [stdData, gapsData, resultsData] = await Promise.all([
-        stdRes.json(),
-        gapsRes.json(),
-        resultsRes.json(),
+        fetchWithCache<any>("/api/students", { ttlMs: 25000 }).then((r) => r.data),
+        fetchWithCache<any>("/api/learning-gaps", { ttlMs: 25000 }).then((r) => r.data),
+        fetchWithCache<any>("/api/assessments/results", { ttlMs: 25000 }).then((r) => r.data),
       ]);
-      if (stdData.success) setStudents(stdData.students || []);
-      if (gapsData.success) setGaps(gapsData.gaps || []);
-      if (resultsData.success) setResults(resultsData.results || []);
+      if (stdData?.success) setStudents(stdData.students || []);
+      if (gapsData?.success) setGaps(gapsData.gaps || []);
+      if (resultsData?.success) setResults(resultsData.results || []);
     } catch (e) {
       console.error("Failed to load students", e);
       showToast(st.loadFailedToast, "error");
@@ -126,6 +124,18 @@ function StudentsPageContent() {
   };
 
   useEffect(() => {
+    // Immediately hydrate from local cache on mount if available
+    const cachedStd = getCachedDataSync<any>("/api/students", 30000);
+    const cachedGaps = getCachedDataSync<any>("/api/learning-gaps", 30000);
+    const cachedResults = getCachedDataSync<any>("/api/assessments/results", 30000);
+
+    if (cachedStd?.students && cachedStd.students.length > 0) {
+      setStudents(cachedStd.students);
+      if (cachedGaps?.gaps) setGaps(cachedGaps.gaps);
+      if (cachedResults?.results) setResults(cachedResults.results);
+      setLoading(false);
+    }
+
     fetchStudents();
 
     const unsubscribe = subscribeToDataUpdates(() => {
@@ -246,7 +256,7 @@ function StudentsPageContent() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="font-heading text-2xl sm:text-3xl font-extrabold text-[#49352F] tracking-tight">
-                {t.students.title || "Student Directory & 3D Profiles"}
+                {t.students.title || "Student Directory & Profiles"}
               </h1>
               <Badge variant="saffron" size="sm">
                 {students.length} {t.students.enrolledBadge || "Enrolled"}
@@ -265,7 +275,7 @@ function StudentsPageContent() {
               onClick={handleExportCsv}
               className="rounded-full text-xs bg-white hover:bg-[#F2CAB3] text-[#49352F] border border-[#49352F]/15"
             >
-              <Download className="w-3.5 h-3.5 mr-1 text-[#7A6862]" />
+              <Download className="w-3.5 h-3.5 text-[#7A6862]" />
               <span>{t.actions.exportCsv}</span>
             </Button>
             <Button
@@ -274,7 +284,7 @@ function StudentsPageContent() {
               onClick={() => setShowCsvModal(true)}
               className="rounded-full text-xs bg-white hover:bg-[#F2CAB3] text-[#49352F] border border-[#49352F]/15"
             >
-              <Upload className="w-3.5 h-3.5 mr-1 text-[#7A6862]" />
+              <Upload className="w-3.5 h-3.5 text-[#7A6862]" />
               <span>{t.actions.importCsv}</span>
             </Button>
             <div data-tour="students-add">
@@ -284,7 +294,7 @@ function StudentsPageContent() {
                 onClick={() => setShowAddModal(true)}
                 className="rounded-full text-xs font-bold"
               >
-                <PlusCircle className="w-3.5 h-3.5 mr-1" />
+                <PlusCircle className="w-3.5 h-3.5" />
                 <span>{t.actions.addStudent}</span>
               </Button>
             </div>
@@ -473,12 +483,12 @@ function StudentsPageContent() {
                   <div className="flex items-center gap-1.5">
                     {!hasAssessments ? (
                       <Badge variant="outline" size="sm" className="bg-[#FAF6E9] border-[#49352F]/15 text-[#7A6862]">
-                        <Clock className="w-3 h-3 mr-1 text-[#B26A1B]" aria-hidden="true" />
+                        <Clock className="w-3 h-3 text-[#B26A1B]" aria-hidden="true" />
                         <span>{st.assessmentPending}</span>
                       </Badge>
                     ) : gapCount > 0 ? (
                       <Badge data-tour={isDemoCase ? "aarav-gap-badge" : undefined} variant="needsSupport" size="sm" dot>
-                        <AlertTriangle className="w-3 h-3 mr-1 text-[#C54738]" aria-hidden="true" />
+                        <AlertTriangle className="w-3 h-3 text-[#C54738]" aria-hidden="true" />
                         <span>
                           {gapCount === 1
                             ? st.activeGapSingle
@@ -515,15 +525,16 @@ function StudentsPageContent() {
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
 
-                    <Link href={`/students/${std.id}`} data-tour={isDemoCase ? "aarav-inspect-btn" : undefined} aria-label={`View 3D Profile for ${std.displayName}`}>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-xs text-[#B26A1B] hover:text-[#49352F]"
-                      >
-                        <span>{st.viewProfile}</span>
-                      </Button>
-                    </Link>
+                    <Button
+                      href={`/students/${std.id}`}
+                      data-tour={isDemoCase ? "aarav-inspect-btn" : undefined}
+                      aria-label={`View Profile for ${std.displayName}`}
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs text-[#B26A1B] hover:text-[#49352F]"
+                    >
+                      <span>{st.viewProfile}</span>
+                    </Button>
                   </div>
                 </div>
               </Card>

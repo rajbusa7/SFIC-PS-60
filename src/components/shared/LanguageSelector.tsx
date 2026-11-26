@@ -82,8 +82,8 @@ export function LanguageSelector({
     : `inline-flex h-9 items-center gap-1.5 rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/20 bg-white dark:bg-[#26201C] px-2.5 text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] hover:bg-[#FAF6E9] dark:hover:bg-[#1E1916] transition-all cursor-pointer shadow-2xs ${className}`;
 
   const panelClasses = isGlass
-    ? "absolute end-0 top-full mt-2 w-[310px] sm:w-[360px] max-w-[calc(100vw-24px)] rounded-2xl border border-white/15 bg-[#1E1916]/95 backdrop-blur-xl text-[#F4F1E1] shadow-2xl z-50 overflow-hidden"
-    : "absolute end-0 top-full mt-2 w-[310px] sm:w-[360px] max-w-[calc(100vw-24px)] rounded-2xl border border-[#49352F]/15 dark:border-[#F2CAB3]/20 bg-white dark:bg-[#26201C] text-[#49352F] dark:text-[#F4F1E1] shadow-xl z-50 overflow-hidden";
+    ? "absolute end-0 top-full mt-2 w-[310px] sm:w-[360px] max-w-[calc(100vw-24px)] rounded-2xl border border-white/15 bg-[#1E1916]/95 backdrop-blur-xl text-[#F4F1E1] shadow-2xl z-50 overflow-hidden animate-grow-top-right origin-top-right"
+    : "absolute end-0 top-full mt-2 w-[310px] sm:w-[360px] max-w-[calc(100vw-24px)] rounded-2xl border border-[#49352F]/15 dark:border-[#F2CAB3]/20 bg-white dark:bg-[#26201C] text-[#49352F] dark:text-[#F4F1E1] shadow-xl z-50 overflow-hidden animate-grow-top-right origin-top-right";
 
   const statusLabelFor = (lang: LanguageConfig) => {
     if (lang.supportStage === "verified") {

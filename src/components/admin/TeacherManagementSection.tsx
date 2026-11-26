@@ -68,6 +68,7 @@ export function TeacherManagementSection() {
   const [assignSaving, setAssignSaving] = useState(false);
   const [assignError, setAssignError] = useState<string | null>(null);
   const [assignSuccess, setAssignSuccess] = useState<string | null>(null);
+  const [assignmentToDelete, setAssignmentToDelete] = useState<string | null>(null);
 
   // Add / Edit Teacher Modal
   const [showTeacherModal, setShowTeacherModal] = useState(false);
@@ -421,8 +422,14 @@ export function TeacherManagementSection() {
   };
 
   // Delete Individual Assignment
-  const handleDeleteAssignment = async (asgId: string) => {
-    if (typeof window !== "undefined" && !window.confirm(at.confirmRemoveAssignment)) return;
+  const handleDeleteAssignment = (asgId: string) => {
+    setAssignmentToDelete(asgId);
+  };
+
+  const confirmDeleteAssignment = async () => {
+    if (!assignmentToDelete) return;
+    const asgId = assignmentToDelete;
+    setAssignmentToDelete(null);
     try {
       const res = await fetch(`/api/admin/teachers/assignments/${asgId}`, {
         method: "DELETE",
@@ -1050,6 +1057,36 @@ export function TeacherManagementSection() {
                 className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 transition-colors shadow-sm cursor-pointer"
               >
                 {isDeletingTeacher ? at.deletingBtn : at.confirmDeleteBtn}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Confirm Delete Assignment Modal */}
+      {assignmentToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-2xl border border-[#49352F]/15 space-y-3 text-[#49352F]">
+            <h3 className="font-heading text-sm font-bold text-[#49352F]">
+              {(at as any)?.confirmRemoveAssignmentTitle || "Remove Assignment?"}
+            </h3>
+            <p className="text-xs text-[#7A6862] leading-relaxed">
+              {at.confirmRemoveAssignment}
+            </p>
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setAssignmentToDelete(null)}
+                className="rounded-xl text-xs"
+              >
+                {t.actions?.cancel || "Cancel"}
+              </Button>
+              <button
+                type="button"
+                onClick={confirmDeleteAssignment}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 transition-colors shadow-sm cursor-pointer"
+              >
+                {t.actions?.confirm || "Confirm"}
               </button>
             </div>
           </div>

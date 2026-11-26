@@ -143,6 +143,7 @@ export function ThemeToggle({
   return (
     <button
       type="button"
+      data-tour="theme-toggle"
       onClick={toggleTheme}
       aria-label={
         isDark
@@ -159,16 +160,16 @@ export function ThemeToggle({
       {/* Icon with smooth rotation animation */}
       <span className="relative flex items-center justify-center w-4 h-4">
         <Sun
-          className={`w-4 h-4 text-[#B26A1B] dark:text-[#F2CAB3] transition-all duration-300 absolute ${
+          className={`w-4 h-4 text-[#B26A1B] dark:text-[#F2CAB3] transition-[transform,opacity] duration-200 absolute ${
             isDark
               ? "scale-100 rotate-0 opacity-100"
-              : "scale-0 rotate-90 opacity-0 pointer-events-none"
+              : "scale-75 rotate-90 opacity-0 pointer-events-none"
           }`}
         />
         <Moon
-          className={`w-4 h-4 text-[#49352F] dark:text-[#FAF6E9] transition-all duration-300 absolute ${
+          className={`w-4 h-4 text-[#49352F] dark:text-[#FAF6E9] transition-[transform,opacity] duration-200 absolute ${
             isDark
-              ? "scale-0 -rotate-90 opacity-0 pointer-events-none"
+              ? "scale-75 -rotate-90 opacity-0 pointer-events-none"
               : "scale-100 rotate-0 opacity-100"
           }`}
         />

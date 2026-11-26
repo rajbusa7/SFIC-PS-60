@@ -268,16 +268,16 @@
     "oauthModalEnvComment": "# Add to .env or Vercel Environment:",
     "oauthModalRedirectHeading": "Authorized Redirect URIs:",
     "oauthModalClose": "Close & Use Email/Password",
-    "heroBadgeHackathon": "SFIC Gujarat Hackathon 2026",
+    "heroBadgeHackathon": "Pedagogical Intelligence",
     "heroBadgeOffline": "100% Offline-First",
     "heroTitleBefore": "The Bridge from Learning Gaps to ",
     "heroTitleHighlight": "Mastery.",
     "heroDesc": "Deterministic rule-based tracking, explainable cognitive diagnosis, and concrete 5-step remedial curricula for Gujarat primary schools.",
     "bulletBenchmarks": "Deterministic 60% developing & 80% mastery benchmarks",
-    "bulletHeatmap": "Interactive 3D class mastery heatmap & student skill progression trees",
+    "bulletHeatmap": "Classroom competency matrix & structured 5-step remedial progression",
     "bulletOffline": "Zero paid APIs required; operates completely offline in rural schools",
     "loadingAuth": "Loading authentication...",
-    "footerCopyright": "© 2026 StudySaathi AI • SFIC Gujarat Hackathon PS-60. Offline-First PWA."
+    "footerCopyright": "© 2026 StudySaathi AI • Pedagogical Remedial System. Offline-First PWA."
   },
   "landing": {
     "heroHeadline": "Every Learning Gap Is an Opportunity.",

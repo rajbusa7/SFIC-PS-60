@@ -53,53 +53,25 @@ export function AppSidebar() {
     return () => clearInterval(interval);
   }, []);
 
-  const navItems = [
+  const primaryNavItems = [
     { href: "/dashboard", label: t.nav.dashboard, icon: LayoutDashboard },
+    { href: "/students", label: t.nav.students, icon: Users },
+    { href: "/assessments", label: t.nav.assessments, icon: FileSpreadsheet },
+    { href: "/learning-gaps", label: t.nav.learningGaps, icon: AlertTriangle },
     {
       href: "/connect",
       label: t.nav.connectChat,
       icon: MessageSquare,
-      badge: unreadChatCount > 0 ? `${unreadChatCount}` : t.sidebar.badgeLive,
-      badgeColor:
-        unreadChatCount > 0
-          ? "bg-[#2E7D5E] text-white font-bold animate-pulse"
-          : "bg-[#2E7D5E]/15 text-[#2E7D5E] border border-[#2E7D5E]/20 font-semibold",
+      badge: unreadChatCount > 0 ? `${unreadChatCount}` : undefined,
+      badgeColor: "bg-[#2E7D5E] text-white font-bold",
     },
-    {
-      href: "/ai",
-      label: t.nav.aiWorkspace || "AI Workspace",
-      icon: Sparkles,
-      badge: t.sidebar?.badge5in1 || "AI 5-in-1",
-      badgeColor: "bg-[#F2CAB3] text-[#49352F] border border-[#49352F]/15 font-bold",
-    },
-    {
-      href: "/notices",
-      label: t.nav.parentBridgeNotices,
-      icon: Users,
-      badge: t.sidebar.badgeUnified,
-      badgeColor: "bg-[#F2CAB3] text-[#49352F] border border-[#49352F]/15 font-bold",
-    },
-    { href: "/students", label: t.nav.students, icon: Users },
-    { href: "/assessments", label: t.nav.assessments, icon: FileSpreadsheet },
-    {
-      href: "/learning-gaps",
-      label: t.nav.learningGaps,
-      icon: AlertTriangle,
-      badge: t.sidebar?.badgeActive || "Active",
-      badgeColor: "bg-[#F2DCB5] text-[#49352F] border border-[#49352F]/15 font-semibold",
-    },
-    { href: "/remedial-plans", label: t.nav.remedialPlans, icon: ClipboardList },
+  ];
+
+  const utilityNavItems = [
     { href: "/activities", label: t.nav.activities, icon: Gamepad2 },
-    { href: "/progress", label: t.nav.progress, icon: TrendingUp },
     { href: "/reports", label: t.nav.reports, icon: FileText },
-    {
-      href: "/tutorial",
-      label: t.nav.tutorial || "Tutorial & Help",
-      icon: BookOpen,
-      badge: t.sidebar?.badge5Min || "5 Min",
-      badgeColor: "bg-[#2E7D5E]/15 text-[#2E7D5E] border border-[#2E7D5E]/20 font-semibold",
-    },
     { href: "/settings", label: t.nav.settings, icon: Settings },
+    { href: "/tutorial", label: t.nav.tutorial || "Tutorial & Help", icon: BookOpen },
   ];
 
   const handleResetDemo = async () => {
@@ -138,6 +110,7 @@ export function AppSidebar() {
       {/* Backdrop for mobile */}
       {isMobileOpen && (
         <div
+          aria-hidden="true"
           className="fixed inset-0 z-40 bg-[#49352F]/30 backdrop-blur-xs lg:hidden print:hidden"
           onClick={() => setIsMobileOpen(false)}
         />
@@ -156,67 +129,9 @@ export function AppSidebar() {
           </Link>
         </div>
 
-        {/* Teacher Tutorial & How-To Card */}
-        <div className="mx-3 mt-3 p-3 rounded-2xl bg-gradient-to-br from-[#F2DCB5]/80 via-[#FAF6E9] to-[#F2CAB3]/80 dark:from-[#26201C] dark:via-[#1E1916] dark:to-[#26201C] border border-[#49352F]/15 dark:border-[#F2CAB3]/20 shadow-xs">
-          <div className="flex items-center justify-between text-[#49352F] dark:text-[#F4F1E1] font-bold text-xs">
-            <span className="flex items-center gap-1.5">
-              <BookOpen className="w-3.5 h-3.5 text-[#B26A1B] dark:text-[#F2CAB3]" />
-              <span>{t.sidebar?.teacherTutorial || "Teacher Tutorial"}</span>
-            </span>
-            <span className="px-1.5 py-0.2 rounded-full bg-[#2E7D5E]/15 text-[#2E7D5E] border border-[#2E7D5E]/20 text-[10px] font-mono font-bold">
-              {t.sidebar?.guideBadge || "Guide"}
-            </span>
-          </div>
-          <p className="text-[11px] text-[#7A6862] dark:text-[#FAF6E9]/70 mt-1 leading-snug">
-            {t.sidebar?.tutorialDesc || "Learn how to spot gaps, create 5-step plans & reassess."}
-          </p>
-          <div className="mt-2.5 flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => {
-                setIsMobileOpen(false);
-                router.push("/dashboard?tour=full");
-              }}
-              className="flex-1 py-1.5 text-center bg-[#F2CAB3] dark:bg-[#F2CAB3]/20 hover:bg-white dark:hover:bg-[#26201C] text-[#49352F] dark:text-[#F4F1E1] border border-[#49352F]/15 dark:border-[#F2CAB3]/20 rounded-xl text-[11px] font-bold transition-all shadow-xs cursor-pointer"
-            >
-              {t.sidebar?.openTutorial || "Open Tutorial →"}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setIsMobileOpen(false);
-                router.push("/dashboard?tour=full");
-              }}
-              className="px-2 py-1.5 rounded-xl border border-[#49352F]/20 dark:border-[#F2CAB3]/20 hover:bg-white dark:hover:bg-[#26201C] text-[#49352F] dark:text-[#F4F1E1] text-[11px] font-semibold cursor-pointer transition-colors"
-              title={t.sidebar?.startTour || "Start Guided Tour"}
-              aria-label={t.sidebar?.startTour || "Start Guided Tour"}
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </div>
-
-        {/* Guided Demo Shortcut Card */}
-        <div className="mx-3 mt-2.5 p-3 rounded-2xl bg-gradient-to-br from-white to-[#FAF6E9] dark:from-[#26201C] dark:to-[#1E1916] border border-[#49352F]/12 dark:border-[#F2CAB3]/20 shadow-xs">
-          <div className="flex items-center gap-1.5 text-[#49352F] dark:text-[#F4F1E1] font-semibold text-xs">
-            <Sparkles className="w-3.5 h-3.5 text-[#B26A1B] dark:text-[#F2CAB3]" />
-            <span>{t.sidebar?.hackathonDemo || "Hackathon Guided Demo"}</span>
-          </div>
-          <p className="text-[11px] text-[#7A6862] dark:text-[#FAF6E9]/70 mt-1 leading-snug">
-            {t.sidebar?.demoDesc || "Evaluate Aarav's division gap remediation in 2 minutes."}
-          </p>
-          <Link
-            href="/students?tour=aarav"
-            onClick={() => setIsMobileOpen(false)}
-            className="mt-2 block w-full py-1 text-center bg-white dark:bg-[#26201C] hover:bg-[#F2CAB3] dark:hover:bg-[#F2CAB3]/20 text-[#49352F] dark:text-[#F4F1E1] border border-[#49352F]/15 dark:border-[#F2CAB3]/20 rounded-lg text-[11px] font-semibold transition-all shadow-xs"
-          >
-            {t.sidebar?.launchDemoCase || "Launch Demo Case →"}
-          </Link>
-        </div>
-
         {/* Navigation links */}
         <nav data-tour="sidebar-nav" className="flex-1 overflow-y-auto px-3 py-3 space-y-1">
-          {navItems.map((item) => {
+          {primaryNavItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);
             return (
@@ -251,6 +166,41 @@ export function AppSidebar() {
                     {item.badge}
                   </span>
                 )}
+              </Link>
+            );
+          })}
+
+          {/* Grouped Secondary / Utilities Section */}
+          <div className="pt-4 pb-1">
+            <div className="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-[#7A6862]/80 dark:text-[#FAF6E9]/50">
+              {(t.sidebar as any)?.toolsUtilities || "Tools & Reports"}
+            </div>
+          </div>
+
+          {utilityNavItems.map((item) => {
+            const Icon = item.icon;
+            const active = isActive(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setIsMobileOpen(false)}
+                className={`flex items-center justify-between px-3 py-2 text-xs font-semibold rounded-xl transition-all group cursor-pointer ${
+                  active
+                    ? "bg-[#F2CAB3] dark:bg-[#F2CAB3]/25 text-[#49352F] dark:text-[#F4F1E1] font-bold shadow-[0_2px_8px_rgba(73,53,47,0.08)] border border-[#49352F]/15 dark:border-[#F2CAB3]/30"
+                    : "text-[#7A6862] dark:text-[#FAF6E9]/70 hover:text-[#49352F] dark:hover:text-[#F4F1E1] hover:bg-[#F2DCB5]/40 dark:hover:bg-[#26201C]"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Icon
+                    className={`w-4 h-4 transition-colors ${
+                      active
+                        ? "text-[#49352F] dark:text-[#F4F1E1]"
+                        : "text-[#7A6862] dark:text-[#FAF6E9]/70 group-hover:text-[#49352F] dark:group-hover:text-[#F4F1E1]"
+                    }`}
+                  />
+                  <span>{item.label}</span>
+                </div>
               </Link>
             );
           })}

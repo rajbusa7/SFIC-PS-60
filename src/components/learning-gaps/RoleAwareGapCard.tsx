@@ -126,12 +126,10 @@ export function RoleAwareGapCard({
                 <span>{rc.printLearningSheet}</span>
               </Button>
             )}
-            <Link href="/activities">
-              <Button variant="saffron" size="sm" className="rounded-full text-xs font-bold">
-                <Sparkles className="w-3.5 h-3.5 mr-1" />
-                <span>{interpretation.nextActivityPrompt || rc.playActivityFallback}</span>
-              </Button>
-            </Link>
+            <Button href="/activities" variant="saffron" size="sm" className="rounded-full text-xs font-bold">
+              <Sparkles className="w-3.5 h-3.5 mr-1" />
+              <span>{interpretation.nextActivityPrompt || rc.playActivityFallback}</span>
+            </Button>
           </div>
         </div>
 

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { AuthProvider } from "@/context/AuthContext";
@@ -6,15 +6,32 @@ import { FilterProvider } from "@/context/FilterContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { TutorialProvider } from "@/context/TutorialContext";
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#F4F1E1" },
+    { media: "(prefers-color-scheme: dark)", color: "#1B1614" },
+  ],
+};
+
 export const metadata: Metadata = {
   applicationName: "StudySaathi AI",
-  title: "StudySaathi AI | Smart Learning Gap Tracking & Remedial Action System",
+  title: "StudySaathi AI | Pedagogical Remedial System & Learning Gap Intelligence",
   description:
-    "Smart tracking and Remedial action system for student learning gaps in primary schools. SFIC Gujarat Hackathon.",
+    "Deterministic rule-based tracking, explainable cognitive diagnosis, and concrete 5-step remedial curricula for primary schools.",
+  keywords: ["StudySaathi", "learning gaps", "remedial education", "primary schools", "offline-first", "pedagogy"],
+  robots: {
+    index: true,
+    follow: true,
+  },
   openGraph: {
-    title: "StudySaathi AI | Smart Learning Gap Tracking & Remedial Action System",
+    title: "StudySaathi AI | Pedagogical Remedial System",
     description: "Every Child Can Learn. AI Helps Us Find the Way. Smart tracking and remedial action system for primary schools.",
     siteName: "StudySaathi AI",
+    locale: "en_IN",
+    type: "website",
   },
 };
 
@@ -56,7 +73,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-screen bg-[#F4F1E1] text-[#49352F] dark:bg-[#1B1614] dark:text-[#F4F1E1] antialiased font-sans transition-colors duration-200">
+      <body suppressHydrationWarning className="min-h-screen bg-[#F4F1E1] text-[#49352F] dark:bg-[#1B1614] dark:text-[#F4F1E1] antialiased font-sans transition-colors duration-200">
         <ThemeProvider>
           <LanguageProvider>
             <AuthProvider>

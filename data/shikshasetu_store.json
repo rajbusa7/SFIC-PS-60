@@ -1097,6 +1097,17 @@
       "percentage": 85,
       "recordedAt": "2026-10-30T10:00:00Z",
       "notes": "Recent reassessment: confirmed independent mastery."
+    },
+    {
+      "assessmentId": "asm-01",
+      "studentId": "std-aarav",
+      "conceptId": "c-math-count-1",
+      "marksObtained": 15,
+      "maximumMarks": 20,
+      "percentage": 75,
+      "notes": "",
+      "recordedAt": "2026-11-26T12:36:40.245Z",
+      "id": "res-1795696600247-72y71"
     }
   ],
   "learningGaps": [
@@ -1110,18 +1121,21 @@
       "grade": 4,
       "priority": "High",
       "masteryStatus": "Needs Support",
-      "reason": "Needs Support: Assessment performance (35%) is below the configured support threshold (60%), and the previous result (40%) also showed persistent difficulty. Structured guided practice on core fundamentals is recommended.",
-      "suggestedAction": "Assign focused small-group remedial practice on Division Basics fundamentals using concrete manipulatives.",
-      "diagnosisType": "Developing / Not Yet Mastered",
+      "reason": "Assessment performance (35%) is below the configured support threshold (60%) (40% → 35%), showing persistent difficulty requiring structured remediation. (Evidence recorded 63 days ago; a brief progress check is recommended).",
+      "suggestedAction": "Assign focused small-group remedial practice on Division Basics & Equal Sharing fundamentals, using visual manipulatives or physical objects.",
+      "diagnosisType": "Conceptual Gap",
       "status": "Active",
       "attemptsCount": 2,
       "latestPercentage": 35,
       "previousPercentage": 40,
       "deltaPercentagePoints": -5,
       "trend": "Declining",
-      "trendLabel": "Declining",
-      "updatedAt": "2026-09-24T12:00:00Z",
-      "remedialPlanId": "plan-aarav-div-01"
+      "trendLabel": "↓ -5% Declining",
+      "updatedAt": "2026-11-26T12:36:40.271Z",
+      "remedialPlanId": "plan-aarav-div-01",
+      "diagnosis": "Conceptual Gap in Division Basics & Equal Sharing",
+      "gapType": "Conceptual Gap",
+      "trendText": "↓ -5% Declining"
     },
     {
       "id": "gap-dev-verb",
@@ -1281,6 +1295,75 @@
       "trend": "Improving",
       "trendLabel": "Improving",
       "updatedAt": "2026-10-30T12:00:00Z"
+    },
+    {
+      "id": "gap-std-aarav-c-mult-01",
+      "studentId": "std-aarav",
+      "studentName": "Aarav Patel",
+      "conceptId": "c-mult-01",
+      "conceptName": "Multiplication Tables (2 to 9)",
+      "subjectCode": "MATH",
+      "grade": 4,
+      "priority": "Medium",
+      "masteryStatus": "Developing",
+      "reason": "Student has grasped core basics (65%), but has not yet met the mastery threshold of 80%. (Evidence recorded 77 days ago; a brief progress check is recommended).",
+      "suggestedAction": "Conduct a short 3-5 item diagnostic exit ticket with concrete physical manipulatives to verify whether this represents a persistent misunderstanding.",
+      "diagnosis": "Insufficient Evidence — Run Diagnostic Check",
+      "gapType": "Insufficient Evidence",
+      "diagnosisType": "Insufficient Evidence",
+      "status": "Active",
+      "attemptsCount": 1,
+      "latestPercentage": 65,
+      "trend": "Insufficient Data",
+      "trendLabel": "⋯ Insufficient Data",
+      "trendText": "⋯ Insufficient Data",
+      "updatedAt": "2026-11-26T12:36:40.271Z"
+    },
+    {
+      "id": "gap-std-aarav-c-eng-comp-01",
+      "studentId": "std-aarav",
+      "studentName": "Aarav Patel",
+      "conceptId": "c-eng-comp-01",
+      "conceptName": "Short Passage Reading Comprehension",
+      "subjectCode": "ENG",
+      "grade": 4,
+      "priority": "Low",
+      "masteryStatus": "Developing",
+      "reason": "Student has grasped core basics (75%), but has not yet met the mastery threshold of 80%. (Evidence recorded 55 days ago; a brief progress check is recommended).",
+      "suggestedAction": "Conduct a short 3-5 item diagnostic exit ticket with concrete physical manipulatives to verify whether this represents a persistent misunderstanding.",
+      "diagnosis": "Insufficient Evidence — Run Diagnostic Check",
+      "gapType": "Insufficient Evidence",
+      "diagnosisType": "Insufficient Evidence",
+      "status": "Active",
+      "attemptsCount": 1,
+      "latestPercentage": 75,
+      "trend": "Insufficient Data",
+      "trendLabel": "⋯ Insufficient Data",
+      "trendText": "⋯ Insufficient Data",
+      "updatedAt": "2026-11-26T12:36:40.271Z"
+    },
+    {
+      "id": "gap-std-aarav-c-math-count-1",
+      "studentId": "std-aarav",
+      "studentName": "Aarav Patel",
+      "conceptId": "c-math-count-1",
+      "conceptName": "Number Recognition & Counting (1–100)",
+      "subjectCode": "MATH",
+      "grade": 4,
+      "priority": "Medium",
+      "masteryStatus": "Developing",
+      "reason": "Student has grasped core basics (75%), but has not yet met the mastery threshold of 80%.",
+      "suggestedAction": "Conduct a short 3-5 item diagnostic exit ticket with concrete physical manipulatives to verify whether this represents a persistent misunderstanding.",
+      "diagnosis": "Insufficient Evidence — Run Diagnostic Check",
+      "gapType": "Insufficient Evidence",
+      "diagnosisType": "Insufficient Evidence",
+      "status": "Active",
+      "attemptsCount": 1,
+      "latestPercentage": 75,
+      "trend": "Insufficient Data",
+      "trendLabel": "⋯ Insufficient Data",
+      "trendText": "⋯ Insufficient Data",
+      "updatedAt": "2026-11-26T12:36:40.273Z"
     }
   ],
   "remedialPlans": [
@@ -4461,6 +4544,19 @@
       "status": "active",
       "createdAt": "2026-01-01T00:00:00Z",
       "updatedAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "usr-1793276409027-bvlf",
+      "name": "Educator",
+      "email": "rajbusa5435@gmail.com",
+      "role": "teacher",
+      "schoolId": "sch-gn-01",
+      "googleId": "111098743213006294298",
+      "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocInzo8GWbivjHdjrH0jePKXqvdZAJC07iAFjHHXwb-IzYwUDdLq=s96-c",
+      "provider": "google",
+      "status": "active",
+      "createdAt": "2026-11-26T12:04:24.109Z",
+      "updatedAt": "2026-11-26T12:04:24.109Z"
     }
   ],
   "feedback": [],
@@ -4553,7 +4649,21 @@
       "updatedAt": "2026-11-03T12:42:21.969Z"
     }
   ],
-  "auditLogs": [],
+  "auditLogs": [
+    {
+      "teacherId": "usr-teacher-01",
+      "teacherName": "Pooja Sharma",
+      "studentId": "std-aarav",
+      "studentName": "Aarav Patel",
+      "subjectCode": "MATH",
+      "assessmentId": "asm-01",
+      "previousMarks": 0,
+      "updatedMarks": 15,
+      "action": "ENTER_MARKS",
+      "id": "audit-1795696600282-zw3zfc",
+      "timestamp": "2026-11-26T12:36:40.282Z"
+    }
+  ],
   "interventionRecords": [
     {
       "id": "int-b10-1",
@@ -5883,7 +5993,7 @@
       "lastMessageSenderName": "Dineshbhai Patel",
       "unreadCounts": {
         "usr-teacher-01": 4,
-        "par-001": 4,
+        "par-001": 0,
         "usr-par-01": 8,
         "par-aarav": 8
       },
@@ -5906,6 +6016,14 @@
         {
           "userId": "usr-teacher-01",
           "readAt": "2026-01-11T09:00:00Z"
+        },
+        {
+          "userId": "usr-1793276409027-bvlf",
+          "readAt": "2026-11-26T12:04:53.860Z"
+        },
+        {
+          "userId": "par-001",
+          "readAt": "2026-11-26T12:39:03.385Z"
         }
       ],
       "isAnnouncement": true,
@@ -5934,6 +6052,14 @@
         {
           "userId": "usr-teacher-01",
           "readAt": "2026-03-24T10:35:00Z"
+        },
+        {
+          "userId": "usr-1793276409027-bvlf",
+          "readAt": "2026-11-26T12:04:53.860Z"
+        },
+        {
+          "userId": "par-001",
+          "readAt": "2026-11-26T12:39:03.385Z"
         }
       ],
       "isAnnouncement": true,
@@ -6053,11 +6179,15 @@
       "senderName": "Pooja Sharma",
       "senderRole": "teacher",
       "text": "Aarav completed the remedial worksheet on division with 85% accuracy!",
-      "status": "sent",
+      "status": "read",
       "readBy": [
         {
           "userId": "usr-teacher-01",
           "readAt": "2026-11-26T04:31:48.389Z"
+        },
+        {
+          "userId": "par-001",
+          "readAt": "2026-11-26T12:39:08.651Z"
         }
       ],
       "createdAt": "2026-11-26T04:31:48.404Z"
@@ -6139,11 +6269,15 @@
       "senderName": "Pooja Sharma",
       "senderRole": "teacher",
       "text": "Aarav completed the remedial worksheet on division with 85% accuracy!",
-      "status": "sent",
+      "status": "read",
       "readBy": [
         {
           "userId": "usr-teacher-01",
           "readAt": "2026-11-26T05:15:13.361Z"
+        },
+        {
+          "userId": "par-001",
+          "readAt": "2026-11-26T12:39:08.651Z"
         }
       ],
       "createdAt": "2026-11-26T05:15:13.362Z"
@@ -6225,11 +6359,15 @@
       "senderName": "Pooja Sharma",
       "senderRole": "teacher",
       "text": "Aarav completed the remedial worksheet on division with 85% accuracy!",
-      "status": "sent",
+      "status": "read",
       "readBy": [
         {
           "userId": "usr-teacher-01",
           "readAt": "2026-11-26T05:26:13.163Z"
+        },
+        {
+          "userId": "par-001",
+          "readAt": "2026-11-26T12:39:08.651Z"
         }
       ],
       "createdAt": "2026-11-26T05:26:13.166Z"
@@ -6311,11 +6449,15 @@
       "senderName": "Pooja Sharma",
       "senderRole": "teacher",
       "text": "Aarav completed the remedial worksheet on division with 85% accuracy!",
-      "status": "sent",
+      "status": "read",
       "readBy": [
         {
           "userId": "usr-teacher-01",
           "readAt": "2026-11-26T05:40:47.382Z"
+        },
+        {
+          "userId": "par-001",
+          "readAt": "2026-11-26T12:39:08.651Z"
         }
       ],
       "createdAt": "2026-11-26T05:40:47.384Z"

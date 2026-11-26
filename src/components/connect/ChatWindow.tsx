@@ -123,6 +123,7 @@ const MessageBubble = React.memo(function MessageBubble({
                       src={att.url}
                       alt={att.name}
                       loading="lazy"
+                      decoding="async"
                       className="max-h-56 w-full object-cover cursor-pointer hover:opacity-95"
                       onClick={() => window.open(att.url, "_blank")}
                     />
@@ -260,6 +261,7 @@ export function ChatWindow({
   const [inputText, setInputText] = useState("");
   const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
   const [attachments, setAttachments] = useState<ChatMessageAttachment[]>([]);
+  const [attachmentError, setAttachmentError] = useState<string | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [translatedMessages, setTranslatedMessages] = useState<Record<string, string>>({});
   const [translatingId, setTranslatingId] = useState<string | null>(null);
@@ -343,7 +345,8 @@ export function ChatWindow({
 
     const file = files[0];
     if (file.size > 10 * 1024 * 1024) {
-      alert(cn.fileTooLarge);
+      setAttachmentError(cn.fileTooLarge);
+      setTimeout(() => setAttachmentError(null), 4000);
       return;
     }
 
@@ -591,6 +594,20 @@ export function ChatWindow({
               {phrase}
             </button>
           ))}
+        </div>
+      )}
+
+      {/* Attachment Error Notice */}
+      {attachmentError && (
+        <div className="p-2.5 px-4 bg-rose-500/10 border-t border-rose-500/20 text-rose-800 dark:text-rose-300 text-xs flex items-center justify-between">
+          <span>{attachmentError}</span>
+          <button
+            type="button"
+            onClick={() => setAttachmentError(null)}
+            className="text-rose-600 hover:text-rose-800 font-bold p-1 cursor-pointer"
+          >
+            &times;
+          </button>
         </div>
       )}
 

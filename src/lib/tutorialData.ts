@@ -87,11 +87,11 @@ export const dashboardTourSteps: TourStep[] = [
     placement: "bottom",
   },
   {
-    id: "shikshabot-trigger",
+    id: "theme-toggle",
     titleKey: "tutorial.tour.dashboard.step7.title",
     descKey: "tutorial.tour.dashboard.step7.desc",
-    targetSelector: '[data-tour="shikshabot-trigger"]',
-    placement: "left",
+    targetSelector: '[data-tour="theme-toggle"]',
+    placement: "bottom",
   },
   {
     id: "finish",

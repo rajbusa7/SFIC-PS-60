@@ -47,8 +47,8 @@ export function RemedialPlanModal({
     plan?.completedSteps || []
   );
   const [isSaving, setIsSaving] = useState(false);
-  const [fallbackCreatedIso] = useState<string>(() => new Date().toISOString());
-  const [fallbackTargetIso] = useState<string>(() => new Date(Date.now() + 7 * 86400000).toISOString());
+  const fallbackCreatedIso = "2026-03-01T09:00:00.000Z";
+  const fallbackTargetIso = "2026-03-08T09:00:00.000Z";
 
   if (!isOpen || !plan) return null;
 

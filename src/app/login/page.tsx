@@ -35,11 +35,6 @@ import {
   Phone,
 } from "lucide-react";
 
-const BridgeCanvas3D = dynamic(
-  () => import("@/components/3d/BridgeCanvas3D").then((m) => m.BridgeCanvas3D),
-  { ssr: false }
-);
-
 function LoginCardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -454,55 +449,35 @@ function LoginCardContent() {
           </div>
         )}
 
-        {/* 1-Click Demo Evaluation Box (Available in Login Mode) */}
+        {/* 1-Click Demo Quick Access */}
         {authMode === "login" && (
-          <div className="p-4 rounded-2xl bg-gradient-to-br from-[#F2DCB5]/70 via-[#FAF6E9] to-[#F2CAB3]/60 dark:from-[#2A231E] dark:via-[#221C18] dark:to-[#1E1916] border border-[#49352F]/15 dark:border-[#F2CAB3]/25 shadow-inner space-y-3 text-[#49352F] dark:text-[#F4F1E1]">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-[#B26A1B] dark:text-[#F2CAB3]" />
-                {lg.juryAccessTitle}
-              </span>
-              <Badge variant="mint" size="sm">
-                {lg.juryNoSignUp}
-              </Badge>
-            </div>
-            <p className="text-[11px] text-[#7A6862] dark:text-[#FAF6E9]/75 leading-relaxed">
-              {lg.jurySubtitle}
-            </p>
-
-            <div className="grid grid-cols-3 gap-2 pt-1">
-              <Button
+          <div className="p-3 rounded-2xl bg-[#FAF6E9]/90 dark:bg-[#26201C] border border-[#49352F]/12 dark:border-[#F2CAB3]/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+            <span className="text-[11px] font-semibold text-[#7A6862] dark:text-[#FAF6E9]/75 flex items-center gap-1.5 shrink-0">
+              <Sparkles className="w-3.5 h-3.5 text-[#B26A1B] dark:text-[#F2CAB3]" />
+              <span>{lg.juryAccessTitle || "Demo Access:"}</span>
+            </span>
+            <div className="grid grid-cols-3 gap-1.5 sm:flex sm:items-center">
+              <button
                 type="button"
-                variant="saffron"
-                size="sm"
                 onClick={handleTeacherDemo}
-                className="rounded-xl text-xs font-black shadow-xs cursor-pointer px-2"
+                className="px-2.5 py-1.5 rounded-xl text-[11px] font-bold bg-[#F2CAB3] hover:bg-white text-[#49352F] border border-[#49352F]/15 transition-all text-center cursor-pointer shadow-2xs active:scale-95"
               >
-                <UserCheck className="w-3.5 h-3.5 mr-1 shrink-0" />
-                <span className="truncate">{lg.roleTeacherShort}</span>
-              </Button>
-
-              <Button
+                {lg.roleTeacherShort || "Teacher"}
+              </button>
+              <button
                 type="button"
-                variant="outline"
-                size="sm"
                 onClick={handleParentDemo}
-                className="rounded-xl text-xs font-bold border-[#B26A1B]/40 hover:border-[#B26A1B] bg-[#F2CAB3]/25 hover:bg-[#F2CAB3]/50 text-[#49352F] dark:text-[#F4F1E1] cursor-pointer px-2"
+                className="px-2.5 py-1.5 rounded-xl text-[11px] font-bold bg-white dark:bg-[#201A16] text-[#49352F] dark:text-[#F4F1E1] hover:bg-[#F2CAB3] border border-[#49352F]/15 transition-all text-center cursor-pointer shadow-2xs active:scale-95"
               >
-                <Users className="w-3.5 h-3.5 mr-1 shrink-0 text-[#B26A1B] dark:text-[#F2CAB3]" />
-                <span className="truncate">{lg.roleParentShort}</span>
-              </Button>
-
-              <Button
+                {lg.roleParentShort || "Parent"}
+              </button>
+              <button
                 type="button"
-                variant="outline"
-                size="sm"
                 onClick={handleAdminDemo}
-                className="rounded-xl text-xs font-bold border-[#49352F]/15 dark:border-[#F2CAB3]/30 hover:border-[#49352F]/30 bg-white dark:bg-[#26201C] text-[#49352F] dark:text-[#F4F1E1] cursor-pointer px-2"
+                className="px-2.5 py-1.5 rounded-xl text-[11px] font-bold bg-white dark:bg-[#201A16] text-[#7A6862] dark:text-[#FAF6E9]/70 hover:bg-[#FAF6E9] border border-[#49352F]/15 transition-all text-center cursor-pointer shadow-2xs active:scale-95"
               >
-                <ShieldCheck className="w-3.5 h-3.5 mr-1 shrink-0 text-[#7A6862] dark:text-[#FAF6E9]" />
-                <span className="truncate">{lg.roleAdminShort}</span>
-              </Button>
+                {lg.roleAdminShort || "Admin"}
+              </button>
             </div>
           </div>
         )}
@@ -1163,9 +1138,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-[#F4F1E1] dark:bg-[#15110E] text-[#49352F] dark:text-[#F4F1E1] flex flex-col justify-between overflow-hidden relative">
-      {/* Background 3D Bridge Canvas */}
-      <BridgeCanvas3D progress={0.5} />
-
       {/* Top Navbar */}
       <header className="relative z-20 flex items-center justify-between p-5 sm:px-10 max-w-7xl w-full mx-auto backdrop-blur-xs">
         <Link href="/" className="cursor-pointer">

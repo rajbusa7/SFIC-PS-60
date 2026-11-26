@@ -735,11 +735,9 @@ export default function TutorialPage() {
                         <span>{tu.sandboxS4ResetBtn}</span>
                       </Button>
 
-                      <Link href="/students/std-aarav">
-                        <Button variant="outline" size="sm" className="rounded-full text-xs text-[#49352F] border-[#49352F]/20 hover:bg-[#FAF6E9]">
-                          <span>{tu.sandboxS4ProfileBtn}</span>
-                        </Button>
-                      </Link>
+                      <Button href="/students/std-aarav" variant="outline" size="sm" className="rounded-full text-xs text-[#49352F] border-[#49352F]/20 hover:bg-[#FAF6E9]">
+                        <span>{tu.sandboxS4ProfileBtn}</span>
+                      </Button>
                     </div>
                   </div>
                 )}

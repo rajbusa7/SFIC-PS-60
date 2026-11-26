@@ -419,12 +419,10 @@ export default function RemedialPlansPage() {
               </Button>
             </div>
 
-            <Link href="/ai?tab=remedial" className="print:hidden">
-              <Button variant="saffron" size="sm" className="rounded-full text-xs font-bold">
-                <Sparkles className="w-3.5 h-3.5 mr-1" />
-                <span>{rp.generatePlanBtn}</span>
-              </Button>
-            </Link>
+            <Button href="/ai?tab=remedial" variant="saffron" size="sm" className="rounded-full text-xs font-bold print:hidden">
+              <Sparkles className="w-3.5 h-3.5 mr-1" />
+              <span>{rp.generatePlanBtn}</span>
+            </Button>
           </div>
         </div>
 

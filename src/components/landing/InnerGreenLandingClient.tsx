@@ -64,19 +64,6 @@ export function InnerGreenLandingClient() {
         onLoad={tryMountLanding}
       />
 
-      {/* 120 FPS Performance Monitor Badge */}
-      <div className="fps-hud-badge" id="fps-hud" title={l.fpsTargetTitle}>
-        <span className="fps-pulse-dot" />
-        <span className="fps-val" id="fps-val">
-          120
-        </span>
-        <span className="fps-unit">FPS</span>
-        <span className="fps-sep">|</span>
-        <span className="fps-ms" id="fps-ms">
-          8.3ms
-        </span>
-      </div>
-
       {/* SECTION 1 — 3D INTERACTIVE HERO */}
       <main className="hero" id="hero">
         <canvas id="scene" />
@@ -89,7 +76,7 @@ export function InnerGreenLandingClient() {
               data-spec
               data-burst
               href="#hero"
-              style={{ ["--d" as string]: "120ms" }}
+              style={{ ["--d" as string]: "30ms" }}
               aria-label={l.nav.homeAria}
             >
               <svg viewBox="0 0 22 24" aria-hidden="true">
@@ -107,7 +94,7 @@ export function InnerGreenLandingClient() {
               data-spec
               data-burst
               href="#hero"
-              style={{ ["--d" as string]: "180ms" }}
+              style={{ ["--d" as string]: "45ms" }}
               aria-label={l.nav.home}
             >
               <span className="glyph" aria-hidden="true">
@@ -126,7 +113,7 @@ export function InnerGreenLandingClient() {
               data-spec
               data-burst
               href="#how-it-works"
-              style={{ ["--d" as string]: "220ms" }}
+              style={{ ["--d" as string]: "60ms" }}
               aria-label={l.nav.howItWorks}
             >
               <span className="glyph" aria-hidden="true">
@@ -144,7 +131,7 @@ export function InnerGreenLandingClient() {
               data-spec
               data-burst
               href="#features"
-              style={{ ["--d" as string]: "260ms" }}
+              style={{ ["--d" as string]: "75ms" }}
               aria-label={l.nav.features}
             >
               <span className="glyph" aria-hidden="true">
@@ -162,7 +149,7 @@ export function InnerGreenLandingClient() {
               data-spec
               data-burst
               href="#for-teachers"
-              style={{ ["--d" as string]: "300ms" }}
+              style={{ ["--d" as string]: "90ms" }}
               aria-label={l.nav.forTeachers}
             >
               <span className="glyph" aria-hidden="true">
@@ -180,7 +167,7 @@ export function InnerGreenLandingClient() {
               data-spec
               data-burst
               href="/login"
-              style={{ ["--d" as string]: "340ms" }}
+              style={{ ["--d" as string]: "105ms" }}
               aria-label={l.nav.signIn}
             >
               <span className="glyph" aria-hidden="true">
@@ -199,7 +186,7 @@ export function InnerGreenLandingClient() {
               data-spec
               data-burst
               href="/dashboard"
-              style={{ ["--d" as string]: "380ms" }}
+              style={{ ["--d" as string]: "120ms" }}
               aria-label={l.nav.getStarted}
             >
               <span className="glyph" aria-hidden="true">

@@ -33,6 +33,12 @@
   --amber: #B26A1B;               /* Developing / In Progress (warm ochre/amber) */
   --amber-light: #FDF4E7;
 
+  /* Emil Kowalski motion tokens (emil-design-eng) */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --duration-fast: 150ms;
+  --duration-base: 220ms;
+
   /* Theme mappings */
   --background: var(--color-cream);
   --foreground: var(--color-text-brown);
@@ -265,6 +271,112 @@ html[dir="rtl"] .rtl-flip { transform: scaleX(-1); }
   color: #FA8C7C !important;
 }
 
+/* Universal Dark Mode Icon and Muted Text Visibility */
+.dark .text-\[\#49352F\]\/90,
+.dark .text-\[\#49352F\]\/80,
+.dark .text-\[\#49352F\]\/70,
+.dark .text-\[\#49352F\]\/60,
+.dark .text-\[\#49352F\]\/50,
+.dark .text-\[\#49352F\]\/40,
+[data-theme="dark"] .text-\[\#49352F\]\/90,
+[data-theme="dark"] .text-\[\#49352F\]\/80,
+[data-theme="dark"] .text-\[\#49352F\]\/70,
+[data-theme="dark"] .text-\[\#49352F\]\/60,
+[data-theme="dark"] .text-\[\#49352F\]\/50,
+[data-theme="dark"] .text-\[\#49352F\]\/40 {
+  color: rgba(244, 241, 225, 0.78) !important;
+}
+
+.dark .text-\[\#7A6862\]\/90,
+.dark .text-\[\#7A6862\]\/80,
+.dark .text-\[\#7A6862\]\/70,
+.dark .text-\[\#7A6862\]\/60,
+.dark .text-\[\#7A6862\]\/50,
+.dark .text-\[\#7A6862\]\/40,
+[data-theme="dark"] .text-\[\#7A6862\]\/90,
+[data-theme="dark"] .text-\[\#7A6862\]\/80,
+[data-theme="dark"] .text-\[\#7A6862\]\/70,
+[data-theme="dark"] .text-\[\#7A6862\]\/60,
+[data-theme="dark"] .text-\[\#7A6862\]\/50,
+[data-theme="dark"] .text-\[\#7A6862\]\/40 {
+  color: rgba(194, 179, 172, 0.78) !important;
+}
+
+.dark svg[class*="text-[#49352F]"],
+[data-theme="dark"] svg[class*="text-[#49352F]"] {
+  color: #F4F1E1 !important;
+}
+
+.dark svg[class*="text-[#7A6862]"],
+[data-theme="dark"] svg[class*="text-[#7A6862]"] {
+  color: #C2B3AC !important;
+}
+
+/* Origin-aware fluid growth animations (emil-design-eng) */
+@keyframes origin-grow-top-right {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes origin-grow-top-left {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes origin-grow-bottom-right {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes origin-grow-center {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-grow-top-right {
+  transform-origin: top right;
+  animation: origin-grow-top-right var(--duration-base) var(--ease-out) forwards;
+}
+
+.animate-grow-top-left {
+  transform-origin: top left;
+  animation: origin-grow-top-left var(--duration-base) var(--ease-out) forwards;
+}
+
+.animate-grow-bottom-right {
+  transform-origin: bottom right;
+  animation: origin-grow-bottom-right var(--duration-base) var(--ease-out) forwards;
+}
+
+.animate-grow-center {
+  transform-origin: center;
+  animation: origin-grow-center var(--duration-base) var(--ease-out) forwards;
+}
+
 
 body {
   background-color: var(--background);
@@ -308,8 +420,11 @@ h1, h2, h3, .font-heading {
   *, ::before, ::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  *:not([data-reduced-motion-allow]) {
+    transform: none !important;
   }
 }
 
@@ -326,7 +441,9 @@ h1, h2, h3, .font-heading {
   color: var(--color-text-brown);
   border: 1px solid rgba(73, 53, 47, 0.16);
   box-shadow: 0 4px 14px rgba(73, 53, 47, 0.08);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: background-color var(--duration-base) var(--ease-out),
+              transform var(--duration-base) var(--ease-out),
+              box-shadow var(--duration-base) var(--ease-out);
 }
 
 .bridge-glow-button:hover {

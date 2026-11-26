@@ -32,6 +32,11 @@ export function GroupInfoDrawer({
   const [showAddMember, setShowAddMember] = useState(false);
   const [availableContacts, setAvailableContacts] = useState<any[]>([]);
   const [actionLoading, setActionLoading] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  } | null>(null);
 
   const isConvAdmin =
     conversation.adminIds?.includes(currentUserId) || currentUserRole === "admin";
@@ -66,19 +71,22 @@ export function GroupInfoDrawer({
 
   if (!isOpen) return null;
 
-  const handleRemoveMember = async (userId: string) => {
-    if (!confirm(cn.confirmRemoveMember)) {
-      return;
-    }
-    setActionLoading(true);
-    try {
-      await onUpdateGroup({ removeParticipants: [userId] });
-      setParticipants((prev) => prev.filter((p) => p.userId !== userId));
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setActionLoading(false);
-    }
+  const handleRemoveMember = (userId: string) => {
+    setConfirmDialog({
+      title: (cn as any)?.removeMemberBtn || "Remove Member",
+      message: cn.confirmRemoveMember,
+      onConfirm: async () => {
+        setActionLoading(true);
+        try {
+          await onUpdateGroup({ removeParticipants: [userId] });
+          setParticipants((prev) => prev.filter((p) => p.userId !== userId));
+        } catch (e) {
+          console.error(e);
+        } finally {
+          setActionLoading(false);
+        }
+      },
+    });
   };
 
   const handleAddMember = async (userId: string) => {
@@ -97,12 +105,15 @@ export function GroupInfoDrawer({
     }
   };
 
-  const handleDelete = async () => {
-    if (!confirm(cn.confirmDeleteConv)) {
-      return;
-    }
-    await onDeleteGroup(conversation.id);
-    onClose();
+  const handleDelete = () => {
+    setConfirmDialog({
+      title: cn.deleteConvBtn || "Delete Group",
+      message: cn.confirmDeleteConv,
+      onConfirm: async () => {
+        await onDeleteGroup(conversation.id);
+        onClose();
+      },
+    });
   };
 
   return (
@@ -245,6 +256,40 @@ export function GroupInfoDrawer({
           </div>
         )}
       </div>
+
+      {/* Confirmation Modal */}
+      {confirmDialog && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+          <div className="bg-white dark:bg-[#201A17] p-5 rounded-2xl max-w-xs w-full border border-[#49352F]/15 dark:border-[#F2CAB3]/20 shadow-xl space-y-3">
+            <h4 className="font-bold text-sm text-[#49352F] dark:text-[#F4F1E1]">
+              {confirmDialog.title}
+            </h4>
+            <p className="text-xs text-[#7A6862] dark:text-[#FAF6E9]/70 leading-relaxed">
+              {confirmDialog.message}
+            </p>
+            <div className="flex items-center justify-end gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setConfirmDialog(null)}
+                className="px-3 py-1.5 rounded-xl text-xs font-semibold text-[#7A6862] hover:bg-[#FAF6E9] dark:hover:bg-[#261E1A] cursor-pointer"
+              >
+                {t.actions?.cancel || "Cancel"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const action = confirmDialog.onConfirm;
+                  setConfirmDialog(null);
+                  action();
+                }}
+                className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#C54738] hover:bg-[#A8382B] text-white shadow-xs cursor-pointer"
+              >
+                {t.actions?.confirm || "Confirm"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

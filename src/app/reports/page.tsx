@@ -353,30 +353,11 @@ export default function ReportsPage() {
                   >
                     <optgroup label={rp.groupIndividual}>
                       <option value="student">{rp.optStudent}</option>
-                      <option value="portfolio">{rp.optPortfolio}</option>
                       <option value="parentSummary">{rp.optParentSummary}</option>
-                      <option value="ptm">{rp.optPtm}</option>
-                    </optgroup>
-                    <optgroup label={rp.groupCurriculum}>
-                      <option value="subject">{rp.optSubject}</option>
-                      <option value="chapter">{rp.optChapter}</option>
-                      <option value="conceptMastery">{rp.optConceptMastery}</option>
-                    </optgroup>
-                    <optgroup label={rp.groupTemporal}>
-                      <option value="weekly">{rp.optWeekly}</option>
-                      <option value="monthly">{rp.optMonthly}</option>
-                      <option value="term">{rp.optTerm}</option>
-                      <option value="annual">{rp.optAnnual}</option>
-                    </optgroup>
-                    <optgroup label={rp.groupDiagnostics}>
-                      <option value="gapDiagnostic">{rp.optGapDiagnostic}</option>
-                      <option value="remedial">{rp.optRemedial}</option>
-                      <option value="reassessment">{rp.optReassessment}</option>
                     </optgroup>
                     <optgroup label={rp.groupClasswide}>
-                      <option value="classPerformance">{rp.optClassPerformance}</option>
                       <option value="classGap">{rp.optClassGap}</option>
-                      <option value="attendanceActivity">{rp.optAttendanceActivity}</option>
+                      <option value="term">{rp.optTerm}</option>
                     </optgroup>
                   </select>
                 </div>
@@ -450,7 +431,7 @@ export default function ReportsPage() {
                       ? rp.badgeClassGap
                       : rp.badgeOfficialReport}
                   </span>
-                  <div className="text-[11px] text-[#7A6862] mt-1.5 font-medium">
+                  <div suppressHydrationWarning className="text-[11px] text-[#7A6862] mt-1.5 font-medium">
                     {rp.generatedLabel} {formatDate(new Date().toISOString())}
                   </div>
                 </div>
@@ -1100,7 +1081,7 @@ export default function ReportsPage() {
                   </div>
                   <div>
                     <span>{wsLanguage === "gu" ? "તારીખ:" : "Date:"}</span>{" "}
-                    <strong>{formatDate(new Date().toISOString())}</strong>
+                    <strong suppressHydrationWarning>{formatDate(new Date().toISOString())}</strong>
                   </div>
                 </div>
 

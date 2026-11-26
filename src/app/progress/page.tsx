@@ -285,7 +285,7 @@ export default function ProgressTrackingPage() {
             {pg.printReportSub}
           </p>
           <div className="text-xs text-gray-600 mt-2 flex gap-4">
-            <span>{tr("progress.printDate", { date: formatDate(new Date().toISOString()) })}</span>
+            <span suppressHydrationWarning>{tr("progress.printDate", { date: formatDate(new Date().toISOString()) })}</span>
             <span>{tr("progress.printTotalStudents", { count: kpis.totalStudentsTracked })}</span>
             <span>{tr("progress.printClassAvg", { avg: kpis.overallClassAverage })}</span>
           </div>

@@ -93,3 +93,81 @@ export async function GET(request: Request) {
     );
   }
 }
+
+export async function PATCH(request: Request) {
+  try {
+    const sessionToken = await extractSessionToken(request);
+
+    if (!sessionToken) {
+      return NextResponse.json(
+        { success: false, error: "Authentication required." },
+        { status: 401 }
+      );
+    }
+
+    const session = await verifySession(sessionToken);
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: "Session expired or invalid." },
+        { status: 401 }
+      );
+    }
+
+    const body = await request.json();
+    const { name, phone, preferredLanguage, preferredScript } = body;
+
+    // Persist to user record
+    await db.updateUserAsync(session.id, {
+      ...(name ? { name } : {}),
+      ...(phone ? { phone } : {}),
+    });
+
+    // Persist to parent profile record
+    let parentProfile = await db.getParentByUserIdAsync(session.id);
+    if (parentProfile) {
+      parentProfile = await db.createParentProfileAsync({
+        ...parentProfile,
+        userId: parentProfile.userId || session.id,
+        name: name || parentProfile.name,
+        phone: phone !== undefined ? phone : parentProfile.phone,
+        preferredLanguage: preferredLanguage || parentProfile.preferredLanguage,
+      });
+    } else {
+      parentProfile = await db.createParentProfileAsync({
+        userId: session.id,
+        name: name || session.name,
+        email: session.email,
+        phone: phone || "",
+        preferredLanguage: preferredLanguage || "gu",
+        relationship: "guardian",
+        studentIds: [],
+      });
+    }
+
+    if (preferredLanguage || preferredScript) {
+      await db.updateParentPreferencesAsync(session.id, {
+        ...(preferredLanguage ? { preferredLanguage: preferredLanguage as any } : {}),
+        ...(preferredScript ? { preferredScript: preferredScript as any } : {}),
+      });
+    }
+
+    return NextResponse.json({
+      success: true,
+      user: {
+        id: session.id,
+        name: name || session.name,
+        email: session.email,
+        role: session.role,
+        preferredLanguage: preferredLanguage || parentProfile.preferredLanguage,
+        phone,
+      },
+      parentProfile,
+    });
+  } catch (error: any) {
+    console.error("[Parent Me PATCH Error]:", error);
+    return NextResponse.json(
+      { success: false, error: error.message || "Failed to update parent settings" },
+      { status: 500 }
+    );
+  }
+}

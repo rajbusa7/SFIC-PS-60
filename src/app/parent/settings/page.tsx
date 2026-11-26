@@ -30,6 +30,7 @@ export default function ParentSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/parent/me")
@@ -38,7 +39,7 @@ export default function ParentSettingsPage() {
         if (data.success && data.user) {
           setParentName(data.user.name || "");
           setParentEmail(data.user.email || "");
-          setPhone(data.parentProfile?.phone || "");
+          setPhone(data.parentProfile?.phone || data.user.phone || "");
         } else {
           router.push("/parent/login");
         }
@@ -47,14 +48,28 @@ export default function ParentSettingsPage() {
       .finally(() => setLoading(false));
   }, [router]);
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    setTimeout(() => {
+    setSaveError(null);
+    try {
+      const res = await fetch("/api/parent/me", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: parentName, phone }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSavedSuccess(true);
+        setTimeout(() => setSavedSuccess(false), 3000);
+      } else {
+        setSaveError(data.error || "Failed to save settings");
+      }
+    } catch (err: any) {
+      setSaveError(err?.message || "Failed to save settings");
+    } finally {
       setSaving(false);
-      setSavedSuccess(true);
-      setTimeout(() => setSavedSuccess(false), 3000);
-    }, 600);
+    }
   };
 
   return (
@@ -93,6 +108,13 @@ export default function ParentSettingsPage() {
             <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-900 text-xs flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-600" />
               <span>{pp.settingsSavedSuccess}</span>
+            </div>
+          )}
+
+          {saveError && (
+            <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/25 text-rose-900 text-xs flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+              <span>{saveError}</span>
             </div>
           )}
 

@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { useLanguage } from "@/context/LanguageContext";
 import { subscribeToDataUpdates } from "@/lib/events";
+import { fetchWithCache, getCachedDataSync } from "@/lib/cache/localCache";
 import {
   FileSpreadsheet,
   PlusCircle,
@@ -22,17 +23,16 @@ export default function AssessmentsPage() {
 
   const [assessments, setAssessments] = useState<any[]>([]);
   const [concepts, setConcepts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
   const [subjectFilter, setSubjectFilter] = useState("all");
 
   const fetchAssessments = async () => {
-    setLoading(true);
+    if (assessments.length === 0) setLoading(true);
     try {
-      const res = await fetch("/api/assessments");
-      const data = await res.json();
-      if (data.success) {
-        setAssessments(data.assessments || []);
-        setConcepts(data.concepts || []);
+      const res = await fetchWithCache<any>("/api/assessments", { ttlMs: 25000 });
+      if (res.data?.success) {
+        setAssessments(res.data.assessments || []);
+        setConcepts(res.data.concepts || []);
       }
     } catch (e) {
       console.error("Failed to load assessments", e);
@@ -42,6 +42,13 @@ export default function AssessmentsPage() {
   };
 
   useEffect(() => {
+    const cachedAsm = getCachedDataSync<any>("/api/assessments", 30000);
+    if (cachedAsm?.assessments && cachedAsm.assessments.length > 0) {
+      setAssessments(cachedAsm.assessments);
+      if (cachedAsm.concepts) setConcepts(cachedAsm.concepts);
+      setLoading(false);
+    }
+
     fetchAssessments();
     const unsubscribe = subscribeToDataUpdates(() => {
       fetchAssessments();
@@ -101,6 +108,9 @@ export default function AssessmentsPage() {
               <option value="ENG">{formatSubject("ENG")}</option>
               <option value="GUJ">{formatSubject("GUJ")}</option>
               <option value="EVS">{formatSubject("EVS")}</option>
+              <option value="SCI">{formatSubject("SCI")}</option>
+              <option value="SST">{formatSubject("SST")}</option>
+              <option value="HIN">{formatSubject("HIN")}</option>
             </select>
           </div>
           <span className="text-xs text-[#7A6862]">

@@ -24,12 +24,16 @@ export default function NewAssessmentPage() {
   const { t, tr, formatClass, formatSubject, formatStatus } = useLanguage();
   const an = t.assessments.new;
 
-  const [title, setTitle] = useState("Class 4: Division & Multiplication Check");
+  const [title, setTitle] = useState("");
   const [classroomId, setClassroomId] = useState("cls-4a");
   const [subjectCode, setSubjectCode] = useState<string>("MATH");
-  const [assessmentDate, setAssessmentDate] = useState("2026-10-18");
+  const [assessmentDate, setAssessmentDate] = useState<string>("");
+
+  useEffect(() => {
+    setAssessmentDate(new Date().toISOString().split("T")[0]);
+  }, []);
   const [maxMarks, setMaxMarks] = useState<number>(20);
-  const [selectedConcepts, setSelectedConcepts] = useState<string[]>(["c-div-01"]);
+  const [selectedConcepts, setSelectedConcepts] = useState<string[]>([]);
 
   const [students, setStudents] = useState<any[]>([]);
   const [concepts, setConcepts] = useState<any[]>([]);
@@ -48,10 +52,10 @@ export default function NewAssessmentPage() {
 
         if (dataStd.success) {
           setStudents(dataStd.students || []);
-          // Initialize scores map with default scores
+          // Initialize scores map with empty/zero scores for clean teacher data entry
           const initialScores: Record<string, { marks: number; notes: string }> = {};
           dataStd.students.forEach((s: any) => {
-            initialScores[s.id] = { marks: 15, notes: "" };
+            initialScores[s.id] = { marks: 0, notes: "" };
           });
           setScores(initialScores);
         }
@@ -197,6 +201,7 @@ export default function NewAssessmentPage() {
               </label>
               <input
                 type="date"
+                suppressHydrationWarning
                 value={assessmentDate}
                 onChange={(e) => setAssessmentDate(e.target.value)}
                 className="w-full rounded-xl border border-[#49352F]/15 bg-white p-2.5 text-xs text-[#49352F] focus:border-[#B26A1B] focus:ring-1 focus:ring-[#B26A1B] outline-hidden cursor-pointer"
@@ -235,6 +240,9 @@ export default function NewAssessmentPage() {
                 <option value="ENG">{formatSubject("ENG")}</option>
                 <option value="GUJ">{formatSubject("GUJ")}</option>
                 <option value="EVS">{formatSubject("EVS")}</option>
+                <option value="SCI">{formatSubject("SCI")}</option>
+                <option value="SST">{formatSubject("SST")}</option>
+                <option value="HIN">{formatSubject("HIN")}</option>
               </select>
             </div>
 

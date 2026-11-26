@@ -1,4 +1,4 @@
-{
+﻿{
   "app": {
     "name": "StudySaathi AI",
     "tagline": "ప్రతి అంతరం గుర్తించబడుతుంది. ప్రతి విద్యార్థికి సహాయం అందుతుంది.",
@@ -217,7 +217,7 @@
     "headingLogin": "StudySaathi AIలోకి సైన్ ఇన్ చేయండి",
     "headingRegister": "కొత్త ఉపాధ్యాయ ఖాతాను నమోదు చేయండి",
     "subheadingSystem": "ప్రాథమిక పాఠశాల బోధనా నివారణ వ్యవస్థ",
-    "juryAccessTitle": "హ్యాకథాన్ జ్యూరీ 1-క్లిక్ ప్రవేశం",
+    "juryAccessTitle": "Quick Demo Access",
     "juryNoSignUp": "సైన్ అప్ అవసరం లేదు",
     "jurySubtitle": "లైవ్ ప్రాథమిక తరగతి వివరాలను వెంటనే పరిశీలించడానికి ముందుగా కాన్ఫిగర్ చేసిన పాత్రను ఎంచుకోండి:",
     "roleTeacherShort": "ఉపాధ్యాయ పాత్ర",
@@ -268,7 +268,7 @@
     "oauthModalEnvComment": "# .env లేదా Vercel ఎన్విరాన్‌మెంట్‌లో జోడించండి:",
     "oauthModalRedirectHeading": "అధీకృత రీడైరెక్ట్ URIలు:",
     "oauthModalClose": "మూసివేసి ఇమెయిల్/పాస్‌వర్డ్ ఉపయోగించండి",
-    "heroBadgeHackathon": "SFIC గుజరాత్ హ్యాకథాన్ 2026",
+    "heroBadgeHackathon": "Pedagogical Intelligence",
     "heroBadgeOffline": "100% ఆఫ్‌లైన్-మొదటిది",
     "heroTitleBefore": "అభ్యసన అంతరాల నుండి దీనికి వారధి: ",
     "heroTitleHighlight": "ప్రావీణ్యం.",

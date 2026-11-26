@@ -1,4 +1,4 @@
-{
+﻿{
   "students": {
     "title": "শিক্ষার্থী তালিকা ও 3D প্রোফাইল",
     "subtitle": "প্রাথমিক বিদ্যালয়ের ভর্তি পরিচালনা করুন, 3D দক্ষতা বৃক্ষ পর্যবেক্ষণ করুন এবং 5-ধাপের সংশোধনমূলক পরিকল্পনা সমন্বয় করুন।",
@@ -17,8 +17,8 @@
     "demoCaseBadge": "নমুনা কেস",
     "activeGapsBadge": "{count}টি সক্রিয় ঘাটতি",
     "onTrackBadge": "সঠিক পথে",
-    "viewProfile": "3D প্রোফাইল →",
-    "view3DProfile": "3D প্রোফাইল →",
+    "viewProfile": "প্রোফাইল →",
+    "view3DProfile": "প্রোফাইল →",
     "removeStudentConfirm": "আপনি কি নিশ্চিত যে আপনি {name}-কে তালিকা থেকে সরাতে চান?",
     "removeStudentTitle": "{name}-কে সরান",
     "noStudentsFound": "আপনার ফিল্টারের সাথে কোনো শিক্ষার্থী মেলেনি।",

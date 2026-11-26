@@ -1,4 +1,4 @@
-{
+﻿{
   "app": {
     "name": "StudySaathi AI",
     "tagline": "प्रत्येक अध्ययन तूट ओळखली जाईल. प्रत्येक मुलाला आधार मिळेल.",
@@ -217,7 +217,7 @@
     "headingLogin": "StudySaathi AI मध्ये प्रवेश करा",
     "headingRegister": "नवीन शिक्षक खाते नोंदवा",
     "subheadingSystem": "प्राथमिक शाळा अध्यापनशास्त्रीय उपचारात्मक प्रणाली",
-    "juryAccessTitle": "हॅकाथॉन परीक्षक 1-क्लिक प्रवेश",
+    "juryAccessTitle": "Quick Demo Access",
     "juryNoSignUp": "नोंदणीशिवाय",
     "jurySubtitle": "सक्रिय प्राथमिक वर्गाचे कामकाज त्वरित पाहण्यासाठी पूर्व-निश्चित भूमिका निवडा:",
     "roleTeacherShort": "शिक्षक भूमिका",
@@ -268,7 +268,7 @@
     "oauthModalEnvComment": "# .env किंवा Vercel Environment मध्ये जोडा:",
     "oauthModalRedirectHeading": "अधिकृत Redirect URIs:",
     "oauthModalClose": "बंद करा व ईमेल/पासवर्ड वापरा",
-    "heroBadgeHackathon": "SFIC गुजरात हॅकाथॉन 2026",
+    "heroBadgeHackathon": "Pedagogical Intelligence",
     "heroBadgeOffline": "100% ऑफलाइन-प्रथम",
     "heroTitleBefore": "अध्ययन तुटींपासून यशाकडे नेणारा ",
     "heroTitleHighlight": "प्राविण्याचा सेतू.",

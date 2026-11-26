@@ -1,4 +1,4 @@
-{
+﻿{
   "app": {
     "name": "StudySaathi AI",
     "tagline": "ஒவ்வொரு இடைவெளியும் கண்டறியப்படும். ஒவ்வொரு குழந்தையும் ஆதரிக்கப்படும்.",
@@ -217,7 +217,7 @@
     "headingLogin": "StudySaathi AI தளத்தில் உள்நுழைக",
     "headingRegister": "புதிய ஆசிரியர் கணக்கைப் பதிவுசெய்க",
     "subheadingSystem": "தொடக்கப் பள்ளி கற்பித்தல் குறைதீர் அமைப்பு",
-    "juryAccessTitle": "ஹேக்கத்தான் நடுவர் 1-கிளிக் அணுகல்",
+    "juryAccessTitle": "Quick Demo Access",
     "juryNoSignUp": "பதிவு தேவையில்லை",
     "jurySubtitle": "நேரடி தொடக்கப் பள்ளி வகுப்பை உடனடியாக ஆராய முன்னரே கட்டமைக்கப்பட்ட பங்கைத் தேர்ந்தெடுக்கவும்:",
     "roleTeacherShort": "ஆசிரியர் பங்கு",
@@ -268,7 +268,7 @@
     "oauthModalEnvComment": "# .env அல்லது Vercel சூழலில் சேர்க்கவும்:",
     "oauthModalRedirectHeading": "அங்கீகரிக்கப்பட்ட திருப்பிவிடும் URI-கள்:",
     "oauthModalClose": "மூடி மின்னஞ்சல்/கடவுச்சொல்லைப் பயன்படுத்துக",
-    "heroBadgeHackathon": "SFIC குஜராத் ஹேக்கத்தான் 2026",
+    "heroBadgeHackathon": "Pedagogical Intelligence",
     "heroBadgeOffline": "100% இணையமில்லா-முதல்நிலை",
     "heroTitleBefore": "கற்றல் இடைவெளிகளிலிருந்து ",
     "heroTitleHighlight": "தேர்ச்சிக்கான பாலம்.",

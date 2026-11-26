@@ -273,29 +273,29 @@ function StudentsPageContent() {
               variant="outline"
               size="sm"
               onClick={handleExportCsv}
-              className="rounded-full text-xs bg-white hover:bg-[#F2CAB3] text-[#49352F] border border-[#49352F]/15"
+              className="rounded-full text-xs bg-white hover:bg-[#F2CAB3] text-[#49352F] border border-[#49352F]/15 whitespace-nowrap"
             >
-              <Download className="w-3.5 h-3.5 text-[#7A6862]" />
-              <span>{t.actions.exportCsv}</span>
+              <Download className="w-3.5 h-3.5 text-[#7A6862] shrink-0" />
+              <span className="whitespace-nowrap">{t.actions.exportCsv}</span>
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => setShowCsvModal(true)}
-              className="rounded-full text-xs bg-white hover:bg-[#F2CAB3] text-[#49352F] border border-[#49352F]/15"
+              className="rounded-full text-xs bg-white hover:bg-[#F2CAB3] text-[#49352F] border border-[#49352F]/15 whitespace-nowrap"
             >
-              <Upload className="w-3.5 h-3.5 text-[#7A6862]" />
-              <span>{t.actions.importCsv}</span>
+              <Upload className="w-3.5 h-3.5 text-[#7A6862] shrink-0" />
+              <span className="whitespace-nowrap">{t.actions.importCsv}</span>
             </Button>
             <div data-tour="students-add">
               <Button
                 variant="saffron"
                 size="sm"
                 onClick={() => setShowAddModal(true)}
-                className="rounded-full text-xs font-bold"
+                className="rounded-full text-xs font-bold whitespace-nowrap"
               >
-                <PlusCircle className="w-3.5 h-3.5" />
-                <span>{t.actions.addStudent}</span>
+                <PlusCircle className="w-3.5 h-3.5 shrink-0" />
+                <span className="whitespace-nowrap">{t.actions.addStudent}</span>
               </Button>
             </div>
           </div>
@@ -482,14 +482,14 @@ function StudentsPageContent() {
                 <div className="mt-4 pt-3 border-t border-[#49352F]/10 flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     {!hasAssessments ? (
-                      <Badge variant="outline" size="sm" className="bg-[#FAF6E9] border-[#49352F]/15 text-[#7A6862]">
-                        <Clock className="w-3 h-3 text-[#B26A1B]" aria-hidden="true" />
-                        <span>{st.assessmentPending}</span>
+                      <Badge variant="outline" size="sm" className="bg-[#FAF6E9] border-[#49352F]/15 text-[#7A6862] whitespace-nowrap">
+                        <Clock className="w-3 h-3 text-[#B26A1B] shrink-0" aria-hidden="true" />
+                        <span className="whitespace-nowrap">{st.assessmentPending}</span>
                       </Badge>
                     ) : gapCount > 0 ? (
-                      <Badge data-tour={isDemoCase ? "aarav-gap-badge" : undefined} variant="needsSupport" size="sm" dot>
-                        <AlertTriangle className="w-3 h-3 text-[#C54738]" aria-hidden="true" />
-                        <span>
+                      <Badge data-tour={isDemoCase ? "aarav-gap-badge" : undefined} variant="needsSupport" size="sm">
+                        <AlertTriangle className="w-3 h-3 text-[#C54738] shrink-0" aria-hidden="true" />
+                        <span className="whitespace-nowrap">
                           {gapCount === 1
                             ? st.activeGapSingle
                             : tr("students.activeGapsCount", { count: gapCount })}
@@ -497,7 +497,7 @@ function StudentsPageContent() {
                       </Badge>
                     ) : (
                       <Badge variant="mastered" size="sm" dot>
-                        <span>{st.onTrackBadge}</span>
+                        <span className="whitespace-nowrap">{st.onTrackBadge}</span>
                       </Badge>
                     )}
                   </div>

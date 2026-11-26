@@ -63,7 +63,7 @@ function LoginCardContent() {
 
   // Login form state
   const [email, setEmail] = useState(searchParams.get("email") || "teacher@studysaathi.edu.in");
-  const [password, setPassword] = useState("DemoPass2026!");
+  const [password, setPassword] = useState("teacher123");
   const [showPassword, setShowPassword] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
@@ -454,27 +454,27 @@ function LoginCardContent() {
           <div className="p-3 rounded-2xl bg-[#FAF6E9]/90 dark:bg-[#26201C] border border-[#49352F]/12 dark:border-[#F2CAB3]/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
             <span className="text-[11px] font-semibold text-[#7A6862] dark:text-[#FAF6E9]/75 flex items-center gap-1.5 shrink-0">
               <Sparkles className="w-3.5 h-3.5 text-[#B26A1B] dark:text-[#F2CAB3]" />
-              <span>{lg.juryAccessTitle || "Demo Access:"}</span>
+              <span>{lg.juryAccessTitle || "Quick Demo Access"}</span>
             </span>
             <div className="grid grid-cols-3 gap-1.5 sm:flex sm:items-center">
               <button
                 type="button"
                 onClick={handleTeacherDemo}
-                className="px-2.5 py-1.5 rounded-xl text-[11px] font-bold bg-[#F2CAB3] hover:bg-white text-[#49352F] border border-[#49352F]/15 transition-all text-center cursor-pointer shadow-2xs active:scale-95"
+                className="px-3 py-1.5 rounded-xl text-[11px] font-bold bg-[#F2CAB3] hover:bg-white text-[#49352F] border border-[#49352F]/15 transition-all text-center cursor-pointer shadow-2xs active:scale-95 whitespace-nowrap"
               >
                 {lg.roleTeacherShort || "Teacher"}
               </button>
               <button
                 type="button"
                 onClick={handleParentDemo}
-                className="px-2.5 py-1.5 rounded-xl text-[11px] font-bold bg-white dark:bg-[#201A16] text-[#49352F] dark:text-[#F4F1E1] hover:bg-[#F2CAB3] border border-[#49352F]/15 transition-all text-center cursor-pointer shadow-2xs active:scale-95"
+                className="px-3 py-1.5 rounded-xl text-[11px] font-bold bg-white dark:bg-[#201A16] text-[#49352F] dark:text-[#F4F1E1] hover:bg-[#F2CAB3] border border-[#49352F]/15 transition-all text-center cursor-pointer shadow-2xs active:scale-95 whitespace-nowrap"
               >
                 {lg.roleParentShort || "Parent"}
               </button>
               <button
                 type="button"
                 onClick={handleAdminDemo}
-                className="px-2.5 py-1.5 rounded-xl text-[11px] font-bold bg-white dark:bg-[#201A16] text-[#7A6862] dark:text-[#FAF6E9]/70 hover:bg-[#FAF6E9] border border-[#49352F]/15 transition-all text-center cursor-pointer shadow-2xs active:scale-95"
+                className="px-3 py-1.5 rounded-xl text-[11px] font-bold bg-white dark:bg-[#201A16] text-[#7A6862] dark:text-[#FAF6E9]/70 hover:bg-[#FAF6E9] border border-[#49352F]/15 transition-all text-center cursor-pointer shadow-2xs active:scale-95 whitespace-nowrap"
               >
                 {lg.roleAdminShort || "Admin"}
               </button>

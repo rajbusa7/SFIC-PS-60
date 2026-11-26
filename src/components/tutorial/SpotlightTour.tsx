@@ -108,6 +108,7 @@ export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps
     const timer1 = setTimeout(updateTargetRect, 80);
     const timer2 = setTimeout(updateTargetRect, 220);
     const timer3 = setTimeout(updateTargetRect, 500);
+    const timer4 = setTimeout(updateTargetRect, 700);
 
     window.addEventListener("resize", updateTargetRect, { passive: true });
     window.addEventListener("scroll", updateTargetRect, { passive: true });
@@ -116,6 +117,7 @@ export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps
       clearTimeout(timer1);
       clearTimeout(timer2);
       clearTimeout(timer3);
+      clearTimeout(timer4);
       window.removeEventListener("resize", updateTargetRect);
       window.removeEventListener("scroll", updateTargetRect);
     };

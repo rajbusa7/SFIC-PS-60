@@ -1,4 +1,4 @@
-{
+﻿{
   "students": {
     "title": "विद्यार्थी निर्देशिका और 3D प्रोफ़ाइल",
     "subtitle": "प्राथमिक विद्यालय के नामांकन प्रबंधित करें, 3D कौशल वृक्ष ट्रैक करें और 5-चरणीय उपचारात्मक योजनाओं का समन्वय करें।",
@@ -17,8 +17,8 @@
     "demoCaseBadge": "डेमो केस",
     "activeGapsBadge": "{count} सक्रिय कमियाँ",
     "onTrackBadge": "सही दिशा में",
-    "viewProfile": "3D प्रोफ़ाइल →",
-    "view3DProfile": "3D प्रोफ़ाइल →",
+    "viewProfile": "प्रोफ़ाइल →",
+    "view3DProfile": "प्रोफ़ाइल →",
     "removeStudentConfirm": "क्या आप वाकई {name} को हटाना चाहते हैं?",
     "removeStudentTitle": "{name} को हटाएँ",
     "noStudentsFound": "आपके फ़िल्टर मानदंडों से कोई विद्यार्थी मेल नहीं खाता।",

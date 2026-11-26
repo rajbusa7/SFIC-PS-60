@@ -655,6 +655,7 @@ export default function ActivitiesPage() {
                   </label>
                   <input
                     type="date"
+                    suppressHydrationWarning
                     defaultValue={new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0]}
                     className="w-full p-2 rounded-xl border border-[#49352F]/15 bg-[#FAF6E9] font-medium text-[#49352F]"
                   />

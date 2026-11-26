@@ -1,4 +1,4 @@
-{
+﻿{
   "app": {
     "name": "StudySaathi AI",
     "tagline": "প্রতিটি ঘাটতি চিহ্নিত। প্রতিটি শিশু সহায়তাপ্রাপ্ত।",
@@ -217,7 +217,7 @@
     "headingLogin": "StudySaathi AI-তে প্রবেশ করুন",
     "headingRegister": "নতুন শিক্ষক অ্যাকাউন্ট নিবন্ধন করুন",
     "subheadingSystem": "প্রাথমিক বিদ্যালয় শিক্ষাগত সংশোধন ব্যবস্থা",
-    "juryAccessTitle": "হ্যাকাথন জুরি 1-ক্লিক প্রবেশাধিকার",
+    "juryAccessTitle": "Quick Demo Access",
     "juryNoSignUp": "সাইন আপ ছাড়াই",
     "jurySubtitle": "তাৎক্ষণিকভাবে সক্রিয় প্রাথমিক শিক্ষার্থী দল দেখতে একটি পূর্ব-কনফিগারকৃত ভূমিকা নির্বাচন করুন:",
     "roleTeacherShort": "শিক্ষক ভূমিকা",
@@ -268,7 +268,7 @@
     "oauthModalEnvComment": "# .env বা Vercel এনভায়রনমেন্টে যোগ করুন:",
     "oauthModalRedirectHeading": "অনুমোদিত রিডাইরেক্ট URI সমূহ:",
     "oauthModalClose": "বন্ধ করুন ও ইমেইল/পাসওয়ার্ড ব্যবহার করুন",
-    "heroBadgeHackathon": "SFIC গুজরাট হ্যাকাথন 2026",
+    "heroBadgeHackathon": "Pedagogical Intelligence",
     "heroBadgeOffline": "100% অফলাইন-প্রথম",
     "heroTitleBefore": "শিখন ঘাটতি থেকে দক্ষতা অর্জনের ",
     "heroTitleHighlight": "সেতুবন্ধন।",

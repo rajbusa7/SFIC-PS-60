@@ -1,4 +1,4 @@
-{
+﻿{
   "app": {
     "name": "StudySaathi AI",
     "tagline": "ਹਰ ਪਾੜੇ ਦੀ ਪਛਾਣ। ਹਰ ਬੱਚੇ ਨੂੰ ਸਹਾਇਤਾ।",
@@ -217,7 +217,7 @@
     "headingLogin": "StudySaathi AI ਵਿੱਚ ਸਾਈਨ ਇਨ ਕਰੋ",
     "headingRegister": "ਨਵਾਂ ਅਧਿਆਪਕ ਖਾਤਾ ਰਜਿਸਟਰ ਕਰੋ",
     "subheadingSystem": "ਪ੍ਰਾਇਮਰੀ ਸਕੂਲ ਸਿੱਖਿਆ ਸ਼ਾਸਤਰੀ ਉਪਚਾਰ ਪ੍ਰਣਾਲੀ",
-    "juryAccessTitle": "ਹੈਕਾਥੌਨ ਜੂਰੀ 1-ਕਲਿੱਕ ਪਹੁੰਚ",
+    "juryAccessTitle": "Quick Demo Access",
     "juryNoSignUp": "ਕੋਈ ਸਾਈਨ ਅੱਪ ਨਹੀਂ",
     "jurySubtitle": "ਲਾਈਵ ਪ੍ਰਾਇਮਰੀ ਸਮੂਹ ਨੂੰ ਤੁਰੰਤ ਵੇਖਣ ਲਈ ਪਹਿਲਾਂ ਤੋਂ ਬਣੀ ਭੂਮਿਕਾ ਚੁਣੋ:",
     "roleTeacherShort": "ਅਧਿਆਪਕ ਭੂਮਿਕਾ",
@@ -268,7 +268,7 @@
     "oauthModalEnvComment": "# .env ਜਾਂ Vercel ਵਾਤਾਵਰਣ ਵਿੱਚ ਸ਼ਾਮਲ ਕਰੋ:",
     "oauthModalRedirectHeading": "ਅਧਿਕਾਰਤ ਰੀਡਾਇਰੈਕਟ URI:",
     "oauthModalClose": "ਬੰਦ ਕਰੋ ਅਤੇ ਈਮੇਲ/ਪਾਸਵਰਡ ਵਰਤੋ",
-    "heroBadgeHackathon": "SFIC ਗੁਜਰਾਤ ਹੈਕਾਥੌਨ 2026",
+    "heroBadgeHackathon": "Pedagogical Intelligence",
     "heroBadgeOffline": "100% ਆਫ਼ਲਾਈਨ-ਪਹਿਲ",
     "heroTitleBefore": "ਸਿੱਖਣ ਦੇ ਪਾੜਿਆਂ ਤੋਂ ",
     "heroTitleHighlight": "ਮੁਹਾਰਤ ਤੱਕ ਦਾ ਪੁਲ।",

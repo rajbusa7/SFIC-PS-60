@@ -561,7 +561,7 @@ let needResize = true;
 function resize(){
   const r  = stage.getBoundingClientRect();
   const br = btn.getBoundingClientRect();
-  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  DPR = Math.min(window.devicePixelRatio || 1, 1.15);
   const w = Math.max(2, Math.round(r.width  * DPR));
   const h = Math.max(2, Math.round(r.height * DPR));
   if(w !== W || h !== H){ W = w; H = h; cv.width = W; cv.height = H; }
@@ -1017,7 +1017,7 @@ window.__seek   = v => { clock = v; drawn = null; };
      which is overscanned past the figure by 9u so the parallax rotation has
      somewhere to go, so the front has to be converted out of that box and
      into the canvas's before it is painted. */
-  var CUT_STEPS = 12, CUT_MS = 1450;
+  var CUT_STEPS = 8, CUT_MS = 350;
   var portalStarted = false;
 
   function startPortalReveal() {
@@ -2582,8 +2582,8 @@ window.__seek   = v => { clock = v; drawn = null; };
     var narrow = NARROW.matches;
     var small = narrow || (window.innerWidth * window.innerHeight) < 620000;
     // High-performance calibrated blade count for buttery smooth 60-120 FPS
-    var BLADES_NEAR = small ? 9000 : 22000;
-    var BLADES_FAR  = small ? 2500 :  5000;
+    var BLADES_NEAR = small ? 4000 : 8000;
+    var BLADES_FAR  = small ? 1000 : 2000;
 
     var q = /[?&]blades=(\d+)/.exec(location.search);
     if (q) { BLADES_NEAR = +q[1]; BLADES_FAR = Math.round(+q[1] * 0.21); }
@@ -2597,7 +2597,7 @@ window.__seek   = v => { clock = v; drawn = null; };
       stencil: false
     });
     renderer.setClearColor(0x000000, 0);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.15));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.30;
     if ('sRGBEncoding' in THREE) renderer.outputEncoding = THREE.sRGBEncoding;

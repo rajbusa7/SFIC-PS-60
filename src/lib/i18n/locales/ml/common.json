@@ -1,4 +1,4 @@
-{
+﻿{
   "app": {
     "name": "StudySaathi AI",
     "tagline": "ഓരോ പഠന വിടവും കണ്ടെത്തുന്നു. ഓരോ കുട്ടിക്കും പിന്തുണ നൽകുന്നു.",
@@ -217,7 +217,7 @@
     "headingLogin": "StudySaathi AI-ലേക്ക് സൈൻ ഇൻ ചെയ്യുക",
     "headingRegister": "പുതിയ അധ്യാപക അക്കൗണ്ട് രജിസ്റ്റർ ചെയ്യുക",
     "subheadingSystem": "പ്രൈമറി സ്കൂൾ അധ്യാപന പരിഹാര സംവിധാനം",
-    "juryAccessTitle": "ഹാക്കത്തോൺ ജൂറി 1-ക്ലിക്ക് പ്രവേശനം",
+    "juryAccessTitle": "Quick Demo Access",
     "juryNoSignUp": "സൈൻ അപ്പ് വേണ്ട",
     "jurySubtitle": "തത്സമയ പ്രൈമറി ബാച്ച് ഉടനടി പര്യവേക്ഷണം ചെയ്യാൻ മുൻകൂട്ടി ക്രമീകരിച്ച റോൾ തിരഞ്ഞെടുക്കുക:",
     "roleTeacherShort": "അധ്യാപക റോൾ",
@@ -268,7 +268,7 @@
     "oauthModalEnvComment": "# .env അല്ലെങ്കിൽ Vercel എൻവയോൺമെന്റിലേക്ക് ചേർക്കുക:",
     "oauthModalRedirectHeading": "അംഗീകൃത റീഡയറക്ട് URI-കൾ:",
     "oauthModalClose": "അടച്ച് ഇമെയിൽ/പാസ്‌വേഡ് ഉപയോഗിക്കുക",
-    "heroBadgeHackathon": "SFIC ഗുജറാത്ത് ഹാക്കത്തോൺ 2026",
+    "heroBadgeHackathon": "Pedagogical Intelligence",
     "heroBadgeOffline": "100% ഓഫ്‌ലൈൻ-ഫസ്റ്റ്",
     "heroTitleBefore": "പഠന വിടവുകളിൽ നിന്ന് ",
     "heroTitleHighlight": "പ്രാവീണ്യത്തിലേക്കുള്ള പാലം.",

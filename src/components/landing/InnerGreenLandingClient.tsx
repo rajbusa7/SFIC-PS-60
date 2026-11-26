@@ -207,7 +207,7 @@ export function InnerGreenLandingClient() {
         </div>
 
         <div className="stage" id="stage">
-          <div className="guides fade" style={{ ["--d" as string]: "900ms" }} aria-hidden="true">
+          <div className="guides fade" style={{ ["--d" as string]: "40ms" }} aria-hidden="true">
             <i style={{ insetInlineStart: "calc(405 * var(--u))" }} />
             <i style={{ insetInlineStart: "calc(748 * var(--u))" }} />
             <i style={{ insetInlineStart: "calc(1091 * var(--u))" }} />
@@ -215,7 +215,7 @@ export function InnerGreenLandingClient() {
 
           <div
             className="ghost fade"
-            style={{ ["--d" as string]: "1150ms", cursor: "pointer" }}
+            style={{ ["--d" as string]: "60ms", cursor: "pointer" }}
             onClick={() => scrollToSection("hero")}
             aria-hidden="true"
           >
@@ -225,10 +225,10 @@ export function InnerGreenLandingClient() {
           {/* Card 1: Learning Insights */}
           <article
             className="card card--about mask"
-            style={{ ["--d" as string]: "760ms", ["--pd" as string]: 10, ["--pr" as string]: 2.2, cursor: "pointer" }}
+            style={{ ["--d" as string]: "70ms", ["--pd" as string]: 10, ["--pr" as string]: 2.2, cursor: "pointer" }}
             onClick={() => scrollToSection("features")}
           >
-            <figure className="portal" data-delay="920">
+            <figure className="portal" data-delay="60">
               <span className="portal-media">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -255,7 +255,7 @@ export function InnerGreenLandingClient() {
             <button
               type="button"
               className="knob knob--about mask-circle"
-              style={{ ["--d" as string]: "1100ms" }}
+              style={{ ["--d" as string]: "80ms" }}
               aria-label={l.hero.card1KnobAria}
               onClick={() => scrollToSection("features")}
             >
@@ -273,7 +273,7 @@ export function InnerGreenLandingClient() {
           </span>
 
           <div className="hero-content-block" style={{ ["--pd" as string]: 18, ["--pr" as string]: 1.2 }}>
-            <div className="hero-brand fade" style={{ ["--d" as string]: "120ms" }} aria-label={l.hero.brandLabel}>
+            <div className="hero-brand fade" style={{ ["--d" as string]: "30ms" }} aria-label={l.hero.brandLabel}>
               <span className="hero-brand-mark" aria-hidden="true">
                 <svg viewBox="0 0 22 24">
                   <path d="M11 1.3c-2.1 0-3.95 1.2-4.75 2.95C3.95 4.55 2.3 6.25 2.3 8.35c0 2.3 1.9 4.2 4.3 4.2h8.8c2.4 0 4.3-1.9 4.3-4.2 0-2.1-1.65-3.8-4-4.1C14.95 2.5 13.1 1.3 11 1.3Z" />
@@ -289,7 +289,7 @@ export function InnerGreenLandingClient() {
               </div>
             </div>
 
-            <div className="hero-badge fade" style={{ ["--d" as string]: "200ms" }}>
+            <div className="hero-badge fade" style={{ ["--d" as string]: "45ms" }}>
               <svg
                 viewBox="0 0 24 24"
                 className="hero-badge-icon"
@@ -307,18 +307,18 @@ export function InnerGreenLandingClient() {
 
             <h1 className="headline">
               <span>
-                <i style={{ ["--d" as string]: "280ms" }}>{l.hero.headlineLine1}</i>
+                <i style={{ ["--d" as string]: "60ms" }}>{l.hero.headlineLine1}</i>
               </span>
               <span>
-                <i style={{ ["--d" as string]: "380ms" }}>{l.hero.headlineLine2}</i>
+                <i style={{ ["--d" as string]: "80ms" }}>{l.hero.headlineLine2}</i>
               </span>
             </h1>
 
-            <p className="lede mask" style={{ ["--d" as string]: "480ms" }}>
+            <p className="lede mask" style={{ ["--d" as string]: "90ms" }}>
               {l.hero.lede}
             </p>
 
-            <div className="hero-actions fade" style={{ ["--d" as string]: "600ms" }}>
+            <div className="hero-actions fade" style={{ ["--d" as string]: "100ms" }}>
               <div className="hero-explore-slot">
                 <div className="pill-clip">
                   <div className="pill" style={{ ["--pd" as string]: 15, ["--pr" as string]: 1.4 }}>
@@ -368,7 +368,7 @@ export function InnerGreenLandingClient() {
 
               <span className="play-wrap">
                 <span className="play-clip">
-                  <span className="play-glass mask-circle" style={{ ["--d" as string]: "900ms" }}>
+                  <span className="play-glass mask-circle" style={{ ["--d" as string]: "110ms" }}>
                     <span className="liquid-stage liquid-stage--play" data-liquid-metal="play">
                       <span className="liquid-plate plate" aria-hidden="true" />
                       <canvas className="liquid-fx" aria-hidden="true" />
@@ -384,12 +384,12 @@ export function InnerGreenLandingClient() {
                     </span>
                   </span>
                 </span>
-                <span className="play-ring mask-circle" style={{ ["--d" as string]: "840ms" }} aria-hidden="true" />
+                <span className="play-ring mask-circle" style={{ ["--d" as string]: "100ms" }} aria-hidden="true" />
               </span>
             </div>
           </div>
 
-          <dl className="stat stat--a mask" style={{ ["--d" as string]: "700ms", ["--pd" as string]: 12 }}>
+          <dl className="stat stat--a mask" style={{ ["--d" as string]: "80ms", ["--pd" as string]: 12 }}>
             <span className="mark" aria-hidden="true">
               <svg viewBox="0 0 30 30" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
                 <circle cx="15" cy="15" r="11" strokeDasharray="2 3" />
@@ -403,7 +403,7 @@ export function InnerGreenLandingClient() {
             </div>
           </dl>
 
-          <dl className="stat stat--b mask" style={{ ["--d" as string]: "770ms", ["--pd" as string]: 13 }}>
+          <dl className="stat stat--b mask" style={{ ["--d" as string]: "90ms", ["--pd" as string]: 13 }}>
             <span className="mark" aria-hidden="true">
               <svg viewBox="0 0 30 30" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
                 <path d="M15 3.5v5" />
@@ -422,7 +422,7 @@ export function InnerGreenLandingClient() {
           {/* Card 2: Student Progress */}
           <article
             className="card card--stove mask"
-            style={{ ["--d" as string]: "880ms", ["--pd" as string]: 22, ["--pr" as string]: 2.4, cursor: "pointer" }}
+            style={{ ["--d" as string]: "100ms", ["--pd" as string]: 22, ["--pr" as string]: 2.4, cursor: "pointer" }}
             onClick={() => scrollToSection("how-it-works")}
           >
             <div className="card-text-block">
@@ -434,7 +434,7 @@ export function InnerGreenLandingClient() {
                 <span className="card-demo-badge">{l.hero.demoTag}</span>
               </div>
             </div>
-            <figure className="portal" data-delay="1080">
+            <figure className="portal" data-delay="90">
               <span className="portal-media">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -471,7 +471,7 @@ export function InnerGreenLandingClient() {
 
           <a
             className="scroll mask"
-            style={{ ["--d" as string]: "1040ms", ["--pd" as string]: 9 }}
+            style={{ ["--d" as string]: "110ms", ["--pd" as string]: 9 }}
             href="#challenge"
             onClick={(e) => {
               e.preventDefault();

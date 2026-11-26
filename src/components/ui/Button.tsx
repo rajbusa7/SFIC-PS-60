@@ -30,7 +30,7 @@ export function Button({
   ...props
 }: ButtonProps) {
   const baseClasses =
-    "inline-flex items-center justify-center font-semibold rounded-full select-none transition-all duration-150 ease-out active:scale-[0.98] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#8D4E10] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FAF6E9] disabled:opacity-50 disabled:pointer-events-none cursor-pointer";
+    "inline-flex flex-row flex-nowrap items-center justify-center font-semibold rounded-full select-none whitespace-nowrap transition-all duration-150 ease-out active:scale-[0.98] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#8D4E10] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FAF6E9] disabled:opacity-50 disabled:pointer-events-none cursor-pointer";
 
   const sizeClasses = {
     sm: "text-xs px-3.5 py-1.5 gap-1.5",
@@ -64,7 +64,7 @@ export function Button({
       ) : (
         leftIcon && <span className="shrink-0 inline-flex items-center justify-center self-center" aria-hidden="true">{leftIcon}</span>
       )}
-      <span className="inline-flex items-center justify-center gap-1.5 leading-none self-center">{children}</span>
+      <span className="inline-flex flex-row flex-nowrap items-center justify-center gap-1.5 leading-none self-center whitespace-nowrap">{children}</span>
       {!isLoading && rightIcon && <span className="shrink-0 inline-flex items-center justify-center self-center" aria-hidden="true">{rightIcon}</span>}
     </>
   );

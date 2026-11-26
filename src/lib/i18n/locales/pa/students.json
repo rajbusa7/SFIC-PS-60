@@ -1,4 +1,4 @@
-{
+﻿{
   "students": {
     "title": "ਵਿਦਿਆਰਥੀ ਡਾਇਰੈਕਟਰੀ ਅਤੇ 3D ਪ੍ਰੋਫਾਈਲਾਂ",
     "subtitle": "ਪ੍ਰਾਇਮਰੀ ਸਕੂਲ ਦੇ ਦਾਖਲਿਆਂ ਦਾ ਪ੍ਰਬੰਧਨ ਕਰੋ, 3D ਹੁਨਰ ਰੁੱਖਾਂ ਦੀ ਨਿਗਰਾਨੀ ਕਰੋ, ਅਤੇ 5-ਕਦਮੀ ਉਪਚਾਰਕ ਯੋਜਨਾਵਾਂ ਦਾ ਤਾਲਮੇਲ ਕਰੋ।",
@@ -17,8 +17,8 @@
     "demoCaseBadge": "ਡੈਮੋ ਕੇਸ",
     "activeGapsBadge": "{count} ਸਰਗਰਮ ਸਿੱਖਣ ਪਾੜੇ",
     "onTrackBadge": "ਸਹੀ ਰਾਹ 'ਤੇ",
-    "viewProfile": "3D ਪ੍ਰੋਫਾਈਲ →",
-    "view3DProfile": "3D ਪ੍ਰੋਫਾਈਲ →",
+    "viewProfile": "ਪ੍ਰੋਫਾਈਲ →",
+    "view3DProfile": "ਪ੍ਰੋਫਾਈਲ →",
     "removeStudentConfirm": "ਕੀ ਤੁਸੀਂ ਯਕੀਨੀ ਤੌਰ 'ਤੇ {name} ਨੂੰ ਹਟਾਉਣਾ ਚਾਹੁੰਦੇ ਹੋ?",
     "removeStudentTitle": "{name} ਨੂੰ ਹਟਾਓ",
     "noStudentsFound": "ਤੁਹਾਡੇ ਫਿਲਟਰ ਮਾਪਦੰਡਾਂ ਨਾਲ ਕੋਈ ਵਿਦਿਆਰਥੀ ਮੇਲ ਨਹੀਂ ਖਾਂਦਾ।",

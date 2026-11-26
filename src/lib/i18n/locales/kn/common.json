@@ -1,4 +1,4 @@
-{
+﻿{
   "app": {
     "name": "StudySaathi AI",
     "tagline": "ಪ್ರತಿ ಕಲಿಕಾ ಅಂತರವನ್ನೂ ಗುರುತಿಸಿ. ಪ್ರತಿ ಮಗುವಿಗೂ ಬೆಂಬಲ ನೀಡಿ.",
@@ -217,7 +217,7 @@
     "headingLogin": "StudySaathi AI ಗೆ ಸೈನ್ ಇನ್ ಮಾಡಿ",
     "headingRegister": "ಹೊಸ ಶಿಕ್ಷಕರ ಖಾತೆ ನೋಂದಾಯಿಸಿ",
     "subheadingSystem": "ಪ್ರಾಥಮಿಕ ಶಾಲಾ ಶೈಕ್ಷಣಿಕ ಪರಿಹಾರ ಬೋಧನಾ ವ್ಯವಸ್ಥೆ",
-    "juryAccessTitle": "ಹ್ಯಾಕಥಾನ್ ತೀರ್ಪುಗಾರರ 1-ಕ್ಲಿಕ್ ಪ್ರವೇಶ",
+    "juryAccessTitle": "Quick Demo Access",
     "juryNoSignUp": "ಸೈನ್ ಅಪ್ ಇಲ್ಲದೆ",
     "jurySubtitle": "ನೈಜ ಪ್ರಾಥಮಿಕ ವಿದ್ಯಾರ್ಥಿ ತಂಡವನ್ನು ತಕ್ಷಣ ಅನ್ವೇಷಿಸಲು ಪೂರ್ವ-ಕಾನ್ಫಿಗರ್ ಮಾಡಿದ ಪಾತ್ರವನ್ನು ಆಯ್ಕೆಮಾಡಿ:",
     "roleTeacherShort": "ಶಿಕ್ಷಕರ ಪಾತ್ರ",
@@ -268,7 +268,7 @@
     "oauthModalEnvComment": "# .env ಅಥವಾ Vercel ಪರಿಸರಕ್ಕೆ ಸೇರಿಸಿ:",
     "oauthModalRedirectHeading": "ಅಧಿಕೃತ ಮರುನಿರ್ದೇಶನ URIಗಳು:",
     "oauthModalClose": "ಮುಚ್ಚಿ ಮತ್ತು ಇಮೇಲ್/ಪಾಸ್‌ವರ್ಡ್ ಬಳಸಿ",
-    "heroBadgeHackathon": "SFIC ಗುಜರಾತ್ ಹ್ಯಾಕಥಾನ್ 2026",
+    "heroBadgeHackathon": "Pedagogical Intelligence",
     "heroBadgeOffline": "100% ಆಫ್‌ಲೈನ್-ಮೊದಲ",
     "heroTitleBefore": "ಕಲಿಕಾ ಅಂತರಗಳಿಂದ ",
     "heroTitleHighlight": "ಪರಿಣತಿಯತ್ತ ಸೇತುವೆ.",

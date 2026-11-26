@@ -346,7 +346,7 @@ export function NoticesView({ embedded = false }: { embedded?: boolean }) {
               </div>
 
               {lastUpdatedTime && (
-                <span className="text-[11px] text-[#7A6862] dark:text-[#FAF6E9]/60 hidden sm:inline">
+                <span suppressHydrationWarning className="text-[11px] text-[#7A6862] dark:text-[#FAF6E9]/60 hidden sm:inline">
                   {pp.updatedLabel}
                   {lastUpdatedTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
                 </span>

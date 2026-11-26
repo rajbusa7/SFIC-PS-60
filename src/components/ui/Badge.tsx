@@ -103,7 +103,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-flex items-center justify-center rounded-full border shadow-2xs leading-none shrink-0 whitespace-nowrap align-middle select-none transition-colors",
+        "inline-flex flex-row flex-nowrap items-center justify-center rounded-full border shadow-2xs leading-none shrink-0 whitespace-nowrap align-middle select-none transition-colors",
         sizeStyles[size],
         variantStyles[variant],
         className
@@ -111,7 +111,7 @@ export function Badge({
       {...props}
     >
       {showDot && (
-        <span className="relative inline-flex h-2 w-2 shrink-0 items-center justify-center self-center" aria-hidden="true">
+        <span className="relative inline-flex h-2 w-2 shrink-0 items-center justify-center self-center mr-0.5" aria-hidden="true">
           {pulse && (
             <span
               className={cn(
@@ -128,7 +128,7 @@ export function Badge({
           />
         </span>
       )}
-      <span className="inline-flex items-center justify-center gap-1.5 leading-none shrink-0 self-center">
+      <span className="inline-flex flex-row flex-nowrap items-center justify-center gap-1.5 leading-none shrink-0 self-center whitespace-nowrap">
         {children}
       </span>
     </span>

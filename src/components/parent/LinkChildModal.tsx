@@ -37,6 +37,7 @@ interface LinkChildModalProps {
   errorCode?: string | null;
   successMessage: string | null;
   linkedChild: LinkedChildSummary | null;
+  alreadyLinked?: boolean;
   onViewLinkedChild?: () => void;
   formatClass: (grade?: number, section?: string) => string;
 }
@@ -53,6 +54,7 @@ export function LinkChildModal({
   errorCode,
   successMessage,
   linkedChild,
+  alreadyLinked = false,
   onViewLinkedChild,
   formatClass,
 }: LinkChildModalProps) {
@@ -150,11 +152,32 @@ export function LinkChildModal({
           <div className="space-y-4">
             <div
               role="status"
-              className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-950 space-y-3"
+              className={`p-4 rounded-2xl border space-y-3 ${
+                alreadyLinked
+                  ? "bg-amber-50/80 border-amber-200 text-amber-950"
+                  : "bg-emerald-50 border-emerald-200 text-emerald-950"
+              }`}
             >
-              <div className="flex items-center gap-2 text-xs font-bold text-emerald-800">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>{successMessage || "Child linked successfully!"}</span>
+              <div
+                className={`flex items-start gap-2 text-xs font-bold ${
+                  alreadyLinked ? "text-amber-900" : "text-emerald-800"
+                }`}
+              >
+                <CheckCircle2
+                  className={`w-4 h-4 shrink-0 mt-0.5 ${
+                    alreadyLinked ? "text-amber-600" : "text-emerald-600"
+                  }`}
+                />
+                <div className="space-y-0.5">
+                  <span>{successMessage || "Child linked successfully!"}</span>
+                  {alreadyLinked && (
+                    <p className="text-[11px] font-medium text-amber-800/90">
+                      {language === "gu"
+                        ? "તમારે નવા કોડની જરૂર નથી. નીચે તમારા બાળકની પ્રોફાઇલ ઉપલબ્ધ છે."
+                        : "No new code is needed — their linked profile is already active on your dashboard."}
+                    </p>
+                  )}
+                </div>
               </div>
 
               <div className="p-3.5 rounded-xl bg-white border border-emerald-200/80 flex items-center justify-between gap-3">
@@ -184,7 +207,7 @@ export function LinkChildModal({
                 </div>
                 <Badge variant="mastered" size="sm">
                   <ShieldCheck className="w-3 h-3 mr-1" />
-                  Verified
+                  {alreadyLinked ? "Linked" : "Verified"}
                 </Badge>
               </div>
             </div>

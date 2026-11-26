@@ -82,6 +82,7 @@ function ParentDashboardContent() {
   const [linkErrorCode, setLinkErrorCode] = useState<string | null>(null);
   const [linkSuccess, setLinkSuccess] = useState<string | null>(null);
   const [newlyLinkedChild, setNewlyLinkedChild] = useState<LinkedChildSummary | null>(null);
+  const [alreadyLinkedNotice, setAlreadyLinkedNotice] = useState(false);
 
   // Teacher inquiry message form
   const [msgSubject, setMsgSubject] = useState("");
@@ -112,7 +113,11 @@ function ParentDashboardContent() {
       setLinkedStudents(students);
 
       if (students.length > 0) {
-        setSelectedStudentId((prev) => prev || students[0].id);
+        setSelectedStudentId((prev) =>
+          prev && students.some((s: any) => s.id === prev) ? prev : students[0].id
+        );
+      } else {
+        setSelectedStudentId(null);
       }
     } catch (err: any) {
       setError(err.message || pp.loadInfoError);
@@ -217,6 +222,7 @@ function ParentDashboardContent() {
     setLinkErrorCode(null);
     setLinkSuccess(null);
     setNewlyLinkedChild(null);
+    setAlreadyLinkedNotice(false);
 
     try {
       const res = await fetch("/api/parent/link-code", {
@@ -242,8 +248,16 @@ function ParentDashboardContent() {
           }
         : null;
 
+      const isAlreadyLinked = Boolean(data.alreadyLinked);
+      setAlreadyLinkedNotice(isAlreadyLinked);
       setNewlyLinkedChild(linkedSummary);
-      setLinkSuccess(tr("parentPortal.linkSuccessMsg", { name: data.student?.displayName || pp.studentFallback }));
+      setLinkSuccess(
+        isAlreadyLinked
+          ? language === "gu"
+            ? `${data.student?.displayName || pp.studentFallback} પહેલેથી જ તમારા ખાતા સાથે જોડાયેલ છે.`
+            : `${data.student?.displayName || "This child"} is already linked to your parent account.`
+          : tr("parentPortal.linkSuccessMsg", { name: data.student?.displayName || pp.studentFallback })
+      );
       setLinkingCodeInput("");
 
       // Refresh parent profile & linked students silently so UI updates smoothly
@@ -263,6 +277,7 @@ function ParentDashboardContent() {
     setLinkErrorCode(null);
     setLinkSuccess(null);
     setNewlyLinkedChild(null);
+    setAlreadyLinkedNotice(false);
     setLinkModalOpen(true);
   };
 
@@ -547,6 +562,19 @@ function ParentDashboardContent() {
             <p className="text-sm font-bold text-[#49352F]">
               {pp.loadingPortal}
             </p>
+          </div>
+        ) : error ? (
+          <div className="p-6 sm:p-8 rounded-3xl bg-white border border-rose-200 shadow-sm text-center max-w-lg mx-auto space-y-3">
+            <AlertTriangle className="w-8 h-8 text-rose-600 mx-auto" />
+            <p className="text-sm font-bold text-[#49352F]">{error}</p>
+            <Button
+              type="button"
+              onClick={() => fetchParentProfile()}
+              className="rounded-xl text-xs font-bold bg-[#B26A1B] text-white hover:bg-[#8F4E10]"
+            >
+              <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+              <span>{language === "gu" ? "ફરી પ્રયાસ કરો" : "Retry"}</span>
+            </Button>
           </div>
         ) : linkedStudents.length === 0 ? (
           /* Empty State: No child linked yet */
@@ -1602,6 +1630,7 @@ function ParentDashboardContent() {
         onClose={() => {
           setLinkModalOpen(false);
           setNewlyLinkedChild(null);
+          setAlreadyLinkedNotice(false);
           setLinkSuccess(null);
           setLinkError(null);
           setLinkErrorCode(null);
@@ -1615,6 +1644,7 @@ function ParentDashboardContent() {
         errorCode={linkErrorCode}
         successMessage={linkSuccess}
         linkedChild={newlyLinkedChild}
+        alreadyLinked={alreadyLinkedNotice}
         onViewLinkedChild={() => {
           if (newlyLinkedChild?.id) {
             setSelectedStudentId(newlyLinkedChild.id);
@@ -1622,6 +1652,7 @@ function ParentDashboardContent() {
           setActiveTab("overview");
           setLinkModalOpen(false);
           setNewlyLinkedChild(null);
+          setAlreadyLinkedNotice(false);
           setLinkSuccess(null);
         }}
         formatClass={formatClass}

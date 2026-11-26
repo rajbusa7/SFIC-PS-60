@@ -2,6 +2,15 @@ import { NextResponse } from "next/server";
 import { verifySession, extractSessionToken } from "@/lib/auth/session";
 import { db } from "@/lib/db/database";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+const noCacheHeaders = {
+  "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+  Pragma: "no-cache",
+  Expires: "0",
+};
+
 export async function GET(request: Request) {
   try {
     const sessionToken = await extractSessionToken(request);
@@ -70,21 +79,24 @@ export async function GET(request: Request) {
       }
     }
 
-    return NextResponse.json({
-      success: true,
-      user: {
-        id: session.id,
-        name: session.name,
-        email: session.email,
-        role: session.role,
-        schoolId: session.schoolId,
-        provider: session.provider,
-        preferredLanguage: parentProfile?.preferredLanguage || "en",
-        preferredScript: parentProfile?.preferredScript || undefined,
+    return NextResponse.json(
+      {
+        success: true,
+        user: {
+          id: session.id,
+          name: session.name,
+          email: session.email,
+          role: session.role,
+          schoolId: session.schoolId,
+          provider: session.provider,
+          preferredLanguage: parentProfile?.preferredLanguage || "en",
+          preferredScript: parentProfile?.preferredScript || undefined,
+        },
+        parentProfile,
+        linkedStudents,
       },
-      parentProfile,
-      linkedStudents,
-    });
+      { headers: noCacheHeaders }
+    );
   } catch (error: any) {
     console.error("[Parent Me API Error]:", error);
     return NextResponse.json(

@@ -1926,7 +1926,7 @@ export const postgresParentDb = {
     code: string,
     parentUserId: string,
     parentProfileId: string
-  ): Promise<{ success: boolean; studentId?: string; error?: string; errorCode?: string }> {
+  ): Promise<{ success: boolean; alreadyLinked?: boolean; studentId?: string; error?: string; errorCode?: string }> {
     await ensurePostgresSchema();
     const pool = getPostgresPool()!;
     const normalized = normalizeLinkingCode(code);
@@ -1963,6 +1963,25 @@ export const postgresParentDb = {
       }
 
       const linkingCode = mapLinkingCodeRow(codeRes.rows[0]);
+
+      // Check if THIS authenticated parent is already linked to the student before rejecting reused/active codes.
+      // Safe because it only matches an already-authorized parent-student association.
+      const existingLinkRes = await client.query(
+        `SELECT 1 FROM parent_students ps
+         JOIN parent_profiles pp ON pp.id = ps.parent_id
+         WHERE (ps.parent_id = $1 OR pp.user_id = $2) AND ps.student_id = $3
+         LIMIT 1`,
+        [parentProfileId, parentUserId, linkingCode.studentId]
+      );
+      if (existingLinkRes.rows.length > 0) {
+        await client.query("ROLLBACK");
+        return {
+          success: true,
+          alreadyLinked: true,
+          errorCode: "ALREADY_LINKED",
+          studentId: linkingCode.studentId,
+        };
+      }
 
       if (linkingCode.status === "used") {
         await client.query("ROLLBACK");
@@ -2008,7 +2027,7 @@ export const postgresParentDb = {
         };
       }
 
-      // Verify parent profile ownership
+      // Verify parent profile ownership before consuming code or linking
       const profileRes = await client.query(
         `SELECT id, relationship FROM parent_profiles WHERE id = $1 AND user_id = $2 LIMIT 1`,
         [parentProfileId, parentUserId]
@@ -2019,23 +2038,6 @@ export const postgresParentDb = {
           success: false,
           errorCode: "PROFILE_NOT_FOUND",
           error: "Parent profile not found. Please sign in again.",
-        };
-      }
-
-      // Check if already linked before consuming the code
-      const existingLinkRes = await client.query(
-        `SELECT 1 FROM parent_students ps
-         JOIN parent_profiles pp ON pp.id = ps.parent_id
-         WHERE (ps.parent_id = $1 OR pp.user_id = $2) AND ps.student_id = $3
-         LIMIT 1`,
-        [parentProfileId, parentUserId, linkingCode.studentId]
-      );
-      if (existingLinkRes.rows.length > 0) {
-        await client.query("ROLLBACK");
-        return {
-          success: false,
-          errorCode: "ALREADY_LINKED",
-          error: "This child is already linked to your parent account.",
         };
       }
 
@@ -2065,7 +2067,7 @@ export const postgresParentDb = {
       );
 
       await client.query("COMMIT");
-      return { success: true, studentId: linkingCode.studentId };
+      return { success: true, alreadyLinked: false, studentId: linkingCode.studentId };
     } catch (err) {
       await client.query("ROLLBACK");
       throw err;

@@ -2,6 +2,15 @@ import { NextResponse } from "next/server";
 import { verifySession, extractSessionToken } from "@/lib/auth/session";
 import { db } from "@/lib/db/database";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+const noCacheHeaders = {
+  "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+  Pragma: "no-cache",
+  Expires: "0",
+};
+
 export async function GET(request: Request) {
   try {
     const sessionToken = await extractSessionToken(request);
@@ -23,11 +32,11 @@ export async function GET(request: Request) {
 
     const parentProfile = await db.getParentByUserIdAsync(session.id);
     if (!parentProfile) {
-      return NextResponse.json({ success: true, students: [] });
+      return NextResponse.json({ success: true, students: [] }, { headers: noCacheHeaders });
     }
 
     const students = await db.getLinkedStudentsForParentAsync(parentProfile.id);
-    return NextResponse.json({ success: true, students });
+    return NextResponse.json({ success: true, students }, { headers: noCacheHeaders });
   } catch (error: any) {
     console.error("[Parent Students API Error]:", error);
     return NextResponse.json(

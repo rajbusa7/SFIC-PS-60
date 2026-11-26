@@ -119,17 +119,14 @@ export async function POST(request: Request) {
     );
 
     if (!redeemResult.success) {
-      if (redeemResult.errorCode !== "ALREADY_LINKED") {
-        recordFailedAttempt(session.id);
-      }
-      const status = redeemResult.errorCode === "ALREADY_LINKED" ? 409 : 400;
+      recordFailedAttempt(session.id);
       return NextResponse.json(
         {
           success: false,
           errorCode: redeemResult.errorCode || "INVALID_CODE",
           error: redeemResult.error || "Invalid verification code. Please check the code provided by your school.",
         },
-        { status }
+        { status: 400 }
       );
     }
 
@@ -139,9 +136,15 @@ export async function POST(request: Request) {
       ? await db.getStudentByIdAsync(redeemResult.studentId)
       : null;
 
+    const alreadyLinked = Boolean(redeemResult.alreadyLinked);
+
     return NextResponse.json({
       success: true,
-      message: `Successfully linked ${linkedStudent?.displayName || "student"} to your parent account!`,
+      alreadyLinked,
+      ...(alreadyLinked ? { errorCode: "ALREADY_LINKED" } : {}),
+      message: alreadyLinked
+        ? `${linkedStudent?.displayName || "This child"} is already linked to your parent account.`
+        : `Successfully linked ${linkedStudent?.displayName || "student"} to your parent account!`,
       student: linkedStudent
         ? {
             id: linkedStudent.id,

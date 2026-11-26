@@ -1622,7 +1622,7 @@ export const db = {
     code: string,
     parentUserId: string,
     parentProfileId: string
-  ): Promise<{ success: boolean; studentId?: string; error?: string; errorCode?: string }> {
+  ): Promise<{ success: boolean; alreadyLinked?: boolean; studentId?: string; error?: string; errorCode?: string }> {
     const normalized = String(code || "").trim().toUpperCase().replace(/\s+/g, "");
     if (!normalized) {
       return { success: false, errorCode: "INVALID_CODE", error: "Please enter a valid verification code." };
@@ -1641,6 +1641,17 @@ export const db = {
     if (!linkingCode) {
       return { success: false, errorCode: "INVALID_CODE", error: "Invalid verification code. Please check the code provided by your school." };
     }
+
+    const parent = (store.parents || []).find((p) => p.id === parentProfileId || p.userId === parentUserId);
+    if (parent && parent.studentIds && parent.studentIds.includes(linkingCode.studentId)) {
+      return {
+        success: true,
+        alreadyLinked: true,
+        errorCode: "ALREADY_LINKED",
+        studentId: linkingCode.studentId,
+      };
+    }
+
     if (linkingCode.status === "used") {
       return {
         success: false,
@@ -1674,20 +1685,11 @@ export const db = {
       };
     }
 
-    const parent = (store.parents || []).find((p) => p.id === parentProfileId || p.userId === parentUserId);
     if (!parent) {
       return {
         success: false,
         errorCode: "PROFILE_NOT_FOUND",
         error: "Parent profile not found. Please sign in again.",
-      };
-    }
-
-    if (parent.studentIds && parent.studentIds.includes(linkingCode.studentId)) {
-      return {
-        success: false,
-        errorCode: "ALREADY_LINKED",
-        error: "This child is already linked to your parent account.",
       };
     }
 
@@ -1699,7 +1701,7 @@ export const db = {
     parent.studentIds.push(linkingCode.studentId);
 
     saveStore(store);
-    return { success: true, studentId: linkingCode.studentId };
+    return { success: true, alreadyLinked: false, studentId: linkingCode.studentId };
   },
 
   async revokeLinkingCodeAsync(codeId: string, studentId: string): Promise<boolean> {

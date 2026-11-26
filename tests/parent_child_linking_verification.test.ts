@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { db } from "../src/lib/db/database";
 import { signSession, SESSION_COOKIE_NAME } from "../src/lib/auth/session";
 import { POST as registerParentHandler } from "../src/app/api/auth/register-parent/route";
+import { POST as loginHandler } from "../src/app/api/v1/auth/login/route";
+import { POST as logoutHandler } from "../src/app/api/auth/logout/route";
 import { POST as redeemCodeHandler } from "../src/app/api/parent/link-code/route";
 import { GET as parentMeHandler } from "../src/app/api/parent/me/route";
 import { GET as parentStudentHandler } from "../src/app/api/parent/students/[id]/route";
@@ -33,6 +35,8 @@ describe("Parent-Child Linking End-to-End Verification", () => {
   let secondParentToken = "";
   let parentUserId = "";
   let parentProfileId = "";
+  let parentEmail = "";
+  const parentPassword = "VerifyParent2026!";
 
   before(async () => {
     db.resetToDemoData();
@@ -56,12 +60,13 @@ describe("Parent-Child Linking End-to-End Verification", () => {
       provider: "local",
     });
 
+    parentEmail = `manisha.verify.${ts}@example.com`;
     const regReq1 = makeAuthRequest("http://localhost:3000/api/auth/register-parent", "POST", undefined, {
       name: "Manisha Patel",
-      email: `manisha.verify.${ts}@example.com`,
+      email: parentEmail,
       phone: "9865412374",
-      password: "VerifyParent2026!",
-      confirmPassword: "VerifyParent2026!",
+      password: parentPassword,
+      confirmPassword: parentPassword,
       preferredLanguage: "gu",
     });
     const regRes1 = await registerParentHandler(regReq1);
@@ -211,32 +216,64 @@ describe("Parent-Child Linking End-to-End Verification", () => {
     const redeemData = await redeemRes.json();
     assert.equal(redeemRes.status, 200);
     assert.equal(redeemData.success, true);
+    assert.equal(redeemData.alreadyLinked, false);
     assert.equal(redeemData.studentId, "std-aarav");
     assert.equal(redeemData.student.displayName, "Aarav Patel");
 
-    // Parent /api/parent/me reflects linked child
+    // Same parent enters the SAME code again -> idempotent success with ALREADY_LINKED + existing child profile
+    const sameParentReuseRes = await redeemCodeHandler(
+      makeAuthRequest("http://localhost:3000/api/parent/link-code", "POST", parentToken, {
+        code,
+      })
+    );
+    const sameParentReuseData = await sameParentReuseRes.json();
+    assert.equal(sameParentReuseRes.status, 200);
+    assert.equal(sameParentReuseData.success, true);
+    assert.equal(sameParentReuseData.alreadyLinked, true);
+    assert.equal(sameParentReuseData.errorCode, "ALREADY_LINKED");
+    assert.equal(sameParentReuseData.studentId, "std-aarav");
+    assert.equal(sameParentReuseData.student.displayName, "Aarav Patel");
+
+    // Parent logs out and logs back in -> /api/parent/me persists linked children across refresh/login
+    const logoutRes = await logoutHandler();
+    assert.equal(logoutRes.status, 200);
+
+    const loginRes = await loginHandler(
+      makeAuthRequest("http://localhost:3000/api/v1/auth/login", "POST", undefined, {
+        email: parentEmail,
+        password: parentPassword,
+        role: "parent",
+      })
+    );
+    assert.equal(loginRes.status, 200);
+    const cookieHeader = loginRes.headers.get("set-cookie") || "";
+    const match = cookieHeader.match(/studysaathi_session=([^;]+)/);
+    assert.ok(match, "Fresh session cookie must be issued on login");
+    const freshToken = decodeURIComponent(match[1]);
+
     const meRes = await parentMeHandler(
-      makeAuthRequest("http://localhost:3000/api/parent/me", "GET", parentToken)
+      makeAuthRequest("http://localhost:3000/api/parent/me", "GET", freshToken)
     );
     const meData = await meRes.json();
     assert.equal(meRes.status, 200);
-    assert.ok(meData.linkedStudents.some((s: any) => s.id === "std-aarav"));
+    assert.equal(meRes.headers.get("cache-control")?.includes("no-store"), true);
+    assert.equal(meData.linkedStudents.filter((s: any) => s.id === "std-aarav").length, 1);
 
     // Parent can access linked student's records
     const detailRes = await parentStudentHandler(
-      makeAuthRequest("http://localhost:3000/api/parent/students/std-aarav", "GET", parentToken),
+      makeAuthRequest("http://localhost:3000/api/parent/students/std-aarav", "GET", freshToken),
       { params: Promise.resolve({ id: "std-aarav" }) }
     );
     assert.equal(detailRes.status, 200);
 
     // Parent CANNOT access unlinked student's records
     const unlinkedRes = await parentStudentHandler(
-      makeAuthRequest("http://localhost:3000/api/parent/students/std-meera", "GET", parentToken),
+      makeAuthRequest("http://localhost:3000/api/parent/students/std-meera", "GET", freshToken),
       { params: Promise.resolve({ id: "std-meera" }) }
     );
     assert.equal(unlinkedRes.status, 403);
 
-    // Second parent trying to reuse already-redeemed code is rejected
+    // Different parent trying to reuse already-redeemed code is rejected with zero student info leaked
     const reuseRes = await redeemCodeHandler(
       makeAuthRequest("http://localhost:3000/api/parent/link-code", "POST", secondParentToken, {
         code,
@@ -245,9 +282,11 @@ describe("Parent-Child Linking End-to-End Verification", () => {
     const reuseData = await reuseRes.json();
     assert.equal(reuseRes.status, 400);
     assert.equal(reuseData.errorCode, "USED_CODE");
+    assert.equal(reuseData.student, undefined);
+    assert.equal(reuseData.studentId, undefined);
     assert.match(reuseData.error, /already been redeemed/i);
 
-    // Already-linked child: generate a fresh code for Aarav, same parent tries it -> 409 ALREADY_LINKED and code remains active
+    // Already-linked child: generate a fresh code for Aarav, same parent tries it -> idempotent ALREADY_LINKED and code remains active
     const genRes2 = await generateLinkCodeHandler(
       makeAuthRequest("http://localhost:3000/api/students/std-aarav/link-code", "POST", teacher01Token),
       { params: Promise.resolve({ id: "std-aarav" }) }
@@ -256,12 +295,14 @@ describe("Parent-Child Linking End-to-End Verification", () => {
     const freshCode = genData2.linkingCode.code;
 
     const dupRes = await redeemCodeHandler(
-      makeAuthRequest("http://localhost:3000/api/parent/link-code", "POST", parentToken, {
+      makeAuthRequest("http://localhost:3000/api/parent/link-code", "POST", freshToken, {
         code: freshCode,
       })
     );
     const dupData = await dupRes.json();
-    assert.equal(dupRes.status, 409);
+    assert.equal(dupRes.status, 200);
+    assert.equal(dupData.success, true);
+    assert.equal(dupData.alreadyLinked, true);
     assert.equal(dupData.errorCode, "ALREADY_LINKED");
 
     // Verify freshCode was NOT consumed by the duplicate attempt (so another authorized guardian could use it)

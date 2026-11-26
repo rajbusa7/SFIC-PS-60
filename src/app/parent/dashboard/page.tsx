@@ -503,6 +503,18 @@ function ParentDashboardContent() {
               </button>
             );
           })}
+
+          {/* Direct ClassConnect WhatsApp-style Chat Link */}
+          <Link
+            href="/connect"
+            className="px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 cursor-pointer bg-[#2E7D5E] text-white hover:bg-[#24634B] shadow-xs ml-auto"
+          >
+            <MessageSquare className="w-3.5 h-3.5 text-white" />
+            <span>{language === "gu" ? "સેતુ કનેક્ટ ચેટ" : "Connect Chat"}</span>
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-white text-[#2E7D5E]">
+              Live
+            </span>
+          </Link>
         </div>
       </nav>
 
@@ -870,13 +882,13 @@ function ParentDashboardContent() {
                         : "Send an inquiry or request consultation regarding your child's progress."}
                     </p>
                   </div>
-                  <button
-                    onClick={() => setActiveTab("communication")}
-                    className="px-4 py-2.5 rounded-xl bg-[#261B16] text-[#FAF6E9] text-xs font-bold flex items-center gap-2 hover:bg-[#49352F] transition-all shrink-0 cursor-pointer shadow-xs"
+                  <Link
+                    href="/connect"
+                    className="px-4 py-2.5 rounded-xl bg-[#2E7D5E] text-white text-xs font-bold flex items-center gap-2 hover:bg-[#24634B] transition-all shrink-0 cursor-pointer shadow-xs"
                   >
-                    <MessageSquare className="w-3.5 h-3.5 text-[#F2CAB3]" />
-                    <span>{language === "gu" ? "શિક્ષકને સંદેશ મોકલો" : "Message Teacher"}</span>
-                  </button>
+                    <MessageSquare className="w-3.5 h-3.5 text-white" />
+                    <span>{language === "gu" ? "શિક્ષક સાથે સીધી ચેટ કરો" : "Chat with Teacher (Live)"}</span>
+                  </Link>
                 </div>
               </div>
             )}

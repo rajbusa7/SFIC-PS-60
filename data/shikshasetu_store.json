@@ -596,6 +596,49 @@
       "enrollmentStatus": "active",
       "notes": "",
       "createdAt": "2026-10-28T18:09:39.757Z"
+    },
+    {
+      "id": "std-arjun",
+      "studentCode": "MPS-1A-01",
+      "displayName": "Arjun Pandya",
+      "classroomId": "cls-1a",
+      "grade": 1,
+      "section": "A",
+      "enrollmentStatus": "active",
+      "notes": "Enthusiastic learner. Strong at number recognition up to 50.",
+      "createdAt": "2026-06-14T09:00:00Z"
+    },
+    {
+      "id": "std-krisha",
+      "studentCode": "MPS-1A-02",
+      "displayName": "Krisha Modi",
+      "classroomId": "cls-1a",
+      "grade": 1,
+      "section": "A",
+      "enrollmentStatus": "active",
+      "notes": "Needs support with phonics sound mapping.",
+      "createdAt": "2026-06-14T09:05:00Z"
+    },
+    {
+      "id": "std-hetvi",
+      "studentCode": "MPS-2A-01",
+      "displayName": "Hetvi Raval",
+      "classroomId": "cls-2a",
+      "grade": 2,
+      "section": "A",
+      "enrollmentStatus": "active",
+      "notes": "Good grasp of addition. Needs practice with 2-digit subtraction.",
+      "createdAt": "2026-06-14T09:10:00Z"
+    },
+    {
+      "id": "std-neel",
+      "studentCode": "MPS-2A-02",
+      "displayName": "Neel Parmar",
+      "classroomId": "cls-2a",
+      "grade": 2,
+      "section": "A",
+      "enrollmentStatus": "active",
+      "createdAt": "2026-06-14T09:15:00Z"
     }
   ],
   "assessments": [
@@ -5652,5 +5695,614 @@
       "outcome": "Developing"
     }
   ],
-  "parentHomeActivities": []
+  "parentHomeActivities": [],
+  "conversations": [
+    {
+      "id": "conv-announcements",
+      "type": "announcement",
+      "title": "Gandhinagar Primary — Official Announcements",
+      "titleGujarati": "ગાંધીનગર પ્રાથમિક શાળા — સત્તાવાર સૂચનાઓ",
+      "description": "Official circulars, exam dates, parent meetings, and holiday alerts from the Principal's Office.",
+      "schoolId": "sch-gn-01",
+      "avatarUrl": "/globe.svg",
+      "participantIds": [
+        "usr-admin-01",
+        "usr-teacher-01",
+        "usr-teacher-02",
+        "usr-teacher-03",
+        "usr-teacher-raj",
+        "par-001",
+        "usr-par-01",
+        "par-aarav",
+        "par-diya",
+        "usr-par-02",
+        "par-pooja",
+        "usr-par-03",
+        "par-karan",
+        "usr-par-04",
+        "par-dev",
+        "usr-par-05"
+      ],
+      "adminIds": [
+        "usr-admin-01"
+      ],
+      "lastMessageText": "Dear Parents & Teachers, the Gujarat Reading Campaign (વાંચન સપ્તાહ) commences next Monday. Please encourage 20 minutes of daily Gujarati story reading at home.",
+      "lastMessageAt": "2026-03-24T10:30:00Z",
+      "lastMessageSenderName": "Principal R. K. Trivedi",
+      "unreadCounts": {},
+      "isPinned": true,
+      "allowParentReplies": false,
+      "createdAt": "2026-01-10T08:00:00Z",
+      "updatedAt": "2026-03-24T10:30:00Z"
+    },
+    {
+      "id": "conv-class-4a",
+      "type": "class_group",
+      "title": "Class 4A — Parents & Teacher",
+      "titleGujarati": "ધોરણ ૪-અ — વાલી અને શિક્ષક જૂથ",
+      "description": "Academic updates, daily homework, remedial worksheets, and interactive support for Class 4A.",
+      "classroomId": "cls-4a",
+      "grade": 4,
+      "section": "A",
+      "schoolId": "sch-gn-01",
+      "participantIds": [
+        "usr-teacher-01",
+        "usr-admin-01",
+        "par-001",
+        "usr-par-01",
+        "par-aarav",
+        "par-pooja",
+        "usr-par-03"
+      ],
+      "adminIds": [
+        "usr-teacher-01",
+        "usr-admin-01"
+      ],
+      "lastMessageText": "Notice: School timing tomorrow will be 8:00 AM to 12:30 PM.",
+      "lastMessageAt": "2026-11-26T05:26:13.204Z",
+      "lastMessageSenderName": "Pooja Sharma",
+      "unreadCounts": {
+        "usr-teacher-01": 0,
+        "par-001": 0,
+        "usr-par-01": 6,
+        "par-aarav": 6,
+        "usr-admin-01": 6,
+        "par-pooja": 6,
+        "usr-par-03": 6
+      },
+      "isPinned": false,
+      "allowParentReplies": true,
+      "createdAt": "2026-01-15T09:00:00Z",
+      "updatedAt": "2026-11-26T05:26:13.204Z"
+    },
+    {
+      "id": "conv-class-3a",
+      "type": "class_group",
+      "title": "Class 3A — Parents & Teacher",
+      "titleGujarati": "ધોરણ ૩-અ — વાલી અને શિક્ષક જૂથ",
+      "description": "Multiplication tables practice, phonetics reading, and classroom notices for Class 3A.",
+      "classroomId": "cls-3a",
+      "grade": 3,
+      "section": "A",
+      "schoolId": "sch-gn-01",
+      "participantIds": [
+        "usr-teacher-01",
+        "usr-admin-01",
+        "par-diya",
+        "usr-par-02"
+      ],
+      "adminIds": [
+        "usr-teacher-01",
+        "usr-admin-01"
+      ],
+      "lastMessageText": "Weekly Multiplication Practice worksheet has been sent home with students. Please check page 4.",
+      "lastMessageAt": "2026-03-23T14:15:00Z",
+      "lastMessageSenderName": "Pooja Sharma",
+      "unreadCounts": {},
+      "isPinned": false,
+      "allowParentReplies": true,
+      "createdAt": "2026-01-15T09:00:00Z",
+      "updatedAt": "2026-03-23T14:15:00Z"
+    },
+    {
+      "id": "conv-class-2a",
+      "type": "class_group",
+      "title": "Class 2A — Parents & Teacher",
+      "titleGujarati": "ધોરણ ૨-અ — વાલી અને શિક્ષક જૂથ",
+      "description": "Addition, subtraction regrouping, and vocabulary building for Class 2A.",
+      "classroomId": "cls-2a",
+      "grade": 2,
+      "section": "A",
+      "schoolId": "sch-gn-01",
+      "participantIds": [
+        "usr-teacher-01",
+        "usr-admin-01",
+        "par-karan",
+        "usr-par-04"
+      ],
+      "adminIds": [
+        "usr-teacher-01",
+        "usr-admin-01"
+      ],
+      "lastMessageText": "Please bring 10 clean bottle caps tomorrow for our grouping and counting activity.",
+      "lastMessageAt": "2026-03-22T11:00:00Z",
+      "lastMessageSenderName": "Pooja Sharma",
+      "unreadCounts": {},
+      "isPinned": false,
+      "allowParentReplies": true,
+      "createdAt": "2026-01-15T09:00:00Z",
+      "updatedAt": "2026-03-22T11:00:00Z"
+    },
+    {
+      "id": "conv-class-1a",
+      "type": "class_group",
+      "title": "Class 1A — Parents & Teacher",
+      "titleGujarati": "ધોરણ ૧-અ — વાલી અને શિક્ષક જૂથ",
+      "description": "Number counting (1-100) and Gujarati Svar-Vyanjan foundation for Class 1A.",
+      "classroomId": "cls-1a",
+      "grade": 1,
+      "section": "A",
+      "schoolId": "sch-gn-01",
+      "participantIds": [
+        "usr-teacher-01",
+        "usr-admin-01",
+        "par-dev",
+        "usr-par-05"
+      ],
+      "adminIds": [
+        "usr-teacher-01",
+        "usr-admin-01"
+      ],
+      "lastMessageText": "Welcome Class 1A parents! All children wrote numbers 1 to 20 very nicely today.",
+      "lastMessageAt": "2026-03-21T13:30:00Z",
+      "lastMessageSenderName": "Pooja Sharma",
+      "unreadCounts": {},
+      "isPinned": false,
+      "allowParentReplies": true,
+      "createdAt": "2026-01-15T09:00:00Z",
+      "updatedAt": "2026-03-21T13:30:00Z"
+    },
+    {
+      "id": "conv-direct-pooja-aarav",
+      "type": "direct",
+      "title": "Dineshbhai Patel (Aarav's Parent)",
+      "titleGujarati": "દિનેશભાઈ પટેલ (આરવના વાલી)",
+      "description": "Confidential academic consultation regarding Aarav Patel (Std 4A)",
+      "schoolId": "sch-gn-01",
+      "participantIds": [
+        "usr-teacher-01",
+        "par-001",
+        "usr-par-01",
+        "par-aarav"
+      ],
+      "adminIds": [
+        "usr-teacher-01"
+      ],
+      "lastMessageText": "Thank you Pooja Madam, we are continuing the practice daily.",
+      "lastMessageAt": "2026-11-26T05:26:13.180Z",
+      "lastMessageSenderName": "Dineshbhai Patel",
+      "unreadCounts": {
+        "usr-teacher-01": 3,
+        "par-001": 3,
+        "usr-par-01": 6,
+        "par-aarav": 6
+      },
+      "isPinned": false,
+      "createdAt": "2026-02-01T10:00:00Z",
+      "updatedAt": "2026-11-26T05:26:13.180Z"
+    }
+  ],
+  "chatMessages": [
+    {
+      "id": "msg-ann-01",
+      "conversationId": "conv-announcements",
+      "senderId": "usr-admin-01",
+      "senderName": "Principal R. K. Trivedi",
+      "senderRole": "admin",
+      "text": "Welcome to ShikshaSetu Connect — Gujarat Primary Schools Direct Communication Network.\nThis platform facilitates secure parent-teacher communication, homework updates, and official notifications.",
+      "textGujarati": "શિક્ષાસેતુ કનેક્ટમાં આપનું સ્વાગત છે — ગુજરાત પ્રાથમિક શાળાઓનું સુરક્ષિત સંવાદ નેટવર્ક.\nઆ પ્લેટફોર્મ વાલી-શિક્ષક સંવાદ, હોમવર્ક અપડેટ્સ અને સત્તાવાર સૂચનાઓ માટે છે.",
+      "status": "read",
+      "readBy": [
+        {
+          "userId": "usr-teacher-01",
+          "readAt": "2026-01-11T09:00:00Z"
+        }
+      ],
+      "isAnnouncement": true,
+      "isPinned": true,
+      "createdAt": "2026-01-10T08:05:00Z"
+    },
+    {
+      "id": "msg-ann-02",
+      "conversationId": "conv-announcements",
+      "senderId": "usr-admin-01",
+      "senderName": "Principal R. K. Trivedi",
+      "senderRole": "admin",
+      "text": "Dear Parents & Teachers, the Gujarat Reading Campaign (વાંચન સપ્તાહ) commences next Monday. Please encourage 20 minutes of daily Gujarati story reading at home.",
+      "textGujarati": "પ્રિય વાલીઓ અને શિક્ષકો, આગામી સોમવારથી ગુજરાત વાંચન સપ્તાહ શરૂ થઈ રહ્યું છે. કૃપા કરીને ઘરે ૨૦ મિનિટ દૈનિક ગુજરાતી વાર્તા વાંચન કરાવો.",
+      "attachments": [
+        {
+          "id": "att-reading-circ",
+          "name": "Gujarat_Reading_Week_Circular.pdf",
+          "url": "/docs/reading_week_schedule.pdf",
+          "size": 245000,
+          "mimeType": "application/pdf"
+        }
+      ],
+      "status": "read",
+      "readBy": [
+        {
+          "userId": "usr-teacher-01",
+          "readAt": "2026-03-24T10:35:00Z"
+        }
+      ],
+      "isAnnouncement": true,
+      "isPinned": true,
+      "createdAt": "2026-03-24T10:30:00Z"
+    },
+    {
+      "id": "msg-c4a-01",
+      "conversationId": "conv-class-4a",
+      "senderId": "usr-teacher-01",
+      "senderName": "Pooja Sharma",
+      "senderRole": "teacher",
+      "text": "Namaste Class 4A Parents! Today in Mathematics, we focused on Division Basics & Equal Sharing (2-digit divided by 1-digit).",
+      "textGujarati": "નમસ્તે ધોરણ ૪-અ ના વાલીઓ! આજે ગણિતમાં આપણે ભાગાકાર અને સમાન વહેંચણી (૨-અંકનો ૧-અંક વડે) પર ધ્યાન કેન્દ્રિત કર્યું.",
+      "status": "read",
+      "readBy": [
+        {
+          "userId": "par-001",
+          "readAt": "2026-03-24T15:30:00Z"
+        }
+      ],
+      "createdAt": "2026-03-24T15:00:00Z",
+      "isReported": true,
+      "reportReason": "Contains outdated homework date"
+    },
+    {
+      "id": "msg-c4a-02",
+      "conversationId": "conv-class-4a",
+      "senderId": "usr-teacher-01",
+      "senderName": "Pooja Sharma",
+      "senderRole": "teacher",
+      "text": "Here is the practice worksheet for today. You can also print this from the Reports & Worksheets section.",
+      "textGujarati": "આજનું પ્રેક્ટિસ વર્કશીટ અહીં જોડાયેલ છે. તમે તેને રિપોર્ટ્સ અને વર્કશીટ વિભાગમાંથી પણ પ્રિન્ટ કરી શકો છો.",
+      "attachments": [
+        {
+          "id": "att-ws-c4a-div",
+          "name": "Class4_Math_Division_Worksheet.pdf",
+          "url": "/docs/class4_division_practice.pdf",
+          "size": 180000,
+          "mimeType": "application/pdf"
+        }
+      ],
+      "status": "read",
+      "readBy": [
+        {
+          "userId": "par-001",
+          "readAt": "2026-03-24T15:35:00Z"
+        }
+      ],
+      "createdAt": "2026-03-24T15:10:00Z"
+    },
+    {
+      "id": "msg-c4a-03",
+      "conversationId": "conv-class-4a",
+      "senderId": "par-001",
+      "senderName": "Dineshbhai Patel",
+      "senderRole": "parent",
+      "text": "Thank you Pooja Madam! We practiced the concrete bottle cap division at home yesterday.",
+      "textGujarati": "આભાર પૂજા મેડમ! અમે ગઈકાલે ઘરે બોટલના ઢાંકણા વડે ભાગાકારની પ્રેક્ટિસ કરી હતી.",
+      "replyTo": {
+        "id": "msg-c4a-02",
+        "senderName": "Pooja Sharma",
+        "text": "Here is the practice worksheet for today. You can also print this from the Reports & Worksheets section."
+      },
+      "status": "read",
+      "readBy": [
+        {
+          "userId": "usr-teacher-01",
+          "readAt": "2026-03-24T16:50:00Z"
+        }
+      ],
+      "createdAt": "2026-03-24T16:45:00Z"
+    },
+    {
+      "id": "msg-dir-01",
+      "conversationId": "conv-direct-pooja-aarav",
+      "senderId": "usr-teacher-01",
+      "senderName": "Pooja Sharma",
+      "senderRole": "teacher",
+      "text": "Namaste Rajeshbhai, Aarav has shown impressive progress in our latest reassessment, improving from 35% to 85% (+50 pp) on Division Basics!",
+      "textGujarati": "નમસ્તે રાજેશભાઈ, આરવે આપણા પુનઃમૂલ્યાંકનમાં ઉત્તમ પ્રગતિ દર્શાવી છે, ભાગાકારમાં ૩૫% થી ૮૫% (+૫૦ pp) સુધી સુધારો કર્યો છે!",
+      "status": "read",
+      "readBy": [
+        {
+          "userId": "par-001",
+          "readAt": "2026-03-24T16:00:00Z"
+        }
+      ],
+      "createdAt": "2026-03-24T15:45:00Z"
+    },
+    {
+      "id": "msg-dir-02",
+      "conversationId": "conv-direct-pooja-aarav",
+      "senderId": "par-001",
+      "senderName": "Dineshbhai Patel",
+      "senderRole": "parent",
+      "text": "Yes madam, he understood the concept of remainders using the pebbles. Thank you for your guidance!",
+      "textGujarati": "હા મેડમ, કાંકરાની મદદથી તેને શેષનો ખ્યાલ બરાબર સમજાઈ ગયો. તમારા માર્ગદર્શન બદલ ખૂબ ખૂબ આભાર!",
+      "replyTo": {
+        "id": "msg-dir-01",
+        "senderName": "Pooja Sharma",
+        "text": "Namaste Rajeshbhai, Aarav has shown impressive progress in our latest reassessment..."
+      },
+      "status": "read",
+      "readBy": [
+        {
+          "userId": "usr-teacher-01",
+          "readAt": "2026-03-24T17:15:00Z"
+        }
+      ],
+      "createdAt": "2026-03-24T17:10:00Z"
+    },
+    {
+      "id": "msg-test-1795667508389",
+      "conversationId": "conv-direct-pooja-aarav",
+      "senderId": "usr-teacher-01",
+      "senderName": "Pooja Sharma",
+      "senderRole": "teacher",
+      "text": "Aarav completed the remedial worksheet on division with 85% accuracy!",
+      "status": "sent",
+      "readBy": [
+        {
+          "userId": "usr-teacher-01",
+          "readAt": "2026-11-26T04:31:48.389Z"
+        }
+      ],
+      "createdAt": "2026-11-26T04:31:48.404Z"
+    },
+    {
+      "id": "msg-parent-1795667508419",
+      "conversationId": "conv-direct-pooja-aarav",
+      "senderId": "par-001",
+      "senderName": "Dineshbhai Patel",
+      "senderRole": "parent",
+      "text": "Thank you Pooja Madam, we are continuing the practice daily.",
+      "replyTo": {
+        "id": "msg-test-1795667508389",
+        "senderName": "Pooja Sharma",
+        "text": "Aarav completed the remedial worksheet on division"
+      },
+      "status": "sent",
+      "readBy": [
+        {
+          "userId": "par-001",
+          "readAt": "2026-11-26T04:31:48.419Z"
+        }
+      ],
+      "createdAt": "2026-11-26T04:31:48.419Z"
+    },
+    {
+      "id": "msg-ws-1795667508432",
+      "conversationId": "conv-class-4a",
+      "senderId": "usr-teacher-01",
+      "senderName": "Pooja Sharma",
+      "senderRole": "teacher",
+      "text": "Please find attached the homework worksheet for Class 4 Mathematics.",
+      "attachments": [
+        {
+          "id": "att-ws-math",
+          "name": "Std4_Math_Homework.pdf",
+          "url": "/docs/std4_math.pdf",
+          "size": 154000,
+          "mimeType": "application/pdf"
+        }
+      ],
+      "status": "read",
+      "readBy": [
+        {
+          "userId": "usr-teacher-01",
+          "readAt": "2026-11-26T04:31:48.432Z"
+        },
+        {
+          "userId": "par-001",
+          "readAt": "2026-11-26T04:31:48.463Z"
+        }
+      ],
+      "createdAt": "2026-11-26T04:31:48.432Z"
+    },
+    {
+      "id": "msg-unread-1795667508452",
+      "conversationId": "conv-class-4a",
+      "senderId": "usr-teacher-01",
+      "senderName": "Pooja Sharma",
+      "senderRole": "teacher",
+      "text": "Notice: School timing tomorrow will be 8:00 AM to 12:30 PM.",
+      "status": "read",
+      "readBy": [
+        {
+          "userId": "usr-teacher-01",
+          "readAt": "2026-11-26T04:31:48.452Z"
+        },
+        {
+          "userId": "par-001",
+          "readAt": "2026-11-26T04:31:48.463Z"
+        }
+      ],
+      "createdAt": "2026-11-26T04:31:48.452Z"
+    },
+    {
+      "id": "msg-test-1795670113361",
+      "conversationId": "conv-direct-pooja-aarav",
+      "senderId": "usr-teacher-01",
+      "senderName": "Pooja Sharma",
+      "senderRole": "teacher",
+      "text": "Aarav completed the remedial worksheet on division with 85% accuracy!",
+      "status": "sent",
+      "readBy": [
+        {
+          "userId": "usr-teacher-01",
+          "readAt": "2026-11-26T05:15:13.361Z"
+        }
+      ],
+      "createdAt": "2026-11-26T05:15:13.362Z"
+    },
+    {
+      "id": "msg-parent-1795670113376",
+      "conversationId": "conv-direct-pooja-aarav",
+      "senderId": "par-001",
+      "senderName": "Dineshbhai Patel",
+      "senderRole": "parent",
+      "text": "Thank you Pooja Madam, we are continuing the practice daily.",
+      "replyTo": {
+        "id": "msg-test-1795670113361",
+        "senderName": "Pooja Sharma",
+        "text": "Aarav completed the remedial worksheet on division"
+      },
+      "status": "sent",
+      "readBy": [
+        {
+          "userId": "par-001",
+          "readAt": "2026-11-26T05:15:13.376Z"
+        }
+      ],
+      "createdAt": "2026-11-26T05:15:13.376Z"
+    },
+    {
+      "id": "msg-ws-1795670113385",
+      "conversationId": "conv-class-4a",
+      "senderId": "usr-teacher-01",
+      "senderName": "Pooja Sharma",
+      "senderRole": "teacher",
+      "text": "Please find attached the homework worksheet for Class 4 Mathematics.",
+      "attachments": [
+        {
+          "id": "att-ws-math",
+          "name": "Std4_Math_Homework.pdf",
+          "url": "/docs/std4_math.pdf",
+          "size": 154000,
+          "mimeType": "application/pdf"
+        }
+      ],
+      "status": "read",
+      "readBy": [
+        {
+          "userId": "usr-teacher-01",
+          "readAt": "2026-11-26T05:15:13.385Z"
+        },
+        {
+          "userId": "par-001",
+          "readAt": "2026-11-26T05:15:13.403Z"
+        }
+      ],
+      "createdAt": "2026-11-26T05:15:13.385Z"
+    },
+    {
+      "id": "msg-unread-1795670113397",
+      "conversationId": "conv-class-4a",
+      "senderId": "usr-teacher-01",
+      "senderName": "Pooja Sharma",
+      "senderRole": "teacher",
+      "text": "Notice: School timing tomorrow will be 8:00 AM to 12:30 PM.",
+      "status": "read",
+      "readBy": [
+        {
+          "userId": "usr-teacher-01",
+          "readAt": "2026-11-26T05:15:13.397Z"
+        },
+        {
+          "userId": "par-001",
+          "readAt": "2026-11-26T05:15:13.403Z"
+        }
+      ],
+      "createdAt": "2026-11-26T05:15:13.397Z"
+    },
+    {
+      "id": "msg-test-1795670773163",
+      "conversationId": "conv-direct-pooja-aarav",
+      "senderId": "usr-teacher-01",
+      "senderName": "Pooja Sharma",
+      "senderRole": "teacher",
+      "text": "Aarav completed the remedial worksheet on division with 85% accuracy!",
+      "status": "sent",
+      "readBy": [
+        {
+          "userId": "usr-teacher-01",
+          "readAt": "2026-11-26T05:26:13.163Z"
+        }
+      ],
+      "createdAt": "2026-11-26T05:26:13.166Z"
+    },
+    {
+      "id": "msg-parent-1795670773180",
+      "conversationId": "conv-direct-pooja-aarav",
+      "senderId": "par-001",
+      "senderName": "Dineshbhai Patel",
+      "senderRole": "parent",
+      "text": "Thank you Pooja Madam, we are continuing the practice daily.",
+      "replyTo": {
+        "id": "msg-test-1795670773163",
+        "senderName": "Pooja Sharma",
+        "text": "Aarav completed the remedial worksheet on division"
+      },
+      "status": "sent",
+      "readBy": [
+        {
+          "userId": "par-001",
+          "readAt": "2026-11-26T05:26:13.180Z"
+        }
+      ],
+      "createdAt": "2026-11-26T05:26:13.180Z"
+    },
+    {
+      "id": "msg-ws-1795670773188",
+      "conversationId": "conv-class-4a",
+      "senderId": "usr-teacher-01",
+      "senderName": "Pooja Sharma",
+      "senderRole": "teacher",
+      "text": "Please find attached the homework worksheet for Class 4 Mathematics.",
+      "attachments": [
+        {
+          "id": "att-ws-math",
+          "name": "Std4_Math_Homework.pdf",
+          "url": "/docs/std4_math.pdf",
+          "size": 154000,
+          "mimeType": "application/pdf"
+        }
+      ],
+      "status": "read",
+      "readBy": [
+        {
+          "userId": "usr-teacher-01",
+          "readAt": "2026-11-26T05:26:13.188Z"
+        },
+        {
+          "userId": "par-001",
+          "readAt": "2026-11-26T05:26:13.215Z"
+        }
+      ],
+      "createdAt": "2026-11-26T05:26:13.188Z"
+    },
+    {
+      "id": "msg-unread-1795670773204",
+      "conversationId": "conv-class-4a",
+      "senderId": "usr-teacher-01",
+      "senderName": "Pooja Sharma",
+      "senderRole": "teacher",
+      "text": "Notice: School timing tomorrow will be 8:00 AM to 12:30 PM.",
+      "status": "read",
+      "readBy": [
+        {
+          "userId": "usr-teacher-01",
+          "readAt": "2026-11-26T05:26:13.204Z"
+        },
+        {
+          "userId": "par-001",
+          "readAt": "2026-11-26T05:26:13.215Z"
+        }
+      ],
+      "createdAt": "2026-11-26T05:26:13.204Z"
+    }
+  ]
 }

@@ -64,7 +64,12 @@ import type {
   AuditLogEntry,
   SubjectCode,
   InterventionRecord,
+  Conversation,
+  ChatMessage,
+  ChatNotification,
+  ConversationParticipant,
 } from "../types";
+import { SEED_CONVERSATIONS, SEED_CHAT_MESSAGES } from "../connect/seedConnect";
 
 interface DataStore {
   school: School;
@@ -97,6 +102,9 @@ interface DataStore {
   auditLogs?: AuditLogEntry[];
   interventionRecords?: InterventionRecord[];
   parentHomeActivities?: any[];
+  conversations?: Conversation[];
+  chatMessages?: ChatMessage[];
+  chatNotifications?: ChatNotification[];
 }
 
 const DEFAULT_DATA_DIR = path.join(process.cwd(), "data");
@@ -149,6 +157,9 @@ function getInitialStore(): DataStore {
     auditLogs: [],
     interventionRecords: JSON.parse(JSON.stringify(SEED_INTERVENTION_RECORDS)),
     parentHomeActivities: [],
+    conversations: JSON.parse(JSON.stringify(SEED_CONVERSATIONS)),
+    chatMessages: JSON.parse(JSON.stringify(SEED_CHAT_MESSAGES)),
+    chatNotifications: [],
   };
 }
 
@@ -246,6 +257,15 @@ function loadStore(): DataStore {
               memoryStore.learningGaps.push(JSON.parse(JSON.stringify(gap)));
               storeNeedsSync = true;
             }
+          }
+          // Auto-sync ShikshaSetu Connect conversations if missing
+          if (!memoryStore.conversations || memoryStore.conversations.length === 0) {
+            memoryStore.conversations = JSON.parse(JSON.stringify(SEED_CONVERSATIONS));
+            storeNeedsSync = true;
+          }
+          if (!memoryStore.chatMessages || memoryStore.chatMessages.length === 0) {
+            memoryStore.chatMessages = JSON.parse(JSON.stringify(SEED_CHAT_MESSAGES));
+            storeNeedsSync = true;
           }
           if (storeNeedsSync) {
             try {
@@ -2765,6 +2785,303 @@ export const db = {
     return list;
   },
 
+  // ==========================================
+  // SHIKSHASETU CONNECT (PARENT-TEACHER CHAT)
+  // ==========================================
+  getConversations(userId?: string, role?: string): Conversation[] {
+    const store = loadStore();
+    let convs = store.conversations || [];
+    if (!userId) return convs;
+
+    return convs.filter((c) => {
+      // 1. School announcements: visible to everyone in the school
+      if (c.type === "announcement") return true;
+
+      // 2. Direct participant
+      if (c.participantIds && c.participantIds.includes(userId)) return true;
+
+      // 3. Admin has global visibility
+      if (role === "admin") return true;
+
+      // 4. Teacher assigned to classroom
+      if (role === "teacher" && c.classroomId) {
+        const assignments = this.getTeacherAssignments(userId);
+        if (assignments.some((a) => a.classroomIds && a.classroomIds.includes(c.classroomId!))) {
+          return true;
+        }
+      }
+
+      // 5. Parent whose child is in this classroom
+      if (role === "parent" && c.classroomId) {
+        const parent = this.getParentByUserId(userId) || this.getParentById(userId);
+        if (parent && parent.studentIds) {
+          const students = this.getStudents().filter((s) => parent.studentIds.includes(s.id));
+          if (students.some((s) => s.classroomId === c.classroomId)) {
+            return true;
+          }
+        }
+      }
+
+      return false;
+    });
+  },
+
+  getConversationById(id: string, userId?: string, role?: string): Conversation | undefined {
+    const convs = this.getConversations(userId, role);
+    return convs.find((c) => c.id === id);
+  },
+
+  saveConversation(conv: Conversation): Conversation {
+    const store = loadStore();
+    if (!store.conversations) store.conversations = [];
+    const idx = store.conversations.findIndex((c) => c.id === conv.id);
+    if (idx >= 0) {
+      store.conversations[idx] = { ...store.conversations[idx], ...conv, updatedAt: new Date().toISOString() };
+    } else {
+      store.conversations.push(conv);
+    }
+    saveStore(store);
+    return conv;
+  },
+
+  deleteConversation(id: string): boolean {
+    const store = loadStore();
+    if (!store.conversations) return false;
+    const initialLen = store.conversations.length;
+    store.conversations = store.conversations.filter((c) => c.id !== id);
+    if (store.chatMessages) {
+      store.chatMessages = store.chatMessages.filter((m) => m.conversationId !== id);
+    }
+    saveStore(store);
+    return store.conversations.length < initialLen;
+  },
+
+  getMessages(conversationId: string, limit = 100): ChatMessage[] {
+    const store = loadStore();
+    const msgs = (store.chatMessages || []).filter((m) => m.conversationId === conversationId);
+    msgs.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    return msgs.slice(-limit);
+  },
+
+  saveMessage(msg: ChatMessage): ChatMessage {
+    const store = loadStore();
+    if (!store.chatMessages) store.chatMessages = [];
+    store.chatMessages.push(msg);
+
+    if (!store.conversations) store.conversations = [];
+    const conv = store.conversations.find((c) => c.id === msg.conversationId);
+    if (conv) {
+      conv.lastMessageText = msg.text;
+      conv.lastMessageAt = msg.createdAt;
+      conv.lastMessageSenderName = msg.senderName;
+      conv.updatedAt = msg.createdAt;
+
+      if (!conv.unreadCounts) conv.unreadCounts = {};
+      const targetParticipants = conv.participantIds || [];
+      for (const pId of targetParticipants) {
+        if (pId !== msg.senderId) {
+          conv.unreadCounts[pId] = (conv.unreadCounts[pId] || 0) + 1;
+        }
+      }
+    }
+
+    saveStore(store);
+    return msg;
+  },
+
+  markMessagesAsRead(conversationId: string, userId: string): number {
+    const store = loadStore();
+    if (!store.chatMessages) return 0;
+    let count = 0;
+    const now = new Date().toISOString();
+
+    for (const msg of store.chatMessages) {
+      if (msg.conversationId === conversationId && msg.senderId !== userId) {
+        if (!msg.readBy) msg.readBy = [];
+        if (!msg.readBy.some((r) => r.userId === userId)) {
+          msg.readBy.push({ userId, readAt: now });
+          msg.status = "read";
+          count++;
+        }
+      }
+    }
+
+    if (store.conversations) {
+      const conv = store.conversations.find((c) => c.id === conversationId);
+      if (conv && conv.unreadCounts) {
+        conv.unreadCounts[userId] = 0;
+      }
+    }
+
+    if (count > 0 || (store.conversations && store.conversations.some((c) => c.id === conversationId))) {
+      saveStore(store);
+    }
+    return count;
+  },
+
+  getUnreadChatCount(userId: string): number {
+    const store = loadStore();
+    let total = 0;
+    for (const conv of store.conversations || []) {
+      if (conv.unreadCounts && conv.unreadCounts[userId]) {
+        total += conv.unreadCounts[userId];
+      }
+    }
+    return total;
+  },
+
+  reportMessage(messageId: string, reason: string): boolean {
+    const store = loadStore();
+    if (!store.chatMessages) return false;
+    const msg = store.chatMessages.find((m) => m.id === messageId);
+    if (!msg) return false;
+    msg.isReported = true;
+    msg.reportReason = reason;
+    saveStore(store);
+    return true;
+  },
+
+  getConversationParticipants(conversationId: string): ConversationParticipant[] {
+    const store = loadStore();
+    const conv = (store.conversations || []).find((c) => c.id === conversationId);
+    if (!conv) return [];
+
+    const participants: ConversationParticipant[] = [];
+    const users = store.users || [];
+    const parents = store.parents || [];
+    const students = store.students || [];
+
+    for (const uid of conv.participantIds || []) {
+      const u = users.find((usr) => usr.id === uid);
+      const parent = parents.find((p) => p.userId === uid || p.id === uid);
+
+      if (u) {
+        let childName: string | undefined;
+        let childGrade: number | undefined;
+        let childSection: string | undefined;
+
+        if (parent && parent.studentIds && parent.studentIds.length > 0) {
+          const std = students.find((s) => parent.studentIds.includes(s.id));
+          if (std) {
+            childName = (std as any).name || std.displayName;
+            childGrade = std.grade;
+            childSection = std.section;
+          }
+        }
+
+        participants.push({
+          userId: u.id,
+          name: u.name,
+          role: u.role,
+          email: u.email,
+          childName,
+          childGrade,
+          childSection,
+          joinedAt: conv.createdAt,
+        });
+      } else if (parent) {
+        const std = students.find((s) => parent.studentIds.includes(s.id));
+        participants.push({
+          userId: parent.userId || parent.id,
+          name: parent.name,
+          role: "parent",
+          email: parent.email,
+          childName: (std as any)?.name || std?.displayName,
+          childGrade: std?.grade,
+          childSection: std?.section,
+          joinedAt: conv.createdAt,
+        });
+      }
+    }
+
+    return participants;
+  },
+
+  getAvailableChatContacts(userId: string, role: string): any[] {
+    const store = loadStore();
+    const students = store.students || [];
+    const parents = store.parents || [];
+    const users = store.users || [];
+    const classrooms = store.classrooms || [];
+
+    if (role === "parent") {
+      const parent = this.getParentByUserId(userId) || this.getParentById(userId);
+      const myStudentIds = parent ? parent.studentIds || [] : [];
+      const myStudents = students.filter((s) => myStudentIds.includes(s.id));
+      const myClassroomIds = myStudents.map((s) => s.classroomId);
+
+      const assignments = store.teacherAssignments || [];
+      const teacherIds = Array.from(
+        new Set(
+          assignments
+            .filter((a) => a.classroomIds && a.classroomIds.some((cid) => myClassroomIds.includes(cid)))
+            .map((a) => a.teacherId)
+        )
+      );
+
+      return users
+        .filter((u) => teacherIds.includes(u.id) || u.role === "admin")
+        .map((u) => ({
+          userId: u.id,
+          name: u.name,
+          role: u.role,
+          title: u.role === "admin" ? "Principal Office" : `${u.name} (Assigned Teacher)`,
+          subtitle: u.role === "admin" ? "School Administration" : "Class Teacher",
+          classroomId: myClassroomIds[0] || "",
+        }));
+    }
+
+    if (role === "teacher") {
+      const assignments = this.getTeacherAssignments(userId);
+      const assignedClassIds = Array.from(new Set(assignments.flatMap((a) => a.classroomIds || [])));
+      const assignedStudents = students.filter((s) => assignedClassIds.includes(s.classroomId));
+      const studentMap = new Map(assignedStudents.map((s) => [s.id, s]));
+
+      const contactParents: any[] = [];
+      for (const p of parents) {
+        const matchingStudents = (p.studentIds || [])
+          .map((sid) => studentMap.get(sid))
+          .filter(Boolean);
+
+        if (matchingStudents.length > 0) {
+          const firstStd = matchingStudents[0]!;
+          const stdName = (firstStd as any).name || firstStd.displayName;
+          contactParents.push({
+            userId: p.userId || p.id,
+            name: p.name,
+            role: "parent",
+            title: `${p.name} (Parent of ${stdName})`,
+            subtitle: `Class ${firstStd.grade}-${firstStd.section} • Code #${firstStd.studentCode || "N/A"}`,
+            studentId: firstStd.id,
+            studentName: stdName,
+            grade: firstStd.grade,
+            section: firstStd.section,
+            classroomId: firstStd.classroomId,
+          });
+        }
+      }
+
+      return contactParents;
+    }
+
+    // Admin sees all
+    return [
+      ...users.map((u) => ({
+        userId: u.id,
+        name: u.name,
+        role: u.role,
+        title: `${u.name} (${u.role.toUpperCase()})`,
+        subtitle: u.email,
+      })),
+      ...classrooms.map((c) => ({
+        classroomId: c.id,
+        name: `Class ${c.grade}-${c.section}`,
+        role: "classroom",
+        title: `Class ${c.grade}-${c.section} Group`,
+        subtitle: `${students.filter((s) => s.classroomId === c.id).length} Students`,
+      })),
+    ];
+  },
   resetToDemoData(): void {
     const fresh = getInitialStore();
     saveStore(fresh);

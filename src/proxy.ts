@@ -68,6 +68,17 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // 3b. ShikshaSetu Connect Chat: Accessible to all authenticated users (teachers, admins, parents)
+  if (pathname === "/connect" || pathname.startsWith("/connect/")) {
+    if (!isAuthenticated) {
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.pathname = "/login";
+      loginUrl.searchParams.set("redirect", `${pathname}${search}`);
+      return NextResponse.redirect(loginUrl);
+    }
+    return NextResponse.next();
+  }
+
   // 4. Role-Based Route Protection: Parent Routes
   const isParentProtected = PARENT_PROTECTED_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)

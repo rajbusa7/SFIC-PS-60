@@ -28,7 +28,9 @@ import {
 } from "lucide-react";
 
 export default function ActivitiesPage() {
-  const { t, language, formatSubject, formatClass } = useLanguage();
+  const { t, tr, language, formatSubject, formatClass } = useLanguage();
+  const ac = t.activities;
+  const showGuField = language === "gu";
 
   const [activities, setActivities] = useState<any[]>([]);
   const [students, setStudents] = useState<any[]>([]);
@@ -201,9 +203,11 @@ export default function ActivitiesPage() {
 
   const confirmAssignment = () => {
     setAssignSuccessMsg(
-      language === "gu"
-        ? `પ્રવૃત્તિ "${assigningActivity?.title}" સફળતાપૂર્વક વર્ગ ${selectedStudent.grade}-${selectedStudent.section} ને સોંપાઈ!`
-        : `Activity "${assigningActivity?.title}" assigned to Class ${selectedStudent.grade}-${selectedStudent.section} successfully!`
+      tr("activities.assignSuccessToast", {
+        title: assigningActivity?.title || "",
+        grade: selectedStudent.grade,
+        section: selectedStudent.section,
+      })
     );
     setTimeout(() => {
       setAssigningActivity(null);
@@ -229,7 +233,7 @@ export default function ActivitiesPage() {
           <div className="flex items-center gap-2 self-start sm:self-auto px-3 py-1.5 rounded-2xl bg-white border border-[#49352F]/12 shadow-2xs">
             <UserCheck className="w-4 h-4 text-[#B26A1B]" />
             <span className="text-xs font-semibold text-[#7A6862]">
-              {language === "gu" ? "વિદ્યાર્થી:" : "Practicing for:"}
+              {ac.practicingFor}
             </span>
             <select
               value={selectedStudentId}
@@ -239,11 +243,11 @@ export default function ActivitiesPage() {
               {students.length > 0 ? (
                 students.map((s) => (
                   <option key={s.id} value={s.id}>
-                    {s.displayName} (Std {s.grade}-{s.section})
+                    {s.displayName} ({formatClass(s.grade, s.section)})
                   </option>
                 ))
               ) : (
-                <option value="std-aarav">Aarav Patel (Std 4-A)</option>
+                <option value="std-aarav">{t.dashboard.aaravStudentName} ({formatClass(4, "A")})</option>
               )}
             </select>
           </div>
@@ -260,7 +264,7 @@ export default function ActivitiesPage() {
                 : "bg-white/80 text-[#7A6862] hover:bg-white hover:text-[#49352F]"
             }`}
           >
-            {language === "gu" ? "બધી પ્રવૃત્તિઓ" : "All Activities"} ({activities.length})
+            {ac.allActivitiesTab} ({activities.length})
           </button>
 
           <button
@@ -274,7 +278,7 @@ export default function ActivitiesPage() {
           >
             <Sparkles className="w-3.5 h-3.5 text-[#B26A1B]" />
             <span>
-              {language === "gu" ? `ધોરણ ${selectedStudent.grade} ભલામણ` : `Std ${selectedStudent.grade} Recommended`}
+              {tr("activities.recommendedTab", { grade: selectedStudent.grade })}
             </span>
           </button>
 
@@ -289,7 +293,7 @@ export default function ActivitiesPage() {
           >
             <CheckCircle2 className="w-3.5 h-3.5 text-[#2E7D5E]" />
             <span>
-              {language === "gu" ? "તાજેતરમાં કરેલ" : "Recently Attempted"} (
+              {ac.recentlyAttemptedTab} (
               {Object.keys(studentAttempts).length})
             </span>
           </button>
@@ -304,7 +308,7 @@ export default function ActivitiesPage() {
             }`}
           >
             <Bookmark className="w-3.5 h-3.5 text-[#B26A1B]" />
-            <span>{language === "gu" ? "સાચવેલ (બુકમાર્ક)" : "Bookmarked"} ({bookmarkedIds.length})</span>
+            <span>{ac.bookmarkedTab} ({bookmarkedIds.length})</span>
           </button>
         </div>
 
@@ -316,7 +320,7 @@ export default function ActivitiesPage() {
               {/* Subject Filter */}
               <div className="flex items-center gap-1.5">
                 <span className="text-xs font-semibold text-[#7A6862]">
-                  {language === "gu" ? "વિષય:" : "Subject:"}
+                  {ac.filterSubject}
                 </span>
                 <select
                   value={subjectFilter}
@@ -324,7 +328,7 @@ export default function ActivitiesPage() {
                   onChange={(e) => setSubjectFilter(e.target.value)}
                   className="rounded-xl border border-[#49352F]/15 bg-[#FAF6E9] px-3 py-1.5 text-xs font-semibold text-[#49352F] outline-hidden cursor-pointer"
                 >
-                  <option value="all">{language === "gu" ? "બધા વિષયો" : "All Subjects"}</option>
+                  <option value="all">{ac.allSubjects}</option>
                   <option value="MATH">{formatSubject("MATH")}</option>
                   <option value="ENG">{formatSubject("ENG")}</option>
                   <option value="GUJ">{formatSubject("GUJ")}</option>
@@ -338,7 +342,7 @@ export default function ActivitiesPage() {
               {/* Standard Filter */}
               <div className="flex items-center gap-1.5">
                 <span className="text-xs font-semibold text-[#7A6862]">
-                  {language === "gu" ? "ધોરણ:" : "Standard:"}
+                  {ac.standardLabel}
                 </span>
                 <select
                   value={gradeFilter}
@@ -346,22 +350,19 @@ export default function ActivitiesPage() {
                   onChange={(e) => setGradeFilter(e.target.value)}
                   className="rounded-xl border border-[#49352F]/15 bg-[#FAF6E9] px-3 py-1.5 text-xs font-semibold text-[#49352F] outline-hidden cursor-pointer"
                 >
-                  <option value="all">{language === "gu" ? "બધા ધોરણ" : "All Standards"}</option>
-                  <option value="1">{language === "gu" ? "ધોરણ ૧" : "Std 1"}</option>
-                  <option value="2">{language === "gu" ? "ધોરણ ૨" : "Std 2"}</option>
-                  <option value="3">{language === "gu" ? "ધોરણ ૩" : "Std 3"}</option>
-                  <option value="4">{language === "gu" ? "ધોરણ ૪" : "Std 4"}</option>
-                  <option value="5">{language === "gu" ? "ધોરણ ૫" : "Std 5"}</option>
-                  <option value="6">{language === "gu" ? "ધોરણ ૬" : "Std 6"}</option>
-                  <option value="7">{language === "gu" ? "ધોરણ ૭" : "Std 7"}</option>
-                  <option value="8">{language === "gu" ? "ધોરણ ૮" : "Std 8"}</option>
+                  <option value="all">{ac.allStandards}</option>
+                  {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+                    <option key={n} value={String(n)}>
+                      {formatClass(n)}
+                    </option>
+                  ))}
                 </select>
               </div>
 
               {/* Difficulty Filter */}
               <div className="flex items-center gap-1.5">
                 <span className="text-xs font-semibold text-[#7A6862]">
-                  {language === "gu" ? "મુશ્કેલી:" : "Difficulty:"}
+                  {ac.difficultyLabel}
                 </span>
                 <select
                   value={difficultyFilter}
@@ -369,17 +370,17 @@ export default function ActivitiesPage() {
                   onChange={(e) => setDifficultyFilter(e.target.value)}
                   className="rounded-xl border border-[#49352F]/15 bg-[#FAF6E9] px-3 py-1.5 text-xs font-semibold text-[#49352F] outline-hidden cursor-pointer"
                 >
-                  <option value="all">{language === "gu" ? "બધા સ્તરો" : "All Levels"}</option>
-                  <option value="Easy">{language === "gu" ? "સરળ / પ્રારંભિક" : "Beginner / Easy"}</option>
-                  <option value="Medium">{language === "gu" ? "મધ્યમ" : "Intermediate"}</option>
-                  <option value="Hard">{language === "gu" ? "કઠિન" : "Advanced"}</option>
+                  <option value="all">{ac.allLevels}</option>
+                  <option value="Easy">{ac.beginnerEasy}</option>
+                  <option value="Medium">{ac.intermediate}</option>
+                  <option value="Hard">{ac.advanced}</option>
                 </select>
               </div>
 
               {/* Activity Type Filter */}
               <div className="flex items-center gap-1.5">
                 <span className="text-xs font-semibold text-[#7A6862]">
-                  {language === "gu" ? "પ્રકાર:" : "Type:"}
+                  {ac.typeLabel}
                 </span>
                 <select
                   value={typeFilter}
@@ -387,20 +388,20 @@ export default function ActivitiesPage() {
                   onChange={(e) => setTypeFilter(e.target.value)}
                   className="rounded-xl border border-[#49352F]/15 bg-[#FAF6E9] px-3 py-1.5 text-xs font-semibold text-[#49352F] outline-hidden cursor-pointer"
                 >
-                  <option value="all">{language === "gu" ? "બધા પ્રકાર" : "All Types"}</option>
-                  <option value="mcq">MCQ Quiz</option>
-                  <option value="fill_in_the_blank">{language === "gu" ? "ખાલી જગ્યા" : "Fill in Blanks"}</option>
-                  <option value="true_false">{language === "gu" ? "સાચું કે ખોટું" : "True or False"}</option>
-                  <option value="word_problem">{language === "gu" ? "શાબ્દિક દાખલા" : "Word Problem"}</option>
-                  <option value="reading_comprehension">{language === "gu" ? "વાંચન સમજ" : "Comprehension"}</option>
-                  <option value="sorting">{language === "gu" ? "વર્ગીકરણ" : "Sorting"}</option>
+                  <option value="all">{ac.allTypes}</option>
+                  <option value="mcq">{ac.mcqType}</option>
+                  <option value="fill_in_the_blank">{ac.fillBlanksType}</option>
+                  <option value="true_false">{ac.trueFalseType}</option>
+                  <option value="word_problem">{ac.wordProblemType}</option>
+                  <option value="reading_comprehension">{ac.comprehensionType}</option>
+                  <option value="sorting">{ac.sortingType}</option>
                 </select>
               </div>
             </div>
 
             {/* Results Count */}
             <span className="text-xs font-semibold text-[#7A6862]">
-              {filteredActivities.length} {language === "gu" ? "ઉપલબ્ધ મહાવરા બેંકો" : "available practice banks"}
+              {tr("activities.availableBanksSuffix", { count: filteredActivities.length })}
             </span>
           </div>
 
@@ -411,11 +412,7 @@ export default function ActivitiesPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={
-                language === "gu"
-                  ? "પ્રવૃત્તિ, સંકલ્પના કે પ્રકરણ શોધો (દા.ત. ભાગાકાર, fractions, water, phonics)..."
-                  : "Search activities, concepts, or chapters (e.g. division, fractions, water, phonics)..."
-              }
+              placeholder={ac.searchPlaceholder}
               className="w-full pl-9 pr-8 py-2 rounded-xl border border-[#49352F]/15 bg-[#FAF6E9] text-xs font-medium text-[#49352F] placeholder-[#7A6862]/70 outline-hidden focus:border-[#49352F]/40"
             />
             {searchQuery && (
@@ -437,12 +434,10 @@ export default function ActivitiesPage() {
               <Search className="w-6 h-6" />
             </div>
             <h3 className="text-base font-bold text-[#49352F]">
-              {language === "gu" ? "કોઈ મેળ ખાતી પ્રવૃત્તિ મળી નથી" : "No matching activities found"}
+              {ac.noMatchingTitle}
             </h3>
             <p className="text-xs text-[#7A6862] max-w-sm mx-auto">
-              {language === "gu"
-                ? "કૃપા કરીને વિષય, ધોરણ કે મુશ્કેલી સ્તરના ફિલ્ટર્સ બદલીને ફરી તપાસો."
-                : "Try adjusting your subject, standard, or difficulty filters to see more available activities."}
+              {ac.noMatchingDesc}
             </p>
             <button
               type="button"
@@ -456,7 +451,7 @@ export default function ActivitiesPage() {
               }}
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#FAF6E9] hover:bg-[#F2CAB3] text-[#49352F] text-xs font-bold transition-colors cursor-pointer"
             >
-              <span>{language === "gu" ? "બધા ફિલ્ટર્સ સાફ કરો" : "Reset All Filters"}</span>
+              <span>{ac.resetAllFilters}</span>
             </button>
           </div>
         )}
@@ -474,7 +469,7 @@ export default function ActivitiesPage() {
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex flex-wrap items-center gap-1.5">
                       <Badge variant="outline" size="sm">
-                        {formatSubject(act.subjectCode)} • {language === "gu" ? `ધોરણ ${act.grade}` : `Grade ${act.grade}`}
+                        {formatSubject(act.subjectCode)} • {formatClass(act.grade)}
                       </Badge>
                       <Badge
                         variant={
@@ -487,10 +482,10 @@ export default function ActivitiesPage() {
                         size="sm"
                       >
                         {act.difficulty === "Easy"
-                          ? language === "gu" ? "સરળ" : "Easy"
+                          ? ac.easyShort
                           : act.difficulty === "Medium"
-                          ? language === "gu" ? "મધ્યમ" : "Medium"
-                          : language === "gu" ? "કઠિન" : "Hard"}
+                          ? ac.mediumShort
+                          : ac.hardShort}
                       </Badge>
 
                       {prevAttempt && (
@@ -506,7 +501,7 @@ export default function ActivitiesPage() {
                       <button
                         type="button"
                         onClick={(e) => handleQuickAssign(act, e)}
-                        title={language === "gu" ? "વર્ગને સોંપો" : "Assign to Class"}
+                        title={ac.assignToClassTitle}
                         className="p-1.5 rounded-lg text-[#7A6862] hover:text-[#49352F] hover:bg-[#FAF6E9] transition-colors cursor-pointer"
                       >
                         <Share2 className="w-4 h-4" />
@@ -516,7 +511,7 @@ export default function ActivitiesPage() {
                       <button
                         type="button"
                         onClick={(e) => toggleBookmark(act.id, e)}
-                        aria-label="Bookmark activity"
+                        aria-label={ac.bookmarkAria}
                         className="p-1.5 rounded-lg text-[#7A6862] hover:text-[#B26A1B] hover:bg-[#FAF6E9] transition-colors cursor-pointer"
                       >
                         {isBookmarked ? (
@@ -542,13 +537,13 @@ export default function ActivitiesPage() {
                   <div className="mt-1 text-xs text-[#7A6862] space-y-0.5">
                     {act.chapter && (
                       <p>
-                        <strong className="text-[#49352F]">{language === "gu" ? "પ્રકરણ:" : "Chapter:"}</strong>{" "}
-                        {language === "gu" && act.chapterGujarati ? act.chapterGujarati : act.chapter}
+                        <strong className="text-[#49352F]">{ac.chapterLabel}</strong>{" "}
+                        {showGuField && act.chapterGujarati ? act.chapterGujarati : act.chapter}
                       </p>
                     )}
                     <p>
-                      <strong className="text-[#49352F]">{language === "gu" ? "સંકલ્પના:" : "Concept:"}</strong>{" "}
-                      {language === "gu" && act.conceptNameGujarati ? act.conceptNameGujarati : act.conceptName}
+                      <strong className="text-[#49352F]">{ac.conceptLabel}</strong>{" "}
+                      {showGuField && act.conceptNameGujarati ? act.conceptNameGujarati : act.conceptName}
                     </p>
                   </div>
 
@@ -556,9 +551,7 @@ export default function ActivitiesPage() {
                   <div className="mt-3 p-3 rounded-xl bg-[#FAF6E9] border border-[#49352F]/10 text-xs space-y-1.5">
                     <div className="flex items-center justify-between text-[11px] font-semibold text-[#49352F]">
                       <span>
-                        {language === "gu"
-                          ? `નમૂના પ્રશ્નો (${act.questions?.length} પ્રશ્નો):`
-                          : `Sample Questions (${act.questions?.length} items):`}
+                        {tr("activities.sampleQuestionsLabel", { count: act.questions?.length || 0 })}
                       </span>
                       <span className="text-[#7A6862] flex items-center gap-1 font-normal">
                         <Clock className="w-3 h-3" />
@@ -568,7 +561,7 @@ export default function ActivitiesPage() {
 
                     {act.questions?.slice(0, 2).map((q: any, i: number) => (
                       <p key={i} className="text-[#7A6862] text-[11px] line-clamp-1">
-                        • {language === "gu" && q.questionTextGujarati ? q.questionTextGujarati : q.questionText}
+                        • {showGuField && q.questionTextGujarati ? q.questionTextGujarati : q.questionText}
                       </p>
                     ))}
                   </div>
@@ -582,7 +575,7 @@ export default function ActivitiesPage() {
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#49352F]/15 bg-white hover:bg-[#FAF6E9] text-[#49352F] text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
                   >
                     <Printer className="w-3.5 h-3.5 text-[#B26A1B]" />
-                    <span>{language === "gu" ? "કાર્યપત્રિકા પ્રિન્ટ કરો" : "Print Worksheet"}</span>
+                    <span>{ac.printWorksheetBtn}</span>
                   </button>
 
                   <button
@@ -591,7 +584,7 @@ export default function ActivitiesPage() {
                     className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-[#F2CAB3] hover:bg-white text-[#49352F] border border-[#49352F]/16 text-xs font-bold shadow-xs transition-colors cursor-pointer"
                   >
                     <Play className="w-3.5 h-3.5 fill-current" />
-                    <span>{language === "gu" ? "મહાવરો શરૂ કરો" : "Launch Practice"}</span>
+                    <span>{ac.launchPracticeBtn}</span>
                   </button>
                 </div>
               </Card>
@@ -605,7 +598,7 @@ export default function ActivitiesPage() {
         <ActivityPlayerModal
           activity={activeActivity}
           studentId={selectedStudent.id}
-          studentName={`${selectedStudent.displayName} (Std ${selectedStudent.grade}-${selectedStudent.section})`}
+          studentName={`${selectedStudent.displayName} (${formatClass(selectedStudent.grade, selectedStudent.section)})`}
           isOpen={Boolean(activeActivity)}
           onClose={() => setActiveActivity(null)}
           onLaunchNext={handleLaunchNext}
@@ -621,7 +614,7 @@ export default function ActivitiesPage() {
           <div className="w-full max-w-md rounded-2xl bg-white border border-[#49352F]/15 p-6 shadow-xl space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-base font-bold text-[#49352F]">
-                {language === "gu" ? "પ્રવૃત્તિ સોંપો (Teacher Assignment)" : "Assign Practice Activity"}
+                {ac.assignModalTitle}
               </h3>
               <button
                 type="button"
@@ -635,7 +628,7 @@ export default function ActivitiesPage() {
             <div className="p-3 rounded-xl bg-[#FAF6E9] border border-[#49352F]/10 text-xs space-y-1">
               <span className="font-bold text-[#49352F] block">{assigningActivity.title}</span>
               <span className="text-[#7A6862]">
-                {formatSubject(assigningActivity.subjectCode)} • Std {assigningActivity.grade} • {assigningActivity.difficulty}
+                {formatSubject(assigningActivity.subjectCode)} • {formatClass(assigningActivity.grade)} • {assigningActivity.difficulty}
               </span>
             </div>
 
@@ -647,18 +640,18 @@ export default function ActivitiesPage() {
               <div className="space-y-3 text-xs">
                 <div>
                   <label className="font-semibold text-[#7A6862] block mb-1">
-                    {language === "gu" ? "લક્ષિત વર્ગ / વિદ્યાર્થી:" : "Target Classroom:"}
+                    {ac.targetClassroomLabel}
                   </label>
                   <select className="w-full p-2 rounded-xl border border-[#49352F]/15 bg-[#FAF6E9] font-semibold text-[#49352F]">
-                    <option value="cls-4a">Class 4-A (Whole Roster - 6 Students)</option>
-                    <option value="cls-3a">Class 3-A (Whole Roster - 5 Students)</option>
-                    <option value="cls-5a">Class 5-A (Whole Roster - 4 Students)</option>
+                    <option value="cls-4a">{ac.classRoster4a}</option>
+                    <option value="cls-3a">{ac.classRoster3a}</option>
+                    <option value="cls-5a">{ac.classRoster5a}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="font-semibold text-[#7A6862] block mb-1">
-                    {language === "gu" ? "પૂર્ણ કરવાની સમયસીમા:" : "Completion Deadline:"}
+                    {ac.deadlineLabel}
                   </label>
                   <input
                     type="date"
@@ -673,14 +666,14 @@ export default function ActivitiesPage() {
                     onClick={() => setAssigningActivity(null)}
                     className="px-4 py-2 text-xs font-semibold text-[#7A6862] hover:bg-[#FAF6E9] rounded-xl"
                   >
-                    {language === "gu" ? "રદ કરો" : "Cancel"}
+                    {ac.cancelBtn}
                   </button>
                   <button
                     type="button"
                     onClick={confirmAssignment}
                     className="px-5 py-2 text-xs font-bold bg-[#F2CAB3] hover:bg-white text-[#49352F] border border-[#49352F]/16 rounded-xl shadow-xs cursor-pointer"
                   >
-                    {language === "gu" ? "સોંપણી મંજૂર કરો" : "Confirm Assignment"}
+                    {ac.confirmAssignmentBtn}
                   </button>
                 </div>
               </div>
@@ -695,10 +688,10 @@ export default function ActivitiesPage() {
           {/* School Header */}
           <div className="border-b-2 border-slate-900 pb-4 mb-6 text-center">
             <h1 className="text-2xl font-bold uppercase tracking-wide">
-              Model Primary School, Gandhinagar
+              {ac.printSchoolTitle}
             </h1>
             <p className="text-xs text-slate-600 mt-0.5">
-              Gujarat Primary Education Department • Remedial Practice Worksheet
+              {ac.printSubHeader}
             </p>
             <h2 className="text-lg font-bold mt-2 text-slate-800">
               {printingActivity.title}
@@ -710,16 +703,16 @@ export default function ActivitiesPage() {
             )}
 
             <div className="flex justify-between items-center text-xs mt-4 pt-2 border-t border-slate-300 font-medium">
-              <span>Student Name: ____________________________________</span>
-              <span>Class: Std {printingActivity.grade} _____</span>
-              <span>Roll No: ______</span>
-              <span>Date: ____________</span>
+              <span>{ac.printStudentBlank}</span>
+              <span>{tr("activities.printClassBlank", { grade: printingActivity.grade })}</span>
+              <span>{ac.printRollBlank}</span>
+              <span>{ac.printDateBlank}</span>
             </div>
           </div>
 
           {/* Instructions */}
           <div className="mb-6 p-3 border border-slate-300 rounded text-xs text-slate-700">
-            <strong>Instructions:</strong> Read each question carefully. Write your answer in the space provided or tick the correct option. Show all working steps where required.
+            <strong>{ac.printInstructionsLabel}</strong> {ac.printInstructionsBody}
           </div>
 
           {/* Questions */}
@@ -730,7 +723,7 @@ export default function ActivitiesPage() {
                   <span>
                     Q{i + 1}. {q.questionText}
                   </span>
-                  <span className="text-xs text-slate-500 font-normal">[{q.marks || 1} mark]</span>
+                  <span className="text-xs text-slate-500 font-normal">{tr("activities.printMarkUnit", { marks: q.marks || 1 })}</span>
                 </div>
 
                 {q.questionTextGujarati && (
@@ -751,7 +744,7 @@ export default function ActivitiesPage() {
                   </div>
                 ) : (
                   <div className="h-14 border-b border-dashed border-slate-300 pl-4 text-xs text-slate-400 italic flex items-end pb-1">
-                    Answer: __________________________________________________
+                    {ac.printAnswerBlank}
                   </div>
                 )}
               </div>
@@ -760,20 +753,20 @@ export default function ActivitiesPage() {
 
           {/* Teacher Signature & Marks */}
           <div className="mt-8 pt-4 border-t-2 border-slate-400 flex justify-between text-xs text-slate-600">
-            <span>Teacher Evaluation & Signature: __________________</span>
-            <span>Marks Obtained: _____ / {printingActivity.questions?.length}</span>
-            <span>Teacher Remarks: __________________</span>
+            <span>{ac.printTeacherSigBlank}</span>
+            <span>{tr("activities.printMarksObtainedBlank", { total: printingActivity.questions?.length || 0 })}</span>
+            <span>{ac.printRemarksBlank}</span>
           </div>
 
           {/* Teacher Answer Key Page Break */}
           <div className="mt-12 pt-6 border-t-2 border-dashed border-slate-400 page-break-before-always">
             <div className="text-center font-bold text-sm mb-4">
-              [TEACHER REFERENCE ANSWER KEY — DO NOT DISTRIBUTE TO STUDENTS]
+              {ac.printAnswerKeyBanner}
             </div>
             <div className="grid grid-cols-2 gap-3 text-xs">
               {printingActivity.questions?.map((q: any, i: number) => (
                 <div key={i} className="p-2 border border-slate-200 rounded bg-slate-50">
-                  <span className="font-bold">Q{i + 1} Answer:</span> {String(q.correctAnswer)}
+                  <span className="font-bold">{tr("activities.printQAnswerPrefix", { num: i + 1 })}</span> {String(q.correctAnswer)}
                   <p className="text-[11px] text-slate-500 mt-0.5">{q.explanation}</p>
                 </div>
               ))}

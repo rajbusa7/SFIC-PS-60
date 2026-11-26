@@ -44,12 +44,16 @@ import {
   Square,
   Home,
   FileText,
+  RotateCcw,
+  Wrench,
 } from "lucide-react";
 
 function ParentDashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { language, formatClass, formatPriority, formatSubject, formatStatus } = useLanguage();
+  const { t, tr, language, formatClass, formatPriority, formatSubject, formatStatus, formatDate } = useLanguage();
+  const pp = t.parentPortal;
+  const showGuField = language === "gu";
 
   // Navigation tab state (can also be synced with ?tab=)
   const initialTab = searchParams.get("tab") || "overview";
@@ -108,7 +112,7 @@ function ParentDashboardContent() {
         setSelectedStudentId((prev) => prev || students[0].id);
       }
     } catch (err: any) {
-      setError(err.message || "Failed to load parent information.");
+      setError(err.message || pp.loadInfoError);
     } finally {
       setLoading(false);
     }
@@ -212,11 +216,7 @@ function ParentDashboardContent() {
         throw new Error(data.error || "Failed to redeem code.");
       }
 
-      setLinkSuccess(
-        language === "gu"
-          ? `${data.student?.displayName || "બાળક"} સફળતાપૂર્વક જોડાયું!`
-          : `Successfully linked ${data.student?.displayName || "student"}!`
-      );
+      setLinkSuccess(tr("parentPortal.linkSuccessMsg", { name: data.student?.displayName || pp.studentFallback }));
       setLinkingCodeInput("");
 
       // Refresh list
@@ -230,7 +230,7 @@ function ParentDashboardContent() {
         setLinkSuccess(null);
       }, 1500);
     } catch (err: any) {
-      setLinkError(err.message || "Failed to redeem linking code.");
+      setLinkError(err.message || pp.redeemCodeFailError);
     } finally {
       setLinkLoading(false);
     }
@@ -291,7 +291,7 @@ function ParentDashboardContent() {
             }),
           };
         });
-        alert(data.error || "Failed to update activity completion.");
+        alert(data.error || pp.activityUpdateFailAlert);
       } else {
         setLastUpdatedTime(new Date());
       }
@@ -328,18 +328,14 @@ function ParentDashboardContent() {
         throw new Error(data.error || "Failed to send message.");
       }
 
-      setMsgSuccess(
-        language === "gu"
-          ? "તમારો સંદેશ વર્ગ શિક્ષકને મોકલી દેવામાં આવ્યો છે."
-          : "Your message has been sent to the class teacher."
-      );
+      setMsgSuccess(pp.msgSentSuccess);
       setMsgSubject("");
       setMsgBody("");
       fetchMessages();
 
       setTimeout(() => setMsgSuccess(null), 4000);
     } catch (err: any) {
-      setMsgError(err.message || "Failed to send inquiry.");
+      setMsgError(err.message || pp.sendMsgFailError);
     } finally {
       setMsgSending(false);
     }
@@ -378,7 +374,7 @@ function ParentDashboardContent() {
             <div className="h-5 w-px bg-[#49352F]/20 hidden sm:block" />
             <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#B26A1B]/10 border border-[#B26A1B]/25 text-[#B26A1B] text-xs font-bold">
               <Users className="w-3.5 h-3.5" />
-              <span>{language === "gu" ? "વાલી સેતુ" : "Parent Bridge"}</span>
+              <span>{pp.parentBridgeBadge}</span>
             </div>
           </div>
 
@@ -390,7 +386,7 @@ function ParentDashboardContent() {
               className="px-3 py-1.5 rounded-xl border border-[#49352F]/15 hover:bg-rose-50 text-rose-700 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{language === "gu" ? "બહાર નીકળો" : "Sign Out"}</span>
+              <span className="hidden sm:inline">{pp.signOutBtn}</span>
             </button>
           </div>
         </div>
@@ -402,17 +398,15 @@ function ParentDashboardContent() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-xl sm:text-2xl font-black text-[#49352F] tracking-tight">
-                <span>{language === "gu" ? "નમસ્તે, " : "Welcome, "}</span>
-                <span className="text-[#B26A1B]">{parentData?.user?.name || "Respected Parent"}</span>
+                <span>{pp.welcomePrefix}</span>
+                <span className="text-[#B26A1B]">{parentData?.user?.name || pp.respectedParentFallback}</span>
               </h1>
               <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#B26A1B]/15 text-[#B26A1B]">
                 <ShieldCheck className="w-3.5 h-3.5" />
               </span>
             </div>
             <p className="text-xs text-[#7A6862] mt-0.5">
-              {language === "gu"
-                ? "વાલી સેતુ પોર્ટલ • તમારા બાળકની વાસ્તવિક શૈક્ષણિક પ્રગતિ અને ઘરે સહાય"
-                : "Understand your child's learning progress and discover how you can help at home."}
+              {pp.dashboardSubtitle}
             </p>
           </div>
 
@@ -420,11 +414,11 @@ function ParentDashboardContent() {
           <div className="flex flex-wrap items-center gap-2.5">
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-800 border border-emerald-500/20">
               <span className={`w-2 h-2 rounded-full bg-emerald-500 ${isSyncing ? "animate-ping" : "animate-pulse"}`} />
-              <span>{language === "gu" ? "લાઇવ સિંક" : "Live Sync"}</span>
+              <span>{pp.liveSyncLabel}</span>
             </div>
             {lastUpdatedTime && (
               <span className="text-[11px] text-[#7A6862] hidden sm:inline">
-                {language === "gu" ? "છેલ્લું અપડેટ: " : "Updated: "}
+                {pp.updatedLabel}
                 {lastUpdatedTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
               </span>
             )}
@@ -446,7 +440,7 @@ function ParentDashboardContent() {
                     <GraduationCap className={`w-3.5 h-3.5 ${isSelected ? "text-[#F2CAB3]" : "text-[#B26A1B]"}`} />
                     <span>{child.displayName}</span>
                     <span className="text-[10px] opacity-75">
-                      ({formatClass(child.grade, child.section) || "Student"})
+                      ({formatClass(child.grade, child.section) || pp.studentFallback})
                     </span>
                   </button>
                 );
@@ -462,7 +456,7 @@ function ParentDashboardContent() {
                 className="px-3 py-1.5 rounded-xl text-xs font-bold border border-dashed border-[#B26A1B]/50 hover:border-[#B26A1B] bg-[#FAF6E9] hover:bg-[#F2CAB3]/30 text-[#B26A1B] transition-all flex items-center gap-1.5 cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>{language === "gu" ? "+ નવું બાળક જોડો" : "+ Link Child"}</span>
+                <span>{pp.linkChildPlusBtn}</span>
               </button>
             </div>
           </div>
@@ -473,13 +467,13 @@ function ParentDashboardContent() {
       <nav className="bg-white/40 border-b border-[#49352F]/10 px-4 sm:px-8">
         <div className="max-w-7xl mx-auto flex overflow-x-auto gap-2 py-2.5 no-scrollbar">
           {[
-            { id: "overview", labelEn: "Overview", labelGu: "વિહંગાવલોકન", icon: BookOpen },
-            { id: "progress", labelEn: "Academic Progress", labelGu: "શૈક્ષણિક પ્રગતિ", icon: TrendingUp },
-            { id: "learning-gaps", labelEn: "Learning Gaps & Remedial", labelGu: "શિક્ષણ ત્રુટિ અને ઉપચાર", icon: BrainCircuit },
-            { id: "home-activities", labelEn: "Help at Home", labelGu: "ઘરે બાળકને મદદ", icon: Home, count: homeActivities.length },
-            { id: "children", labelEn: "Child Profiles", labelGu: "બાળકની પ્રોફાઇલ", icon: Users },
-            { id: "communication", labelEn: "Teacher Notes", labelGu: "શિક્ષક સાથે વાતચીત", icon: MessageSquare },
-            { id: "notices", labelEn: "School Notices", labelGu: "શાળા સૂચનાઓ", icon: Bell },
+            { id: "overview", label: pp.tabOverview, icon: BookOpen },
+            { id: "progress", label: pp.tabProgress, icon: TrendingUp },
+            { id: "learning-gaps", label: pp.tabLearningGaps, icon: BrainCircuit },
+            { id: "home-activities", label: pp.tabHomeActivities, icon: Home, count: homeActivities.length },
+            { id: "children", label: pp.tabChildren, icon: Users },
+            { id: "communication", label: pp.tabCommunication, icon: MessageSquare },
+            { id: "notices", label: pp.tabNotices, icon: Bell },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -494,7 +488,7 @@ function ParentDashboardContent() {
                 }`}
               >
                 <Icon className={`w-3.5 h-3.5 ${isActive ? "text-[#49352F]" : "text-[#7A6862]"}`} />
-                <span>{language === "gu" ? tab.labelGu : tab.labelEn}</span>
+                <span>{tab.label}</span>
                 {tab.count !== undefined && tab.count > 0 && (
                   <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#B26A1B]/15 text-[#B26A1B]">
                     {tab.count}
@@ -512,7 +506,7 @@ function ParentDashboardContent() {
           <div className="p-16 text-center space-y-3">
             <Sparkles className="w-8 h-8 animate-spin text-[#B26A1B] mx-auto" />
             <p className="text-sm font-bold text-[#49352F]">
-              {language === "gu" ? "વાલી ડેશબોર્ડ લોડ થઈ રહ્યું છે..." : "Loading Parent Portal..."}
+              {pp.loadingPortal}
             </p>
           </div>
         ) : linkedStudents.length === 0 ? (
@@ -522,12 +516,10 @@ function ParentDashboardContent() {
               <KeyRound className="w-8 h-8" />
             </div>
             <h2 className="text-xl font-black text-[#49352F]">
-              {language === "gu" ? "તમારા બાળકને જોડો" : "Link Your Child's Profile"}
+              {pp.linkProfileHeading}
             </h2>
             <p className="text-xs text-[#7A6862] leading-relaxed">
-              {language === "gu"
-                ? "તમારા બાળકના વર્ગ શિક્ષક પાસેથી ૬-અક્ષરનો સુરક્ષિત વેરિફિકેશન કોડ (દા.ત. PAR-4892) મેળવો અને અહીં દાખલ કરો."
-                : "Enter the secure verification code issued by your child's primary school teacher (e.g. PAR-4892) to view authorized records."}
+              {pp.linkProfileDesc}
             </p>
             <form onSubmit={handleRedeemCode} className="space-y-3 pt-2">
               <input
@@ -546,7 +538,7 @@ function ParentDashboardContent() {
                   disabled={linkLoading}
                   className="rounded-xl px-6 py-2.5 text-xs font-bold bg-[#B26A1B] text-white hover:bg-[#8F4E10]"
                 >
-                  {linkLoading ? "Verifying..." : language === "gu" ? "કોડ ચકાસો અને જોડો" : "Verify & Connect Child"}
+                  {linkLoading ? pp.verifyingBtn : pp.verifyConnectBtn}
                 </Button>
               </div>
             </form>
@@ -568,7 +560,7 @@ function ParentDashboardContent() {
                           <h2 className="text-xl font-black text-[#49352F]">{activeStudent?.displayName}</h2>
                           {results.length > 0 && (
                             <Badge variant={averageScore >= 80 ? "mastered" : averageScore >= 60 ? "developing" : "needsSupport"} size="sm">
-                              {averageScore >= 80 ? "Mastery (≥80%)" : averageScore >= 60 ? "Developing (60-79%)" : "Support Needed (<60%)"}
+                              {averageScore >= 80 ? pp.masteryThresholdBadge : averageScore >= 60 ? pp.developingThresholdBadge : pp.supportNeededThresholdBadge}
                             </Badge>
                           )}
                         </div>
@@ -579,11 +571,11 @@ function ParentDashboardContent() {
                               <span>&bull;</span>
                             </>
                           )}
-                          <span>Code: {activeStudent?.studentCode}</span>
+                          <span>{pp.studentCodePrefix} {activeStudent?.studentCode}</span>
                           <span>&bull;</span>
                           <span className="flex items-center gap-1">
                             <Building className="w-3 h-3 text-[#7A6862]" />
-                            {studentDetail?.school?.name || "Model Primary School"}
+                            {studentDetail?.school?.name || pp.defaultSchoolName}
                           </span>
                         </p>
                       </div>
@@ -598,7 +590,7 @@ function ParentDashboardContent() {
                         className="rounded-xl text-xs border-[#49352F]/20 text-[#49352F]"
                       >
                         <RefreshCw className={`w-3.5 h-3.5 mr-1 ${detailLoading ? "animate-spin" : ""}`} />
-                        <span>{language === "gu" ? "રીફ્રેશ" : "Refresh"}</span>
+                        <span>{pp.refreshBtn}</span>
                       </Button>
                     </div>
                   </div>
@@ -607,38 +599,38 @@ function ParentDashboardContent() {
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-3 border-t border-[#49352F]/10">
                     <div className="p-3.5 rounded-2xl bg-white border border-[#49352F]/10 text-center shadow-xs">
                       <span className="text-[11px] font-semibold text-[#7A6862] block">
-                        {language === "gu" ? "સરેરાશ ગુણ" : "Average Score"}
+                        {pp.averageScoreLabel}
                       </span>
                       <span className="text-2xl font-black text-[#B26A1B]">{averageScore}%</span>
-                      <span className="text-[10px] text-[#7A6862] block mt-0.5">{results.length} Assessments</span>
+                      <span className="text-[10px] text-[#7A6862] block mt-0.5">{tr("parentPortal.assessmentsCount", { count: results.length })}</span>
                     </div>
 
                     <div className="p-3.5 rounded-2xl bg-white border border-[#49352F]/10 text-center shadow-xs">
                       <span className="text-[11px] font-semibold text-[#7A6862] block">
-                        {language === "gu" ? "સક્રિય શિક્ષણ ત્રુટિ" : "Active Learning Gaps"}
+                        {pp.activeLearningGapsLabel}
                       </span>
                       <span className={`text-2xl font-black ${activeGapsCount > 0 ? "text-[#C54738]" : "text-[#2E7D5E]"}`}>
                         {activeGapsCount}
                       </span>
-                      <span className="text-[10px] text-[#7A6862] block mt-0.5">&lt;60% threshold</span>
+                      <span className="text-[10px] text-[#7A6862] block mt-0.5">{pp.thresholdHint}</span>
                     </div>
 
                     <div className="p-3.5 rounded-2xl bg-white border border-[#49352F]/10 text-center shadow-xs">
                       <span className="text-[11px] font-semibold text-[#7A6862] block">
-                        {language === "gu" ? "ઘર પ્રવૃત્તિ પૂર્ણ" : "Home Activities Done"}
+                        {pp.homeActivitiesDoneLabel}
                       </span>
                       <span className="text-2xl font-black text-[#2E7D5E]">
                         {completedHomeActivitiesCount} / {homeActivities.length}
                       </span>
-                      <span className="text-[10px] text-[#7A6862] block mt-0.5">Household Materials</span>
+                      <span className="text-[10px] text-[#7A6862] block mt-0.5">{pp.householdMaterialsHint}</span>
                     </div>
 
                     <div className="p-3.5 rounded-2xl bg-white border border-[#49352F]/10 text-center shadow-xs">
                       <span className="text-[11px] font-semibold text-[#7A6862] block">
-                        {language === "gu" ? "શાળા સૂચનાઓ" : "School Notices"}
+                        {pp.schoolNoticesLabel}
                       </span>
                       <span className="text-2xl font-black text-[#49352F]">{notices.length}</span>
-                      <span className="text-[10px] text-[#7A6862] block mt-0.5">Targeted to Class {activeStudent?.grade}</span>
+                      <span className="text-[10px] text-[#7A6862] block mt-0.5">{tr("parentPortal.targetedToClass", { classLabel: formatClass(activeStudent?.grade) || `${activeStudent?.grade || ""}` })}</span>
                     </div>
                   </div>
                 </div>
@@ -650,19 +642,17 @@ function ParentDashboardContent() {
                       <div>
                         <h3 className="font-heading text-base font-extrabold text-[#49352F] flex items-center gap-2">
                           <Home className="w-4 h-4 text-[#B26A1B]" />
-                          <span>{language === "gu" ? "ઘરે બાળકને કેવી રીતે મદદ કરવી? (આજની પ્રવૃત્તિઓ)" : "How to Help at Home (Practical Activities)"}</span>
+                          <span>{pp.homeHelpHeading}</span>
                         </h3>
                         <p className="text-xs text-[#7A6862]">
-                          {language === "gu"
-                            ? "શિક્ષણ ત્રુટિઓને ધ્યાનમાં રાખીને ઘરમાં રહેલી ચીજવસ્તુઓથી બાળકને સરળતાથી શીખવો"
-                            : "Concrete activities using household materials tailored to your child's recorded learning gaps"}
+                          {pp.homeHelpSubtitle}
                         </p>
                       </div>
                       <button
                         onClick={() => setActiveTab("home-activities")}
                         className="text-xs font-bold text-[#B26A1B] hover:underline flex items-center gap-1"
                       >
-                        <span>{language === "gu" ? "બધી જુઓ →" : "View All Activities →"}</span>
+                        <span>{pp.viewAllActivitiesBtn}</span>
                       </button>
                     </div>
 
@@ -682,23 +672,23 @@ function ParentDashboardContent() {
                                 {act.conceptName}
                               </span>
                               <h4 className="text-sm font-bold text-[#49352F]">
-                                {language === "gu" ? act.titleGujarati || act.title : act.title}
+                                {showGuField ? act.titleGujarati || act.title : act.title}
                               </h4>
                             </div>
                             <span className="text-[11px] font-semibold text-[#7A6862] flex items-center gap-1 shrink-0">
                               <Clock className="w-3 h-3" />
-                              {act.estimatedMinutes} {language === "gu" ? "મિનિટ" : "mins"}
+                              {act.estimatedMinutes} {pp.minsUnit}
                             </span>
                           </div>
 
                           <div className="mt-2.5 p-2.5 rounded-xl bg-white border border-[#49352F]/10 text-xs text-[#49352F]">
                             <span className="font-bold text-[#B26A1B] block text-[11px] mb-1">
-                              {language === "gu" ? "જરૂરી વસ્તુઓ:" : "Household Materials Needed:"}
+                              {pp.materialsNeededLabel}
                             </span>
                             <span className="text-[#7A6862]">
-                              {Array.isArray(language === "gu" ? act.materialsGu : act.materialsEn)
-                                ? (language === "gu" ? act.materialsGu : act.materialsEn).join(", ")
-                                : act.materialsEn || "Household counters"}
+                              {Array.isArray(showGuField ? act.materialsGu : act.materialsEn)
+                                ? (showGuField ? act.materialsGu : act.materialsEn).join(", ")
+                                : act.materialsEn || pp.householdCountersFallback}
                             </span>
                           </div>
 
@@ -707,10 +697,10 @@ function ParentDashboardContent() {
                               {act.completed ? (
                                 <span className="text-emerald-700 font-bold flex items-center gap-1">
                                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                                  {language === "gu" ? "પૂર્ણ થઈ ગયું છે" : "Completed"}
+                                  {pp.completedLabel}
                                 </span>
                               ) : (
-                                language === "gu" ? "બાકી છે" : "Pending practice"
+                                pp.pendingPracticeLabel
                               )}
                             </span>
                             <Button
@@ -723,12 +713,12 @@ function ParentDashboardContent() {
                               {act.completed ? (
                                 <span className="flex items-center gap-1">
                                   <Check className="w-3.5 h-3.5" />
-                                  {language === "gu" ? "પૂર્ણ ચિહ્નિત" : "Done"}
+                                  {pp.doneBtn}
                                 </span>
                               ) : (
                                 <span className="flex items-center gap-1">
                                   <Square className="w-3.5 h-3.5" />
-                                  {language === "gu" ? "પ્રવૃત્તિ પૂર્ણ થઈ" : "Mark Done"}
+                                  {pp.markDoneBtn}
                                 </span>
                               )}
                             </Button>
@@ -746,18 +736,18 @@ function ParentDashboardContent() {
                     <div className="flex items-center justify-between">
                       <h3 className="font-heading text-base font-extrabold text-[#49352F] flex items-center gap-2">
                         <Award className="w-4 h-4 text-[#B26A1B]" />
-                        <span>{language === "gu" ? "તાજેતરના મૂલ્યાંકન પરિણામો" : "Recent Assessments"}</span>
+                        <span>{pp.recentAssessmentsHeading}</span>
                       </h3>
                       <button
                         onClick={() => setActiveTab("progress")}
                         className="text-xs font-bold text-[#B26A1B] hover:underline flex items-center gap-1"
                       >
-                        <span>{language === "gu" ? "બધા જુઓ →" : "View All →"}</span>
+                        <span>{pp.viewAllBtn}</span>
                       </button>
                     </div>
 
                     {results.length === 0 ? (
-                      <p className="text-xs text-[#7A6862] p-4 text-center">No assessments recorded yet for this student.</p>
+                      <p className="text-xs text-[#7A6862] p-4 text-center">{pp.noAssessmentsMsg}</p>
                     ) : (
                       <div className="space-y-3">
                         {results.slice(0, 4).map((r: any) => (
@@ -767,10 +757,10 @@ function ParentDashboardContent() {
                           >
                             <div className="space-y-0.5">
                               <span className="text-xs font-bold text-[#49352F] block">
-                                {r.assessmentName || "Formative Evaluation"}
+                                {r.assessmentName || pp.formativeEvaluationFallback}
                               </span>
                               <span className="text-[11px] text-[#7A6862]">
-                                {r.recordedAt ? new Date(r.recordedAt).toLocaleDateString() : "Recent"} &bull; Marks: {r.marksObtained}/{r.maximumMarks}
+                                {r.recordedAt ? formatDate(r.recordedAt) : pp.recentLabel} &bull; {pp.marksLabel} {r.marksObtained}/{r.maximumMarks}
                               </span>
                             </div>
                             <div className="text-right">
@@ -782,7 +772,7 @@ function ParentDashboardContent() {
                                 {r.percentage}%
                               </span>
                               <span className="block text-[10px] text-[#7A6862]">
-                                {r.percentage >= 80 ? "Mastery" : r.percentage >= 60 ? "Developing" : "Needs Support"}
+                                {r.percentage >= 80 ? formatStatus("Mastered") : r.percentage >= 60 ? formatStatus("Developing") : formatStatus("Needs Support")}
                               </span>
                             </div>
                           </div>
@@ -796,13 +786,13 @@ function ParentDashboardContent() {
                     <div className="flex items-center justify-between">
                       <h3 className="font-heading text-base font-extrabold text-[#49352F] flex items-center gap-2">
                         <AlertTriangle className="w-4 h-4 text-[#C54738]" />
-                        <span>{language === "gu" ? "સક્રિય શિક્ષણ ત્રુટિઓ" : "Active Learning Gaps"}</span>
+                        <span>{pp.activeGapsHeading}</span>
                       </h3>
                       <button
                         onClick={() => setActiveTab("learning-gaps")}
                         className="text-xs font-bold text-[#B26A1B] hover:underline flex items-center gap-1"
                       >
-                        <span>{language === "gu" ? "ઉપચાર યોજના જુઓ →" : "View Remedial Plan →"}</span>
+                        <span>{pp.viewRemedialPlanBtn}</span>
                       </button>
                     </div>
 
@@ -810,7 +800,7 @@ function ParentDashboardContent() {
                       <div className="p-6 text-center space-y-2">
                         <CheckCircle2 className="w-8 h-8 text-[#2E7D5E] mx-auto" />
                         <p className="text-xs font-bold text-[#2E7D5E]">
-                          {language === "gu" ? "ઉત્કૃષ્ટ! કોઈ સક્રિય શિક્ષણ ખામી નથી." : "Excellent! No active learning gaps flagged."}
+                          {pp.noActiveGapsMsg}
                         </p>
                       </div>
                     ) : (
@@ -822,7 +812,7 @@ function ParentDashboardContent() {
                           >
                             <div className="flex items-center justify-between">
                               <span className="text-xs font-bold text-[#49352F]">
-                                {gap.conceptName || "Foundational Concept"}
+                                {gap.conceptName || pp.foundationalConceptFallback}
                               </span>
                               <Badge
                                 variant={
@@ -838,12 +828,12 @@ function ParentDashboardContent() {
                               </Badge>
                             </div>
                             <p className="text-xs text-[#7A6862] leading-relaxed">
-                              {gap.reason || "Student scored below developing threshold on this concept."}
+                              {gap.reason || pp.gapBelowThresholdReason}
                             </p>
                             <div className="pt-1 flex items-center justify-between text-[11px] text-[#7A6862]">
-                              <span>Latest Score: {gap.latestPercentage || gap.scoreRecorded || 35}%</span>
+                              <span>{tr("parentPortal.latestScoreLabel", { score: gap.latestPercentage || gap.scoreRecorded || 35 })}</span>
                               <span className="font-semibold text-[#B26A1B]">
-                                {gap.remedialPlanId ? "Active 5-Step Plan In Progress" : "Plan Recommended"}
+                                {gap.remedialPlanId ? pp.activePlanInProgress : pp.planRecommended}
                               </span>
                             </div>
                           </div>
@@ -857,17 +847,13 @@ function ParentDashboardContent() {
                 <div className="p-5 rounded-3xl bg-gradient-to-r from-amber-500/10 via-[#FAF6E9] to-[#F2CAB3]/30 border border-[#B26A1B]/30 flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div className="space-y-1 text-center sm:text-left">
                     <span className="text-xs font-bold text-[#B26A1B] uppercase tracking-wider block">
-                      {language === "gu" ? "શિક્ષક પરામર્શ સમય" : "Teacher Consultation Hours"}
+                      {pp.consultationHoursHeading}
                     </span>
                     <h4 className="text-sm font-black text-[#49352F]">
-                      {language === "gu"
-                        ? "દર સોમવારથી શુક્રવાર બપોરે ૩:૧૫ થી ૪:૦૦ કલાક સુધી"
-                        : "Monday - Friday: 3:15 PM – 4:00 PM (After Class Dismissal)"}
+                      {pp.consultationHoursSchedule}
                     </h4>
                     <p className="text-xs text-[#7A6862]">
-                      {language === "gu"
-                        ? "તમારા બાળકના વર્ગ શિક્ષક સાથે સીધી વાતચીત કરવા માટે સંદેશ મોકલો."
-                        : "Send an inquiry or request consultation regarding your child's progress."}
+                      {pp.consultationHoursDesc}
                     </p>
                   </div>
                   <button
@@ -875,7 +861,7 @@ function ParentDashboardContent() {
                     className="px-4 py-2.5 rounded-xl bg-[#261B16] text-[#FAF6E9] text-xs font-bold flex items-center gap-2 hover:bg-[#49352F] transition-all shrink-0 cursor-pointer shadow-xs"
                   >
                     <MessageSquare className="w-3.5 h-3.5 text-[#F2CAB3]" />
-                    <span>{language === "gu" ? "શિક્ષકને સંદેશ મોકલો" : "Message Teacher"}</span>
+                    <span>{pp.messageTeacherBtn}</span>
                   </button>
                 </div>
               </div>
@@ -887,12 +873,10 @@ function ParentDashboardContent() {
                 <div className="p-5 rounded-3xl bg-white border border-[#49352F]/15 shadow-sm space-y-4">
                   <div>
                     <h2 className="font-heading text-lg font-black text-[#49352F]">
-                      {language === "gu" ? "વિષયવાર ગુણ અને પ્રદર્શન" : "Subject-Wise Academic Performance"}
+                      {pp.subjectPerformanceHeading}
                     </h2>
                     <p className="text-xs text-[#7A6862]">
-                      {language === "gu"
-                        ? "વાસ્તવિક વર્ગખંડ મૂલ્યાંકન અને દૈનિક નિરીક્ષણના આધારે પ્રમાણિત સ્કોર"
-                        : "Real assessment data and formative evaluations recorded by class teachers"}
+                      {pp.subjectPerformanceSubtitle}
                     </p>
                   </div>
 
@@ -902,8 +886,8 @@ function ParentDashboardContent() {
                       {studentDetail.subjectBreakdown.map((sub: any, idx: number) => (
                         <div key={idx} className="p-4 rounded-2xl bg-[#FAF6E9]/70 border border-[#49352F]/10 space-y-2">
                           <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-[#49352F]">{sub.subject}</span>
-                            <span className="text-[10px] text-[#7A6862]">{sub.assessmentsCount} Tests</span>
+                            <span className="text-xs font-bold text-[#49352F]">{formatSubject(sub.subject)}</span>
+                            <span className="text-[10px] text-[#7A6862]">{tr("parentPortal.testsCount", { count: sub.assessmentsCount })}</span>
                           </div>
                           <div className="text-2xl font-black text-[#B26A1B]">{sub.averagePercentage}%</div>
                           <div className="w-full h-2 rounded-full bg-white border border-[#49352F]/15 overflow-hidden">
@@ -919,40 +903,40 @@ function ParentDashboardContent() {
                     </div>
                   ) : (
                     <div className="p-6 text-center text-xs text-[#7A6862] bg-[#FAF6E9]/40 rounded-2xl border border-[#49352F]/10">
-                      No assessment results recorded yet to calculate subject averages.
+                      {pp.noSubjectAveragesMsg}
                     </div>
                   )}
 
                   {/* Complete Assessment History Table */}
                   <div className="pt-4">
                     <h3 className="text-sm font-extrabold text-[#49352F] mb-3">
-                      {language === "gu" ? "સંપૂર્ણ મૂલ્યાંકન ઇતિહાસ" : "Complete Assessment Records"}
+                      {pp.completeRecordsHeading}
                     </h3>
                     <div className="overflow-x-auto rounded-2xl border border-[#49352F]/15 bg-white">
                       <table className="w-full text-left text-xs">
                         <thead className="bg-[#FAF6E9] border-b border-[#49352F]/15 text-[#49352F] font-bold">
                           <tr>
-                            <th className="py-3 px-4">Assessment Name</th>
-                            <th className="py-3 px-4">Concept / Topic</th>
-                            <th className="py-3 px-4">Date</th>
-                            <th className="py-3 px-4">Marks Obtained</th>
-                            <th className="py-3 px-4">Score</th>
-                            <th className="py-3 px-4">Mastery Level</th>
+                            <th className="py-3 px-4">{pp.thAssessmentName}</th>
+                            <th className="py-3 px-4">{pp.thConceptTopic}</th>
+                            <th className="py-3 px-4">{pp.thDate}</th>
+                            <th className="py-3 px-4">{pp.thMarksObtained}</th>
+                            <th className="py-3 px-4">{pp.thScore}</th>
+                            <th className="py-3 px-4">{pp.thMasteryLevel}</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-[#49352F]/10">
                           {results.length === 0 ? (
                             <tr>
                               <td colSpan={6} className="py-6 text-center text-[#7A6862]">
-                                No assessment records found in database.
+                                {pp.noRecordsInDb}
                               </td>
                             </tr>
                           ) : (
                             results.map((r: any) => (
                               <tr key={r.id} className="hover:bg-[#FAF6E9]/40 transition-colors">
-                                <td className="py-3 px-4 font-bold text-[#49352F]">{r.assessmentName || "Formative Unit Evaluation"}</td>
-                                <td className="py-3 px-4 text-[#7A6862]">{r.conceptName || "Curriculum Benchmark"}</td>
-                                <td className="py-3 px-4 text-[#7A6862]">{r.recordedAt ? new Date(r.recordedAt).toLocaleDateString() : "Recent"}</td>
+                                <td className="py-3 px-4 font-bold text-[#49352F]">{r.assessmentName || pp.formativeUnitFallback}</td>
+                                <td className="py-3 px-4 text-[#7A6862]">{r.conceptName || pp.curriculumBenchmarkFallback}</td>
+                                <td className="py-3 px-4 text-[#7A6862]">{r.recordedAt ? formatDate(r.recordedAt) : pp.recentLabel}</td>
                                 <td className="py-3 px-4 font-mono font-bold text-[#49352F]">{r.marksObtained} / {r.maximumMarks}</td>
                                 <td className="py-3 px-4">
                                   <span className={`font-black ${r.percentage >= 80 ? "text-[#2E7D5E]" : r.percentage >= 60 ? "text-[#B26A1B]" : "text-[#C54738]"}`}>
@@ -961,7 +945,7 @@ function ParentDashboardContent() {
                                 </td>
                                 <td className="py-3 px-4">
                                   <Badge variant={r.percentage >= 80 ? "mastered" : r.percentage >= 60 ? "developing" : "needsSupport"} size="sm">
-                                    {r.percentage >= 80 ? "Mastered" : r.percentage >= 60 ? "Developing" : "Needs Support"}
+                                    {r.percentage >= 80 ? formatStatus("Mastered") : r.percentage >= 60 ? formatStatus("Developing") : formatStatus("Needs Support")}
                                   </Badge>
                                 </td>
                               </tr>
@@ -982,12 +966,10 @@ function ParentDashboardContent() {
                   <div>
                     <h2 className="font-heading text-lg font-black text-[#49352F] flex items-center gap-2">
                       <BrainCircuit className="w-5 h-5 text-[#B26A1B]" />
-                      <span>{language === "gu" ? "શિક્ષણ ત્રુટિઓ અને ૫-પગલાંની ઉપચાર યોજના" : "Learning Gaps & 5-Step Remedial Pathways"}</span>
+                      <span>{pp.gapsPathwaysHeading}</span>
                     </h2>
                     <p className="text-xs text-[#7A6862]">
-                      {language === "gu"
-                        ? "બાળક ક્યાં અટકે છે તે સ્પષ્ટ સમજો અને શિક્ષક-માન્ય મૂર્ત સાધનોથી શીખવાની રીત જુઓ"
-                        : "Transparent conceptual diagnosis with step-by-step concrete manipulative learning pathways"}
+                      {pp.gapsPathwaysSubtitle}
                     </p>
                   </div>
 
@@ -995,23 +977,24 @@ function ParentDashboardContent() {
                     <div className="p-8 text-center space-y-2">
                       <CheckCircle2 className="w-10 h-10 text-[#2E7D5E] mx-auto" />
                       <h4 className="text-sm font-bold text-[#2E7D5E]">
-                        {language === "gu" ? "કોઈ સક્રિય ત્રુટિ નોંધાયેલ નથી" : "No Active Gaps Found"}
+                        {pp.noActiveGapsHeading}
                       </h4>
                       <p className="text-xs text-[#7A6862]">
-                        {activeStudent?.displayName} is currently performing above developing benchmarks across all tested concepts.
+                        {tr("parentPortal.noActiveGapsSubtitle", { name: activeStudent?.displayName || pp.yourChildFallback })}
                       </p>
                     </div>
                   ) : (
                     <div className="space-y-4">
                       {learningGaps.map((gap: any) => {
                         const matchingPlan = remedialPlans.find((p: any) => p.gapId === gap.id || p.conceptId === gap.conceptId);
+                        const engineLang = showGuField ? "gu" : "en";
                         const interp = getRoleAwareGapInterpretation(
                           {
                             ...gap,
                             studentName: activeStudent?.displayName || gap.studentName,
                           },
                           "parent",
-                          language === "gu" ? "gu" : "en"
+                          engineLang
                         );
                         const act = interp.parentHomeActivity;
 
@@ -1024,10 +1007,10 @@ function ParentDashboardContent() {
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#49352F]/10 pb-3">
                               <div>
                                 <span className="text-[10.5px] uppercase tracking-wider font-extrabold text-[#B26A1B] block">
-                                  {language === "gu" ? "વર્તમાન અભ્યાસ ક્ષેત્ર" : "Current Learning Focus"}
+                                  {pp.currentFocusEyebrow}
                                 </span>
                                 <h3 className="text-base font-black text-[#49352F]">
-                                  {interp.growthFocus || gap.conceptName || "Curricular Concept"}
+                                  {interp.growthFocus || gap.conceptName || pp.curricularConceptFallback}
                                 </h3>
                               </div>
                               <div className="flex items-center gap-2">
@@ -1041,7 +1024,7 @@ function ParentDashboardContent() {
                             <div className="p-4 rounded-2xl bg-white border border-[#2E7D5E]/20 space-y-1.5 shadow-xs">
                               <span className="text-xs font-bold text-[#2E7D5E] flex items-center gap-1.5">
                                 <CheckCircle2 className="w-4 h-4 text-[#2E7D5E] shrink-0" />
-                                <span>{language === "gu" ? `બાળક શું સરસ રીતે કરી રહ્યું છે (શક્તિઓ):` : `What ${activeStudent?.displayName || "your child"} is doing well:`}</span>
+                                <span>{tr("parentPortal.whatChildDoingWell", { name: activeStudent?.displayName || pp.yourChildFallback })}</span>
                               </span>
                               <p className="text-xs text-[#49352F] leading-relaxed">
                                 {interp.strengthsSummary}
@@ -1053,7 +1036,7 @@ function ParentDashboardContent() {
                               <div className="p-3.5 rounded-2xl bg-white border border-[#49352F]/10 space-y-1">
                                 <span className="text-[11px] font-bold text-[#49352F] flex items-center gap-1.5">
                                   <TrendingUp className="w-3.5 h-3.5 text-[#B26A1B]" />
-                                  <span>{language === "gu" ? "વર્ગખંડમાં પ્રગતિ:" : "Classroom Progress & Practice:"}</span>
+                                  <span>{pp.classroomProgressLabel}</span>
                                 </span>
                                 <p className="text-xs text-[#7A6862] leading-relaxed">
                                   {interp.progressNarrative}
@@ -1063,14 +1046,15 @@ function ParentDashboardContent() {
                               <div className="p-3.5 rounded-2xl bg-white border border-[#49352F]/10 space-y-1">
                                 <span className="text-[11px] font-bold text-[#49352F] flex items-center gap-1.5">
                                   <GraduationCap className="w-3.5 h-3.5 text-[#2E7D5E]" />
-                                  <span>{language === "gu" ? "શિક્ષકની ભલામણ:" : "Teacher Recommendation:"}</span>
+                                  <span>{pp.teacherRecommendationLabel}</span>
                                 </span>
                                 <p className="text-xs text-[#49352F] leading-relaxed">
                                   {interp.teacherRecommendation}
                                 </p>
                                 {interp.reassessmentUpdate && (
-                                  <div className="text-[11px] text-[#B26A1B] font-semibold pt-1">
-                                    🔄 {interp.reassessmentUpdate}
+                                  <div className="text-[11px] text-[#B26A1B] font-semibold pt-1 flex items-center gap-1">
+                                    <RotateCcw className="w-3 h-3 shrink-0" />
+                                    <span>{interp.reassessmentUpdate}</span>
                                   </div>
                                 )}
                               </div>
@@ -1082,11 +1066,11 @@ function ParentDashboardContent() {
                                 <div className="flex items-center justify-between border-b border-[#49352F]/10 pb-1.5">
                                   <span className="font-heading font-extrabold text-xs text-[#B26A1B] flex items-center gap-1.5">
                                     <Home className="w-4 h-4 text-[#B26A1B]" />
-                                    <span>{language === "gu" ? "૫-મિનિટનો સરળ ઘર-મહાવરો" : "One 5-Minute Home Activity"}</span>
+                                    <span>{pp.oneMinuteHomeActivity}</span>
                                   </span>
                                   <Badge variant="mint" size="sm">
                                     <Clock className="w-3 h-3 mr-1" />
-                                    {act.durationMinutes} {language === "gu" ? "મિનિટ" : "mins"}
+                                    {act.durationMinutes} {pp.minsUnit}
                                   </Badge>
                                 </div>
 
@@ -1096,9 +1080,10 @@ function ParentDashboardContent() {
                                     {act.commonHouseholdMaterials.map((m: string, mIdx: number) => (
                                       <span
                                         key={mIdx}
-                                        className="px-2 py-0.5 rounded-full bg-white border border-[#49352F]/10 text-[10.5px] text-[#7A6862]"
+                                        className="px-2 py-0.5 rounded-full bg-white border border-[#49352F]/10 text-[10.5px] text-[#7A6862] inline-flex items-center gap-1"
                                       >
-                                        🛠️ {m}
+                                        <Wrench className="w-2.5 h-2.5 text-[#B26A1B] shrink-0" />
+                                        <span>{m}</span>
                                       </span>
                                     ))}
                                   </div>
@@ -1106,10 +1091,11 @@ function ParentDashboardContent() {
 
                                 <div className="space-y-1.5 text-xs text-[#49352F]">
                                   <p className="leading-snug">
-                                    <strong>{language === "gu" ? "વાલીએ શું કરવું:" : "What to do:"}</strong> {act.whatParentDoes}
+                                    <strong>{pp.whatToDoLabel}</strong> {act.whatParentDoes}
                                   </p>
-                                  <p className="italic text-[#8D4E10] text-[11px] bg-white/70 p-2 rounded-xl border border-[#49352F]/8">
-                                    🗣️ <strong>{language === "gu" ? "પૂછવા માટે સંવાદ:" : "Conversational Prompt:"}</strong> {act.conversationalPrompt}
+                                  <p className="italic text-[#8D4E10] text-[11px] bg-white/70 p-2 rounded-xl border border-[#49352F]/8 flex items-start gap-1.5">
+                                    <MessageSquare className="w-3.5 h-3.5 text-[#B26A1B] shrink-0 mt-0.5 not-italic" />
+                                    <span><strong>{pp.conversationalPromptLabel}</strong> {act.conversationalPrompt}</span>
                                   </p>
                                 </div>
                               </div>
@@ -1120,7 +1106,7 @@ function ParentDashboardContent() {
                               <div className="space-y-2 pt-1 border-t border-[#49352F]/10">
                                 <span className="text-xs font-extrabold text-[#49352F] flex items-center gap-1.5">
                                   <Layers className="w-3.5 h-3.5 text-[#2E7D5E]" />
-                                  <span>{language === "gu" ? "શિક્ષક-માન્ય ૫-પગલાંની ઉપચાર યોજના:" : "Teacher-Approved 5-Step Concrete Remedial Plan:"}</span>
+                                  <span>{pp.approvedPlanLabel}</span>
                                 </span>
                                 <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
                                   {matchingPlan.steps.map((st: any, sIdx: number) => {
@@ -1135,14 +1121,14 @@ function ParentDashboardContent() {
                                         }`}
                                       >
                                         <div className="flex items-center justify-between">
-                                          <span className="text-[10px] font-bold">Step {sIdx + 1}</span>
+                                          <span className="text-[10px] font-bold">{tr("parentPortal.stepLabel", { step: sIdx + 1 })}</span>
                                           {isDone ? (
                                             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                                           ) : (
                                             <Clock className="w-3.5 h-3.5 text-[#7A6862]" />
                                           )}
                                         </div>
-                                        <p className="text-[11px] font-semibold leading-tight">{st.title || `Concrete Activity ${sIdx + 1}`}</p>
+                                        <p className="text-[11px] font-semibold leading-tight">{st.title || tr("parentPortal.concreteActivityLabel", { step: sIdx + 1 })}</p>
                                       </div>
                                     );
                                   })}
@@ -1165,12 +1151,10 @@ function ParentDashboardContent() {
                   <div>
                     <h2 className="font-heading text-lg font-black text-[#49352F] flex items-center gap-2">
                       <Home className="w-5 h-5 text-[#B26A1B]" />
-                      <span>{language === "gu" ? "ઘરે બાળકને કેવી રીતે મદદ કરવી? (પ્રાયોગિક પ્રવૃત્તિઓ)" : "Help My Child at Home (Practical Activities)"}</span>
+                      <span>{pp.helpChildHeading}</span>
                     </h2>
                     <p className="text-xs text-[#7A6862]">
-                      {language === "gu"
-                        ? "બાળક કયા વિષયમાં પાછળ છે તે માટે ઘરમાં મળતી રોજિંદી વસ્તુઓથી સરળતાથી કરાવી શકાય તેવી પ્રવૃત્તિઓ"
-                        : "Recommended home activities linked directly to your child's recorded learning gaps using household items"}
+                      {pp.helpChildSubtitle}
                     </p>
                   </div>
 
@@ -1178,10 +1162,10 @@ function ParentDashboardContent() {
                     <div className="p-8 text-center space-y-2">
                       <CheckCircle2 className="w-10 h-10 text-[#2E7D5E] mx-auto" />
                       <h4 className="text-sm font-bold text-[#2E7D5E]">
-                        {language === "gu" ? "કોઈ વધારાની ઘર પ્રવૃત્તિ જરૂરી નથી" : "No Home Activities Required"}
+                        {pp.noHomeActivitiesHeading}
                       </h4>
                       <p className="text-xs text-[#7A6862]">
-                        {activeStudent?.displayName} has mastered the currently assessed concepts.
+                        {tr("parentPortal.noHomeActivitiesSubtitle", { name: activeStudent?.displayName || pp.yourChildFallback })}
                       </p>
                     </div>
                   ) : (
@@ -1198,19 +1182,19 @@ function ParentDashboardContent() {
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#49352F]/10 pb-3">
                             <div>
                               <span className="text-[10px] font-bold uppercase tracking-wider text-[#B26A1B] block">
-                                {act.conceptName} &bull; {act.subjectCode}
+                                {act.conceptName} &bull; {formatSubject(act.subjectCode)}
                               </span>
                               <h3 className="text-base font-black text-[#49352F]">
-                                {language === "gu" ? act.titleGujarati || act.title : act.title}
+                                {showGuField ? act.titleGujarati || act.title : act.title}
                               </h3>
                               <p className="text-xs text-[#7A6862] mt-0.5">
-                                {language === "gu" ? act.whyNeededGu : act.whyNeededEn}
+                                {showGuField ? act.whyNeededGu : act.whyNeededEn}
                               </p>
                             </div>
                             <div className="flex items-center gap-3 shrink-0">
                               <span className="text-xs font-semibold text-[#7A6862] flex items-center gap-1">
                                 <Clock className="w-3.5 h-3.5 text-[#B26A1B]" />
-                                {act.estimatedMinutes} {language === "gu" ? "મિનિટ" : "mins"}
+                                {act.estimatedMinutes} {pp.minsUnit}
                               </span>
                               <Button
                                 size="sm"
@@ -1222,12 +1206,12 @@ function ParentDashboardContent() {
                                 {act.completed ? (
                                   <span className="flex items-center gap-1.5 text-emerald-800">
                                     <Check className="w-3.5 h-3.5" />
-                                    {language === "gu" ? "પ્રવૃત્તિ પૂર્ણ થયેલ છે" : "Completed"}
+                                    {pp.activityCompletedLabel}
                                   </span>
                                 ) : (
                                   <span className="flex items-center gap-1.5">
                                     <Square className="w-3.5 h-3.5" />
-                                    {language === "gu" ? "પ્રવૃત્તિ પૂર્ણ થઈ" : "Mark as Completed"}
+                                    {pp.markCompletedBtn}
                                   </span>
                                 )}
                               </Button>
@@ -1237,12 +1221,12 @@ function ParentDashboardContent() {
                           {/* Household Materials */}
                           <div className="p-3.5 rounded-2xl bg-white border border-[#49352F]/10 space-y-1">
                             <span className="text-xs font-bold text-[#B26A1B] block">
-                              {language === "gu" ? "ઘરની જરૂરી સામગ્રી:" : "Household Materials:"}
+                              {pp.householdMaterialsLabel}
                             </span>
                             <span className="text-xs text-[#49352F]">
-                              {Array.isArray(language === "gu" ? act.materialsGu : act.materialsEn)
-                                ? (language === "gu" ? act.materialsGu : act.materialsEn).join(", ")
-                                : act.materialsEn || "Household objects"}
+                              {Array.isArray(showGuField ? act.materialsGu : act.materialsEn)
+                                ? (showGuField ? act.materialsGu : act.materialsEn).join(", ")
+                                : act.materialsEn || pp.householdObjectsFallback}
                             </span>
                           </div>
 
@@ -1250,7 +1234,7 @@ function ParentDashboardContent() {
                           {act.steps && act.steps.length > 0 && (
                             <div className="space-y-2">
                               <span className="text-xs font-extrabold text-[#49352F] block">
-                                {language === "gu" ? "કેવી રીતે કરાવવું (સરળ પગલાં):" : "Step-by-Step Instructions:"}
+                                {pp.stepByStepInstructionsLabel}
                               </span>
                               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                                 {act.steps.map((st: any, idx: number) => (
@@ -1259,10 +1243,10 @@ function ParentDashboardContent() {
                                     className="p-3 rounded-2xl bg-white border border-[#49352F]/10 space-y-1 text-xs"
                                   >
                                     <span className="text-[10px] font-bold text-[#B26A1B] uppercase tracking-wider block">
-                                      Step {st.stepNumber || idx + 1}
+                                      {tr("parentPortal.stepLabel", { step: st.stepNumber || idx + 1 })}
                                     </span>
                                     <p className="text-[#49352F] leading-snug">
-                                      {language === "gu" ? st.instructionGu || st.instructionEn : st.instructionEn}
+                                      {showGuField ? st.instructionGu || st.instructionEn : st.instructionEn}
                                     </p>
                                   </div>
                                 ))}
@@ -1272,8 +1256,8 @@ function ParentDashboardContent() {
 
                           {act.completedAt && (
                             <p className="text-[11px] text-emerald-700 italic">
-                              {language === "gu" ? "પૂર્ણ કર્યાની તારીખ: " : "Completed on: "}
-                              {new Date(act.completedAt).toLocaleString()}
+                              {pp.completedOnPrefix}
+                              {formatDate(act.completedAt)}
                             </p>
                           )}
                         </div>
@@ -1290,12 +1274,10 @@ function ParentDashboardContent() {
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="font-heading text-lg font-black text-[#49352F]">
-                      {language === "gu" ? "મારા બાળકોની યાદી" : "Authorized Linked Children"}
+                      {pp.linkedChildrenHeading}
                     </h2>
                     <p className="text-xs text-[#7A6862]">
-                      {language === "gu"
-                        ? "તમારા ખાતા સાથે જોડાયેલા બાળકો અને શાળાનું સત્તાવાર રેકોર્ડ"
-                        : "Children linked to your parent account verified by school authority"}
+                      {pp.linkedChildrenSubtitle}
                     </p>
                   </div>
                   <Button
@@ -1307,7 +1289,7 @@ function ParentDashboardContent() {
                     className="rounded-xl text-xs font-bold bg-[#B26A1B] text-white hover:bg-[#8F4E10]"
                   >
                     <Plus className="w-3.5 h-3.5 mr-1" />
-                    <span>{language === "gu" ? "બીજું બાળક જોડો" : "Link Another Child"}</span>
+                    <span>{pp.linkAnotherChildBtn}</span>
                   </Button>
                 </div>
 
@@ -1331,20 +1313,20 @@ function ParentDashboardContent() {
                             <div>
                               <h3 className="font-heading text-base font-extrabold text-[#49352F]">{ch.displayName}</h3>
                               <p className="text-xs text-[#7A6862]">
-                                {formatClass(ch.grade, ch.section)} &bull; Code: {ch.studentCode}
+                                {formatClass(ch.grade, ch.section)} &bull; {pp.studentCodePrefix} {ch.studentCode}
                               </p>
                             </div>
                           </div>
                           <Badge variant="mastered" size="sm">
                             <ShieldCheck className="w-3 h-3 mr-1" />
-                            Verified Link
+                            {pp.verifiedLinkBadge}
                           </Badge>
                         </div>
 
                         <div className="mt-4 pt-3 border-t border-[#49352F]/10 flex items-center justify-between text-xs">
                           <span className="text-[#7A6862] flex items-center gap-1">
                             <Building className="w-3.5 h-3.5" />
-                            {studentDetail?.school?.name || "Model Primary School"}
+                            {studentDetail?.school?.name || pp.defaultSchoolName}
                           </span>
                           <button
                             onClick={() => {
@@ -1353,7 +1335,7 @@ function ParentDashboardContent() {
                             }}
                             className="font-bold text-[#B26A1B] hover:underline flex items-center gap-1 cursor-pointer"
                           >
-                            <span>{language === "gu" ? "વિહંગાવલોકન જુઓ →" : "View Dashboard →"}</span>
+                            <span>{pp.viewDashboardBtn}</span>
                           </button>
                         </div>
                       </div>
@@ -1372,12 +1354,10 @@ function ParentDashboardContent() {
                     <div>
                       <h2 className="font-heading text-base font-black text-[#49352F] flex items-center gap-2">
                         <MessageSquare className="w-4 h-4 text-[#B26A1B]" />
-                        <span>{language === "gu" ? "વર્ગ શિક્ષકને પૂછપરછ અથવા નોંધ મોકલો" : "Send Inquiry to Class Teacher"}</span>
+                        <span>{pp.sendInquiryHeading}</span>
                       </h2>
                       <p className="text-xs text-[#7A6862]">
-                        {language === "gu"
-                          ? `${activeStudent?.displayName} ના વર્ગ શિક્ષકને સંદેશ મોકલો. અંગત ફોન નંબર જાહેર કર્યા વગર સુરક્ષિત સંચાર.`
-                          : `Direct pedagogical communication with ${activeStudent?.displayName}'s teacher without exchanging private phone numbers.`}
+                        {tr("parentPortal.sendInquirySubtitle", { name: activeStudent?.displayName || pp.yourChildFallback })}
                       </p>
                     </div>
 
@@ -1398,32 +1378,28 @@ function ParentDashboardContent() {
                     <form onSubmit={handleSendMessage} className="space-y-3.5">
                       <div className="space-y-1">
                         <label className="text-xs font-bold text-[#49352F] block">
-                          {language === "gu" ? "વિષય *" : "Subject *"}
+                          {pp.inquirySubjectLabel}
                         </label>
                         <input
                           type="text"
                           required
                           value={msgSubject}
                           onChange={(e) => setMsgSubject(e.target.value)}
-                          placeholder={language === "gu" ? "દા.ત. ગણિત હોમવર્ક અને ઉપચાર યોજના બાબત" : "e.g. Inquiring about Mathematics remedial worksheet"}
+                          placeholder={pp.inquirySubjectPlaceholder}
                           className="w-full px-3.5 py-2.5 rounded-xl border border-[#49352F]/20 bg-[#FAF6E9]/60 text-xs font-medium text-[#49352F] focus:outline-none focus:border-[#B26A1B]"
                         />
                       </div>
 
                       <div className="space-y-1">
                         <label className="text-xs font-bold text-[#49352F] block">
-                          {language === "gu" ? "તમારો સંદેશ *" : "Message / Query *"}
+                          {pp.inquiryMessageLabel}
                         </label>
                         <textarea
                           rows={4}
                           required
                           value={msgBody}
                           onChange={(e) => setMsgBody(e.target.value)}
-                          placeholder={
-                            language === "gu"
-                              ? "શિક્ષક માટે તમારો પ્રશ્ન અથવા વર્ગ પછી મળવાનો સમય વિનંતી લખો..."
-                              : "Write your question for the teacher or request consultation timing..."
-                          }
+                          placeholder={pp.inquiryMessagePlaceholder}
                           className="w-full px-3.5 py-2.5 rounded-xl border border-[#49352F]/20 bg-[#FAF6E9]/60 text-xs font-medium text-[#49352F] focus:outline-none focus:border-[#B26A1B]"
                         />
                       </div>
@@ -1434,7 +1410,7 @@ function ParentDashboardContent() {
                         className="py-2.5 px-5 rounded-xl bg-[#261B16] text-[#FAF6E9] text-xs font-bold flex items-center gap-2 hover:bg-[#49352F] transition-all cursor-pointer disabled:opacity-50"
                       >
                         <Send className="w-3.5 h-3.5 text-[#F2CAB3]" />
-                        <span>{msgSending ? "Sending..." : language === "gu" ? "સંદેશ મોકલો" : "Submit Inquiry"}</span>
+                        <span>{msgSending ? pp.sendingInquiryBtn : pp.submitInquiryBtn}</span>
                       </button>
                     </form>
                   </div>
@@ -1444,17 +1420,17 @@ function ParentDashboardContent() {
                     <div className="p-5 rounded-3xl bg-white border border-[#49352F]/15 shadow-sm space-y-3">
                       <h3 className="text-sm font-extrabold text-[#49352F] flex items-center gap-2">
                         <Clock className="w-4 h-4 text-[#B26A1B]" />
-                        <span>Consultation Timings</span>
+                        <span>{pp.consultationTimingsHeading}</span>
                       </h3>
                       <p className="text-xs text-[#7A6862] leading-relaxed">
-                        Class teachers are available for parent meetings every weekday from <strong>3:15 PM – 4:00 PM</strong> at the primary school staff room.
+                        {pp.consultationTimingsBefore} <strong>{pp.consultationTimingsWindow}</strong> {pp.consultationTimingsAfter}
                       </p>
                     </div>
 
                     <div className="p-5 rounded-3xl bg-white border border-[#49352F]/15 shadow-sm space-y-3">
-                      <h3 className="text-sm font-extrabold text-[#49352F]">Past Conversations</h3>
+                      <h3 className="text-sm font-extrabold text-[#49352F]">{pp.pastConversationsHeading}</h3>
                       {pastMessages.length === 0 ? (
-                        <p className="text-xs text-[#7A6862]">No previous inquiries submitted.</p>
+                        <p className="text-xs text-[#7A6862]">{pp.noPreviousInquiries}</p>
                       ) : (
                         <div className="space-y-2">
                           {pastMessages.map((m: any) => (
@@ -1462,13 +1438,13 @@ function ParentDashboardContent() {
                               <div className="flex items-center justify-between font-bold text-[#49352F]">
                                 <span>{m.subject}</span>
                                 <Badge variant={m.status === "replied" ? "mastered" : "default"} size="sm">
-                                  {m.status}
+                                  {m.status === "replied" ? pp.messageStatusReplied : pp.messageStatusSent}
                                 </Badge>
                               </div>
                               <p className="text-[#7A6862] text-[11px]">{m.message}</p>
                               {m.reply && (
                                 <div className="mt-1 p-2 rounded-lg bg-emerald-50 text-emerald-950 text-[11px] border border-emerald-200">
-                                  <strong>Teacher reply:</strong> {m.reply}
+                                  <strong>{pp.teacherReplyPrefix}</strong> {m.reply}
                                 </div>
                               )}
                             </div>
@@ -1487,19 +1463,17 @@ function ParentDashboardContent() {
                 <div>
                   <h2 className="font-heading text-lg font-black text-[#49352F] flex items-center gap-2">
                     <Bell className="w-5 h-5 text-[#B26A1B]" />
-                    <span>{language === "gu" ? "શાળા પરિપત્રો અને સૂચનાઓ" : "Official School Notices & Announcements"}</span>
+                    <span>{pp.noticesTabHeading}</span>
                   </h2>
                   <p className="text-xs text-[#7A6862]">
-                    {language === "gu"
-                      ? "પ્રાથમિક શાળા દ્વારા બહાર પાડવામાં આવેલ મહત્વપૂર્ણ પરિપત્રો અને કાર્યક્રમો"
-                      : "Official circulars and meeting announcements applicable to your ward"}
+                    {pp.noticesTabSubtitle}
                   </p>
                 </div>
 
                 <div className="space-y-4">
                   {notices.length === 0 ? (
                     <div className="p-8 text-center bg-white rounded-3xl border border-[#49352F]/15 text-xs text-[#7A6862]">
-                      No notices currently posted for this grade.
+                      {pp.noNoticesForGrade}
                     </div>
                   ) : (
                     notices.map((n: any) => (
@@ -1511,15 +1485,15 @@ function ParentDashboardContent() {
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
                               <span className="text-xs font-black uppercase tracking-wider text-[#B26A1B]">
-                                {n.category || "Announcement"}
+                                {n.category || pp.defaultNoticeCategory}
                               </span>
-                              {n.urgency === "urgent" && <Badge variant="needsSupport" size="sm">Urgent</Badge>}
+                              {n.urgency === "urgent" && <Badge variant="needsSupport" size="sm">{pp.urgentBadge}</Badge>}
                             </div>
                             <h3 className="text-base font-extrabold text-[#49352F]">{n.title}</h3>
                           </div>
                           <span className="text-xs text-[#7A6862] flex items-center gap-1">
                             <Calendar className="w-3.5 h-3.5" />
-                            {n.createdAt ? new Date(n.createdAt).toLocaleDateString() : "Recent"}
+                            {n.createdAt ? formatDate(n.createdAt) : pp.recentLabel}
                           </span>
                         </div>
 
@@ -1529,20 +1503,20 @@ function ParentDashboardContent() {
 
                         <div className="pt-2 flex flex-wrap items-center justify-between gap-2 border-t border-[#49352F]/10 text-xs">
                           <span className="text-[#7A6862]">
-                            Issued by: <strong>{n.senderTeacherName || "Class Teacher"}</strong>
+                            {pp.issuedByPrefix} <strong>{n.senderTeacherName || pp.classTeacherFallback}</strong>
                           </span>
                           <div className="flex items-center gap-2">
                             <button
                               type="button"
                               onClick={() => {
                                 const utterance = new SpeechSynthesisUtterance(n.simplifiedContent || n.originalContent);
-                                utterance.lang = "gu-IN";
+                                utterance.lang = language === "en" ? "en-IN" : `${language}-IN`;
                                 window.speechSynthesis?.speak(utterance);
                               }}
                               className="px-3 py-1.5 rounded-xl border border-[#49352F]/15 hover:bg-[#FAF6E9] text-xs font-bold text-[#49352F] flex items-center gap-1.5 transition-all cursor-pointer"
                             >
                               <Volume2 className="w-3.5 h-3.5 text-[#B26A1B]" />
-                              <span>{language === "gu" ? "ગુજરાતીમાં સાંભળો" : "Listen in Gujarati"}</span>
+                              <span>{pp.listenAudioBtn}</span>
                             </button>
                           </div>
                         </div>
@@ -1563,7 +1537,7 @@ function ParentDashboardContent() {
             <div className="flex items-center justify-between">
               <h3 className="text-base font-black text-[#49352F] flex items-center gap-2">
                 <KeyRound className="w-4 h-4 text-[#B26A1B]" />
-                <span>{language === "gu" ? "બીજું બાળક જોડો" : "Link Another Child"}</span>
+                <span>{pp.linkAnotherChildBtn}</span>
               </h3>
               <button
                 onClick={() => setLinkModalOpen(false)}
@@ -1574,9 +1548,7 @@ function ParentDashboardContent() {
             </div>
 
             <p className="text-xs text-[#7A6862]">
-              {language === "gu"
-                ? "તમારા બાળકના શિક્ષક પાસેથી ૬-અક્ષરનો વેરિફિકેશન કોડ (દા.ત. PAR-4892) મેળવો."
-                : "Enter the 6-character linking code provided by your child's primary school teacher."}
+              {pp.linkModalDescription}
             </p>
 
             <form onSubmit={handleRedeemCode} className="space-y-3">
@@ -1585,7 +1557,7 @@ function ParentDashboardContent() {
                 required
                 value={linkingCodeInput}
                 onChange={(e) => setLinkingCodeInput(e.target.value.toUpperCase())}
-                placeholder="PAR-XXXX"
+                placeholder={pp.linkingCodePlaceholder}
                 className="w-full text-center px-4 py-3 rounded-2xl border-2 border-[#B26A1B] font-mono text-base font-bold text-[#B26A1B] uppercase tracking-widest placeholder:font-sans placeholder:normal-case placeholder:text-xs"
               />
               {linkError && <p className="text-xs text-rose-600 font-semibold">{linkError}</p>}
@@ -1597,14 +1569,14 @@ function ParentDashboardContent() {
                   onClick={() => setLinkModalOpen(false)}
                   className="rounded-xl text-xs"
                 >
-                  Cancel
+                  {pp.cancelBtn}
                 </Button>
                 <Button
                   type="submit"
                   disabled={linkLoading}
                   className="rounded-xl text-xs font-bold bg-[#B26A1B] text-white hover:bg-[#8F4E10]"
                 >
-                  {linkLoading ? "Verifying..." : "Verify & Link"}
+                  {linkLoading ? pp.verifyingBtn : pp.verifyAndLinkBtn}
                 </Button>
               </div>
             </form>

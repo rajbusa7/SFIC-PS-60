@@ -91,7 +91,8 @@ export type SortOption =
   | "prereqImpact";
 
 export default function LearningGapsPage() {
-  const { t, language } = useLanguage();
+  const { t, tr, language, formatSubject, formatClass, formatStatus, formatPriority, formatDate } = useLanguage();
+  const lg = t.learningGaps;
 
   const [gaps, setGaps] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -292,7 +293,7 @@ export default function LearningGapsPage() {
           approximateDuration: gapContext?.dynamicPrescription?.approximateDuration,
           pedagogicalRationale: gapContext?.dynamicPrescription?.reason,
           recommendedAction: gapContext?.dynamicPrescription?.recommendedAction || gapContext?.suggestedAction,
-          language: language === "gu" ? "gu" : "en",
+          language,
         }),
       });
       const data = await res.json();
@@ -357,12 +358,12 @@ export default function LearningGapsPage() {
 
   // Safe text and priority formatting helpers with normalized severity score (0-100)
   const formatPriorityText = (priority?: string, severityScore?: number): string => {
-    if (!priority) return "Medium Priority";
-    const base = String(priority).replace(/\s*Priority\s*Priority$/i, "").replace(/\s*Priority$/i, "").trim();
+    const base = String(priority || "Medium").replace(/\s*Priority\s*Priority$/i, "").replace(/\s*Priority$/i, "").trim();
+    const localized = formatPriority(base);
     if (typeof severityScore === "number" && !isNaN(severityScore)) {
-      return `${base} Priority (${severityScore}/100)`;
+      return tr("learningGaps.priorityWithScore", { level: localized, score: severityScore });
     }
-    return `${base} Priority`;
+    return tr("learningGaps.priorityWithLevel", { level: localized });
   };
 
   const getPriorityBadgeVariant = (priority?: string): "high" | "medium" | "low" => {
@@ -373,7 +374,10 @@ export default function LearningGapsPage() {
   };
 
   const formatClassSection = (grade?: number, section?: string): string => {
-    return formatClassLabel(grade, section, language as any) || (grade ? `Class ${grade}` : "Primary Section");
+    if (grade !== undefined && grade !== null) {
+      return formatClass(grade, section) || formatClassLabel(grade, section, language as any) || lg.primarySectionFallback;
+    }
+    return lg.primarySectionFallback;
   };
 
   const getSubjectLabel = (gap: any): string => {
@@ -641,7 +645,7 @@ export default function LearningGapsPage() {
     ).sort((a, b) => a - b);
     return grades.map((gr) => ({
       value: String(gr),
-      label: `Class ${gr}`,
+      label: formatClass(gr),
     }));
   }, [processedGaps]);
 
@@ -833,14 +837,14 @@ export default function LearningGapsPage() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="font-heading text-2xl sm:text-3xl font-extrabold text-[#49352F] tracking-tight">
-                {language === "gu" ? "સ્માર્ટ લર્નિંગ ગેપ ડિટેક્શન એન્જિન" : "Smart Learning-Gap Detection Engine"}
+                {lg.pageTitle}
               </h1>
               <Badge variant="saffron" size="sm" pulse>
-                Deterministic AI
+                {lg.deterministicAiBadge}
               </Badge>
             </div>
             <p className="text-xs sm:text-sm text-[#7A6862] mt-1">
-              Transparent, explainable pedagogical rule engine identifying student conceptual roadblocks with plain-language reasons.
+              {lg.pageSubtitle}
             </p>
           </div>
 
@@ -854,10 +858,10 @@ export default function LearningGapsPage() {
                   ? "bg-[#49352F] text-white shadow-xs"
                   : "text-[#7A6862] hover:text-[#49352F] hover:bg-[#FAF6E9]"
               }`}
-              title="Teacher professional diagnosis & intervention controls"
+              title={lg.teacherViewTitle}
             >
               <GraduationCap className="w-3.5 h-3.5" />
-              <span>Teacher View</span>
+              <span>{lg.teacherView}</span>
             </button>
             <button
               type="button"
@@ -867,10 +871,10 @@ export default function LearningGapsPage() {
                   ? "bg-[#2E7D5E] text-white shadow-xs"
                   : "text-[#7A6862] hover:text-[#49352F] hover:bg-[#FAF6E9]"
               }`}
-              title="Growth-oriented, supportive student interpretation"
+              title={lg.studentViewTitle}
             >
               <User className="w-3.5 h-3.5" />
-              <span>Student View</span>
+              <span>{lg.studentView}</span>
             </button>
             <button
               type="button"
@@ -880,10 +884,10 @@ export default function LearningGapsPage() {
                   ? "bg-[#B26A1B] text-white shadow-xs"
                   : "text-[#7A6862] hover:text-[#49352F] hover:bg-[#FAF6E9]"
               }`}
-              title="Simple parent-friendly view with 5-minute home activities"
+              title={lg.parentViewTitle}
             >
               <Home className="w-3.5 h-3.5" />
-              <span>Parent View</span>
+              <span>{lg.parentView}</span>
             </button>
           </div>
         </div>
@@ -894,14 +898,14 @@ export default function LearningGapsPage() {
             <div className="flex items-center gap-2">
               <Sliders className="w-5 h-5 text-[#B26A1B]" />
               <h3 className="font-heading text-sm font-bold text-[#49352F]">
-                Interactive Threshold Sandbox Demo
+                {lg.sandboxTitle}
               </h3>
               <Badge variant="mint" size="sm">
-                Jury Sandbox
+                {lg.jurySandboxBadge}
               </Badge>
             </div>
             <span className="text-[11px] text-[#7A6862]">
-              Slide to simulate real-time rule engine threshold adjustments
+              {lg.sandboxHint}
             </span>
           </div>
 
@@ -911,11 +915,11 @@ export default function LearningGapsPage() {
               <div className="flex items-center justify-between text-xs">
                 <span className="font-semibold text-[#C54738] flex items-center gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#C54738]" />
-                  <span>Developing / Support Threshold:</span>
+                  <span>{lg.supportThresholdLabel}</span>
                   <ContextualHelp termKey="masteryThreshold" />
                 </span>
                 <span className="font-heading font-black text-[#C54738] text-sm">
-                  {supportThreshold}% Benchmark
+                  {tr("learningGaps.supportBenchmark", { val: supportThreshold })}
                 </span>
               </div>
               <input
@@ -928,7 +932,7 @@ export default function LearningGapsPage() {
                 className="w-full h-2 bg-white rounded-lg appearance-none cursor-pointer accent-[#C54738] border border-[#49352F]/15"
               />
               <p className="text-[11px] text-[#7A6862]">
-                Any student scoring below {supportThreshold}% is flagged for immediate 5-step concrete remediation.
+                {tr("learningGaps.supportExplanation", { val: supportThreshold })}
               </p>
             </div>
 
@@ -937,10 +941,10 @@ export default function LearningGapsPage() {
               <div className="flex items-center justify-between text-xs">
                 <span className="font-semibold text-[#2E7D5E] flex items-center gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#2E7D5E]" />
-                  Mastery Threshold:
+                  {lg.masteryThresholdLabel}
                 </span>
                 <span className="font-heading font-black text-[#2E7D5E] text-sm">
-                  {masteryThreshold}% Benchmark
+                  {tr("learningGaps.masteryBenchmark", { val: masteryThreshold })}
                 </span>
               </div>
               <input
@@ -953,7 +957,7 @@ export default function LearningGapsPage() {
                 className="w-full h-2 bg-white rounded-lg appearance-none cursor-pointer accent-[#2E7D5E] border border-[#49352F]/15"
               />
               <p className="text-[11px] text-[#7A6862]">
-                Students scoring &ge; {masteryThreshold}% cross the bridge into certified independent mastery.
+                {tr("learningGaps.masteryExplanation", { val: masteryThreshold })}
               </p>
             </div>
           </div>
@@ -961,20 +965,20 @@ export default function LearningGapsPage() {
           {/* Sandbox Live Impact Stat Banner */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-[#49352F]/10 text-xs">
             <div className="p-2.5 rounded-xl bg-white/90 border border-[#49352F]/10 text-center shadow-xs">
-              <span className="text-[10px] text-[#7A6862] block font-semibold">Flagged Under Threshold</span>
-              <span className="text-lg font-black text-[#C54738]">{flaggedCount} Gaps</span>
+              <span className="text-[10px] text-[#7A6862] block font-semibold">{lg.flaggedUnderThreshold}</span>
+              <span className="text-lg font-black text-[#C54738]">{tr("learningGaps.gapsCount", { count: flaggedCount })}</span>
             </div>
             <div className="p-2.5 rounded-xl bg-white/90 border border-[#49352F]/10 text-center shadow-xs">
-              <span className="text-[10px] text-[#7A6862] block font-semibold">Over Mastery Threshold</span>
-              <span className="text-lg font-black text-[#2E7D5E]">{masteredCount} Concepts</span>
+              <span className="text-[10px] text-[#7A6862] block font-semibold">{lg.overMasteryThreshold}</span>
+              <span className="text-lg font-black text-[#2E7D5E]">{tr("learningGaps.conceptsCount", { count: masteredCount })}</span>
             </div>
             <div className="p-2.5 rounded-xl bg-white/90 border border-[#49352F]/10 text-center shadow-xs">
-              <span className="text-[10px] text-[#7A6862] block font-semibold">Decision Engine</span>
-              <span className="text-lg font-black text-[#B26A1B]">Deterministic</span>
+              <span className="text-[10px] text-[#7A6862] block font-semibold">{lg.decisionEngineLabel}</span>
+              <span className="text-lg font-black text-[#B26A1B]">{lg.deterministicLabel}</span>
             </div>
             <div className="p-2.5 rounded-xl bg-white/90 border border-[#49352F]/10 text-center shadow-xs">
-              <span className="text-[10px] text-[#7A6862] block font-semibold">API Latency / Cost</span>
-              <span className="text-lg font-black text-[#2E7D5E]">0ms • $0.00</span>
+              <span className="text-[10px] text-[#7A6862] block font-semibold">{lg.apiLatencyCostLabel}</span>
+              <span className="text-lg font-black text-[#2E7D5E]">{lg.zeroCostLabel}</span>
             </div>
           </div>
         </Card>
@@ -1026,7 +1030,7 @@ export default function LearningGapsPage() {
               <Search className="w-4 h-4 text-[#7A6862] absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
-                placeholder="Search student, concept, or ID..."
+                placeholder={lg.searchPlaceholder}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 aria-label="Search learning gaps by student or concept"
@@ -1037,7 +1041,7 @@ export default function LearningGapsPage() {
                   type="button"
                   onClick={() => setSearchQuery("")}
                   className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7A6862] hover:text-[#49352F] cursor-pointer"
-                  aria-label="Clear search"
+                  aria-label={lg.clearSearch}
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -1047,51 +1051,51 @@ export default function LearningGapsPage() {
             {/* Quick Filter & Sort Controls */}
             <div className="flex flex-wrap items-center gap-2">
               <div className="flex items-center gap-1.5">
-                <span className="text-xs font-semibold text-[#7A6862]">Priority:</span>
+                <span className="text-xs font-semibold text-[#7A6862]">{lg.priorityFilterLabel}</span>
                 <select
                   value={priorityFilter}
                   aria-label="Filter learning gaps by priority"
                   onChange={(e) => setPriorityFilter(e.target.value)}
                   className="rounded-full border border-[#49352F]/15 bg-[#FAF6E9] px-3 py-1.5 text-xs font-semibold text-[#49352F] outline-hidden cursor-pointer"
                 >
-                  <option value="all">All Priorities</option>
-                  <option value="Critical">Critical Priority</option>
-                  <option value="High">High Priority</option>
-                  <option value="Medium">Medium Priority</option>
-                  <option value="Low">Low Priority</option>
+                  <option value="all">{lg.allPriorities}</option>
+                  <option value="Critical">{lg.criticalPriority}</option>
+                  <option value="High">{lg.highPriority}</option>
+                  <option value="Medium">{lg.mediumPriority}</option>
+                  <option value="Low">{lg.lowPriority}</option>
                 </select>
               </div>
 
               <div className="flex items-center gap-1.5">
-                <span className="text-xs font-semibold text-[#7A6862]">Status:</span>
+                <span className="text-xs font-semibold text-[#7A6862]">{lg.statusFilterLabel}</span>
                 <select
                   value={statusFilter}
                   aria-label="Filter learning gaps by status"
                   onChange={(e) => setStatusFilter(e.target.value)}
                   className="rounded-full border border-[#49352F]/15 bg-[#FAF6E9] px-3 py-1.5 text-xs font-semibold text-[#49352F] outline-hidden cursor-pointer"
                 >
-                  <option value="all">All Statuses</option>
-                  <option value="Active Gap">Active Gaps</option>
-                  <option value="Monitoring/Developing">Monitoring / Developing</option>
-                  <option value="Closed Gap">Closed Gaps (Mastered)</option>
+                  <option value="all">{lg.allStatuses}</option>
+                  <option value="Active Gap">{lg.activeGapsOption}</option>
+                  <option value="Monitoring/Developing">{lg.monitoringDevelopingOption}</option>
+                  <option value="Closed Gap">{lg.closedGapsOption}</option>
                 </select>
               </div>
 
               <div className="flex items-center gap-1.5">
                 <ArrowUpDown className="w-3.5 h-3.5 text-[#7A6862]" />
-                <span className="text-xs font-semibold text-[#7A6862]">Sort:</span>
+                <span className="text-xs font-semibold text-[#7A6862]">{lg.sortFilterLabel}</span>
                 <select
                   value={sortBy}
                   aria-label="Sort learning gaps"
                   onChange={(e) => setSortBy(e.target.value as SortOption)}
                   className="rounded-full border border-[#49352F]/15 bg-[#FAF6E9] px-3 py-1.5 text-xs font-semibold text-[#49352F] outline-hidden cursor-pointer"
                 >
-                  <option value="urgent">Most Urgent (Default)</option>
-                  <option value="decline">Biggest Decline</option>
-                  <option value="recent">Recently Detected</option>
-                  <option value="closeMastery">Closest to Mastery</option>
-                  <option value="reassessOverdue">Reassessment Overdue</option>
-                  <option value="prereqImpact">Largest Prereq Impact</option>
+                  <option value="urgent">{lg.sortUrgent}</option>
+                  <option value="decline">{lg.sortDecline}</option>
+                  <option value="recent">{lg.sortRecent}</option>
+                  <option value="closeMastery">{lg.sortCloseMastery}</option>
+                  <option value="reassessOverdue">{lg.sortReassessOverdue}</option>
+                  <option value="prereqImpact">{lg.sortPrereqImpact}</option>
                 </select>
               </div>
 
@@ -1108,7 +1112,7 @@ export default function LearningGapsPage() {
                 aria-expanded={showAdvancedFilters}
               >
                 <SlidersHorizontal className="w-3.5 h-3.5 mr-1 text-[#B26A1B]" />
-                <span>Filters</span>
+                <span>{lg.filtersBtn}</span>
                 {activeFiltersCount > 0 && (
                   <span className="ml-1 px-1.5 py-0.2 rounded-full bg-[#B26A1B] text-white text-[10px] font-bold">
                     {activeFiltersCount}
@@ -1127,17 +1131,17 @@ export default function LearningGapsPage() {
                 size="sm"
                 onClick={toggleExpandAll}
                 className="rounded-full text-xs bg-white hover:bg-[#FAF6E9] text-[#49352F] border-[#49352F]/15 font-medium"
-                title={allExpanded ? "Collapse all learning gap details" : "Expand all learning gap details"}
+                title={allExpanded ? lg.collapseAllTitle : lg.expandAllTitle}
               >
                 {allExpanded ? (
                   <>
                     <Minimize2 className="w-3.5 h-3.5 mr-1 text-[#7A6862]" />
-                    <span>Collapse All</span>
+                    <span>{lg.collapseAll}</span>
                   </>
                 ) : (
                   <>
                     <Maximize2 className="w-3.5 h-3.5 mr-1 text-[#7A6862]" />
-                    <span>Expand All</span>
+                    <span>{lg.expandAll}</span>
                   </>
                 )}
               </Button>
@@ -1150,14 +1154,14 @@ export default function LearningGapsPage() {
               <div className="flex items-center justify-between text-xs font-bold text-[#49352F]">
                 <span className="flex items-center gap-1.5">
                   <Filter className="w-3.5 h-3.5 text-[#B26A1B]" />
-                  <span>Advanced Filter Dimensions</span>
+                  <span>{lg.advancedFiltersTitle}</span>
                 </span>
                 <button
                   type="button"
                   onClick={resetAllFilters}
                   className="text-xs font-semibold text-[#C54738] hover:text-[#991B1B] hover:underline cursor-pointer"
                 >
-                  Reset All Filters
+                  {lg.resetAllFilters}
                 </button>
               </div>
 
@@ -1165,14 +1169,14 @@ export default function LearningGapsPage() {
                 {/* Class */}
                 <div>
                   <label className="text-[10px] font-bold uppercase tracking-wider text-[#7A6862] block mb-1">
-                    Class
+                    {lg.classLabel}
                   </label>
                   <select
                     value={classFilter}
                     onChange={(e) => setClassFilter(e.target.value)}
                     className="w-full rounded-lg border border-[#49352F]/15 bg-white px-2 py-1.5 text-xs text-[#49352F] outline-hidden cursor-pointer"
                   >
-                    <option value="all">All Classes</option>
+                    <option value="all">{lg.allClasses}</option>
                     {availableClasses.map((c) => (
                       <option key={c.value} value={c.value}>
                         {c.label}
@@ -1184,17 +1188,17 @@ export default function LearningGapsPage() {
                 {/* Subject */}
                 <div>
                   <label className="text-[10px] font-bold uppercase tracking-wider text-[#7A6862] block mb-1">
-                    Subject
+                    {lg.subjectLabel}
                   </label>
                   <select
                     value={subjectFilter}
                     onChange={(e) => setSubjectFilter(e.target.value)}
                     className="w-full rounded-lg border border-[#49352F]/15 bg-white px-2 py-1.5 text-xs text-[#49352F] outline-hidden cursor-pointer"
                   >
-                    <option value="all">All Subjects</option>
+                    <option value="all">{lg.allSubjects}</option>
                     {availableSubjects.map((s) => (
                       <option key={s} value={s}>
-                        {s}
+                        {s === "English" ? formatSubject("ENG") : s === "Gujarati" ? formatSubject("GUJ") : s === "Environmental Studies" ? formatSubject("EVS") : s === "Mathematics" ? formatSubject("MATH") : s}
                       </option>
                     ))}
                   </select>
@@ -1203,14 +1207,14 @@ export default function LearningGapsPage() {
                 {/* Competency */}
                 <div>
                   <label className="text-[10px] font-bold uppercase tracking-wider text-[#7A6862] block mb-1">
-                    Competency
+                    {lg.competencyLabel}
                   </label>
                   <select
                     value={competencyFilter}
                     onChange={(e) => setCompetencyFilter(e.target.value)}
                     className="w-full rounded-lg border border-[#49352F]/15 bg-white px-2 py-1.5 text-xs text-[#49352F] outline-hidden cursor-pointer truncate"
                   >
-                    <option value="all">All Competencies</option>
+                    <option value="all">{lg.allCompetencies}</option>
                     {availableCompetencies.map((c) => (
                       <option key={c} value={c}>
                         {c}
@@ -1222,14 +1226,14 @@ export default function LearningGapsPage() {
                 {/* Gap Type */}
                 <div>
                   <label className="text-[10px] font-bold uppercase tracking-wider text-[#7A6862] block mb-1">
-                    Gap Type
+                    {lg.gapTypeLabel}
                   </label>
                   <select
                     value={gapTypeFilter}
                     onChange={(e) => setGapTypeFilter(e.target.value)}
                     className="w-full rounded-lg border border-[#49352F]/15 bg-white px-2 py-1.5 text-xs text-[#49352F] outline-hidden cursor-pointer truncate"
                   >
-                    <option value="all">All Gap Types</option>
+                    <option value="all">{lg.allGapTypes}</option>
                     {availableGapTypes.map((t) => (
                       <option key={t} value={t}>
                         {t}
@@ -1241,18 +1245,18 @@ export default function LearningGapsPage() {
                 {/* Trend */}
                 <div>
                   <label className="text-[10px] font-bold uppercase tracking-wider text-[#7A6862] block mb-1">
-                    Trend
+                    {lg.trendLabel}
                   </label>
                   <select
                     value={trendFilter}
                     onChange={(e) => setTrendFilter(e.target.value)}
                     className="w-full rounded-lg border border-[#49352F]/15 bg-white px-2 py-1.5 text-xs text-[#49352F] outline-hidden cursor-pointer"
                   >
-                    <option value="all">All Trends</option>
-                    <option value="Improving">Improving</option>
-                    <option value="Stable">Stable</option>
-                    <option value="Declining">Declining</option>
-                    <option value="Insufficient Data">Insufficient Data</option>
+                    <option value="all">{lg.allTrends}</option>
+                    <option value="Improving">{lg.trendImproving}</option>
+                    <option value="Stable">{lg.trendStable}</option>
+                    <option value="Declining">{lg.trendDeclining}</option>
+                    <option value="Insufficient Data">{lg.trendInsufficient}</option>
                   </select>
                 </div>
 
@@ -1265,7 +1269,7 @@ export default function LearningGapsPage() {
                       onChange={(e) => setReassessmentDueOnly(e.target.checked)}
                       className="rounded text-[#B26A1B] focus:ring-[#B26A1B] cursor-pointer"
                     />
-                    <span>Reassess Due</span>
+                    <span>{lg.reassessDue}</span>
                   </label>
                 </div>
               </div>
@@ -1276,68 +1280,68 @@ export default function LearningGapsPage() {
           <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#49352F]/10 text-xs">
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="text-[11px] font-medium text-[#7A6862]">
-                Showing <strong>{sortedAndFilteredGaps.length}</strong> of {processedGaps.length} learning {processedGaps.length === 1 ? "gap" : "gaps"}
+                {tr("learningGaps.showingSummary", { shown: sortedAndFilteredGaps.length, total: processedGaps.length, unit: processedGaps.length === 1 ? lg.gapSingular : lg.gapPlural })}
               </span>
 
               {searchQuery && (
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#FAF6E9] border border-[#49352F]/15 text-[#49352F]">
-                  <span>Search: &ldquo;{searchQuery}&rdquo;</span>
+                  <span>{tr("learningGaps.chipSearch", { query: searchQuery })}</span>
                   <button type="button" onClick={() => setSearchQuery("")} className="hover:text-[#C54738] cursor-pointer">✕</button>
                 </span>
               )}
 
               {priorityFilter !== "all" && (
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#FAF6E9] border border-[#49352F]/15 text-[#49352F]">
-                  <span>Priority: {priorityFilter}</span>
+                  <span>{tr("learningGaps.chipPriority", { val: formatPriority(priorityFilter) })}</span>
                   <button type="button" onClick={() => setPriorityFilter("all")} className="hover:text-[#C54738] cursor-pointer">✕</button>
                 </span>
               )}
 
               {statusFilter !== "all" && (
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#FAF6E9] border border-[#49352F]/15 text-[#49352F]">
-                  <span>Status: {statusFilter}</span>
+                  <span>{tr("learningGaps.chipStatus", { val: formatStatus(statusFilter) })}</span>
                   <button type="button" onClick={() => setStatusFilter("all")} className="hover:text-[#C54738] cursor-pointer">✕</button>
                 </span>
               )}
 
               {classFilter !== "all" && (
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#FAF6E9] border border-[#49352F]/15 text-[#49352F]">
-                  <span>Class: {classFilter}</span>
+                  <span>{tr("learningGaps.chipClass", { val: formatClass(classFilter) })}</span>
                   <button type="button" onClick={() => setClassFilter("all")} className="hover:text-[#C54738] cursor-pointer">✕</button>
                 </span>
               )}
 
               {subjectFilter !== "all" && (
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#FAF6E9] border border-[#49352F]/15 text-[#49352F]">
-                  <span>Subject: {subjectFilter}</span>
+                  <span>{tr("learningGaps.chipSubject", { val: subjectFilter })}</span>
                   <button type="button" onClick={() => setSubjectFilter("all")} className="hover:text-[#C54738] cursor-pointer">✕</button>
                 </span>
               )}
 
               {competencyFilter !== "all" && (
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#FAF6E9] border border-[#49352F]/15 text-[#49352F]">
-                  <span className="truncate max-w-[140px]">Concept: {competencyFilter}</span>
+                  <span className="truncate max-w-[140px]">{tr("learningGaps.chipConcept", { val: competencyFilter })}</span>
                   <button type="button" onClick={() => setCompetencyFilter("all")} className="hover:text-[#C54738] cursor-pointer">✕</button>
                 </span>
               )}
 
               {gapTypeFilter !== "all" && (
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#FAF6E9] border border-[#49352F]/15 text-[#49352F]">
-                  <span>Type: {gapTypeFilter}</span>
+                  <span>{tr("learningGaps.chipType", { val: gapTypeFilter })}</span>
                   <button type="button" onClick={() => setGapTypeFilter("all")} className="hover:text-[#C54738] cursor-pointer">✕</button>
                 </span>
               )}
 
               {trendFilter !== "all" && (
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#FAF6E9] border border-[#49352F]/15 text-[#49352F]">
-                  <span>Trend: {trendFilter}</span>
+                  <span>{tr("learningGaps.chipTrend", { val: trendFilter })}</span>
                   <button type="button" onClick={() => setTrendFilter("all")} className="hover:text-[#C54738] cursor-pointer">✕</button>
                 </span>
               )}
 
               {reassessmentDueOnly && (
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#FAF6E9] border border-[#49352F]/15 text-[#49352F]">
-                  <span>Reassessment Due</span>
+                  <span>{lg.chipReassessmentDue}</span>
                   <button type="button" onClick={() => setReassessmentDueOnly(false)} className="hover:text-[#C54738] cursor-pointer">✕</button>
                 </span>
               )}
@@ -1345,24 +1349,24 @@ export default function LearningGapsPage() {
               {priorityQueueFilter && (
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#FAF6E9] border border-[#B26A1B]/30 text-[#8D4E10]">
                   <span>
-                    Queue:{" "}
-                    <strong>
-                      {priorityQueueFilter === "immediate"
-                        ? "Immediate Support"
-                        : priorityQueueFilter === "developing"
-                        ? "Developing Practice"
-                        : priorityQueueFilter === "reassess"
-                        ? "Ready to Reassess"
-                        : priorityQueueFilter === "reopened"
-                        ? "Reopened Gaps"
-                        : "Recently Mastered"}
-                    </strong>
+                    {tr("learningGaps.chipQueue", {
+                      val:
+                        priorityQueueFilter === "immediate"
+                          ? lg.queueImmediate
+                          : priorityQueueFilter === "developing"
+                          ? lg.queueDeveloping
+                          : priorityQueueFilter === "reassess"
+                          ? lg.queueReassess
+                          : priorityQueueFilter === "reopened"
+                          ? lg.queueReopened
+                          : lg.queueMastered,
+                    })}
                   </span>
                   <button
                     type="button"
                     onClick={() => setPriorityQueueFilter(null)}
                     className="ml-0.5 text-[#C54738] hover:text-[#991B1B] cursor-pointer"
-                    title="Clear priority queue filter"
+                    title={lg.clearQueueFilter}
                   >
                     ✕
                   </button>
@@ -1371,12 +1375,12 @@ export default function LearningGapsPage() {
 
               {heatmapFilter && (
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#FAF6E9] border border-[#B26A1B]/30 text-[#8D4E10]">
-                  <span>Heatmap: <strong>{heatmapFilter.competencyName}</strong> ({heatmapFilter.status})</span>
+                  <span>{tr("learningGaps.chipHeatmap", { concept: heatmapFilter.competencyName, status: formatStatus(heatmapFilter.status || "Needs Support") })}</span>
                   <button
                     type="button"
                     onClick={() => setHeatmapFilter(null)}
                     className="ml-0.5 text-[#C54738] hover:text-[#991B1B] cursor-pointer"
-                    title="Clear heatmap filter"
+                    title={lg.clearHeatmapFilter}
                   >
                     ✕
                   </button>
@@ -1390,7 +1394,7 @@ export default function LearningGapsPage() {
                 onClick={resetAllFilters}
                 className="text-xs font-semibold text-[#C54738] hover:text-[#991B1B] hover:underline cursor-pointer shrink-0"
               >
-                Reset All Filters
+                {lg.resetAllFilters}
               </button>
             )}
           </div>
@@ -1402,10 +1406,10 @@ export default function LearningGapsPage() {
             <Card variant="glass" className="p-8 border-[#49352F]/15 bg-white text-center space-y-3 shadow-xs">
               <Search className="w-8 h-8 text-[#B26A1B] mx-auto opacity-70" />
               <h4 className="font-heading text-base font-bold text-[#49352F]">
-                No learning gaps match your criteria
+                {lg.noGapsTitle}
               </h4>
               <p className="text-xs text-[#7A6862] max-w-md mx-auto">
-                No learning gaps match the active search query or filter dimensions. Try adjusting your search term or resetting the filters.
+                {lg.noGapsDesc}
               </p>
               {activeFiltersCount > 0 && (
                 <Button
@@ -1414,7 +1418,7 @@ export default function LearningGapsPage() {
                   onClick={resetAllFilters}
                   className="rounded-full text-xs font-semibold bg-[#FAF6E9] hover:bg-white text-[#49352F] border-[#49352F]/15 mx-auto"
                 >
-                  Reset All Filters
+                  {lg.resetAllFilters}
                 </Button>
               )}
             </Card>
@@ -1469,7 +1473,7 @@ export default function LearningGapsPage() {
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
                         <h3 className="font-heading text-lg font-bold text-[#49352F]">
-                          {gap.conceptName || "Curricular Concept"}
+                          {gap.conceptName || lg.curricularConceptFallback}
                         </h3>
                         <Badge
                           variant={getPriorityBadgeVariant(gap.dynamicPriority || gap.priority)}
@@ -1488,7 +1492,7 @@ export default function LearningGapsPage() {
                           }
                           size="sm"
                         >
-                          {gap.dynamicLifecycle || gap.dynamicStatus}
+                          {formatStatus(gap.dynamicLifecycle || gap.dynamicStatus)}
                         </Badge>
                         {gap.trendText && (
                           <Badge
@@ -1506,13 +1510,13 @@ export default function LearningGapsPage() {
                         )}
                         {gap.gapReopened && (
                           <Badge variant="coral" size="sm" dot>
-                            GAP REOPENED (Was {gap.previousMasteryScore ?? 85}%)
+                            {tr("learningGaps.gapReopenedBadge", { score: gap.previousMasteryScore ?? 85 })}
                           </Badge>
                         )}
                         {gap.dynamicIsRootGapIdentified && gap.dynamicRootConcept && (
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-[#F2CAB3]/40 border border-[#B26A1B]/30 text-[#8D4E10]">
                             <GitFork className="w-3 h-3 text-[#B26A1B] shrink-0" />
-                            <span>Root Gap: <strong>{gap.dynamicRootConcept.name}</strong></span>
+                            <span>{lg.rootGapLabel} <strong>{gap.dynamicRootConcept.name}</strong></span>
                           </span>
                         )}
                       </div>
@@ -1522,21 +1526,21 @@ export default function LearningGapsPage() {
                           href={`/students/${gap.studentId}`}
                           className="font-semibold text-[#B26A1B] hover:underline"
                         >
-                          {gap.studentName || "Student"}
+                          {gap.studentName || lg.studentFallback}
                         </Link>
                         <span>•</span>
                         <span>{formatClassSection(gap.grade, gap.section)}</span>
                         <span>•</span>
-                        <span>{getSubjectLabel(gap)}</span>
+                        <span>{formatSubject(gap.subjectCode || getSubjectLabel(gap))}</span>
                         {(gap.evidenceCount || gap.attemptsCount) > 1 && (
                           <>
                             <span>•</span>
-                            <span>{gap.evidenceCount || gap.attemptsCount} Observations</span>
+                            <span>{tr("learningGaps.observationsCount", { count: gap.evidenceCount || gap.attemptsCount })}</span>
                           </>
                         )}
                         <span>•</span>
                         <span className="font-mono font-bold text-[#49352F] bg-[#FAF6E9] px-2 py-0.5 rounded-md border border-[#49352F]/10">
-                          Score: {gap.currentScore ?? gap.latestPercentage}%
+                          {tr("learningGaps.scoreLabel", { score: gap.currentScore ?? gap.latestPercentage })}
                         </span>
                       </div>
                     </div>
@@ -1551,7 +1555,7 @@ export default function LearningGapsPage() {
                           className="rounded-full text-xs font-bold opacity-80 cursor-default"
                         >
                           <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
-                          <span>Mastery Certified</span>
+                          <span>{lg.masteryCertified}</span>
                         </Button>
                       ) : hasExistingPlan ? (
                         <Button
@@ -1562,7 +1566,7 @@ export default function LearningGapsPage() {
                           title="View and print personalized 5-step remedial plan"
                         >
                           <Layers className="w-3.5 h-3.5 mr-1" />
-                          <span>View 5-Step Plan</span>
+                          <span>{lg.viewPlanBtn}</span>
                         </Button>
                       ) : (
                         <Button
@@ -1574,7 +1578,7 @@ export default function LearningGapsPage() {
                           title="Generate personalized 5-step remedial plan"
                         >
                           <Layers className="w-3.5 h-3.5 mr-1" />
-                          <span>{generatingPlanId === gap.id ? "Generating..." : "Generate 5-Step Plan"}</span>
+                          <span>{generatingPlanId === gap.id ? lg.generatingBtn : lg.generatePlanBtn}</span>
                         </Button>
                       )}
 
@@ -1588,7 +1592,7 @@ export default function LearningGapsPage() {
                         className="rounded-full text-xs bg-white hover:bg-[#F2CAB3] text-[#49352F] border border-[#49352F]/15"
                       >
                         <RotateCcw className="w-3.5 h-3.5 mr-1" />
-                        <span>Reassess Delta</span>
+                        <span>{lg.reassessDeltaBtn}</span>
                       </Button>
 
                       <Button
@@ -1599,10 +1603,10 @@ export default function LearningGapsPage() {
                           setHomePracticeModalOpen(true);
                         }}
                         className="rounded-full text-xs bg-white hover:bg-[#FAF6E9] text-[#49352F] border border-[#49352F]/15"
-                        title="Send parent-friendly 5-minute home activity to Parent Bridge"
+                        title={lg.sendHomePracticeTitle}
                       >
                         <Home className="w-3.5 h-3.5 mr-1 text-[#B26A1B]" />
-                        <span>Send Home Practice</span>
+                        <span>{lg.sendHomePracticeBtn}</span>
                       </Button>
 
                       {/* Expand / Collapse Details Toggle */}
@@ -1616,17 +1620,17 @@ export default function LearningGapsPage() {
                             : "bg-white hover:bg-[#FAF6E9] text-[#49352F] border-[#49352F]/15"
                         }`}
                         aria-expanded={isExpanded}
-                        title={isExpanded ? "Collapse detailed diagnosis" : "Expand detailed diagnosis"}
+                        title={isExpanded ? lg.collapseDetails : lg.viewDetails}
                       >
                         {isExpanded ? (
                           <>
                             <ChevronUp className="w-3.5 h-3.5 mr-1 text-[#B26A1B]" />
-                            <span>Collapse Details</span>
+                            <span>{lg.collapseDetails}</span>
                           </>
                         ) : (
                           <>
                             <ChevronDown className="w-3.5 h-3.5 mr-1 text-[#B26A1B]" />
-                            <span>View Details</span>
+                            <span>{lg.viewDetails}</span>
                           </>
                         )}
                       </Button>
@@ -1638,12 +1642,12 @@ export default function LearningGapsPage() {
                     <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#49352F]/10 text-xs">
                       <div className="flex items-center gap-2 text-[#49352F] line-clamp-1 flex-1 min-w-[200px]">
                         <ClipboardList className="w-3.5 h-3.5 text-[#B26A1B] shrink-0" />
-                        <span className="text-[#7A6862] font-semibold shrink-0">Prescription:</span>
+                        <span className="text-[#7A6862] font-semibold shrink-0">{lg.prescriptionPrefix}</span>
                         <span className="truncate">
                           {gap.dynamicPrescription?.recommendedAction ||
                             (gap.dynamicStatus === "Mastered"
-                              ? "Mastery achieved — continue periodic retrieval practice."
-                              : gap.suggestedAction || "Deploy concrete manipulatives followed by paired practice.")}
+                              ? lg.masteryContinuePractice
+                              : gap.suggestedAction || lg.defaultConcreteAction)}
                         </span>
                       </div>
                       <div className="flex items-center gap-3 shrink-0">
@@ -1658,10 +1662,10 @@ export default function LearningGapsPage() {
                             <Layers className="w-3 h-3" />
                             <span>
                               {generatingPlanId === gap.id
-                                ? "Generating..."
+                                ? lg.generatingBtn
                                 : hasExistingPlan
-                                ? "5-Step Plan"
-                                : "Generate Plan"}
+                                ? lg.shortPlanLabel
+                                : lg.shortGeneratePlanLabel}
                             </span>
                           </button>
                         )}
@@ -1671,7 +1675,7 @@ export default function LearningGapsPage() {
                           className="text-[11px] font-semibold text-[#2E7D5E] hover:underline cursor-pointer flex items-center gap-1"
                         >
                           <TrendingUp className="w-3 h-3" />
-                          <span>Timeline {gap.assessmentHistory?.length ? `(${gap.assessmentHistory.length})` : ""}</span>
+                          <span>{lg.timelineLink} {gap.assessmentHistory?.length ? `(${gap.assessmentHistory.length})` : ""}</span>
                         </button>
                         <button
                           type="button"
@@ -1679,14 +1683,14 @@ export default function LearningGapsPage() {
                           className="text-[11px] font-semibold text-[#B26A1B] hover:underline cursor-pointer flex items-center gap-1"
                         >
                           <GitFork className="w-3 h-3" />
-                          <span>Gap Map</span>
+                          <span>{lg.gapMapLink}</span>
                         </button>
                         <button
                           type="button"
                           onClick={() => toggleCardDetails(gap.id)}
                           className="text-[11px] font-bold text-[#B26A1B] hover:underline cursor-pointer flex items-center gap-1"
                         >
-                          <span>Inspect Evidence & Diagnostics &rarr;</span>
+                          <span>{lg.inspectDiagnosticsLink}</span>
                         </button>
                       </div>
                     </div>
@@ -1710,7 +1714,7 @@ export default function LearningGapsPage() {
                             aria-expanded={Boolean(expandedTimelineGapIds[gap.id])}
                           >
                             <TrendingUp className="w-3.5 h-3.5 mr-1 text-[#2E7D5E]" />
-                            <span>{expandedTimelineGapIds[gap.id] ? "Hide Timeline" : "Progress Timeline"}</span>
+                            <span>{expandedTimelineGapIds[gap.id] ? lg.hideTimeline : lg.progressTimelineBtn}</span>
                             {gap.assessmentHistory && gap.assessmentHistory.length > 0 && (
                               <span className="ml-1 px-1.5 py-0.2 rounded-full bg-[#2E7D5E]/15 text-[10px] font-mono font-bold text-[#2E7D5E]">
                                 {gap.assessmentHistory.length}
@@ -1735,7 +1739,7 @@ export default function LearningGapsPage() {
                             aria-expanded={Boolean(expandedMapGapIds[gap.id])}
                           >
                             <GitFork className="w-3.5 h-3.5 mr-1 text-[#B26A1B]" />
-                            <span>{expandedMapGapIds[gap.id] ? "Hide Gap Map" : "Learning Gap Map"}</span>
+                            <span>{expandedMapGapIds[gap.id] ? lg.hideGapMap : lg.learningGapMapBtn}</span>
                             {expandedMapGapIds[gap.id] ? (
                               <ChevronUp className="w-3.5 h-3.5 ml-1" />
                             ) : (
@@ -1745,7 +1749,7 @@ export default function LearningGapsPage() {
                         </div>
 
                         <span className="text-[11px] text-[#7A6862]">
-                          Explainable cognitive diagnosis & pedagogical prescription
+                          {lg.explainableSubtitle}
                         </span>
                       </div>
 
@@ -1755,7 +1759,7 @@ export default function LearningGapsPage() {
                         previousScore={gap.previousPercentage}
                         thresholdDeveloping={supportThreshold}
                         thresholdMastery={masteryThreshold}
-                        studentName={gap.studentName || "Student"}
+                        studentName={gap.studentName || lg.studentFallback}
                         height="md"
                       />
 
@@ -1768,7 +1772,11 @@ export default function LearningGapsPage() {
                             <div className="p-2.5 rounded-xl bg-[#FBECE9] border border-[#C54738]/25 text-[#A93327] text-[11px] font-semibold flex items-center gap-2">
                               <AlertTriangle className="w-4 h-4 shrink-0 text-[#C54738]" />
                               <span>
-                                <strong>Gap Reopened:</strong> Previously mastered on {gap.masteryDate ? new Date(gap.masteryDate).toLocaleDateString() : "prior assessment"} ({gap.previousMasteryScore ?? 85}%), but recent assessment dropped to {gap.currentScore ?? gap.latestPercentage}%.
+                                {tr("learningGaps.gapReopenedAlert", {
+                                  date: gap.masteryDate ? formatDate(gap.masteryDate) : lg.priorAssessment,
+                                  prev: gap.previousMasteryScore ?? 85,
+                                  curr: gap.currentScore ?? gap.latestPercentage,
+                                })}
                               </span>
                             </div>
                           )}
@@ -1779,8 +1787,8 @@ export default function LearningGapsPage() {
                               <BrainCircuit className="w-3.5 h-3.5" />
                               <span>
                                 {gap.dynamicStatus === "Mastered"
-                                  ? "MASTERY EVIDENCE"
-                                  : "Why Flagged (Explainable Diagnosis)"}
+                                  ? lg.masteryEvidenceHeading
+                                  : lg.whyFlaggedExplainable}
                               </span>
                               <ContextualHelp termKey="gapDetection" />
                             </span>
@@ -1796,7 +1804,7 @@ export default function LearningGapsPage() {
                                   }
                                   size="sm"
                                 >
-                                  {gap.dynamicConfidenceLevel} Confidence ({Math.round(((gap.dynamicConfidenceScore ?? gap.dynamicConfidence) || 0.85) * 100)}%)
+                                  {tr("learningGaps.confidenceLevelBadge", { level: gap.dynamicConfidenceLevel, pct: Math.round(((gap.dynamicConfidenceScore ?? gap.dynamicConfidence) || 0.85) * 100) })}
                                 </Badge>
                               </div>
                             )}
@@ -1806,33 +1814,33 @@ export default function LearningGapsPage() {
                           <div className="space-y-1">
                             <div className="flex flex-wrap items-center gap-2">
                               <span className="text-[10px] font-bold uppercase tracking-wider text-[#7A6862]">
-                                Diagnosis:
+                                {lg.diagnosisLabel}
                               </span>
                               <span className="font-heading font-bold text-xs text-[#49352F]">
                                 {gap.dynamicStatus === "Mastered"
-                                  ? "Mastered Competency (Certified)"
+                                  ? lg.masteredCompetencyCertified
                                   : gap.dynamicConfidenceLevel === "Low"
-                                  ? "Uncertain (Diagnostic Verification Required)"
+                                  ? lg.uncertainDiagnosis
                                   : gap.dynamicDiagnosis || gap.dynamicGapType}
                               </span>
                               <Badge variant={gap.dynamicStatus === "Mastered" ? "mint" : "saffron"} size="sm">
-                                {gap.dynamicStatus === "Mastered" ? "Mastered" : gap.dynamicGapType}
+                                {gap.dynamicStatus === "Mastered" ? formatStatus("Mastered") : gap.dynamicGapType}
                               </Badge>
                             </div>
 
                             {/* Low-confidence caution (do not present as certain) */}
                             {gap.dynamicStatus === "Mastered" ? (
                               <p className="text-[#49352F] leading-relaxed text-xs">
-                                Mastery achieved — continue periodic retrieval practice. Verified retention at or above benchmark with no active cognitive obstacle detected.
+                                {lg.masteredRetentionNote}
                               </p>
                             ) : gap.dynamicConfidenceLevel === "Low" ? (
                               <div className="p-2 rounded-xl bg-[#FBECE9] border border-[#C54738]/25 text-[#A93327] text-[11px] font-semibold flex items-center gap-1.5">
                                 <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-                                <span>Insufficient evidence — run a short diagnostic check.</span>
+                                <span>{lg.insufficientEvidenceCaution}</span>
                               </div>
                             ) : (
                               <p className="text-[#49352F] leading-relaxed text-xs">
-                                {gap.dynamicGapTypeReason || gap.gapTypeReason || gap.reason || "Performance dropped below developing benchmark across consecutive classroom observations."}
+                                {gap.dynamicGapTypeReason || gap.gapTypeReason || gap.reason || lg.fallbackGapReason}
                               </p>
                             )}
                           </div>
@@ -1840,24 +1848,24 @@ export default function LearningGapsPage() {
                           {/* Diagnostic Metrics: Threshold, Assessments Analyzed, Questions Analyzed, Error Pattern */}
                           <div className="p-2.5 rounded-xl bg-white/70 border border-[#49352F]/10 space-y-1.5 text-[11px]">
                             <div>
-                              <span className="font-semibold text-[#49352F]">Trigger Rule: </span>
+                              <span className="font-semibold text-[#49352F]">{lg.triggerRuleLabel} </span>
                               <span className="text-[#7A6862]">{gap.dynamicTriggerRule}</span>
                             </div>
                             <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[#7A6862]">
                               <span>
-                                Assessments Analyzed: <strong className="text-[#49352F]">{gap.dynamicAssessmentsAnalyzed}</strong>
+                                {lg.assessmentsAnalyzedLabel} <strong className="text-[#49352F]">{gap.dynamicAssessmentsAnalyzed}</strong>
                               </span>
                               <span>•</span>
                               <span>
-                                Relevant Questions Analyzed: <strong className="text-[#49352F]">{gap.dynamicQuestionsAnalyzed}</strong>
+                                {lg.questionsAnalyzedLabel} <strong className="text-[#49352F]">{gap.dynamicQuestionsAnalyzed}</strong>
                               </span>
                               <span>•</span>
                               <span>
-                                Score: <strong className="text-[#49352F]">{gap.currentScore ?? gap.latestPercentage}%</strong> (Target: &ge; {supportThreshold}%)
+                                {tr("learningGaps.scoreLabel", { score: gap.currentScore ?? gap.latestPercentage })} ({tr("learningGaps.scoreTargetText", { threshold: supportThreshold })})
                               </span>
                             </div>
                             <div>
-                              <span className="font-semibold text-[#49352F]">Error Pattern Detected: </span>
+                              <span className="font-semibold text-[#49352F]">{lg.errorPatternDetectedLabel} </span>
                               <span className="font-medium text-[#C54738]">{gap.dynamicErrorPatternDetected}</span>
                             </div>
                           </div>
@@ -1866,7 +1874,7 @@ export default function LearningGapsPage() {
                           {gap.dynamicSupportingEvidence && gap.dynamicSupportingEvidence.length > 0 && (
                             <div className="space-y-1 pt-0.5">
                               <span className="text-[10px] font-bold uppercase tracking-wider text-[#7A6862] block">
-                                Supporting Evidence:
+                                {lg.supportingEvidenceLabel}
                               </span>
                               <ul className="text-[11px] text-[#49352F] space-y-0.5 list-disc list-inside">
                                 {gap.dynamicSupportingEvidence.map((ev: string, evIdx: number) => (
@@ -1888,12 +1896,12 @@ export default function LearningGapsPage() {
                                 <FileText className="w-3.5 h-3.5" />
                                 <span>
                                   {expandedEvidenceGapIds[gap.id]
-                                    ? "Hide Question-Level Evidence"
-                                    : "View Evidence (Question Responses)"}
+                                    ? lg.hideQuestionEvidence
+                                    : lg.viewQuestionEvidence}
                                 </span>
                                 {gap.dynamicQuestionEvidence && gap.dynamicQuestionEvidence.length > 0 && (
                                   <span className="px-1.5 py-0.2 rounded-full bg-[#B26A1B]/15 text-[10px] font-mono">
-                                    {gap.dynamicQuestionEvidence.length} {gap.dynamicQuestionEvidence.length === 1 ? "question" : "questions"}
+                                    {gap.dynamicQuestionEvidence.length} {gap.dynamicQuestionEvidence.length === 1 ? lg.questionSingular : lg.questionPlural}
                                   </span>
                                 )}
                               </span>
@@ -1914,7 +1922,7 @@ export default function LearningGapsPage() {
                                     >
                                       <div className="flex items-center justify-between text-[10px]">
                                         <span className="font-bold text-[#49352F]">
-                                          Q{q.questionNumber || qIdx + 1}: {q.topic || "Target Item"}
+                                          Q{q.questionNumber || qIdx + 1}: {q.topic || lg.targetItemFallback}
                                         </span>
                                         {q.relatedConcept && (
                                           <span className="rounded bg-[#FAF6E9] px-1.5 py-0.5 border border-[#49352F]/10 font-mono text-[9px] text-[#7A6862]">
@@ -1927,16 +1935,16 @@ export default function LearningGapsPage() {
                                       </p>
                                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[10px] pt-0.5">
                                         <div className="p-1.5 rounded-lg bg-[#FBECE9] border border-[#C54738]/20">
-                                          <span className="text-[#A93327] font-semibold block">Student Response:</span>
+                                          <span className="text-[#A93327] font-semibold block">{lg.studentResponseLabel}</span>
                                           <span className="text-[#49352F] font-mono font-medium">{q.studentResponse}</span>
                                         </div>
                                         <div className="p-1.5 rounded-lg bg-[#EAF4EE] border border-[#2E7D5E]/20">
-                                          <span className="text-[#2E7D5E] font-semibold block">Correct Response:</span>
+                                          <span className="text-[#2E7D5E] font-semibold block">{lg.correctResponseLabel}</span>
                                           <span className="text-[#49352F] font-mono font-medium">{q.correctResponse}</span>
                                         </div>
                                       </div>
                                       <div className="text-[10px] pt-0.5">
-                                        <span className="font-semibold text-[#A93327]">Detected Error: </span>
+                                        <span className="font-semibold text-[#A93327]">{lg.detectedErrorLabel} </span>
                                         <span className="text-[#49352F]">{q.detectedError}</span>
                                       </div>
                                     </div>
@@ -1945,11 +1953,10 @@ export default function LearningGapsPage() {
                                   <div className="p-2.5 rounded-xl bg-white/80 border border-[#49352F]/10 text-[11px] text-[#7A6862] space-y-1">
                                     <div className="flex items-center gap-1 font-semibold text-[#49352F]">
                                       <Info className="w-3.5 h-3.5 text-[#B26A1B]" />
-                                      <span>Question-level evidence unavailable for this record</span>
+                                      <span>{lg.noQuestionEvidenceTitle}</span>
                                     </div>
                                     <p className="text-[10.5px] leading-relaxed">
-                                      This learning gap was recorded from an aggregate assessment score without itemized question logging.
-                                      A short 3–5 question diagnostic exit ticket is recommended to capture per-question student responses.
+                                      {lg.noQuestionEvidenceDesc}
                                     </p>
                                   </div>
                                 )}
@@ -1969,16 +1976,16 @@ export default function LearningGapsPage() {
                                 <GitFork className="w-3.5 h-3.5 text-[#2E7D5E]" />
                                 <span>
                                   {expandedLearningPathGapIds[gap.id]
-                                    ? "Hide Learning Path & Root Cause"
-                                    : "Why this happened & Recommended Learning Path"}
+                                    ? lg.hideLearningPath
+                                    : lg.viewLearningPath}
                                 </span>
                                 {gap.dynamicIsRootGapIdentified ? (
                                   <span className="px-1.5 py-0.2 rounded-full bg-[#2E7D5E]/15 text-[10px] font-semibold text-[#2E7D5E]">
-                                    Root Identified
+                                    {lg.rootIdentifiedBadge}
                                   </span>
                                 ) : (
                                   <span className="px-1.5 py-0.2 rounded-full bg-[#7A6862]/10 text-[10px] font-mono text-[#7A6862]">
-                                    {gap.dynamicPrerequisiteConcepts?.length || 0} Prereqs
+                                    {tr("learningGaps.prereqsCountBadge", { count: gap.dynamicPrerequisiteConcepts?.length || 0 })}
                                   </span>
                                 )}
                               </span>
@@ -1996,7 +2003,7 @@ export default function LearningGapsPage() {
                                   <div className="flex flex-wrap items-center justify-between gap-1 text-[11px]">
                                     <span className="font-bold text-[#49352F] flex items-center gap-1.5">
                                       <Layers className="w-3.5 h-3.5 text-[#B26A1B]" />
-                                      <span>Prerequisite Root-Cause Analysis</span>
+                                      <span>{lg.prereqRootCauseAnalysis}</span>
                                     </span>
                                     <Badge
                                       variant={
@@ -2008,21 +2015,21 @@ export default function LearningGapsPage() {
                                       }
                                       size="sm"
                                     >
-                                      {gap.dynamicRootCauseConfidenceLevel} Confidence ({Math.round((gap.dynamicRootCauseConfidence || 0.85) * 100)}%)
+                                      {tr("learningGaps.confidenceLevelBadge", { level: gap.dynamicRootCauseConfidenceLevel, pct: Math.round((gap.dynamicRootCauseConfidence || 0.85) * 100) })}
                                     </Badge>
                                   </div>
 
                                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[10.5px] pt-0.5">
                                     <div className="p-1.5 rounded-lg bg-[#FAF6E9] border border-[#49352F]/10">
-                                      <span className="text-[#7A6862] font-semibold block text-[9.5px] uppercase">Detected Difficulty:</span>
+                                      <span className="text-[#7A6862] font-semibold block text-[9.5px] uppercase">{lg.detectedDifficultyLabel}</span>
                                       <span className="font-bold text-[#C54738]">{gap.dynamicAffectedConcept?.name || gap.conceptName}</span>
                                     </div>
                                     <div className="p-1.5 rounded-lg bg-[#FAF6E9] border border-[#49352F]/10">
-                                      <span className="text-[#7A6862] font-semibold block text-[9.5px] uppercase">Root Cause:</span>
+                                      <span className="text-[#7A6862] font-semibold block text-[9.5px] uppercase">{lg.rootCauseLabel}</span>
                                       <span className="font-bold text-[#8D4E10]">
                                         {gap.dynamicIsRootGapIdentified && gap.dynamicRootConcept
-                                          ? `${gap.dynamicRootConcept.name} (Prerequisite Gap)`
-                                          : "Direct Roadblock (No Prerequisite Deficit)"}
+                                          ? tr("learningGaps.prereqGapSuffix", { name: gap.dynamicRootConcept.name })
+                                          : lg.directRoadblock}
                                       </span>
                                     </div>
                                   </div>
@@ -2042,7 +2049,7 @@ export default function LearningGapsPage() {
                                 {/* Step-by-Step Recommended Learning Path */}
                                 <div className="space-y-1.5">
                                   <span className="text-[10px] font-bold uppercase tracking-wider text-[#7A6862] block">
-                                    Recommended Learning Path:
+                                    {lg.recommendedLearningPathLabel}
                                   </span>
 
                                   <div className="space-y-1.5">
@@ -2097,7 +2104,7 @@ export default function LearningGapsPage() {
                                               }
                                               size="sm"
                                             >
-                                              {isRoot ? "Root Gap (Remediate First)" : isTarget ? "Target Concept" : step.status}
+                                              {isRoot ? lg.rootGapRemediateFirst : isTarget ? lg.targetConceptBadge : formatStatus(step.status)}
                                             </Badge>
                                           </div>
                                         );
@@ -2129,7 +2136,7 @@ export default function LearningGapsPage() {
                           <div className="flex flex-wrap items-center justify-between gap-1.5 border-b border-[#49352F]/10 pb-1.5">
                             <span className="font-bold uppercase tracking-wider text-[#B26A1B] text-[10px] flex items-center gap-1.5">
                               <ClipboardList className="w-3.5 h-3.5" />
-                              <span>Pedagogical Prescription</span>
+                              <span>{lg.pedagogicalPrescriptionTitle}</span>
                             </span>
                             <div className="flex items-center gap-1.5">
                               {gap.dynamicPrescription?.suggestedModality && (
@@ -2150,14 +2157,14 @@ export default function LearningGapsPage() {
                           <p className="text-[#49352F] leading-relaxed text-xs">
                             {gap.dynamicPrescription?.recommendedAction ||
                               (gap.dynamicStatus === "Mastered"
-                                ? "Mastery achieved — continue periodic retrieval practice."
-                                : gap.suggestedAction || "Deploy concrete manipulatives followed by paired practice.")}
+                                ? lg.masteryContinuePractice
+                                : gap.suggestedAction || lg.defaultConcreteAction)}
                           </p>
 
                           {/* Rationale / Explanation */}
                           {gap.dynamicPrescription?.reason && (
                             <p className="text-[11px] text-[#7A6862] leading-snug">
-                              <strong className="text-[#49352F]">Pedagogical Rationale:</strong> {gap.dynamicPrescription.reason}
+                              <strong className="text-[#49352F]">{lg.pedagogicalRationaleLabel}</strong> {gap.dynamicPrescription.reason}
                             </p>
                           )}
 
@@ -2176,10 +2183,10 @@ export default function LearningGapsPage() {
                               <span>
                                 {gap.dynamicPrescription?.planStatusLabel ||
                                   (gap.dynamicStatus === "Mastered"
-                                    ? "Mastery achieved — continue periodic retrieval practice."
+                                    ? lg.masteryContinuePractice
                                     : (gap.dynamicGapType === "Insufficient Evidence" || gap.gapType === "Insufficient Evidence")
-                                    ? "Recommend 3-5 Item Diagnostic Exit Ticket"
-                                    : "Ready for 5-Step Concrete Remedial Plan")}
+                                    ? lg.diagnosticExitTicketPlan
+                                    : lg.readyForPlanLabel)}
                               </span>
                             </div>
                             {gap.dynamicStatus !== "Mastered" && (
@@ -2194,10 +2201,10 @@ export default function LearningGapsPage() {
                                 <Layers className="w-3.5 h-3.5 mr-1" />
                                 <span>
                                   {generatingPlanId === gap.id
-                                    ? "Generating..."
+                                    ? lg.generatingBtn
                                     : hasExistingPlan
-                                    ? "View 5-Step Plan"
-                                    : "Generate 5-Step Plan"}
+                                    ? lg.viewPlanBtn
+                                    : lg.generatePlanBtn}
                                 </span>
                               </Button>
                             )}
@@ -2224,8 +2231,8 @@ export default function LearningGapsPage() {
                                     <Sparkles className="w-3.5 h-3.5 text-[#B26A1B]" />
                                     <span>
                                       {feedback.hasHistoricalEvidence
-                                        ? "Historical Intervention Effectiveness"
-                                        : "Intervention Evidence Status"}
+                                        ? lg.historicalEffectiveness
+                                        : lg.interventionEvidenceStatus}
                                     </span>
                                   </span>
                                   {feedback.hasHistoricalEvidence && feedback.averageObservedImprovement !== undefined && (

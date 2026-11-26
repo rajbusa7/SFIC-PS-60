@@ -87,7 +87,8 @@ export default function StudentDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const { t, language, formatSubject, formatPriority, formatStatus, formatClass } = useLanguage();
+  const { t, tr, formatSubject, formatPriority, formatStatus, formatClass } = useLanguage();
+  const sd = t.studentDetail;
 
   const [student, setStudent] = useState<any>(null);
   const [results, setResults] = useState<any[]>([]);
@@ -294,7 +295,7 @@ export default function StudentDetailPage({
     skillNodes = [
       {
         id: "node-init-eval",
-        name: language === "gu" ? "પ્રારંભિક નિદાન (બાકી)" : "Diagnostic Assessment (Pending)",
+        name: sd.diagnosticPendingNode,
         subject: "Curriculum",
         score: 0,
         status: "locked",
@@ -304,7 +305,7 @@ export default function StudentDetailPage({
       },
       {
         id: "node-progression",
-        name: language === "gu" ? "અભ્યાસક્રમ પ્રગતિ" : "Curriculum Progression",
+        name: sd.curriculumProgressionNode,
         subject: "Curriculum",
         score: 0,
         status: "locked",
@@ -323,8 +324,8 @@ export default function StudentDetailPage({
             href="/students"
             className="inline-flex items-center gap-1.5 text-xs font-bold text-[#7A6862] hover:text-[#49352F]"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>{language === "gu" ? "બધા વિદ્યાર્થીઓ પર પાછા જાઓ" : "Back to All Students"}</span>
+            <ArrowLeft className="w-3.5 h-3.5 rtl:rotate-180" />
+            <span>{sd.backToStudents}</span>
           </Link>
           <div className="flex items-center gap-2">
             <Button
@@ -333,8 +334,8 @@ export default function StudentDetailPage({
               onClick={() => fetchAndOpenLinkingModal()}
               className="rounded-full text-xs bg-[#FAF6E9] hover:bg-[#F2CAB3] text-[#B26A1B] border border-[#B26A1B]/30"
             >
-              <KeyRound className="w-3 h-3 mr-1" />
-              <span>{language === "gu" ? "વાલી જોડાણ કોડ" : "Parent Link Code"}</span>
+              <KeyRound className="w-3 h-3 me-1" />
+              <span>{sd.parentLinkCodeBtn}</span>
             </Button>
             <Button
               variant="outline"
@@ -342,8 +343,8 @@ export default function StudentDetailPage({
               onClick={() => setShowEditModal(true)}
               className="rounded-full text-xs bg-white hover:bg-[#F2CAB3] text-[#49352F] border border-[#49352F]/15"
             >
-              <Edit className="w-3 h-3 mr-1" />
-              <span>{language === "gu" ? "પ્રોફાઇલ સંપાદિત કરો" : "Edit Profile"}</span>
+              <Edit className="w-3 h-3 me-1" />
+              <span>{sd.editProfile}</span>
             </Button>
           </div>
         </div>
@@ -366,14 +367,12 @@ export default function StudentDetailPage({
                 )}
                 {student.id === "std-aarav" && (
                   <Badge variant="saffron" size="sm" pulse>
-                    {language === "gu" ? "SFIC ગુજરાત કી ડેમો" : "SFIC Gujarat Key Demo"}
+                    {sd.keyDemoBadge}
                   </Badge>
                 )}
               </div>
               <p className="font-mono text-xs text-[#7A6862]">
-                {language === "gu"
-                  ? `રોલ નં: ${student.studentCode} • નોંધણી ૨૦૨૬`
-                  : `Roll: ${student.studentCode} • Enrolled 2026`}
+                {tr("studentDetail.rollCodeEnrolled", { code: student.studentCode })}
               </p>
               <div className="flex items-center gap-1.5 text-xs text-[#7A6862]">
                 <Building className="w-3.5 h-3.5 text-[#B26A1B] shrink-0" />
@@ -395,8 +394,8 @@ export default function StudentDetailPage({
               onClick={() => setShowEditModal(true)}
               className="rounded-full text-xs bg-white hover:bg-[#F2CAB3] text-[#49352F] border border-[#49352F]/15"
             >
-              <Edit className="w-3.5 h-3.5 mr-1" />
-              <span>{language === "gu" ? "પ્રોફાઇલ સંપાદિત કરો" : "Edit Profile"}</span>
+              <Edit className="w-3.5 h-3.5 me-1" />
+              <span>{sd.editProfile}</span>
             </Button>
 
             {divisionActivity && (
@@ -406,8 +405,8 @@ export default function StudentDetailPage({
                 onClick={() => setShowActivityModal(true)}
                 className="rounded-full text-xs bg-white hover:bg-[#F2CAB3] text-[#49352F] border border-[#49352F]/15"
               >
-                <Play className="w-3.5 h-3.5 fill-current mr-1" />
-                <span>{language === "gu" ? "મહાવરા પ્રવૃત્તિ" : "Practice Activity"}</span>
+                <Play className="w-3.5 h-3.5 fill-current me-1" />
+                <span>{sd.practiceActivityBtn}</span>
               </Button>
             )}
 
@@ -424,8 +423,8 @@ export default function StudentDetailPage({
                 }
                 className="rounded-full text-xs font-black shadow-xs"
               >
-                <RotateCcw className="w-3.5 h-3.5 mr-1" />
-                <span>{t.actions.reassess || "Record Reassessment"}</span>
+                <RotateCcw className="w-3.5 h-3.5 me-1" />
+                <span>{t.actions.reassess}</span>
               </Button>
             </div>
           </div>
@@ -434,57 +433,47 @@ export default function StudentDetailPage({
         {/* 4 Summary Stat Tiles */}
         <div data-tour="student-scores" className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <StatTile
-            label={language === "gu" ? "સરેરાશ પરિણામ" : "Average Performance"}
-            value={results.length > 0 ? avgScore : (language === "gu" ? "બાકી" : "Pending")}
+            label={sd.averagePerformance}
+            value={results.length > 0 ? avgScore : sd.pendingValue}
             suffix={results.length > 0 ? "%" : ""}
             icon={TrendingUp}
             variant="indigo"
             description={
               results.length > 0
-                ? (language === "gu"
-                    ? `${results.length} મૂલ્યાંકનોમાં`
-                    : `Across ${results.length} assessments`)
-                : (language === "gu"
-                    ? "હજુ મૂલ્યાંકન થયેલ નથી"
-                    : "Assessment Pending")
+                ? tr("studentDetail.acrossAssessmentsCount", { count: results.length })
+                : sd.assessmentPendingDesc
             }
             sparklineData={results.length > 0 ? [50, 58, 65, 74, avgScore] : []}
           />
 
           <StatTile
-            label={language === "gu" ? "સક્રિય શીખવાની ખામીઓ" : "Active Learning Gaps"}
+            label={sd.activeLearningGaps}
             value={activeGaps.length}
             icon={AlertTriangle}
             variant={activeGaps.length > 0 ? "coral" : "mint"}
             description={
               results.length === 0
-                ? language === "gu"
-                  ? "પ્રારંભિક નિદાન બાકી છે"
-                  : "Diagnostic Pending"
+                ? sd.diagnosticPendingDesc
                 : activeGaps.length === 0
-                ? language === "gu"
-                  ? "બધી સંકલ્પનાઓ સિદ્ધ!"
-                  : "All concepts mastered!"
-                : language === "gu"
-                ? "૫-પગલાં હસ્તક્ષેપ જરૂરી"
-                : "Requires 5-step intervention"
+                ? sd.allMasteredDesc
+                : sd.requiresInterventionDesc
             }
           />
 
           <StatTile
-            label={language === "gu" ? "સક્રિય ઉપચાર યોજનાઓ" : "Active Remedial Plans"}
+            label={sd.activeRemedialPlans}
             value={remedialPlans.length}
             icon={Layers}
             variant="saffron"
-            description={language === "gu" ? "૫-પગલાં પ્રવૃત્તિ આધારિત" : "5-step manipulatives"}
+            description={sd.fiveStepManipulatives}
           />
 
           <StatTile
-            label={language === "gu" ? "પૂર્ણ થયેલ પ્રવૃત્તિઓ" : "Activities Completed"}
+            label={sd.activitiesCompleted}
             value={attempts.length}
             icon={Gamepad2}
             variant="mint"
-            description={language === "gu" ? "ઇન્ટરેક્ટિવ મહાવરા સત્રો" : "Interactive practice sessions"}
+            description={sd.interactivePracticeSessions}
           />
         </div>
 
@@ -501,7 +490,7 @@ export default function StudentDetailPage({
                 : "text-[#7A6862] hover:text-[#49352F] hover:bg-[#FAF6E9]"
             }`}
           >
-            {language === "gu" ? "3D કૌશલ્ય વૃક્ષ (ઇન્ટરેક્ટિવ)" : "3D Skill Tree (Interactive)"}
+            {sd.tabSkillTree}
           </button>
           <button
             type="button"
@@ -514,9 +503,7 @@ export default function StudentDetailPage({
                 : "text-[#7A6862] hover:text-[#49352F] hover:bg-[#FAF6E9]"
             }`}
           >
-            {language === "gu"
-              ? `શીખવાની ખામીઓ અને સેતુ (${gaps.length})`
-              : `Learning Gaps & The Bridge (${gaps.length})`}
+            {tr("studentDetail.tabGapsWithCount", { count: gaps.length })}
           </button>
           <button
             type="button"
@@ -529,7 +516,7 @@ export default function StudentDetailPage({
                 : "text-[#7A6862] hover:text-[#49352F] hover:bg-[#FAF6E9]"
             }`}
           >
-            {language === "gu" ? "પ્રભુત્વ વિશ્લેષણ" : "Mastery Analytics"}
+            {sd.masteryAnalyticsTab}
           </button>
           <button
             type="button"
@@ -542,9 +529,7 @@ export default function StudentDetailPage({
                 : "text-[#7A6862] hover:text-[#49352F] hover:bg-[#FAF6E9]"
             }`}
           >
-            {language === "gu"
-              ? `મૂલ્યાંકન ઇતિહાસ (${results.length})`
-              : `Assessment History (${results.length})`}
+            {tr("studentDetail.historyWithCount", { count: results.length })}
           </button>
         </div>
 
@@ -567,22 +552,10 @@ export default function StudentDetailPage({
             {gaps.length === 0 ? (
               <Card variant="glass" className="p-8 text-center text-[#7A6862] bg-white border-[#49352F]/12 space-y-2">
                 <p className="font-semibold text-sm text-[#49352F]">
-                  {results.length === 0
-                    ? language === "gu"
-                      ? "પ્રારંભિક મૂલ્યાંકન બાકી છે"
-                      : "Diagnostic Assessment Pending"
-                    : language === "gu"
-                    ? "કોઈ શીખવાની ખામી નથી"
-                    : "No Learning Gaps Detected"}
+                  {results.length === 0 ? sd.diagnosticAssessmentPendingTitle : sd.noGapsDetectedTitle}
                 </p>
                 <p className="text-xs text-[#7A6862] max-w-md mx-auto">
-                  {results.length === 0
-                    ? language === "gu"
-                      ? "આ વિદ્યાર્થી માટે હજુ સુધી કોઈ મૂલ્યાંકન પરિણામ નોંધાયેલ નથી. મૂલ્યાંકન લીધા પછી જ લર્નિંગ ગેપ્સ ઓળખવામાં આવશે."
-                      : "No assessment results have been recorded for this student yet. Learning gaps will be identified once classroom assessments are completed."
-                    : language === "gu"
-                    ? "આ વિદ્યાર્થી તમામ મૂલ્યાંકિત સંકલ્પનાઓમાં પ્રભુત્વ અથવા વિકાસશીલ સ્થિતિ દર્શાવે છે."
-                    : "This student is on track across all evaluated concepts."}
+                  {results.length === 0 ? sd.diagnosticPendingBody : sd.onTrackAllConcepts}
                 </p>
               </Card>
             ) : (
@@ -619,7 +592,7 @@ export default function StudentDetailPage({
                         </Badge>
                       </div>
                       <p className="text-xs text-[#B26A1B] font-medium">
-                        {language === "gu" ? "વિષય:" : "Subject:"}{" "}
+                        {sd.subjectLabel}{" "}
                         {formatSubject(
                           gap.subjectCode || gap.subjectName || gap.conceptId || gap.conceptName
                         )}
@@ -638,16 +611,14 @@ export default function StudentDetailPage({
                         }`}
                         aria-expanded={Boolean(expandedMapGapIds[gap.id])}
                       >
-                        <GitFork className="w-3.5 h-3.5 mr-1 text-[#B26A1B]" />
+                        <GitFork className="w-3.5 h-3.5 me-1 text-[#B26A1B]" />
                         <span>
-                          {expandedMapGapIds[gap.id]
-                            ? (language === "gu" ? "મેપ છુપાવો" : "Hide Gap Map")
-                            : (language === "gu" ? "લર્નિંગ ગેપ મેપ" : "Learning Gap Map")}
+                          {expandedMapGapIds[gap.id] ? sd.hideGapMap : sd.showGapMap}
                         </span>
                         {expandedMapGapIds[gap.id] ? (
-                          <ChevronUp className="w-3.5 h-3.5 ml-1" />
+                          <ChevronUp className="w-3.5 h-3.5 ms-1" />
                         ) : (
-                          <ChevronDown className="w-3.5 h-3.5 ml-1" />
+                          <ChevronDown className="w-3.5 h-3.5 ms-1" />
                         )}
                       </Button>
 
@@ -663,8 +634,8 @@ export default function StudentDetailPage({
                         }
                         className="rounded-full text-xs font-bold"
                       >
-                        <RotateCcw className="w-3.5 h-3.5 mr-1" />
-                        <span>{language === "gu" ? "ડેલ્ટા પુનઃમૂલ્યાંકન" : "Reassess Delta"}</span>
+                        <RotateCcw className="w-3.5 h-3.5 me-1" />
+                        <span>{sd.reassessDeltaBtn}</span>
                       </Button>
 
                       <Link
@@ -677,7 +648,7 @@ export default function StudentDetailPage({
                         }}
                       >
                         <Button variant="outline" size="sm" className="rounded-full text-xs bg-white hover:bg-[#F2CAB3] text-[#49352F] border border-[#49352F]/15">
-                          <span>{language === "gu" ? "૫-પગલાં યોજના →" : "5-Step Plan →"}</span>
+                          <span>{sd.fiveStepPlanBtn}</span>
                         </Button>
                       </Link>
                       <ContextualHelp termKey="remedialPlan" />
@@ -698,7 +669,7 @@ export default function StudentDetailPage({
                       <div className="flex items-center gap-1.5">
                         <span className="text-[10px] uppercase font-bold text-[#7A6862] flex items-center gap-1">
                           <BrainCircuit className="w-3.5 h-3.5 text-[#B26A1B]" />
-                          {language === "gu" ? "એલ્ગોરિધમિક સમજૂતી:" : "Algorithmic Explanation:"}
+                          {sd.algoExplanationLabel}
                         </span>
                         <ContextualHelp termKey="gapDetection" />
                       </div>
@@ -723,23 +694,19 @@ export default function StudentDetailPage({
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card variant="glass" className="p-5 bg-white border-[#49352F]/12 text-[#49352F] shadow-xs">
               <h3 className="font-heading text-base font-bold text-[#49352F] mb-2">
-                {language === "gu" ? "સંકલ્પના સ્કોર સરખામણી" : "Concept Scores Comparison"}
+                {sd.conceptScoresComparison}
               </h3>
               <p className="text-xs text-[#7A6862] mb-4">
-                {language === "gu" ? "મૂળ આધાર વિરુદ્ધ પુનઃમૂલ્યાંકન %" : "Baseline vs Reassessment %"}
+                {sd.baselineVsReassessment}
               </p>
               {conceptScoresData.length === 0 ? (
                 <div className="h-[250px] w-full flex flex-col items-center justify-center text-center p-4 rounded-xl bg-[#FAF6E9]/40 border border-dashed border-[#49352F]/15">
                   <Clock className="w-6 h-6 text-[#B26A1B] mb-2" />
                   <p className="text-xs font-semibold text-[#49352F]">
-                    {language === "gu"
-                      ? "હજુ સુધી કોઈ મૂલ્યાંકન સ્કોર ઉપલબ્ધ નથી."
-                      : "No concept scores recorded yet."}
+                    {sd.noConceptScoresYet}
                   </p>
                   <p className="text-[11px] text-[#7A6862] mt-1 max-w-xs">
-                    {language === "gu"
-                      ? "વિદ્યાર્થીનું પ્રથમ મૂલ્યાંકન નોંધાયા પછી અહીં તુલનાત્મક આલેખ આપોઆપ દેખાશે."
-                      : "Mastery comparison charts will display once student diagnostic evaluations are recorded."}
+                    {sd.chartsAppearHint}
                   </p>
                 </div>
               ) : (
@@ -760,13 +727,13 @@ export default function StudentDetailPage({
                       <Bar
                         dataKey="latest"
                         fill="#2E7D5E"
-                        name={language === "gu" ? "તાજેતરનો સ્કોર %" : "Latest Score %"}
+                        name={sd.latestScorePercent}
                         radius={[4, 4, 0, 0]}
                       />
                       <Bar
                         dataKey="previous"
                         fill="#F2CAB3"
-                        name={language === "gu" ? "મૂળ આધાર %" : "Baseline %"}
+                        name={sd.baselinePercent}
                         radius={[4, 4, 0, 0]}
                       />
                     </BarChart>
@@ -778,34 +745,30 @@ export default function StudentDetailPage({
             <Card variant="glass" className="p-5 flex flex-col justify-between bg-white border-[#49352F]/12 text-[#49352F] shadow-xs">
               <div>
                 <h3 className="font-heading text-base font-bold text-[#49352F] mb-2">
-                  {language === "gu" ? "શિક્ષણશાસ્ત્રીય પ્રભુત્વ નિર્ણય" : "Pedagogical Mastery Verdict"}
+                  {sd.pedagogicalMasteryVerdict}
                 </h3>
                 <div className="space-y-3 mt-4 text-xs">
                   <div className="p-3 rounded-xl bg-[#FAF6E9] border border-[#49352F]/10">
                     <span className="text-[#7A6862] block font-semibold">
-                      {language === "gu" ? "પ્રભુત્વ બેન્ચમાર્ક" : "Mastery Benchmark"}
+                      {sd.masteryBenchmarkLabel}
                     </span>
                     <span className="text-lg font-black text-[#2E7D5E]">
-                      {language === "gu" ? "૮૦% મર્યાદા" : "80% Threshold"}
+                      {sd.threshold80}
                     </span>
                     <p className="text-[11px] text-[#7A6862] mt-0.5">
-                      {language === "gu"
-                        ? "વિદ્યાર્થી મદદ વિના સ્વતંત્ર રીતે સમસ્યા ઉકેલી શકે છે."
-                        : "Student demonstrates independent problem-solving without prompt assistance."}
+                      {sd.threshold80Desc}
                     </p>
                   </div>
 
                   <div className="p-3 rounded-xl bg-[#FAF6E9] border border-[#49352F]/10">
                     <span className="text-[#7A6862] block font-semibold">
-                      {language === "gu" ? "પ્રગતિશીલ બેન્ચમાર્ક" : "Developing Benchmark"}
+                      {sd.developingBenchmarkLabel}
                     </span>
                     <span className="text-lg font-black text-[#B26A1B]">
-                      {language === "gu" ? "૬૦% મર્યાદા" : "60% Threshold"}
+                      {sd.threshold60}
                     </span>
                     <p className="text-[11px] text-[#7A6862] mt-0.5">
-                      {language === "gu"
-                        ? "મૂળભૂત સંકલ્પના પરિચય; ક્યારેક પ્રવૃત્તિ સાધનો અથવા દ્રશ્ય સહાયની જરૂર પડે છે."
-                        : "Basic conceptual familiarity; requires occasional manipulative or visual aid."}
+                      {sd.threshold60Desc}
                     </p>
                   </div>
                 </div>
@@ -813,9 +776,7 @@ export default function StudentDetailPage({
 
               <Link href="/reports">
                 <Button variant="outline" size="sm" className="w-full rounded-xl text-xs mt-4 bg-white hover:bg-[#F2CAB3] text-[#49352F] border border-[#49352F]/15">
-                  {language === "gu"
-                    ? "પ્રિન્ટેબલ રિપોર્ટ કાર્ડ બનાવો →"
-                    : "Generate Printable Report Card →"}
+                  {sd.generatePrintableCard}
                 </Button>
               </Link>
             </Card>
@@ -825,14 +786,14 @@ export default function StudentDetailPage({
         {/* Tab 4: Assessment History */}
         {activeTab === "history" && (
           <Card variant="glass" className="p-5 overflow-x-auto border-[#49352F]/12 bg-white text-[#49352F] shadow-xs">
-            <table className="w-full text-left text-xs">
+            <table className="w-full text-start text-xs">
               <thead>
                 <tr className="border-b border-[#49352F]/10 text-[#7A6862]">
-                  <th className="p-3 font-semibold">{language === "gu" ? "તારીખ" : "Date"}</th>
-                  <th className="p-3 font-semibold">{language === "gu" ? "મૂલ્યાંકન શીર્ષક" : "Assessment Title"}</th>
-                  <th className="p-3 font-semibold">{language === "gu" ? "ગુણ" : "Marks"}</th>
-                  <th className="p-3 font-semibold">{language === "gu" ? "ટકાવારી" : "Percentage"}</th>
-                  <th className="p-3 font-semibold">{language === "gu" ? "પ્રભુત્વ સ્થિતિ" : "Mastery Status"}</th>
+                  <th className="p-3 font-semibold">{sd.colDate}</th>
+                  <th className="p-3 font-semibold">{sd.colTitle}</th>
+                  <th className="p-3 font-semibold">{sd.colMarks}</th>
+                  <th className="p-3 font-semibold">{sd.colPercentage}</th>
+                  <th className="p-3 font-semibold">{sd.colMasteryStatus}</th>
                 </tr>
               </thead>
               <tbody>
@@ -842,14 +803,10 @@ export default function StudentDetailPage({
                       <div className="flex flex-col items-center justify-center space-y-1">
                         <Clock className="w-5 h-5 text-[#B26A1B] mb-1" />
                         <span className="font-semibold text-xs text-[#49352F]">
-                          {language === "gu"
-                            ? "આ વિદ્યાર્થી માટે કોઈ મૂલ્યાંકન પરિણામ નોંધાયેલ નથી."
-                            : "No assessment results recorded yet."}
+                          {sd.noResultsRecorded}
                         </span>
                         <span className="text-[11px] text-[#7A6862]">
-                          {language === "gu"
-                            ? "પ્રારંભિક મૂલ્યાંકન બાકી છે (Assessment Pending)."
-                            : "Initial assessment is pending."}
+                          {sd.initialPendingDesc}
                         </span>
                       </div>
                     </td>
@@ -864,7 +821,7 @@ export default function StudentDetailPage({
                           {new Date(res.recordedAt || Date.now()).toLocaleDateString()}
                         </td>
                         <td className="p-3 font-bold text-[#49352F]">
-                          {res.assessmentTitle || (language === "gu" ? "નિદાનાત્મક મૂલ્યાંકન" : "Diagnostic Assessment")}
+                          {res.assessmentTitle || sd.defaultDiagnosticTitle}
                         </td>
                         <td className="p-3 text-[#7A6862]">
                           {res.marksObtained} / {res.maximumMarks}
@@ -888,17 +845,7 @@ export default function StudentDetailPage({
                             size="sm"
                             dot
                           >
-                            {isMastered
-                              ? language === "gu"
-                                ? "સિદ્ધ"
-                                : "Mastered"
-                              : isGap
-                              ? language === "gu"
-                                ? "સહાય જરૂરી"
-                                : "Needs Support"
-                              : language === "gu"
-                              ? "પ્રગતિ હેઠળ"
-                              : "Developing"}
+                            {formatStatus(isMastered ? "Mastered" : isGap ? "Needs Support" : "Developing")}
                           </Badge>
                         </td>
                       </tr>

@@ -21,7 +21,8 @@ import {
 
 export default function ParentSettingsPage() {
   const router = useRouter();
-  const { language, setLanguage } = useLanguage();
+  const { t } = useLanguage();
+  const pp = t.parentPortal;
 
   const [parentName, setParentName] = useState("");
   const [parentEmail, setParentEmail] = useState("");
@@ -71,7 +72,7 @@ export default function ParentSettingsPage() {
               className="px-3.5 py-1.5 rounded-xl border border-[#49352F]/15 bg-white text-xs font-bold text-[#49352F] hover:bg-[#FAF6E9] transition-all flex items-center gap-1.5"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Back to Dashboard</span>
+              <span>{pp.backToDashboard}</span>
             </Link>
           </div>
         </div>
@@ -81,23 +82,23 @@ export default function ParentSettingsPage() {
         <div className="p-6 sm:p-8 rounded-3xl bg-white border border-[#49352F]/15 shadow-sm space-y-5">
           <div className="border-b border-[#49352F]/10 pb-4">
             <h1 className="text-xl font-black text-[#49352F]">
-              {language === "gu" ? "વાલી પ્રોફાઇલ અને સેટિંગ્સ" : "Parent Profile & Preferences"}
+              {pp.settingsTitle}
             </h1>
             <p className="text-xs text-[#7A6862] mt-0.5">
-              Manage your personal details, preferred language, and contact numbers.
+              {pp.settingsSubtitle}
             </p>
           </div>
 
           {savedSuccess && (
             <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-900 text-xs flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-              <span>Settings updated successfully!</span>
+              <span>{pp.settingsSavedSuccess}</span>
             </div>
           )}
 
           <form onSubmit={handleSave} className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-[#49352F] block">Parent Full Name</label>
+              <label className="text-xs font-bold text-[#49352F] block">{pp.settingsFullNameLabel}</label>
               <div className="relative">
                 <User className="w-4 h-4 text-[#7A6862] absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
@@ -110,7 +111,7 @@ export default function ParentSettingsPage() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-[#49352F] block">Email Address (Read-Only)</label>
+              <label className="text-xs font-bold text-[#49352F] block">{pp.settingsEmailReadOnlyLabel}</label>
               <div className="relative">
                 <Mail className="w-4 h-4 text-[#7A6862] absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
@@ -123,44 +124,24 @@ export default function ParentSettingsPage() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-[#49352F] block">Contact Phone Number</label>
+              <label className="text-xs font-bold text-[#49352F] block">{pp.settingsPhoneLabel}</label>
               <div className="relative">
                 <Phone className="w-4 h-4 text-[#7A6862] absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+91 98765 43210"
+                  placeholder={pp.settingsPhonePlaceholder}
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#49352F]/20 bg-[#FAF6E9]/60 text-xs font-medium text-[#49352F] focus:outline-none focus:border-[#B26A1B]"
                 />
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-[#49352F] block">Preferred Interface Language</label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setLanguage("gu")}
-                  className={`py-2.5 px-4 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
-                    language === "gu"
-                      ? "bg-[#261B16] text-[#FAF6E9] border-[#261B16]"
-                      : "bg-[#FAF6E9] text-[#7A6862] border-[#49352F]/20 hover:bg-white"
-                  }`}
-                >
-                  ગુજરાતી (Gujarati)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setLanguage("en")}
-                  className={`py-2.5 px-4 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
-                    language === "en"
-                      ? "bg-[#261B16] text-[#FAF6E9] border-[#261B16]"
-                      : "bg-[#FAF6E9] text-[#7A6862] border-[#49352F]/20 hover:bg-white"
-                  }`}
-                >
-                  English
-                </button>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-[#49352F] block">{pp.settingsPreferredLangLabel}</label>
+              <p className="text-[11px] text-[#7A6862]">{pp.settingsLanguageNote}</p>
+              <div className="pt-0.5">
+                <LanguageSelector variant="default" />
               </div>
             </div>
 
@@ -171,7 +152,7 @@ export default function ParentSettingsPage() {
                 className="w-full py-3 rounded-xl bg-[#B26A1B] text-white text-xs font-bold hover:bg-[#8F4E10] transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm"
               >
                 <Save className="w-3.5 h-3.5" />
-                <span>{saving ? "Saving..." : "Save Settings"}</span>
+                <span>{saving ? pp.savingSettingsBtn : pp.saveSettingsBtn}</span>
               </button>
             </div>
           </form>

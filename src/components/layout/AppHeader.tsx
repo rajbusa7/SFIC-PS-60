@@ -41,7 +41,7 @@ export function AppHeader({
   const router = useRouter();
   const pathname = usePathname();
   const { user, role, assignments, selectedSubject, setSelectedSubject, logout } = useAuth();
-  const { t, language } = useLanguage();
+  const { t, tr, formatClass } = useLanguage();
   const { openTutorial } = useTutorial();
 
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -252,7 +252,7 @@ export function AppHeader({
             <input
               autoFocus
               type="text"
-              placeholder={language === "gu" ? "વિદ્યાર્થીઓ, ત્રુટિઓ શોધો..." : "Search students, gaps..."}
+              placeholder={t.header.searchMobilePlaceholder}
               value={ctxSearch}
               onChange={(e) => handleSearchChange(e.target.value)}
               onKeyDown={handleSearchKeyDown}
@@ -451,12 +451,13 @@ export function AppHeader({
                       className="block p-2 rounded-xl bg-[#FAF6E9] dark:bg-[#1E1916] hover:bg-[#F2DCB5]/40 dark:hover:bg-[#2E2520] border border-[#49352F]/10 dark:border-[#F2CAB3]/15 transition-colors"
                     >
                       <p className="font-semibold text-[#49352F] dark:text-[#F4F1E1]">
-                        {gap.studentName} ({language === "gu" ? `ધોરણ ${gap.grade}-અ` : `Class ${gap.grade}-A`})
+                        {gap.studentName} ({formatClass(gap.grade, "A")})
                       </p>
                       <p className="text-[#7A6862] dark:text-[#FAF6E9]/70 text-[11px] mt-0.5">
-                        {language === "gu"
-                          ? `${gap.conceptName} માં સહાયની જરૂર (${gap.latestPercentage}%).`
-                          : `Needs Support in ${gap.conceptName} (${gap.latestPercentage}%).`}
+                        {tr("header.needsSupportIn", {
+                          concept: gap.conceptName,
+                          score: gap.latestPercentage,
+                        })}
                       </p>
                     </Link>
                   ))

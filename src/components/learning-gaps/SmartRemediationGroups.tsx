@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   SmartRemediationGroup,
   RemediationGroupMember,
@@ -54,6 +55,9 @@ export function SmartRemediationGroups({
   ],
   onOpenPlan,
 }: SmartRemediationGroupsProps) {
+  const { t, tr } = useLanguage();
+  const gr = t.groups;
+
   const [isSectionOpen, setIsSectionOpen] = useState(true);
   const [addingToGroupId, setAddingToGroupId] = useState<string | null>(null);
   const [generatingForGroupId, setGeneratingForGroupId] = useState<string | null>(null);
@@ -145,18 +149,18 @@ export function SmartRemediationGroups({
           <div>
             <div className="flex items-center gap-2">
               <h3 className="font-heading text-sm sm:text-base font-bold text-[#49352F]">
-                Smart Remediation Grouping
+                {gr.title}
               </h3>
               <Badge variant="mint" size="sm">
-                AI Cohort Assistant
+                {gr.aiAssistantBadge}
               </Badge>
               <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold text-[#2E7D5E] bg-[#EAF4EE] px-2 py-0.5 rounded-full border border-[#2E7D5E]/20">
                 <ShieldCheck className="w-3 h-3" />
-                Teacher in Control
+                {gr.teacherInControl}
               </span>
             </div>
             <p className="text-[11px] text-[#7A6862]">
-              Clusters students sharing root prerequisite gaps so you can assign targeted small-group interventions in one click.
+              {gr.subtitle}
             </p>
           </div>
         </div>
@@ -168,7 +172,7 @@ export function SmartRemediationGroups({
             onClick={() => setShowDismissed(!showDismissed)}
             className="text-[11px] font-semibold text-[#7A6862] hover:text-[#49352F] underline underline-offset-2 cursor-pointer"
           >
-            {showDismissed ? "Show Active Suggestions" : "View Dismissed"}
+            {showDismissed ? gr.showActive : gr.viewDismissed}
           </button>
 
           <Button
@@ -177,7 +181,7 @@ export function SmartRemediationGroups({
             onClick={() => setIsSectionOpen(!isSectionOpen)}
             className="rounded-full text-xs bg-white text-[#49352F] border-[#49352F]/15 hover:bg-[#FAF6E9]"
           >
-            <span>{isSectionOpen ? "Collapse Groups" : "Expand Groups"}</span>
+            <span>{isSectionOpen ? gr.collapseGroups : gr.expandGroups}</span>
             {isSectionOpen ? (
               <ChevronUp className="w-3.5 h-3.5 ml-1" />
             ) : (
@@ -195,8 +199,8 @@ export function SmartRemediationGroups({
               <Info className="w-5 h-5 mx-auto text-[#B26A1B]" />
               <p className="text-xs font-semibold text-[#49352F]">
                 {showDismissed
-                  ? "No dismissed suggestions."
-                  : "All suggested remediation groups have been processed or dismissed."}
+                  ? gr.noDismissed
+                  : gr.allProcessed}
               </p>
               {showDismissed && (
                 <button
@@ -204,7 +208,7 @@ export function SmartRemediationGroups({
                   onClick={() => setShowDismissed(false)}
                   className="text-xs text-[#B26A1B] underline font-bold"
                 >
-                  Return to Active Suggestions
+                  {gr.returnActive}
                 </button>
               )}
             </div>
@@ -242,7 +246,7 @@ export function SmartRemediationGroups({
                         {isAccepted && (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#EAF4EE] text-[#2E7D5E] border border-[#2E7D5E]/20">
                             <CheckCircle2 className="w-2.5 h-2.5" />
-                            <span>Accepted</span>
+                            <span>{gr.acceptedBadge}</span>
                           </span>
                         )}
                       </div>
@@ -253,7 +257,7 @@ export function SmartRemediationGroups({
                       <div className="p-2.5 rounded-xl bg-[#FBECE9]/60 border border-[#C54738]/20 space-y-0.5">
                         <span className="text-[10px] uppercase font-bold text-[#A93327] flex items-center gap-1">
                           <BrainCircuit className="w-3 h-3" />
-                          Shared Issue:
+                          {gr.sharedIssueLabel}
                         </span>
                         <p className="font-bold text-[#49352F] text-[11px] leading-tight">
                           {group.sharedIssue}
@@ -263,7 +267,7 @@ export function SmartRemediationGroups({
                       <div className="p-2.5 rounded-xl bg-[#FFFBEB]/70 border border-[#B26A1B]/20 space-y-0.5">
                         <span className="text-[10px] uppercase font-bold text-[#8D4E10] flex items-center gap-1">
                           <Wrench className="w-3 h-3" />
-                          Suggested Intervention:
+                          {gr.suggestedInterventionLabel}
                         </span>
                         <p className="font-bold text-[#49352F] text-[11px] leading-tight">
                           {group.suggestedIntervention}
@@ -272,17 +276,17 @@ export function SmartRemediationGroups({
                     </div>
 
                     <p className="text-[11px] text-[#7A6862] leading-relaxed">
-                      <strong className="text-[#49352F]">Pedagogical Rationale:</strong> {group.groupRationale}
+                      <strong className="text-[#49352F]">{gr.rationaleLabel}</strong> {group.groupRationale}
                     </p>
 
                     {/* Student Member Chips (With Remove Interaction) */}
                     <div className="space-y-1.5 pt-1">
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-[10px] uppercase font-bold text-[#7A6862] tracking-wider">
-                          Group Members ({group.students.length} Students):
+                          {tr("groups.groupMembersHeader", { count: group.students.length })}
                         </span>
                         <span className="text-[10px] text-[#7A6862] italic">
-                          Click &times; to remove student
+                          {gr.removeHint}
                         </span>
                       </div>
 
@@ -295,20 +299,20 @@ export function SmartRemediationGroups({
                                 ? "bg-[#EAF4EE] text-[#2E7D5E] border-[#2E7D5E]/30"
                                 : "bg-[#FAF6E9] text-[#49352F] border-[#49352F]/15"
                             }`}
-                            title={`Score: ${student.currentScore}% | Misconception: ${student.errorPattern || group.sharedIssue}`}
+                            title={tr("groups.memberTooltip", { score: student.currentScore, issue: student.errorPattern || group.sharedIssue })}
                           >
                             <span>{student.studentName}</span>
                             <span className="text-[10px] text-[#7A6862]">({student.currentScore}%)</span>
                             {student.isCustomAdded && (
                               <span className="text-[9px] uppercase font-bold text-[#2E7D5E]">
-                                (Added)
+                                {gr.addedTag}
                               </span>
                             )}
                             <button
                               type="button"
                               onClick={() => handleRemove(group, student.studentId)}
                               className="w-3.5 h-3.5 rounded-full hover:bg-[#C54738]/20 hover:text-[#C54738] flex items-center justify-center text-[#7A6862] ml-0.5 cursor-pointer"
-                              title={`Remove ${student.studentName} from this group`}
+                              title={tr("groups.removeTooltip", { name: student.studentName })}
                             >
                               <X className="w-2.5 h-2.5" />
                             </button>
@@ -330,7 +334,7 @@ export function SmartRemediationGroups({
                               className="text-xs bg-transparent outline-none text-[#49352F] cursor-pointer"
                             >
                               <option value="" disabled>
-                                Select student...
+                                {gr.selectStudentPlaceholder}
                               </option>
                               {availableClassStudents
                                 .filter((s) => !group.students.some((m) => m.studentId === s.id))
@@ -355,7 +359,7 @@ export function SmartRemediationGroups({
                             className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold text-[#B26A1B] bg-[#FFFBEB] hover:bg-[#F2DCB5] border border-[#B26A1B]/30 transition-colors cursor-pointer"
                           >
                             <Plus className="w-3 h-3" />
-                            <span>Add Student</span>
+                            <span>{gr.addStudentBtn}</span>
                           </button>
                         )}
                       </div>
@@ -372,7 +376,7 @@ export function SmartRemediationGroups({
                           className="rounded-full text-xs text-[#2E7D5E] border-[#2E7D5E]/30 hover:bg-[#EAF4EE]"
                         >
                           <Undo2 className="w-3 h-3 mr-1" />
-                          <span>Restore Suggestion</span>
+                          <span>{gr.restoreBtn}</span>
                         </Button>
                       ) : (
                         <button
@@ -380,7 +384,7 @@ export function SmartRemediationGroups({
                           onClick={() => handleDismiss(group)}
                           className="text-[11px] font-semibold text-[#7A6862] hover:text-[#C54738] transition-colors cursor-pointer"
                         >
-                          Dismiss Suggestion
+                          {gr.dismissBtn}
                         </button>
                       )}
 
@@ -394,7 +398,7 @@ export function SmartRemediationGroups({
                             className="rounded-full text-xs bg-white text-[#2E7D5E] border-[#2E7D5E]/30 hover:bg-[#EAF4EE] font-semibold"
                           >
                             <Check className="w-3.5 h-3.5 mr-1" />
-                            <span>Accept Group</span>
+                            <span>{gr.acceptBtn}</span>
                           </Button>
                         )}
 
@@ -411,7 +415,7 @@ export function SmartRemediationGroups({
                             title="View and print group 5-step remedial plan"
                           >
                             <Layers className="w-3.5 h-3.5 mr-1" />
-                            <span>View / Print Group Plan</span>
+                            <span>{gr.viewPrintPlanBtn}</span>
                           </Button>
                         ) : (
                           <Button
@@ -424,8 +428,8 @@ export function SmartRemediationGroups({
                             <Layers className="w-3.5 h-3.5 mr-1" />
                             <span>
                               {generatingForGroupId === group.id
-                                ? "Generating Plan..."
-                                : "Generate Group 5-Step Plan"}
+                                ? gr.generatingPlanBtn
+                                : gr.generateGroupPlanBtn}
                             </span>
                           </Button>
                         )}

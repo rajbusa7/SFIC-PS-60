@@ -28,7 +28,8 @@ interface ProgressTimelineProps {
 }
 
 export function ProgressTimeline({ gap, studentName }: ProgressTimelineProps) {
-  const { language } = useLanguage();
+  const { t, tr, formatStatus, formatDate: formatLocaleDate } = useLanguage();
+  const tl = t.timeline;
 
   const history: AssessmentHistoryItem[] = gap.assessmentHistory || [];
   const isSingleAssessment = history.length <= 1;
@@ -53,14 +54,8 @@ export function ProgressTimeline({ gap, studentName }: ProgressTimelineProps) {
   };
 
   const formatDate = (dateStr?: string) => {
-    if (!dateStr) return "Recorded date";
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return dateStr;
-    return d.toLocaleDateString("en-GB", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
+    if (!dateStr) return tl.recordedDateFallback;
+    return formatLocaleDate(dateStr) || dateStr;
   };
 
   return (
@@ -70,9 +65,7 @@ export function ProgressTimeline({ gap, studentName }: ProgressTimelineProps) {
         <div className="flex items-center gap-1.5">
           <Calendar className="w-3.5 h-3.5 text-[#B26A1B]" />
           <span className="font-heading font-bold text-xs uppercase tracking-wider text-[#49352F]">
-            {language === "gu"
-              ? "સમયાનુસાર પ્રગતિ સમયરેખા (લોન્ગિટ્યુડીનલ ટ્રેકિંગ)"
-              : "Longitudinal Progress & Assessment Timeline"}
+            {tl.headerTitle}
           </span>
         </div>
 
@@ -80,7 +73,7 @@ export function ProgressTimeline({ gap, studentName }: ProgressTimelineProps) {
           {gap.gapReopened && (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FBECE9] border border-[#C54738]/30 text-[#A93327]">
               <AlertTriangle className="w-3 h-3 text-[#C54738]" />
-              <span>GAP REOPENED</span>
+              <span>{tl.gapReopenedTag}</span>
             </span>
           )}
 
@@ -96,7 +89,7 @@ export function ProgressTimeline({ gap, studentName }: ProgressTimelineProps) {
           >
             <span className="flex items-center gap-1">
               {getTrendIcon()}
-              <span>{gap.trendText || trend}</span>
+              <span>{gap.trendText || (trend === "Improving" ? t.learningGaps.trendImproving : trend === "Declining" ? t.learningGaps.trendDeclining : trend === "Stable" ? t.learningGaps.trendStable : t.learningGaps.trendInsufficient)}</span>
             </span>
           </Badge>
         </div>
@@ -108,15 +101,15 @@ export function ProgressTimeline({ gap, studentName }: ProgressTimelineProps) {
           <div className="flex items-center gap-1.5 font-bold text-xs">
             <AlertTriangle className="w-4 h-4 text-[#C54738] shrink-0" />
             <span>
-              {language === "gu"
-                ? "ગેપ પુનઃ ખુલેલ: અગાઉ નિપુણતા પ્રાપ્ત કરેલી હતી"
-                : "Gap Reopened: Competency Previously Mastered"}
+              {tl.reopenedTitle}
             </span>
           </div>
           <p className="text-[11px] leading-relaxed text-[#49352F]">
-            {language === "gu"
-              ? `વિદ્યાર્થીએ અગાઉ ${gap.previousMasteryScore || 85}% સ્કોર સાથે નિપુણતા પ્રાપ્ત કરી હતી, પરંતુ તાજેતરના મૂલ્યાંકનોમાં સ્કોર ઘટીને ${currentScore}% થયો છે. સંકલ્પનાત્મક સ્પષ્ટતા પુનઃસ્થાપિત કરવા ઉપચારાત્મક મહાવરો ફરી શરૂ કરવામાં આવ્યો છે.`
-              : `This student previously demonstrated verified mastery (${gap.previousMasteryScore || 85}%${gap.masteryDate ? ` on ${formatDate(gap.masteryDate)}` : ""}), but performance has fallen to ${currentScore}% across consecutive assessments. Targeted intervention is re-activated.`}
+            {tr("timeline.reopenedNarrative", {
+              prev: gap.previousMasteryScore || 85,
+              datePart: gap.masteryDate ? tr("timeline.onDatePart", { date: formatDate(gap.masteryDate) }) : "",
+              curr: currentScore,
+            })}
           </p>
         </div>
       )}
@@ -128,7 +121,7 @@ export function ProgressTimeline({ gap, studentName }: ProgressTimelineProps) {
             <span className="font-bold text-[#49352F] flex items-center gap-1.5">
               <Info className="w-3.5 h-3.5 text-[#B26A1B]" />
               <span>
-                {language === "gu" ? "પ્રારંભિક મૂલ્યાંકન (પ્રથમ નોંધાયેલ અવલોકન)" : "Initial Assessment (First Recorded Observation)"}
+                {tl.initialAssessmentBadge}
               </span>
             </span>
             <span className="font-mono font-bold text-xs text-[#49352F]">
@@ -137,9 +130,9 @@ export function ProgressTimeline({ gap, studentName }: ProgressTimelineProps) {
           </div>
 
           <p className="text-[11px] text-[#7A6862] leading-relaxed">
-            {language === "gu"
-              ? `આ સંકલ્પના માટે ફક્ત ૧ મૂલ્યાંકન રેકોર્ડ (${formatDate(history[0]?.date || gap.updatedAt)}) ઉપલબ્ધ છે. એક જ ડેટા પોઈન્ટ પરથી કોઈ પ્રગતિ કે વલણનું અનુમાન લગાવી શકાતું નથી. પુનઃમૂલ્યાંકન નોંધ્યા પછી સમયરેખા અને વૃદ્ધિ ડેલ્ટા સક્રિય થશે.`
-              : `This competency has 1 recorded observation (${formatDate(history[0]?.date || gap.updatedAt)}). Longitudinal trend tracking requires a second observation; use Reassess Delta after classroom intervention to establish a growth trajectory.`}
+            {tr("timeline.singleObservationDetail", {
+              date: formatDate(history[0]?.date || gap.updatedAt),
+            })}
           </p>
         </div>
       ) : (
@@ -148,7 +141,7 @@ export function ProgressTimeline({ gap, studentName }: ProgressTimelineProps) {
           {/* Milestone Chain Ribbon */}
           <div className="p-3 rounded-xl bg-[#FAF6E9] border border-[#49352F]/10 space-y-2">
             <span className="text-[10px] font-bold uppercase tracking-wider text-[#7A6862] block">
-              {language === "gu" ? "મૂલ્યાંકન પ્રગતિ ક્રમ:" : "Assessment Progression Pathway:"}
+              {tl.progressionPathwayLabel}
             </span>
 
             <div className="flex flex-wrap items-center gap-2">
@@ -213,7 +206,7 @@ export function ProgressTimeline({ gap, studentName }: ProgressTimelineProps) {
                             : "bg-[#C54738]/10 text-[#A93327]"
                         }`}
                       >
-                        {step.status}
+                        {formatStatus(step.status)}
                       </span>
                     </div>
 
@@ -230,7 +223,7 @@ export function ProgressTimeline({ gap, studentName }: ProgressTimelineProps) {
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center text-xs">
             <div className="p-2 rounded-xl bg-white border border-[#49352F]/10">
               <span className="text-[10px] text-[#7A6862] block font-semibold">
-                {language === "gu" ? "પ્રારંભિક સ્કોર" : "Initial Score"}
+                {tl.initialScoreLabel}
               </span>
               <span className="font-heading font-bold text-[#49352F]">
                 {history[0]?.score ?? currentScore}%
@@ -239,7 +232,7 @@ export function ProgressTimeline({ gap, studentName }: ProgressTimelineProps) {
 
             <div className="p-2 rounded-xl bg-white border border-[#49352F]/10">
               <span className="text-[10px] text-[#7A6862] block font-semibold">
-                {language === "gu" ? "વર્તમાન સ્કોર" : "Current Score"}
+                {tl.currentScoreLabel}
               </span>
               <span className="font-heading font-bold text-[#49352F]">
                 {currentScore}%
@@ -248,7 +241,7 @@ export function ProgressTimeline({ gap, studentName }: ProgressTimelineProps) {
 
             <div className="p-2 rounded-xl bg-white border border-[#49352F]/10">
               <span className="text-[10px] text-[#7A6862] block font-semibold">
-                {language === "gu" ? "કુલ સુધારો" : "Total Delta"}
+                {tl.totalDeltaLabel}
               </span>
               <span
                 className={`font-heading font-bold ${
@@ -265,19 +258,19 @@ export function ProgressTimeline({ gap, studentName }: ProgressTimelineProps) {
 
             <div className="p-2 rounded-xl bg-white border border-[#49352F]/10">
               <span className="text-[10px] text-[#7A6862] block font-semibold">
-                {language === "gu" ? "મૂલ્યાંકનો" : "Assessments"}
+                {tl.assessmentsLabel}
               </span>
               <span className="font-heading font-bold text-[#49352F]">
-                {history.length} recorded
+                {tr("timeline.recordedCount", { count: history.length })}
               </span>
             </div>
 
             <div className="p-2 rounded-xl bg-white border border-[#49352F]/10 col-span-2 sm:col-span-1">
               <span className="text-[10px] text-[#7A6862] block font-semibold">
-                {language === "gu" ? "હસ્તક્ષેપો" : "Interventions"}
+                {tl.interventionsLabel}
               </span>
               <span className="font-heading font-bold text-[#49352F]">
-                {gap.numberOfInterventions || (gap.remedialPlanId ? 1 : 0)} completed
+                {tr("timeline.completedCount", { count: gap.numberOfInterventions || (gap.remedialPlanId ? 1 : 0) })}
               </span>
             </div>
           </div>

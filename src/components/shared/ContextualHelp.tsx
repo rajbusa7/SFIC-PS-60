@@ -19,50 +19,32 @@ interface ContextualHelpProps {
   className?: string;
 }
 
-const TERM_DEFAULTS: Record<
+const TERM_META: Record<
   HelpTermKey,
   {
-    titleEn: string;
-    titleGu: string;
-    descEn: string;
-    descGu: string;
+    titleField: "masteryThresholdTitle" | "gapDetectionTitle" | "deltaTitle" | "remedialPlanTitle";
+    descField: "masteryThresholdDesc" | "gapDetectionDesc" | "deltaDesc" | "remedialPlanDesc";
     tab: string;
   }
 > = {
   masteryThreshold: {
-    titleEn: "60% Mastery Benchmark",
-    titleGu: "૬૦% નિપુણતા બેન્ચમાર્ક",
-    descEn:
-      "Scores below 60% trigger an automatic Learning Gap flag. 60–79% indicates Developing proficiency, and 80%+ marks verified Mastery.",
-    descGu:
-      "૬૦% થી ઓછા ગુણ પર આપોઆપ ત્રુટિ ફ્લેગ થાય છે. ૬૦–૭૯% વિકાસશીલ અને ૮૦%+ નિપુણ દરજ્જો આપે છે.",
+    titleField: "masteryThresholdTitle",
+    descField: "masteryThresholdDesc",
     tab: "faq",
   },
   gapDetection: {
-    titleEn: "Deterministic Gap Detection",
-    titleGu: "પારદર્શક ત્રુટિ ઓળખ એન્જિન",
-    descEn:
-      "Transparent diagnostic rules compare student assessment results directly to NIPUN Bharat learning outcomes with zero black-box obscurity.",
-    descGu:
-      "મૂલ્યાંકન પરિણામોની નિપુણ ભારત માપદંડો સાથે સીધી સરખામણી કરી બાળક ક્યાં અટક્યું તેનું સ્પષ્ટ કારણ દર્શાવાય છે.",
+    titleField: "gapDetectionTitle",
+    descField: "gapDetectionDesc",
     tab: "workflow",
   },
   delta: {
-    titleEn: "Percentage-Point Delta (+pp)",
-    titleGu: "પર્સેન્ટેજ-પોઇન્ટ વૃદ્ધિ (+pp)",
-    descEn:
-      "The absolute numerical increase in score from baseline to post-intervention re-test (e.g. 35% to 85% = +50 pp gain).",
-    descGu:
-      "પ્રારંભિક ટેસ્ટ અને ઉપચાર પછીના પુનઃટેસ્ટ વચ્ચેનો ચોખ્ખો વધારો (જેમ કે ૩૫% થી ૮૫% = +૫૦ pp સુધારો).",
+    titleField: "deltaTitle",
+    descField: "deltaDesc",
     tab: "glossary",
   },
   remedialPlan: {
-    titleEn: "5-Step Remedial Plan",
-    titleGu: "૫-પગલાંની ઉપચારાત્મક યોજના",
-    descEn:
-      "Structured concrete teaching steps starting with physical manipulatives (beads, bowls) before advancing to visual diagrams and equations.",
-    descGu:
-      "મણકા-સળીઓ જેવા મૂર્ત સાધનોથી શરૂ કરી ક્રમશઃ ચિત્રો અને ગણતરી તરફ આગળ વધતી રચનાત્મક શિક્ષણ પદ્ધતિ.",
+    titleField: "remedialPlanTitle",
+    descField: "remedialPlanDesc",
     tab: "lessons",
   },
 };
@@ -74,7 +56,7 @@ export function ContextualHelp({
   tutorialTab,
   className = "",
 }: ContextualHelpProps) {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
 
@@ -91,23 +73,15 @@ export function ContextualHelp({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
 
-  const config = termKey ? TERM_DEFAULTS[termKey] : null;
+  const config = termKey ? TERM_META[termKey] : null;
 
   const title =
     customTitle ||
-    (config
-      ? language === "gu"
-        ? config.titleGu
-        : config.titleEn
-      : "Quick Help");
+    (config ? t.help[config.titleField] : t.help.quickHelpTitle);
 
   const desc =
     customDesc ||
-    (config
-      ? language === "gu"
-        ? config.descGu
-        : config.descEn
-      : "Contextual educational reference.");
+    (config ? t.help[config.descField] : t.help.quickHelpDesc);
 
   const tab = tutorialTab || (config ? config.tab : "faq");
 
@@ -151,7 +125,7 @@ export function ContextualHelp({
               onClick={() => setIsOpen(false)}
               className="text-[10px] font-bold text-[#3DDBA9] hover:underline flex items-center gap-0.5"
             >
-              <span>{t.help?.learnMore || (language === "gu" ? "ટ્યુટોરિયલમાં વધુ જુઓ" : "Learn more in Tutorial")}</span>
+              <span>{t.help.learnMore}</span>
               <ExternalLink className="w-2.5 h-2.5" />
             </Link>
           </div>

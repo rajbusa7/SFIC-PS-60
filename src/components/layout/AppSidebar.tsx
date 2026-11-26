@@ -29,7 +29,7 @@ import { triggerPageTour } from "@/components/tutorial/SpotlightTour";
 export function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const { openTutorial } = useTutorial();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
@@ -46,9 +46,9 @@ export function AppSidebar() {
     },
     {
       href: "/notices",
-      label: language === "gu" ? "વાલી સેતુ અને સૂચનાઓ" : "Parent Bridge & Notices",
+      label: t.nav.parentBridgeNotices,
       icon: Users,
-      badge: language === "gu" ? "સંકલિત સેતુ" : "Unified",
+      badge: t.sidebar.badgeUnified,
       badgeColor: "bg-[#F2CAB3] text-[#49352F] border border-[#49352F]/15 font-bold",
     },
     { href: "/students", label: t.nav.students, icon: Users },

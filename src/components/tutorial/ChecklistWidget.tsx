@@ -18,46 +18,36 @@ import {
 } from "lucide-react";
 
 export interface ChecklistStep {
-  id: number;
-  titleKey: string;
-  defaultTitleEn: string;
-  defaultTitleGu: string;
+  id: 1 | 2 | 3 | 4;
+  titleKey: "step1" | "step2" | "step3" | "step4";
+  actionBtnKey: "step1Btn" | "step2Btn" | "step3Btn" | "step4Btn";
   actionUrl: string;
-  actionTextKey: string;
 }
 
 const CHECKLIST_STEPS: ChecklistStep[] = [
   {
     id: 1,
-    titleKey: "checklist.step1",
-    defaultTitleEn: "Review your class overview & attention list",
-    defaultTitleGu: "વર્ગખંડ યાદી અને ચેતવણીઓની સમીક્ષા કરો",
+    titleKey: "step1",
+    actionBtnKey: "step1Btn",
     actionUrl: "/dashboard",
-    actionTextKey: "Review Class",
   },
   {
     id: 2,
-    titleKey: "checklist.step2",
-    defaultTitleEn: "Open a student who needs support (Aarav)",
-    defaultTitleGu: "સહાયની જરૂર હોય તેવા વિદ્યાર્થીને ખોલો (આરવ)",
+    titleKey: "step2",
+    actionBtnKey: "step2Btn",
     actionUrl: "/students/std-aarav",
-    actionTextKey: "Open Aarav",
   },
   {
     id: 3,
-    titleKey: "checklist.step3",
-    defaultTitleEn: "Generate a 5-step concrete remedial plan",
-    defaultTitleGu: "૫-પગલાંની મૂર્ત ઉપચારાત્મક યોજના બનાવો",
+    titleKey: "step3",
+    actionBtnKey: "step3Btn",
     actionUrl: "/remedial-plans",
-    actionTextKey: "View Plan",
   },
   {
     id: 4,
-    titleKey: "checklist.step4",
-    defaultTitleEn: "Enter a re-test score & verify improvement (+pp)",
-    defaultTitleGu: "પુનઃટેસ્ટ ગુણ દાખલ કરી સુધારો જુઓ (+pp)",
+    titleKey: "step4",
+    actionBtnKey: "step4Btn",
     actionUrl: "/students/std-aarav",
-    actionTextKey: "Reassess",
   },
 ];
 
@@ -66,7 +56,7 @@ const STORAGE_KEY_DISMISSED = "shikshasetu_checklist_dismissed";
 const STORAGE_KEY_CELEBRATED = "shikshasetu_checklist_celebrated";
 
 export function ChecklistWidget() {
-  const { t, language } = useLanguage();
+  const { t, tr } = useLanguage();
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [isExpanded, setIsExpanded] = useState(true);
   const [isDismissed, setIsDismissed] = useState(false);
@@ -180,7 +170,7 @@ export function ChecklistWidget() {
           type="button"
           onClick={handleRestore}
           className="group flex items-center gap-2 px-3 py-2 rounded-2xl bg-[#14123D]/95 hover:bg-[#14123D] border border-[#FF8A3D]/40 text-white shadow-xl backdrop-blur-xl transition-all hover:scale-105 cursor-pointer"
-          title={language === "gu" ? "ઓનબોર્ડિંગ ચેકલિસ્ટ બતાવો" : "Show Onboarding Checklist"}
+          title={t.checklist.showAgain}
         >
           <div className="relative w-5 h-5 flex items-center justify-center">
             <svg width="22" height="22" className="transform -rotate-90">
@@ -200,7 +190,7 @@ export function ChecklistWidget() {
             <span className="absolute text-[8px] font-bold">{count}/{total}</span>
           </div>
           <span className="text-[11px] font-bold text-slate-200 group-hover:text-amber-400 transition-colors">
-            {language === "gu" ? "ચેકલિસ્ટ (૪ પગલાં)" : "Onboarding"}
+            {t.checklist.onboardingChip}
           </span>
         </button>
       </div>
@@ -249,7 +239,7 @@ export function ChecklistWidget() {
           <div>
             <div className="flex items-center gap-1.5">
               <h4 className="text-xs font-bold text-white">
-                {t.checklist?.title || (language === "gu" ? "૪ સરળ પગલાંમાં શરૂ કરો" : "Get Started in 4 Steps")}
+                {t.checklist.title}
               </h4>
               {isAllComplete && (
                 <span className="px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] font-extrabold uppercase">
@@ -258,7 +248,7 @@ export function ChecklistWidget() {
               )}
             </div>
             <p className="text-[10px] text-slate-300">
-              {count} of {total} completed • {isAllComplete ? (language === "gu" ? "સંપૂર્ણ સફળતા!" : "Ready to teach!") : (language === "gu" ? "પ્રગતિમાં..." : "In progress")}
+              {tr("checklist.progressSummary", { count, total })} &bull; {isAllComplete ? t.checklist.readyToTeach : t.checklist.inProgress}
             </p>
           </div>
         </div>
@@ -293,28 +283,24 @@ export function ChecklistWidget() {
               <div className="flex items-center justify-center gap-1.5 text-xs font-black text-emerald-300">
                 <Sparkles className="w-4 h-4 text-emerald-400" aria-hidden="true" />
                 <span>
-                  {t.checklist?.allDone || (language === "gu" ? "તમે તૈયાર છો! ૪ માંથી ૪ પગલાં પૂર્ણ થયા" : "You're ready! All 4 steps completed")}
+                  {t.checklist.allDone}
                 </span>
               </div>
               <p className="text-[11px] text-slate-300">
-                {language === "gu"
-                  ? "તમે વર્ગખંડ સમીક્ષા, વિદ્યાર્થી પસંદગી, ૫-પગલાંની યોજના અને પુનઃમૂલ્યાંકનનો પ્રવાહ પૂર્ણ કર્યો છે."
-                  : "You've successfully tested class monitoring, student gap diagnosis, 5-step concrete intervention, and reassessment."}
+                {t.checklist.allDoneDesc}
               </p>
               <button
                 type="button"
                 onClick={() => fireCelebrationConfetti()}
                 className="mt-1 text-[10px] font-bold text-emerald-400 hover:text-emerald-300 underline cursor-pointer inline-flex items-center gap-1"
               >
-                <span>{language === "gu" ? "ફરીથી ઉજવણી કરો" : "Celebrate again"}</span>
+                <span>{t.checklist.celebrateAgain}</span>
                 <PartyPopper className="w-3 h-3" aria-hidden="true" />
               </button>
             </div>
           ) : (
             <p className="text-[11px] text-slate-300 px-1">
-              {language === "gu"
-                ? "દરેક કાર્ય વર્ગખંડમાં પૂર્ણ કરતાં જ આપોઆપ ટીક થશે:"
-                : "Each action auto-ticks when you perform it in the app:"}
+              {t.checklist.autoTickHint}
             </p>
           )}
 
@@ -322,10 +308,7 @@ export function ChecklistWidget() {
           <div className="space-y-1.5">
             {CHECKLIST_STEPS.map((step) => {
               const isDone = completedSteps.includes(step.id);
-              const title =
-                language === "gu"
-                  ? (t.checklist as any)?.[`step${step.id}`] || step.defaultTitleGu
-                  : (t.checklist as any)?.[`step${step.id}`] || step.defaultTitleEn;
+              const title = t.checklist[step.titleKey];
 
               return (
                 <div
@@ -370,8 +353,8 @@ export function ChecklistWidget() {
                       onClick={(e) => e.stopPropagation()}
                       className="shrink-0 text-[10px] font-bold text-amber-400 hover:text-amber-300 flex items-center gap-0.5 bg-amber-500/10 hover:bg-amber-500/20 px-2 py-0.5 rounded-lg border border-amber-500/20 transition-colors"
                     >
-                      <span>{step.actionTextKey}</span>
-                      <ArrowRight className="w-2.5 h-2.5" />
+                      <span>{t.checklist[step.actionBtnKey]}</span>
+                      <ArrowRight className="w-2.5 h-2.5 rtl:rotate-180" />
                     </Link>
                   )}
                 </div>
@@ -385,7 +368,7 @@ export function ChecklistWidget() {
               href="/tutorial"
               className="text-amber-400 hover:text-amber-300 hover:underline font-semibold flex items-center gap-1"
             >
-              <span>{language === "gu" ? "સંપૂર્ણ માર્ગદર્શિકા →" : "Full Tutorial →"}</span>
+              <span>{t.checklist.fullTutorial}</span>
             </Link>
 
             <button
@@ -400,7 +383,7 @@ export function ChecklistWidget() {
               className="text-slate-400 hover:text-white transition-colors cursor-pointer flex items-center gap-1 text-[10px]"
             >
               <RotateCcw className="w-3 h-3" />
-              <span>{language === "gu" ? "રીસેટ" : "Reset"}</span>
+              <span>{t.checklist.reset}</span>
             </button>
           </div>
         </div>

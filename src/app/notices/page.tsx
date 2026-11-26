@@ -51,7 +51,9 @@ import type { SchoolNotice, NoticeTranslation, NoticeDelivery, SupportedLanguage
 
 export default function UnifiedParentBridgeAndNoticesPage() {
   const { user, role, switchRole } = useAuth();
-  const { t, language } = useLanguage();
+  const { t, tr, formatClass, formatSubject, formatPriority, formatStatus, formatDate } = useLanguage();
+  const no = t.notices;
+  const pp = t.parentPortal;
 
   // Active top-level tab in unified frame
   const [activeTab, setActiveTab] = useState<"bridge" | "feed" | "compose" | "assistant" | "home_activities">("bridge");
@@ -327,17 +329,13 @@ export default function UnifiedParentBridgeAndNoticesPage() {
             <div>
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F2CAB3]/60 dark:bg-[#2A231E] border border-[#49352F]/15 dark:border-[#F2CAB3]/25 text-xs font-bold text-[#49352F] dark:text-[#F4F1E1] mb-2">
                 <Sparkles className="w-3.5 h-3.5 text-[#B26A1B] dark:text-[#F2CAB3]" />
-                <span>{language === "gu" ? "સંકલિત વાલી સેતુ અને પરિપત્ર કેન્દ્ર" : "Unified Parent Bridge & School Notices"}</span>
+                <span>{no.unifiedBadge}</span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-black text-[#49352F] dark:text-[#F4F1E1] tracking-tight font-heading">
-                {language === "gu"
-                  ? "વિદ્યાર્થી શૈક્ષણિક પ્રગતિ, ઉપચાર અને બહુભાષી શાળા સંચાર"
-                  : "Student Academic Progress, Remedial Plans & School Communications"}
+                {no.unifiedTitle}
               </h1>
               <p className="text-xs sm:text-sm text-[#7A6862] dark:text-[#FAF6E9]/75 mt-1 max-w-2xl leading-relaxed">
-                {language === "gu"
-                  ? "એક જ ફ્રેમમાં વિદ્યાર્થીની વાસ્તવિક પ્રગતિ, શિક્ષણ ત્રુટિઓ, ઘરે મદદ કરવાની પ્રવૃત્તિઓ અને અવાજ-સક્ષમ શાળા પરિપત્રોનું નિરીક્ષણ કરો."
-                  : "Monitor verified student progress, pedagogical learning gaps, structured home-learning activities, and voice-enabled school notices in one unified frame."}
+                {no.unifiedSubtitle}
               </p>
             </div>
 
@@ -345,12 +343,12 @@ export default function UnifiedParentBridgeAndNoticesPage() {
             <div className="flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/20">
                 <span className={`w-2 h-2 rounded-full bg-emerald-500 ${isSyncing ? "animate-ping" : "animate-pulse"}`} />
-                <span>{language === "gu" ? "લાઇવ સિંક" : "Live Sync"}</span>
+                <span>{pp.liveSyncLabel}</span>
               </div>
 
               {lastUpdatedTime && (
                 <span className="text-[11px] text-[#7A6862] dark:text-[#FAF6E9]/60 hidden sm:inline">
-                  {language === "gu" ? "અપડેટ: " : "Updated: "}
+                  {pp.updatedLabel}
                   {lastUpdatedTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
                 </span>
               )}
@@ -361,7 +359,7 @@ export default function UnifiedParentBridgeAndNoticesPage() {
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-[#49352F] hover:bg-[#3D2C27] text-white text-xs font-bold shadow-md transition-all cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>{language === "gu" ? "પરિપત્ર લખો" : "Compose Notice"}</span>
+                <span>{no.composeShortBtn}</span>
               </button>
             </div>
           </div>
@@ -371,7 +369,7 @@ export default function UnifiedParentBridgeAndNoticesPage() {
             <div className="flex items-center gap-2">
               <Users className="w-4 h-4 text-[#B26A1B] dark:text-[#F2CAB3]" />
               <span className="text-xs font-bold text-[#49352F] dark:text-[#F4F1E1]">
-                {language === "gu" ? "વિદ્યાર્થી પસંદ કરો:" : "Selected Student:"}
+                {no.selectedStudentLabel}
               </span>
               <div className="flex flex-wrap items-center gap-1.5 ml-1">
                 {linkedStudents.map((child: any) => {
@@ -389,7 +387,7 @@ export default function UnifiedParentBridgeAndNoticesPage() {
                       <UserCheck className="w-3.5 h-3.5" />
                       <span>{child.displayName || child.name}</span>
                       <span className="text-[10px] opacity-75">
-                        (Cl {child.grade}-{child.section})
+                        ({formatClass(child.grade, child.section)})
                       </span>
                     </button>
                   );
@@ -400,11 +398,11 @@ export default function UnifiedParentBridgeAndNoticesPage() {
             {/* Quick Aggregated Metrics */}
             <div className="flex items-center gap-3 text-xs">
               <span className="px-2.5 py-1 rounded-xl bg-white dark:bg-[#26201C] border border-[#49352F]/10 dark:border-[#F2CAB3]/15 font-bold text-[#49352F] dark:text-[#F4F1E1]">
-                {language === "gu" ? "પ્રકાશિત પરિપત્રો: " : "Notices: "}
+                {no.noticesCountPrefix}{" "}
                 <strong className="text-[#B26A1B]">{totalNotices}</strong>
               </span>
               <span className="px-2.5 py-1 rounded-xl bg-white dark:bg-[#26201C] border border-[#49352F]/10 dark:border-[#F2CAB3]/15 font-bold text-[#49352F] dark:text-[#F4F1E1]">
-                {language === "gu" ? "વાલી સ્વીકૃતિઓ: " : "Acknowledged: "}
+                {no.acknowledgedCountPrefix}{" "}
                 <strong className="text-emerald-700 dark:text-emerald-400">{totalAcknowledged}</strong>
               </span>
             </div>
@@ -427,7 +425,7 @@ export default function UnifiedParentBridgeAndNoticesPage() {
               }`}
             >
               <TrendingUp className="w-3.5 h-3.5 text-[#F2CAB3]" />
-              <span>{language === "gu" ? "વાલી સેતુ - વિદ્યાર્થી પ્રગતિ" : "Parent Bridge & Progress"}</span>
+              <span>{no.tabBridgeProgress}</span>
               {activeGapsCount > 0 && (
                 <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#C54738] text-white">
                   {activeGapsCount}
@@ -446,7 +444,7 @@ export default function UnifiedParentBridgeAndNoticesPage() {
               }`}
             >
               <Home className="w-3.5 h-3.5 text-[#2E7D5E]" />
-              <span>{language === "gu" ? "ઘરે બાળકને મદદ" : "Help at Home"}</span>
+              <span>{no.tabHelpHome}</span>
               {homeActivities.length > 0 && (
                 <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#2E7D5E]/20 text-[#2E7D5E]">
                   {completedHomeActivitiesCount}/{homeActivities.length}
@@ -465,7 +463,7 @@ export default function UnifiedParentBridgeAndNoticesPage() {
               }`}
             >
               <Bell className="w-3.5 h-3.5 text-[#B26A1B]" />
-              <span>{language === "gu" ? "શાળા પરિપત્રો અને સૂચનાઓ" : "School Notices & Circulars"}</span>
+              <span>{no.tabNoticesFeed}</span>
             </button>
 
             {/* TAB 4: Compose & AI Simplify */}
@@ -479,7 +477,7 @@ export default function UnifiedParentBridgeAndNoticesPage() {
               }`}
             >
               <Plus className="w-3.5 h-3.5 text-[#2E7D5E]" />
-              <span>{language === "gu" ? "સૂચના રચના અને AI અનુવાદ" : "Compose & AI Translate"}</span>
+              <span>{no.tabComposeTranslate}</span>
             </button>
 
             {/* TAB 5: AI Notice & Remedial Assistant */}
@@ -493,7 +491,7 @@ export default function UnifiedParentBridgeAndNoticesPage() {
               }`}
             >
               <MessageSquare className="w-3.5 h-3.5 text-[#B26A1B]" />
-              <span>{language === "gu" ? "AI સહાયક" : "AI Assistant"}</span>
+              <span>{no.tabAiAssistant}</span>
             </button>
           </div>
 
@@ -509,7 +507,7 @@ export default function UnifiedParentBridgeAndNoticesPage() {
               className="rounded-xl text-xs border-[#49352F]/20 text-[#49352F] dark:text-[#F4F1E1]"
             >
               <RefreshCw className={`w-3.5 h-3.5 mr-1 ${isLoadingBridge ? "animate-spin" : ""}`} />
-              <span>{language === "gu" ? "રીફ્રેશ" : "Refresh"}</span>
+              <span>{pp.refreshBtn}</span>
             </Button>
           </div>
         </div>
@@ -523,7 +521,7 @@ export default function UnifiedParentBridgeAndNoticesPage() {
               <div className="p-16 text-center space-y-3 bg-white dark:bg-[#1E1916] rounded-3xl border border-[#49352F]/15">
                 <Sparkles className="w-8 h-8 animate-spin text-[#B26A1B] mx-auto" />
                 <p className="text-sm font-bold text-[#49352F] dark:text-[#F4F1E1]">
-                  {language === "gu" ? "વિદ્યાર્થીની માહિતી લોડ થઈ રહી છે..." : "Loading Student Information..."}
+                  {no.loadingStudentInfo}
                 </p>
               </div>
             ) : (
@@ -545,18 +543,18 @@ export default function UnifiedParentBridgeAndNoticesPage() {
                               variant={averageScore >= 80 ? "mastered" : averageScore >= 60 ? "developing" : "needsSupport"}
                               size="sm"
                             >
-                              {averageScore >= 80 ? "Mastery (≥80%)" : averageScore >= 60 ? "Developing (60-79%)" : "Support Needed (<60%)"}
+                              {averageScore >= 80 ? pp.masteryThresholdBadge : averageScore >= 60 ? pp.developingThresholdBadge : pp.supportNeededThresholdBadge}
                             </Badge>
                           )}
                         </div>
                         <p className="text-xs text-[#7A6862] dark:text-[#FAF6E9]/75 flex flex-wrap items-center gap-2 mt-0.5">
-                          <span>Class {activeStudent?.grade}-{activeStudent?.section}</span>
+                          <span>{formatClass(activeStudent?.grade, activeStudent?.section)}</span>
                           <span>&bull;</span>
-                          <span>Code: {activeStudent?.studentCode}</span>
+                          <span>{pp.studentCodePrefix} {activeStudent?.studentCode}</span>
                           <span>&bull;</span>
                           <span className="flex items-center gap-1">
                             <Building className="w-3 h-3 text-[#7A6862]" />
-                            {studentDetail?.school?.name || "Model Primary School"}
+                            {studentDetail?.school?.name || pp.defaultSchoolName}
                           </span>
                         </p>
                       </div>
@@ -567,38 +565,38 @@ export default function UnifiedParentBridgeAndNoticesPage() {
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-3 border-t border-[#49352F]/10 dark:border-[#F2CAB3]/15">
                     <div className="p-3.5 rounded-2xl bg-[#FAF6E9]/60 dark:bg-[#26201C] border border-[#49352F]/10 text-center">
                       <span className="text-[11px] font-semibold text-[#7A6862] dark:text-[#FAF6E9]/70 block">
-                        {language === "gu" ? "સરેરાશ શૈક્ષણિક ગુણ" : "Average Score"}
+                        {no.averageScoreCard}
                       </span>
                       <span className="text-2xl font-black text-[#B26A1B]">{averageScore}%</span>
-                      <span className="text-[10px] text-[#7A6862] dark:text-[#FAF6E9]/60 block mt-0.5">{results.length} Assessments</span>
+                      <span className="text-[10px] text-[#7A6862] dark:text-[#FAF6E9]/60 block mt-0.5">{tr("parentPortal.assessmentsCount", { count: results.length })}</span>
                     </div>
 
                     <div className="p-3.5 rounded-2xl bg-[#FAF6E9]/60 dark:bg-[#26201C] border border-[#49352F]/10 text-center">
                       <span className="text-[11px] font-semibold text-[#7A6862] dark:text-[#FAF6E9]/70 block">
-                        {language === "gu" ? "સક્રિય શિક્ષણ ત્રુટિઓ" : "Active Learning Gaps"}
+                        {no.activeGapsCard}
                       </span>
                       <span className={`text-2xl font-black ${activeGapsCount > 0 ? "text-[#C54738]" : "text-[#2E7D5E]"}`}>
                         {activeGapsCount}
                       </span>
-                      <span className="text-[10px] text-[#7A6862] dark:text-[#FAF6E9]/60 block mt-0.5">&lt;60% threshold</span>
+                      <span className="text-[10px] text-[#7A6862] dark:text-[#FAF6E9]/60 block mt-0.5">{pp.thresholdHint}</span>
                     </div>
 
                     <div className="p-3.5 rounded-2xl bg-[#FAF6E9]/60 dark:bg-[#26201C] border border-[#49352F]/10 text-center">
                       <span className="text-[11px] font-semibold text-[#7A6862] dark:text-[#FAF6E9]/70 block">
-                        {language === "gu" ? "ઘર પ્રવૃત્તિ પૂર્ણ" : "Home Activities"}
+                        {no.homeActivitiesCard}
                       </span>
                       <span className="text-2xl font-black text-[#2E7D5E]">
                         {completedHomeActivitiesCount} / {homeActivities.length}
                       </span>
-                      <span className="text-[10px] text-[#7A6862] dark:text-[#FAF6E9]/60 block mt-0.5">Household Materials</span>
+                      <span className="text-[10px] text-[#7A6862] dark:text-[#FAF6E9]/60 block mt-0.5">{pp.householdMaterialsHint}</span>
                     </div>
 
                     <div className="p-3.5 rounded-2xl bg-[#FAF6E9]/60 dark:bg-[#26201C] border border-[#49352F]/10 text-center">
                       <span className="text-[11px] font-semibold text-[#7A6862] dark:text-[#FAF6E9]/70 block">
-                        {language === "gu" ? "શાળા પરિપત્રો" : "School Notices"}
+                        {no.schoolNoticesCard}
                       </span>
                       <span className="text-2xl font-black text-[#49352F] dark:text-[#F4F1E1]">{notices.length}</span>
-                      <span className="text-[10px] text-[#7A6862] dark:text-[#FAF6E9]/60 block mt-0.5">Targeted to Class {activeStudent?.grade}</span>
+                      <span className="text-[10px] text-[#7A6862] dark:text-[#FAF6E9]/60 block mt-0.5">{tr("parentPortal.targetedToClass", { classLabel: formatClass(activeStudent?.grade) || `${activeStudent?.grade || ""}` })}</span>
                     </div>
                   </div>
                 </div>
@@ -607,24 +605,25 @@ export default function UnifiedParentBridgeAndNoticesPage() {
                 <div className="p-6 rounded-3xl bg-white dark:bg-[#1E1916] border border-[#49352F]/15 dark:border-[#F2CAB3]/20 shadow-sm space-y-4">
                   <h3 className="font-heading text-base font-extrabold text-[#49352F] dark:text-[#F4F1E1] flex items-center gap-2">
                     <TrendingUp className="w-4 h-4 text-[#B26A1B]" />
-                    <span>{language === "gu" ? "વિષયવાર વાસ્તવિક પ્રગતિ (ડેટાબેઝ આધારિત)" : "Subject-wise Academic Performance"}</span>
+                    <span>{no.subjectPerformanceTitle}</span>
                   </h3>
 
                   {(!studentDetail?.subjectBreakdown || studentDetail.subjectBreakdown.length === 0) ? (
                     <div className="p-6 text-center text-xs text-[#7A6862] bg-[#FAF6E9]/40 rounded-2xl border border-dashed border-[#49352F]/15">
-                      No assessment results recorded yet for this student.
+                      {no.noAssessmentResults}
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {studentDetail.subjectBreakdown.map((subj: any) => {
                         const pct = subj.averagePercentage ?? 0;
                         const status = pct >= 80 ? "mastered" : pct >= 60 ? "developing" : "needsSupport";
+                        const canonicalStatus = pct >= 80 ? "Mastered" : pct >= 60 ? "Developing" : "Needs Support";
                         return (
                           <div key={subj.subject} className="p-4 rounded-2xl bg-[#FAF6E9]/50 dark:bg-[#26201C] border border-[#49352F]/10 space-y-2">
                             <div className="flex items-center justify-between">
-                              <span className="text-xs font-bold text-[#49352F] dark:text-[#F4F1E1]">{subj.subject}</span>
+                              <span className="text-xs font-bold text-[#49352F] dark:text-[#F4F1E1]">{formatSubject(subj.subject)}</span>
                               <Badge variant={status} size="sm">
-                                {pct}% &bull; {status}
+                                {pct}% &bull; {formatStatus(canonicalStatus)}
                               </Badge>
                             </div>
                             <div className="w-full bg-white dark:bg-[#1E1916] rounded-full h-2.5 overflow-hidden border border-[#49352F]/10">
@@ -636,8 +635,8 @@ export default function UnifiedParentBridgeAndNoticesPage() {
                               />
                             </div>
                             <div className="flex items-center justify-between text-[11px] text-[#7A6862]">
-                              <span>{subj.assessmentsCount} Assessments Recorded</span>
-                              <span>Recent Score: {subj.recentPercentage ?? pct}%</span>
+                              <span>{tr("notices.assessmentsRecordedCount", { count: subj.assessmentsCount })}</span>
+                              <span>{tr("notices.recentScoreLabel", { score: subj.recentPercentage ?? pct })}</span>
                             </div>
                           </div>
                         );
@@ -650,12 +649,12 @@ export default function UnifiedParentBridgeAndNoticesPage() {
                 <div className="p-6 rounded-3xl bg-white dark:bg-[#1E1916] border border-[#49352F]/15 dark:border-[#F2CAB3]/20 shadow-sm space-y-4">
                   <h3 className="font-heading text-base font-extrabold text-[#49352F] dark:text-[#F4F1E1] flex items-center gap-2">
                     <BrainCircuit className="w-4 h-4 text-[#C54738]" />
-                    <span>{language === "gu" ? "ઓળખાયેલ શિક્ષણ ત્રુટિઓ અને ૫-તબક્કા ઉપચાર" : "Identified Learning Gaps & 5-Step Remedial Plan"}</span>
+                    <span>{no.identifiedGapsTitle}</span>
                   </h3>
 
                   {learningGaps.length === 0 ? (
                     <div className="p-6 text-center text-xs text-[#2E7D5E] font-bold bg-emerald-50 rounded-2xl border border-emerald-200">
-                      Great news! No active learning gaps currently detected for this student.
+                      {no.noActiveGapsDetected}
                     </div>
                   ) : (
                     <div className="space-y-4">
@@ -666,26 +665,26 @@ export default function UnifiedParentBridgeAndNoticesPage() {
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#49352F]/10 pb-3">
                               <div>
                                 <div className="flex items-center gap-2">
-                                  <span className="text-xs font-black uppercase tracking-wider text-[#B26A1B]">{gap.subject}</span>
-                                  <Badge variant="needsSupport" size="sm">Severity: {gap.severity || "High"}</Badge>
+                                  <span className="text-xs font-black uppercase tracking-wider text-[#B26A1B]">{formatSubject(gap.subject)}</span>
+                                  <Badge variant="needsSupport" size="sm">{no.severityPrefix} {formatPriority(gap.severity || "High")}</Badge>
                                 </div>
                                 <h4 className="text-sm font-extrabold text-[#49352F] dark:text-[#F4F1E1] mt-0.5">{gap.conceptName}</h4>
                               </div>
                               <span className="text-xs text-[#C54738] font-black">
-                                Baseline: {gap.baselinePercentage || gap.score || 0}% (&lt;60% Benchmark)
+                                {tr("notices.baselineBenchmark", { score: gap.baselinePercentage || gap.score || 0 })}
                               </span>
                             </div>
 
                             <p className="text-xs text-[#49352F] dark:text-[#FAF6E9]/80 leading-relaxed">
-                              <strong>{language === "gu" ? "શિક્ષકનું નિદાન: " : "Teacher Diagnosis: "}</strong>
-                              {gap.reason || gap.diagnosis || "Struggles with fundamental step-by-step procedure."}
+                              <strong>{no.teacherDiagnosisPrefix}</strong>
+                              {gap.reason || gap.diagnosis || no.gapFallbackReason}
                             </p>
 
                             {/* 5-Step Curriculum Steps */}
                             {plan && plan.steps && plan.steps.length > 0 && (
                               <div className="pt-2 border-t border-[#49352F]/10 space-y-2">
                                 <span className="text-[11px] font-bold text-[#7A6862] block uppercase tracking-wider">
-                                  {language === "gu" ? "૫-તબક્કા ઉપચાર પ્રગતિ:" : "5-Step Remedial Steps:"}
+                                  {no.remedialStepsTitle}
                                 </span>
                                 <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
                                   {plan.steps.map((st: any, idx: number) => (
@@ -697,9 +696,9 @@ export default function UnifiedParentBridgeAndNoticesPage() {
                                           : "bg-white dark:bg-[#1E1916] text-[#7A6862] border-[#49352F]/15"
                                       }`}
                                     >
-                                      <div className="text-[10px] font-mono text-[#7A6862]">Step {st.stepNumber || idx + 1}</div>
+                                      <div className="text-[10px] font-mono text-[#7A6862]">{tr("parentPortal.stepLabel", { step: st.stepNumber || idx + 1 })}</div>
                                       <div className="font-bold text-[11px] truncate mt-0.5">{st.title}</div>
-                                      <div className="text-[9px] mt-1 text-[#7A6862]">{st.completed ? "Mastered" : "In Progress"}</div>
+                                      <div className="text-[9px] mt-1 text-[#7A6862]">{formatStatus(st.completed ? "Mastered" : "In Progress")}</div>
                                     </div>
                                   ))}
                                 </div>
@@ -719,19 +718,17 @@ export default function UnifiedParentBridgeAndNoticesPage() {
                       <div>
                         <h3 className="font-heading text-base font-extrabold text-[#49352F] dark:text-[#F4F1E1] flex items-center gap-2">
                           <Home className="w-4 h-4 text-[#B26A1B]" />
-                          <span>{language === "gu" ? "ઘરે બાળકને કેવી રીતે મદદ કરવી? (ઘરેલુ સામગ્રી)" : "How to Help at Home (Practical Activities)"}</span>
+                          <span>{pp.homeHelpHeading}</span>
                         </h3>
                         <p className="text-xs text-[#7A6862] dark:text-[#FAF6E9]/75">
-                          {language === "gu"
-                            ? "શિક્ષણ ત્રુટિઓને ધ્યાનમાં રાખીને ઘરમાં રહેલી ચીજવસ્તુઓથી બાળકને સરળતાથી શીખવો"
-                            : "Concrete activities using household materials tailored to your child's recorded learning gaps"}
+                          {pp.homeHelpSubtitle}
                         </p>
                       </div>
                       <button
                         onClick={() => setActiveTab("home_activities")}
                         className="text-xs font-bold text-[#B26A1B] hover:underline flex items-center gap-1 cursor-pointer"
                       >
-                        <span>{language === "gu" ? "બધી જુઓ →" : "View All Activities →"}</span>
+                        <span>{pp.viewAllActivitiesBtn}</span>
                       </button>
                     </div>
 
@@ -751,7 +748,7 @@ export default function UnifiedParentBridgeAndNoticesPage() {
                             <div className="flex items-start justify-between gap-2">
                               <h4 className="text-xs font-black text-[#49352F] dark:text-[#F4F1E1]">{act.title}</h4>
                               <span className="text-[10px] text-[#7A6862] px-2 py-0.5 rounded-full bg-white dark:bg-[#1E1916] border border-[#49352F]/10">
-                                {act.timeMinutes} mins
+                                {act.timeMinutes} {pp.minsUnit}
                               </span>
                             </div>
                             <p className="text-xs text-[#7A6862] mt-1.5">{act.description}</p>
@@ -766,7 +763,7 @@ export default function UnifiedParentBridgeAndNoticesPage() {
                                 onClick={() => handleToggleActivity(act.id, act.conceptId, isDone)}
                                 className="text-xs rounded-xl"
                               >
-                                {isBusy ? "Saving..." : isDone ? "Completed" : "Mark as Done"}
+                                {isBusy ? no.savingShortBtn : isDone ? pp.completedLabel : no.markAsDoneBtn}
                               </Button>
                             </div>
                           </div>
@@ -788,18 +785,16 @@ export default function UnifiedParentBridgeAndNoticesPage() {
             <div className="p-6 rounded-3xl bg-white dark:bg-[#1E1916] border border-[#49352F]/15 dark:border-[#F2CAB3]/20 shadow-sm space-y-2">
               <h2 className="font-heading text-lg font-black text-[#49352F] dark:text-[#F4F1E1] flex items-center gap-2">
                 <Home className="w-5 h-5 text-[#B26A1B]" />
-                <span>{language === "gu" ? "ઘરે શિક્ષણ સહાય પ્રવૃત્તિઓ" : "Home Learning & Remedial Activities"}</span>
+                <span>{no.homeActivitiesFullTitle}</span>
               </h2>
               <p className="text-xs text-[#7A6862] dark:text-[#FAF6E9]/75">
-                {language === "gu"
-                  ? "શિક્ષણ ત્રુટિઓને સરળતાથી દૂર કરવા માટે ઘરમાં રહેલી ચીજવસ્તુઓ (બટન, સળીઓ, ચિત્રો) નો ઉપયોગ કરીને બાળક સાથે ૧૫-૨૦ મિનિટ કરો."
-                  : "Daily practical activities using low-cost household materials tailored to remove identified learning gaps."}
+                {no.homeActivitiesFullSubtitle}
               </p>
             </div>
 
             {homeActivities.length === 0 ? (
               <div className="p-12 text-center bg-white dark:bg-[#1E1916] rounded-3xl border border-[#49352F]/15 text-xs text-[#7A6862]">
-                No specific home activities required for this student right now.
+                {no.noSpecificHomeActivities}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -818,12 +813,12 @@ export default function UnifiedParentBridgeAndNoticesPage() {
                       <div className="flex items-start justify-between gap-3">
                         <div className="space-y-1">
                           <span className="text-[11px] font-bold text-[#B26A1B] uppercase tracking-wider block">
-                            {act.subject || "Skill Practice"}
+                            {act.subject ? formatSubject(act.subject) : no.skillPracticeFallback}
                           </span>
                           <h3 className="text-base font-extrabold text-[#49352F] dark:text-[#F4F1E1]">{act.title}</h3>
                         </div>
                         <span className="text-xs text-[#7A6862] px-2.5 py-1 rounded-full bg-[#FAF6E9] dark:bg-[#26201C] border border-[#49352F]/10 font-bold whitespace-nowrap">
-                          {act.timeMinutes} mins
+                          {act.timeMinutes} {pp.minsUnit}
                         </span>
                       </div>
 
@@ -834,7 +829,7 @@ export default function UnifiedParentBridgeAndNoticesPage() {
                       {/* Materials */}
                       <div className="p-3 rounded-2xl bg-[#FAF6E9]/70 dark:bg-[#26201C] border border-[#49352F]/10 text-xs">
                         <span className="font-bold text-[#49352F] dark:text-[#F4F1E1] block mb-1">
-                          {language === "gu" ? "જરૂરી ઘરેલુ સામગ્રી:" : "Materials Required:"}
+                          {no.materialsRequiredLabel}
                         </span>
                         <div className="flex flex-wrap gap-1.5">
                           {act.materials?.map((m: string) => (
@@ -849,7 +844,7 @@ export default function UnifiedParentBridgeAndNoticesPage() {
                       {act.instructions && act.instructions.length > 0 && (
                         <div className="space-y-1.5 pt-1">
                           <span className="text-[11px] font-bold text-[#49352F] dark:text-[#F4F1E1] block">
-                            {language === "gu" ? "વાલી માટે માર્ગદર્શન:" : "Instructions for Parents:"}
+                            {no.instructionsForParentsLabel}
                           </span>
                           <ol className="list-decimal list-inside text-xs text-[#7A6862] dark:text-[#FAF6E9]/75 space-y-1">
                             {act.instructions.map((ins: string, i: number) => (
@@ -865,10 +860,10 @@ export default function UnifiedParentBridgeAndNoticesPage() {
                           {isDone ? (
                             <span className="text-emerald-700 dark:text-emerald-400 flex items-center gap-1 font-bold">
                               <CheckCircle2 className="w-4 h-4" />
-                              <span>{language === "gu" ? "પ્રવૃત્તિ પૂર્ણ થયેલ છે" : "Activity Completed"}</span>
+                              <span>{no.activityCompletedLabel}</span>
                             </span>
                           ) : (
-                            <span>{language === "gu" ? "પ્રવૃત્તિ બાકી છે" : "Pending Completion"}</span>
+                            <span>{no.pendingCompletionLabel}</span>
                           )}
                         </span>
 
@@ -879,10 +874,10 @@ export default function UnifiedParentBridgeAndNoticesPage() {
                           onClick={() => handleToggleActivity(act.id, act.conceptId, isDone)}
                           className="rounded-xl text-xs font-bold"
                         >
-                          {isBusy ? "Saving..." : isDone ? (
-                            <span>{language === "gu" ? "રદ કરો" : "Undo"}</span>
+                          {isBusy ? no.savingShortBtn : isDone ? (
+                            <span>{no.undoBtn}</span>
                           ) : (
-                            <span>{language === "gu" ? "પ્રવૃત્તિ પૂર્ણ થઈ" : "Mark as Completed"}</span>
+                            <span>{pp.markCompletedBtn}</span>
                           )}
                         </Button>
                       </div>
@@ -907,7 +902,7 @@ export default function UnifiedParentBridgeAndNoticesPage() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={language === "gu" ? "પરિપત્ર શોધો..." : "Search notices..."}
+                  placeholder={no.searchNoticesPlaceholder}
                   className="w-full pl-10 pr-4 py-2 rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/20 text-xs text-[#49352F] dark:text-[#F4F1E1] bg-[#FAF6E9]/40 dark:bg-[#26201C] focus:outline-none focus:ring-1 focus:ring-[#B26A1B]"
                 />
               </div>
@@ -918,12 +913,12 @@ export default function UnifiedParentBridgeAndNoticesPage() {
                   onChange={(e) => setSelectedCategory(e.target.value)}
                   className="px-3 py-2 rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/20 text-xs font-medium text-[#49352F] dark:text-[#F4F1E1] bg-white dark:bg-[#26201C]"
                 >
-                  <option value="all">All Categories</option>
-                  <option value="academic">Academic</option>
-                  <option value="event">Event</option>
-                  <option value="holiday">Holiday</option>
-                  <option value="health">Health & Nutrition</option>
-                  <option value="administrative">Administrative</option>
+                  <option value="all">{no.allCategories}</option>
+                  <option value="academic">{no.academicShortOpt}</option>
+                  <option value="event">{no.eventShortOpt}</option>
+                  <option value="holiday">{no.holidayShortOpt}</option>
+                  <option value="health">{no.healthCategory}</option>
+                  <option value="administrative">{no.administrativeShortOpt}</option>
                 </select>
 
                 <select
@@ -931,12 +926,12 @@ export default function UnifiedParentBridgeAndNoticesPage() {
                   onChange={(e) => setSelectedGrade(e.target.value)}
                   className="px-3 py-2 rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/20 text-xs font-medium text-[#49352F] dark:text-[#F4F1E1] bg-white dark:bg-[#26201C]"
                 >
-                  <option value="all">All Classes</option>
-                  <option value="1">Grade 1</option>
-                  <option value="2">Grade 2</option>
-                  <option value="3">Grade 3</option>
-                  <option value="4">Grade 4</option>
-                  <option value="5">Grade 5</option>
+                  <option value="all">{no.allClassesOpt}</option>
+                  <option value="1">{formatClass(1)}</option>
+                  <option value="2">{formatClass(2)}</option>
+                  <option value="3">{formatClass(3)}</option>
+                  <option value="4">{formatClass(4)}</option>
+                  <option value="5">{formatClass(5)}</option>
                 </select>
               </div>
             </div>
@@ -947,11 +942,11 @@ export default function UnifiedParentBridgeAndNoticesPage() {
               <div className="lg:col-span-5 space-y-3">
                 {isLoadingNotices ? (
                   <div className="p-8 text-center text-xs text-[#7A6862] bg-white dark:bg-[#1E1916] rounded-2xl border border-[#49352F]/15">
-                    Loading school circulars...
+                    {no.loadingCirculars}
                   </div>
                 ) : notices.length === 0 ? (
                   <div className="p-8 text-center text-xs text-[#7A6862] bg-white dark:bg-[#1E1916] rounded-2xl border border-[#49352F]/15">
-                    No notices match your filters.
+                    {no.noNoticesMatchFilters}
                   </div>
                 ) : (
                   notices.map((n) => {
@@ -971,10 +966,10 @@ export default function UnifiedParentBridgeAndNoticesPage() {
                       >
                         <div className="flex items-start justify-between gap-2">
                           <span className="text-[10px] font-black uppercase tracking-wider text-[#B26A1B]">
-                            {n.category || "Notice"}
+                            {n.category || no.defaultNoticeBadge}
                           </span>
                           <span className="text-[10px] text-[#7A6862]">
-                            {n.createdAt ? new Date(n.createdAt).toLocaleDateString() : "Recent"}
+                            {n.createdAt ? formatDate(n.createdAt) : pp.recentLabel}
                           </span>
                         </div>
                         <h4 className="text-xs font-bold text-[#49352F] dark:text-[#F4F1E1] mt-1">{n.title}</h4>
@@ -996,10 +991,10 @@ export default function UnifiedParentBridgeAndNoticesPage() {
                         <div>
                           <div className="flex items-center gap-2 mb-1">
                             <span className="text-xs font-bold text-[#2E7D5E] bg-[#2E7D5E]/10 px-2 py-0.5 rounded border border-[#2E7D5E]/20 capitalize">
-                              {selectedNotice.status}
+                              {formatStatus(selectedNotice.status)}
                             </span>
                             <span className="text-xs text-[#7A6862]">
-                              Issued by: <strong>{selectedNotice.senderTeacherName}</strong>
+                              {pp.issuedByPrefix} <strong>{selectedNotice.senderTeacherName}</strong>
                             </span>
                           </div>
                           <h2 className="text-lg font-bold text-[#49352F] dark:text-[#F4F1E1]">
@@ -1011,7 +1006,7 @@ export default function UnifiedParentBridgeAndNoticesPage() {
                         <AudioPlayer
                           text={selectedNotice.simplifiedContent || selectedNotice.originalContent}
                           language={selectedNotice.originalLanguage ?? "en"}
-                          buttonLabel={language === "gu" ? "સૂચના સાંભળો" : "Listen Notice"}
+                          buttonLabel={no.listenNoticeBtn}
                         />
                       </div>
 
@@ -1023,7 +1018,7 @@ export default function UnifiedParentBridgeAndNoticesPage() {
                       <div className="pt-3 border-t border-[#49352F]/10 flex flex-wrap items-center justify-between gap-3">
                         <span className="text-xs text-[#7A6862] flex items-center gap-1.5">
                           <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                          <span>{language === "gu" ? "ડિજિટલ વાલી સ્વીકૃતિ માન્ય છે" : "Digital parent receipt sign-off"}</span>
+                          <span>{no.digitalReceiptSignOff}</span>
                         </span>
 
                         <Button
@@ -1033,7 +1028,7 @@ export default function UnifiedParentBridgeAndNoticesPage() {
                           onClick={() => handleAcknowledgeNotice(selectedNotice.id)}
                           className="rounded-xl text-xs font-bold"
                         >
-                          {ackLoading[selectedNotice.id] ? "Recording..." : language === "gu" ? "સ્વીકૃતિ આપો (સહી)" : "Sign & Acknowledge"}
+                          {ackLoading[selectedNotice.id] ? no.recordingBtn : no.signAcknowledgeBtn}
                         </Button>
                       </div>
                     </div>
@@ -1064,7 +1059,7 @@ export default function UnifiedParentBridgeAndNoticesPage() {
                   </>
                 ) : (
                   <div className="p-12 text-center bg-white dark:bg-[#1E1916] rounded-2xl border border-[#49352F]/15 text-xs text-[#7A6862]">
-                    Select a circular on the left to read and listen.
+                    {no.selectCircularPrompt}
                   </div>
                 )}
               </div>

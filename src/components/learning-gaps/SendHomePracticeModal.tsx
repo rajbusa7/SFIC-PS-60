@@ -41,7 +41,8 @@ export function SendHomePracticeModal({
   gap,
   onSuccess,
 }: SendHomePracticeModalProps) {
-  const { language } = useLanguage();
+  const { t, tr } = useLanguage();
+  const hp = t.homePracticeModal;
   const [selectedLanguage, setSelectedLanguage] = useState<"en" | "gu" | "hi">("en");
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [isSending, setIsSending] = useState<boolean>(false);
@@ -53,8 +54,8 @@ export function SendHomePracticeModal({
     generateParentHomeActivity(gap, selectedLanguage)
   );
 
-  const [customTeacherNote, setCustomTeacherNote] = useState<string>(
-    "Aarav is doing great in class. This 5-minute activity will reinforce their confidence!"
+  const [customTeacherNote, setCustomTeacherNote] = useState<string>(() =>
+    tr("homePracticeModal.defaultTeacherNote", { name: gap.studentName || t.learningGaps.studentFallback })
   );
 
   // When changing language, update active language preview
@@ -84,19 +85,19 @@ export function SendHomePracticeModal({
       const data = await res.json();
       if (data.success) {
         setSuccessMsg(
-          language === "gu"
-            ? `ઘર-મહાવરો ${data.parentName || "વાલી"} ને સફળતાપૂર્વક મોકલવામાં આવ્યો છે!`
-            : `Home practice successfully sent to ${data.parentName || "Parent Bridge"}!`
+          tr("homePracticeModal.successSent", {
+            parent: data.parentName || hp.parentFallback,
+          })
         );
         setTimeout(() => {
           if (onSuccess) onSuccess(data.parentName);
           onClose();
         }, 1500);
       } else {
-        setError(data.error || "Failed to dispatch home practice.");
+        setError(data.error || hp.failedToSend);
       }
     } catch (e: any) {
-      setError(e.message || "Network error sending home practice.");
+      setError(e.message || hp.networkError);
     } finally {
       setIsSending(false);
     }
@@ -106,11 +107,7 @@ export function SendHomePracticeModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={
-        language === "gu"
-          ? "વાલી સેતુ: ઘર-મહાવરો મોકલો"
-          : "Parent Bridge: Send Home Practice"
-      }
+      title={hp.modalTitle}
       maxWidth="lg"
     >
       <div className="space-y-4 text-[#49352F]">
@@ -124,7 +121,7 @@ export function SendHomePracticeModal({
               </h4>
             </div>
             <p className="text-xs text-[#7A6862] mt-0.5">
-              Teacher Review & Approval Required • 5–10 min household activity
+              {hp.approvalRequiredSub}
             </p>
           </div>
 
@@ -171,7 +168,7 @@ export function SendHomePracticeModal({
         <div className="flex items-center justify-between text-xs px-1">
           <span className="text-[#7A6862] flex items-center gap-1 font-medium">
             <ShieldCheck className="w-4 h-4 text-[#2E7D5E]" />
-            <span>Teacher preview and approval mode</span>
+            <span>{hp.approvalMode}</span>
           </span>
           <button
             type="button"
@@ -179,7 +176,7 @@ export function SendHomePracticeModal({
             className="font-bold text-[#B26A1B] hover:text-[#8D4E10] flex items-center gap-1 cursor-pointer"
           >
             <Edit3 className="w-3.5 h-3.5" />
-            <span>{isEditing ? "Lock / Preview" : "Edit Activity"}</span>
+            <span>{isEditing ? hp.lockPreview : hp.editActivity}</span>
           </button>
         </div>
 
@@ -201,14 +198,14 @@ export function SendHomePracticeModal({
             )}
             <Badge variant="mint" size="sm" dot>
               <Clock className="w-3 h-3 mr-1" />
-              {activity.durationMinutes} minutes
+              {tr("homePracticeModal.minutesCount", { mins: activity.durationMinutes })}
             </Badge>
           </div>
 
           {/* Common Household Materials */}
           <div className="space-y-1">
             <span className="text-[10px] font-bold uppercase tracking-wider text-[#7A6862] block">
-              Common Household Materials:
+              {hp.materialsLabel}
             </span>
             {isEditing ? (
               <input
@@ -229,7 +226,7 @@ export function SendHomePracticeModal({
                     key={mIdx}
                     className="px-2 py-0.5 rounded-md bg-[#FAF6E9] border border-[#49352F]/10 text-xs font-medium text-[#49352F]"
                   >
-                    🛠️ {mat}
+                    {mat}
                   </span>
                 ))}
               </div>
@@ -239,7 +236,7 @@ export function SendHomePracticeModal({
           {/* What Parent Does */}
           <div className="space-y-1">
             <span className="text-[10px] font-bold uppercase tracking-wider text-[#B26A1B] block">
-              What Parent Does (Simple Instructions):
+              {hp.whatParentDoesLabel}
             </span>
             {isEditing ? (
               <textarea
@@ -258,7 +255,7 @@ export function SendHomePracticeModal({
           {/* What Child Practices */}
           <div className="space-y-1">
             <span className="text-[10px] font-bold uppercase tracking-wider text-[#2E7D5E] block">
-              What Child Practices:
+              {hp.whatChildPracticesLabel}
             </span>
             {isEditing ? (
               <textarea
@@ -277,7 +274,7 @@ export function SendHomePracticeModal({
           {/* Conversational Prompt */}
           <div className="space-y-1">
             <span className="text-[10px] font-bold uppercase tracking-wider text-[#49352F] block">
-              Parent Prompt / Question:
+              {hp.parentPromptLabel}
             </span>
             {isEditing ? (
               <input
@@ -288,7 +285,7 @@ export function SendHomePracticeModal({
               />
             ) : (
               <p className="text-xs italic text-[#8D4E10] font-medium bg-[#F2CAB3]/30 p-2.5 rounded-xl border border-[#B26A1B]/15">
-                🗣️ {activity.conversationalPrompt}
+                {activity.conversationalPrompt}
               </p>
             )}
           </div>
@@ -297,13 +294,13 @@ export function SendHomePracticeModal({
           <div className="space-y-1 pt-1 border-t border-[#49352F]/10">
             <span className="text-[10px] font-bold uppercase tracking-wider text-[#7A6862] flex items-center gap-1">
               <MessageSquare className="w-3.5 h-3.5 text-[#B26A1B]" />
-              <span>Optional Teacher Note to Parent:</span>
+              <span>{hp.optionalNoteLabel}</span>
             </span>
             <input
               type="text"
               value={customTeacherNote}
               onChange={(e) => setCustomTeacherNote(e.target.value)}
-              placeholder="e.g. Aarav did very well today; 5 minutes at home will help solidify this!"
+              placeholder={hp.notePlaceholder}
               className="w-full text-xs border rounded-lg p-2 border-[#49352F]/20 text-[#49352F] bg-[#FAF6E9]/40 outline-hidden focus:border-[#B26A1B]"
             />
           </div>
@@ -327,7 +324,7 @@ export function SendHomePracticeModal({
         {/* Modal Actions */}
         <div className="flex items-center justify-between pt-2">
           <Button variant="outline" size="sm" onClick={onClose} disabled={isSending}>
-            Cancel
+            {hp.cancelBtn}
           </Button>
 
           <Button
@@ -339,7 +336,7 @@ export function SendHomePracticeModal({
           >
             <Send className="w-3.5 h-3.5 mr-1" />
             <span>
-              {isSending ? "Approving & Sending..." : "Approve & Send to Parent Bridge"}
+              {isSending ? hp.sendingBtn : hp.sendBtn}
             </span>
           </Button>
         </div>

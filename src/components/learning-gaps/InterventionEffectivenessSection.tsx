@@ -31,7 +31,8 @@ export function InterventionEffectivenessSection({
   summaries,
   records = [],
 }: InterventionEffectivenessSectionProps) {
-  const { language } = useLanguage();
+  const { t, tr, formatStatus, formatDate } = useLanguage();
+  const ef = t.effectiveness;
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [selectedType, setSelectedType] = useState<string | null>(null);
 
@@ -54,16 +55,14 @@ export function InterventionEffectivenessSection({
           <div className="flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-[#2E7D5E]" />
             <h3 className="font-heading font-extrabold text-base text-[#49352F]">
-              {language === "gu"
-                ? "ઉપચારાત્મક પદ્ધતિઓની અસરકારકતા ટ્રેકિંગ"
-                : "Intervention Effectiveness & Empirical Insights"}
+              {ef.title}
             </h3>
             <Badge variant="mint" size="sm">
-              Continuous Feedback Loop
+              {ef.feedbackLoopBadge}
             </Badge>
           </div>
           <p className="text-xs text-[#7A6862] mt-0.5">
-            Empirical tracking across classrooms • Reports average observed improvement (strictly non-causal)
+            {ef.empiricalSubtitle}
           </p>
         </div>
 
@@ -72,7 +71,7 @@ export function InterventionEffectivenessSection({
           onClick={() => setIsExpanded(!isExpanded)}
           className="text-xs font-bold text-[#B26A1B] hover:text-[#8D4E10] flex items-center gap-1 self-start sm:self-auto cursor-pointer"
         >
-          <span>{isExpanded ? "Hide Details" : "View Observations & Records"}</span>
+          <span>{isExpanded ? ef.hideDetailsBtn : ef.viewObservationsBtn}</span>
           {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
         </button>
       </div>
@@ -114,7 +113,7 @@ export function InterventionEffectivenessSection({
               <div className="flex items-baseline justify-between pt-1">
                 <div>
                   <span className="text-[10px] text-[#7A6862] block font-semibold">
-                    Avg. Observed Gain
+                    {ef.avgObservedGain}
                   </span>
                   {summary.hasSufficientEvidence ? (
                     <span className="text-lg font-black text-[#2E7D5E]">
@@ -122,17 +121,17 @@ export function InterventionEffectivenessSection({
                     </span>
                   ) : (
                     <span className="text-xs font-bold text-[#C54738]">
-                      Insufficient Evidence
+                      {ef.insufficientEvidence}
                     </span>
                   )}
                 </div>
 
                 <div className="text-right">
                   <span className="text-[10px] text-[#7A6862] block font-semibold">
-                    Used In Class
+                    {ef.usedInClass}
                   </span>
                   <span className="text-xs font-bold text-[#49352F]">
-                    {summary.timesUsed} {summary.timesUsed === 1 ? "session" : "sessions"}
+                    {summary.timesUsed} {summary.timesUsed === 1 ? ef.sessionSingular : ef.sessionPlural}
                   </span>
                 </div>
               </div>
@@ -153,8 +152,8 @@ export function InterventionEffectivenessSection({
               <Layers className="w-3.5 h-3.5 text-[#B26A1B]" />
               <span>
                 {selectedType
-                  ? `Recent Classroom Sessions for "${selectedType}"`
-                  : "Recent Intervention Reassessment Logs"}
+                  ? tr("effectiveness.recentSessionsFor", { type: selectedType })
+                  : ef.recentLogs}
               </span>
             </span>
             {selectedType && (
@@ -163,7 +162,7 @@ export function InterventionEffectivenessSection({
                 onClick={() => setSelectedType(null)}
                 className="text-xs text-[#C54738] hover:underline cursor-pointer"
               >
-                Clear filter
+                {ef.clearFilter}
               </button>
             )}
           </div>
@@ -172,21 +171,21 @@ export function InterventionEffectivenessSection({
             <table className="w-full text-[11px] text-[#49352F] text-left">
               <thead className="bg-[#FAF6E9] border-b border-[#49352F]/10 text-[10px] uppercase font-bold text-[#7A6862]">
                 <tr>
-                  <th className="p-2">Date</th>
-                  <th className="p-2">Intervention Type</th>
-                  <th className="p-2">Student</th>
-                  <th className="p-2">Concept</th>
-                  <th className="p-2">Pre-Score</th>
-                  <th className="p-2">Post-Score</th>
-                  <th className="p-2">Observed Delta</th>
-                  <th className="p-2">Outcome</th>
+                  <th className="p-2">{ef.colDate}</th>
+                  <th className="p-2">{ef.colInterventionType}</th>
+                  <th className="p-2">{ef.colStudent}</th>
+                  <th className="p-2">{ef.colConcept}</th>
+                  <th className="p-2">{ef.colPreScore}</th>
+                  <th className="p-2">{ef.colPostScore}</th>
+                  <th className="p-2">{ef.colObservedDelta}</th>
+                  <th className="p-2">{ef.colOutcome}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#49352F]/8">
                 {activeRecords.map((r) => (
                   <tr key={r.id} className="hover:bg-[#FAF6E9]/40 transition-colors">
                     <td className="p-2 text-[#7A6862] whitespace-nowrap">
-                      {new Date(r.date).toLocaleDateString()}
+                      {formatDate(r.date)}
                     </td>
                     <td className="p-2 font-bold text-[#49352F]">{r.interventionType}</td>
                     <td className="p-2 font-medium">{r.studentName}</td>
@@ -207,7 +206,7 @@ export function InterventionEffectivenessSection({
                         }
                         size="sm"
                       >
-                        {r.outcome}
+                        {formatStatus(r.outcome)}
                       </Badge>
                     </td>
                   </tr>

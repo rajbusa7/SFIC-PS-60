@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
-import type { SubjectCode, TeacherAssignment, AuditLogEntry } from "@/lib/types";
+import type { AuditLogEntry, SupportedLanguage } from "@/lib/types";
+import { ALL_LANGUAGES } from "@/lib/i18n/registry";
 import { useTheme } from "@/context/ThemeContext";
 import { useTutorial } from "@/context/TutorialContext";
 import { broadcastDataUpdate } from "@/lib/events";
@@ -29,13 +30,14 @@ import {
 } from "lucide-react";
 
 export default function SettingsPage() {
-  const { t, language, setLanguage } = useLanguage();
+  const { t, tr, setLanguage, formatDate, formatSubject } = useLanguage();
+  const st = t.settings;
   const { theme, resolvedTheme, setTheme } = useTheme();
   const { resetTutorial } = useTutorial();
 
   const [masteryThreshold, setMasteryThreshold] = useState<number>(80);
   const [developingThreshold, setDevelopingThreshold] = useState<number>(60);
-  const [preferredLang, setPreferredLang] = useState<"en" | "gu">("en");
+  const [preferredLang, setPreferredLang] = useState<SupportedLanguage>("en");
   const [enableAiAssist, setEnableAiAssist] = useState<boolean>(true);
 
   const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -98,7 +100,7 @@ export default function SettingsPage() {
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     if (developingThreshold >= masteryThreshold) {
-      setError("Developing threshold must be less than Mastery threshold.");
+      setError(st.errThresholdOrder);
       return;
     }
 
@@ -126,10 +128,10 @@ export default function SettingsPage() {
         setLanguage(preferredLang);
         setTimeout(() => setSaveSuccess(false), 3000);
       } else {
-        setError(data.error || "Failed to update settings");
+        setError(data.error || st.errUpdateFailed);
       }
     } catch {
-      setError("Network error updating settings");
+      setError(st.errNetwork);
     } finally {
       setIsSaving(false);
     }
@@ -155,14 +157,10 @@ export default function SettingsPage() {
       <div className="space-y-6 max-w-4xl mx-auto">
         <div>
           <h1 className="text-xl sm:text-2xl font-extrabold text-[#49352F] tracking-tight font-heading">
-            {language === "gu"
-              ? "સંસ્થાકીય સેટિંગ્સ અને એન્જિન રૂપરેખાંકન"
-              : "Institutional Settings & Engine Configuration"}
+            {st.pageMainTitle}
           </h1>
           <p className="text-xs sm:text-sm text-[#7A6862] mt-0.5">
-            {language === "gu"
-              ? "ઓપરેશનલ ગેપ મર્યાદાઓ, થીમ, દ્વિભાષી ડિફોલ્ટ અને બાળ ગોપનીયતા સુરક્ષાઓ ગોઠવો."
-              : "Configure operational gap thresholds, appearance themes, bilingual defaults, and child privacy protections."}
+            {st.pageMainSubtitle}
           </p>
         </div>
 
@@ -181,7 +179,7 @@ export default function SettingsPage() {
                 </CardDescription>
               </div>
               <Badge variant="outline" size="sm" className="capitalize">
-                {theme === "system" ? `System (${resolvedTheme})` : theme}
+                {theme === "system" ? tr("settings.systemThemeWithResolved", { resolved: resolvedTheme || "" }) : theme}
               </Badge>
             </CardHeader>
 
@@ -223,9 +221,7 @@ export default function SettingsPage() {
                   )}
                 </div>
                 <p className="text-[11px] text-[#7A6862] mt-1 leading-snug">
-                  {language === "gu"
-                    ? "મુખ્ય લેન્ડિંગ પૃષ્ઠમાંથી ક્યુરેટ કરેલ ગરમ ક્રીમ અને પીચ ડિઝાઇન સિસ્ટમ."
-                    : "Curated warm cream & peach design system from the master landing page."}
+                  {st.themeLightDesc}
                 </p>
               </button>
 
@@ -266,9 +262,7 @@ export default function SettingsPage() {
                   )}
                 </div>
                 <p className="text-[11px] text-[#7A6862] mt-1 leading-snug">
-                  {language === "gu"
-                    ? "રાત્રિના મૂલ્યાંકન માટે આંખોને આરામ આપતો ડાર્ક સ્લેટ કોન્ટ્રાસ્ટ."
-                    : "Deep slate contrast for low-light evening evaluation."}
+                  {st.themeDarkDesc}
                 </p>
               </button>
 
@@ -309,9 +303,7 @@ export default function SettingsPage() {
                   )}
                 </div>
                 <p className="text-[11px] text-[#7A6862] mt-1 leading-snug">
-                  {language === "gu"
-                    ? "તમારી ઑપરેટિંગ સિસ્ટમની પસંદગી સાથે આપમેળે મેળ ખાય છે."
-                    : "Automatically sync with your operating system preference."}
+                  {st.themeSystemDesc}
                 </p>
               </button>
             </div>
@@ -324,15 +316,11 @@ export default function SettingsPage() {
                 <CardTitle className="flex items-center gap-2">
                   <Sliders className="w-4 h-4 text-indigo-600 dark:text-cyan-400" />
                   <span>
-                    {language === "gu"
-                      ? "અધ્યયન ત્રુટિ શોધ મર્યાદાઓ"
-                      : "Learning Gap Detection Thresholds"}
+                    {st.thresholdsTitle}
                   </span>
                 </CardTitle>
                 <CardDescription>
-                  {language === "gu"
-                    ? "વિદ્યાર્થી સંકલ્પનાઓને પ્રવીણ, વિકાસશીલ અથવા સહાય જરૂરી શ્રેણીઓમાં વર્ગીકૃત કરવા માટે ઓપરેશનલ કટઓફ ગોઠવો."
-                    : "Configure operational cutoffs for flagging student concepts into Mastery, Developing, or Needs Support categories."}
+                  {st.thresholdsDesc}
                 </CardDescription>
               </div>
             </CardHeader>
@@ -341,17 +329,15 @@ export default function SettingsPage() {
               <div className="p-3 rounded-xl bg-[#FAF6E9] border border-[#49352F]/12 text-xs text-[#49352F] leading-relaxed flex items-start gap-2">
                 <Info className="w-4 h-4 text-[#8D4E10] shrink-0 mt-0.5" aria-hidden="true" />
                 <p>
-                  <strong>{language === "gu" ? "નોંધ:" : "Note:"}</strong>{" "}
-                  {language === "gu"
-                    ? "આ થ્રેશોલ્ડ વર્ગખંડ પ્રાથમિકતા માટે રૂપરેખાંકિત કાર્યકારી મેટ્રિક્સ છે, કોઈ અપરિવર્તનીય ધોરણ નથી. તેમને બદલવાથી બધી સંગ્રહિત શીખવાની ખામીઓ પુનઃ ગણતરી થાય છે."
-                    : "These thresholds are configurable operational metrics for classroom prioritization, not immutable universal standards. Changing them dynamically recalculates all stored learning gaps."}
+                  <strong>{st.notePrefix}</strong>{" "}
+                  {st.thresholdsNote}
                 </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-[#49352F] mb-1">
-                    {language === "gu" ? "નિપુણતા કટઓફ (% ગુણ)" : "Mastery Cutoff (% Score)"}
+                    {st.masteryCutoffLabel}
                   </label>
                   <input
                     type="number"
@@ -363,15 +349,13 @@ export default function SettingsPage() {
                     className="w-full rounded-xl border border-[#49352F]/15 bg-white p-2.5 text-sm font-bold text-[#2E7D5E] focus:border-[#B26A1B] focus:ring-1 focus:ring-[#B26A1B] outline-hidden"
                   />
                   <span className="text-[11px] text-[#7A6862] mt-1 block">
-                    {language === "gu"
-                      ? `${masteryThreshold}% કે તેથી વધુ ગુણ "પ્રવીણ" તરીકે ચિહ્નિત થાય છે`
-                      : `Scores >= ${masteryThreshold}% marked as "Mastered"`}
+                    {tr("settings.masteryCutoffHint", { val: masteryThreshold })}
                   </span>
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-[#49352F] mb-1">
-                    {language === "gu" ? "વિકાસશીલ કટઓફ (% ગુણ)" : "Developing Cutoff (% Score)"}
+                    {st.developingCutoffLabel}
                   </label>
                   <input
                     type="number"
@@ -383,9 +367,7 @@ export default function SettingsPage() {
                     className="w-full rounded-xl border border-[#49352F]/15 bg-white p-2.5 text-sm font-bold text-[#B26A1B] focus:border-[#B26A1B] focus:ring-1 focus:ring-[#B26A1B] outline-hidden"
                   />
                   <span className="text-[11px] text-[#7A6862] mt-1 block">
-                    {language === "gu"
-                      ? `${developingThreshold}% થી ઓછા ગુણ "સહાય જરૂરી" તરીકે ચિહ્નિત થાય છે`
-                      : `Scores below ${developingThreshold}% marked as "Needs Support"`}
+                    {tr("settings.developingCutoffHint", { val: developingThreshold })}
                   </span>
                 </div>
               </div>
@@ -397,12 +379,10 @@ export default function SettingsPage() {
             <CardHeader>
               <div>
                 <CardTitle>
-                  {language === "gu" ? "ભાષા અને સિસ્ટમ પસંદગીઓ" : "Language & System Preferences"}
+                  {st.langSysTitle}
                 </CardTitle>
                 <CardDescription>
-                  {language === "gu"
-                    ? "ડિફોલ્ટ ભાષા અને ઑફલાઇન સહાયતા એન્જિન"
-                    : "Default language and offline assistance engine"}
+                  {st.langSysDesc}
                 </CardDescription>
               </div>
             </CardHeader>
@@ -410,32 +390,31 @@ export default function SettingsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-[#49352F] mb-1">
-                  {language === "gu" ? "ડિફોલ્ટ પ્લેટફોર્મ ભાષા" : "Default Platform Language"}
+                  {st.languagePreferenceLabel}
                 </label>
                 <select
                   value={preferredLang}
-                  onChange={(e) => setPreferredLang(e.target.value as "en" | "gu")}
+                  onChange={(e) => setPreferredLang(e.target.value as SupportedLanguage)}
                   className="w-full rounded-xl border border-[#49352F]/15 bg-white p-2.5 text-xs font-semibold text-[#49352F] focus:border-[#B26A1B] outline-hidden cursor-pointer"
                 >
-                  <option value="en">English (default)</option>
-                  <option value="gu">ગુજરાતી (Gujarati)</option>
+                  {ALL_LANGUAGES.map((lang) => (
+                    <option key={lang.code} value={lang.code}>
+                      {lang.nativeName} ({lang.name})
+                    </option>
+                  ))}
                 </select>
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-[#49352F] mb-1">
-                  {language === "gu" ? "ભલામણ એન્જિન મોડ" : "Recommendation Engine Mode"}
+                  {st.recEngineLabel}
                 </label>
                 <div className="p-2.5 rounded-xl bg-[#FAF6E9] border border-[#49352F]/12 text-xs text-[#49352F]">
                   <span className="font-bold text-[#49352F] block">
-                    {language === "gu"
-                      ? "નિશ્ચયાત્મક શૈક્ષણિક એન્જિન (ઑફલાઇન)"
-                      : "Deterministic Pedagogical Engine (Offline)"}
+                    {st.recEngineTitle}
                   </span>
                   <span className="text-[11px] text-[#7A6862]">
-                    {language === "gu"
-                      ? "કોઈપણ ચૂકવણી કરેલ API કી વિના 100% ઑફલાઇન કાર્ય કરે છે."
-                      : "Works 100% offline with zero paid API keys required."}
+                    {st.recEngineDesc}
                   </span>
                 </div>
               </div>
@@ -449,14 +428,10 @@ export default function SettingsPage() {
                 <ShieldCheck className="w-5 h-5 text-[#2E7D5E]" />
                 <div>
                   <CardTitle>
-                    {language === "gu"
-                      ? "બાળ ગોપનીયતા અને નૈતિક AI ધોરણો"
-                      : "Child Privacy & Ethical AI Standards"}
+                    {st.privacyTitle}
                   </CardTitle>
                   <CardDescription>
-                    {language === "gu"
-                      ? "પ્રાથમિક શિક્ષણ માટે પ્રાઇવસી-બાય-ડિઝાઇન નીતિ"
-                      : "Privacy-by-design policy for primary education"}
+                    {st.privacyDesc}
                   </CardDescription>
                 </div>
               </div>
@@ -464,28 +439,16 @@ export default function SettingsPage() {
 
             <div className="space-y-2 text-xs text-[#49352F] leading-relaxed">
               <p>
-                • <strong>{language === "gu" ? "કોઈ બિનજરૂરી સંવેદનશીલ ડેટા નહીં:" : "No Unnecessary Sensitive Data:"}</strong>{" "}
-                {language === "gu"
-                  ? "અમે સરનામા, ફોન નંબર, આર્થિક સ્થિતિ, બાયોમેટ્રિક ડેટા કે ચહેરાના ફોટા એકત્રિત કરતા નથી."
-                  : "We do not collect home addresses, phone numbers, family financial status, biometric data, or facial images."}
+                • <strong>{st.privacyP1Title}</strong> {st.privacyP1Body}
               </p>
               <p>
-                • <strong>{language === "gu" ? "સકારાત્મક ભાષા:" : "Supportive Language:"}</strong>{" "}
-                {language === "gu"
-                  ? "વિદ્યાર્થીઓને ક્યારેય નકારાત્મક શબ્દોથી લેબલ કરવામાં આવતા નથી. પ્લેટફોર્મ 'સહાય જરૂરી', 'વિકાસશીલ' અને 'આગળ વધવા માટે તૈયાર' જેવા સકારાત્મક શબ્દો વાપરે છે."
-                  : "Students are never labeled with negative terms. The platform uses positive pedagogical phrasing such as \"Needs Support,\" \"Developing,\" and \"Ready for Next Step.\""}
+                • <strong>{st.privacyP2Title}</strong> {st.privacyP2Body}
               </p>
               <p>
-                • <strong>{language === "gu" ? "કોઈ સાર્વજનિક રેન્કિંગ નહીં:" : "No Public Rankings:"}</strong>{" "}
-                {language === "gu"
-                  ? "વ્યક્તિગત ગુણ શિક્ષક અને વાલી માટે ગુપ્ત છે. હાનિકારક વર્ગ રેન્ક યાદીઓ સખત પ્રતિબંધિત છે."
-                  : "Individual student scores are confidential to the teacher and parent. Stigmatizing class rank ladders are strictly prohibited."}
+                • <strong>{st.privacyP3Title}</strong> {st.privacyP3Body}
               </p>
               <p>
-                • <strong>{language === "gu" ? "ઑફલાઇન ટેલિમેટ્રી:" : "Offline Telemetry:"}</strong>{" "}
-                {language === "gu"
-                  ? "શીખવાની ખામીઓ અને ઉપચાર યોજનાઓ સ્થાનિક શાળા સર્વર પર ચાલે છે, ત્રીજા પક્ષને બાળકોના રેકોર્ડ મોકલ્યા વિના."
-                  : "All learning gaps and remedial plans run locally on the school server or device without transmitting children's records to third parties."}
+                • <strong>{st.privacyP4Title}</strong> {st.privacyP4Body}
               </p>
             </div>
           </Card>
@@ -503,18 +466,14 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between pb-2 border-b border-[#49352F]/10">
               <div>
                 <h3 className="font-heading text-base font-bold text-[#49352F]">
-                  {language === "gu"
-                    ? "શિક્ષણ ગુણ પરિવર્તન ઓડિટ લોગ"
-                    : "Academic Mark Change Audit Log"}
+                  {st.auditLogTitle}
                 </h3>
                 <p className="text-xs text-[#7A6862]">
-                  {language === "gu"
-                    ? "વિદ્યાર્થીઓના ગુણ સુધારણાનો સંપૂર્ણ સુરક્ષિત ઇતિહાસ."
-                    : "Cryptographically verified, immutable record of all student mark adjustments."}
+                  {st.auditLogDesc}
                 </p>
               </div>
               <Badge variant="mint" size="sm">
-                {auditLogsList.length} {language === "gu" ? "નોંધો" : "Audit Entries"}
+                {auditLogsList.length} {st.auditEntriesSuffix}
               </Badge>
             </div>
 
@@ -522,26 +481,26 @@ export default function SettingsPage() {
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="border-b border-[#49352F]/10 text-[#7A6862] font-semibold">
-                    <th className="py-2 px-3">{language === "gu" ? "સમય" : "Timestamp"}</th>
-                    <th className="py-2 px-3">{language === "gu" ? "શિક્ષક" : "Teacher"}</th>
-                    <th className="py-2 px-3">{language === "gu" ? "વિદ્યાર્થી" : "Student"}</th>
-                    <th className="py-2 px-3">{language === "gu" ? "વિષય" : "Subject"}</th>
-                    <th className="py-2 px-3 text-center">{language === "gu" ? "ગુણ ફેરફાર" : "Score Delta"}</th>
-                    <th className="py-2 px-3">{language === "gu" ? "ક્રિયા" : "Action"}</th>
+                    <th className="py-2 px-3">{st.thTimestamp}</th>
+                    <th className="py-2 px-3">{st.thTeacher}</th>
+                    <th className="py-2 px-3">{st.thStudent}</th>
+                    <th className="py-2 px-3">{st.thSubject}</th>
+                    <th className="py-2 px-3 text-center">{st.thScoreDelta}</th>
+                    <th className="py-2 px-3">{st.thAction}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#49352F]/8">
                   {auditLogsList.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="py-4 text-center text-[#7A6862]">
-                        No mark adjustments recorded yet.
+                        {st.noAuditLogs}
                       </td>
                     </tr>
                   ) : (
                     auditLogsList.slice(0, 15).map((log) => (
                       <tr key={log.id} className="hover:bg-[#FAF6E9]/40">
                         <td className="py-2 px-3 text-[11px] font-mono text-[#7A6862]">
-                          {new Date(log.timestamp).toLocaleString()}
+                          {formatDate(log.timestamp)}
                         </td>
                         <td className="py-2 px-3 font-medium text-[#49352F]">
                           {log.teacherName}
@@ -550,7 +509,7 @@ export default function SettingsPage() {
                           {log.studentName}
                         </td>
                         <td className="py-2 px-3 font-semibold text-[#B26A1B]">
-                          {log.subjectCode}
+                          {formatSubject(log.subjectCode)}
                         </td>
                         <td className="py-2 px-3 text-center font-mono font-bold">
                           {log.previousMarks} &rarr; {log.updatedMarks}
@@ -579,9 +538,7 @@ export default function SettingsPage() {
             <div className="p-3 rounded-xl bg-[#2E7D5E]/15 border border-[#2E7D5E]/30 text-xs text-[#2E7D5E] flex items-center gap-2 font-medium">
               <CheckCircle2 className="w-4 h-4 shrink-0 text-[#2E7D5E]" />
               <span>
-                {language === "gu"
-                  ? "સેટિંગ્સ સચવાઈ ગઈ! તમામ વિદ્યાર્થીઓની શીખવાની ખામી સ્થિતિ પુનઃ ગણતરી થઈ."
-                  : "Settings saved! Learning gap statuses recalculated across all students."}
+                {st.saveSuccessRecalc}
               </span>
             </div>
           )}
@@ -590,9 +547,7 @@ export default function SettingsPage() {
             <div className="p-3 rounded-xl bg-[#FAF6E9] border border-[#B26A1B]/30 text-xs text-[#B26A1B] flex items-center gap-2 font-medium">
               <CheckCircle2 className="w-4 h-4 shrink-0 text-[#B26A1B]" />
               <span>
-                {language === "gu"
-                  ? "ટ્યુટોરીયલ અને માર્ગદર્શિત પ્રવાસ પ્રગતિ રીસેટ થઈ ગઈ! હવે તમે કોઈપણ પૃષ્ઠ પર માર્ગદર્શિકા જોશો."
-                  : "Tutorial & guided walkthrough progress reset! You will see the guided tour on your next visit to any page."}
+                {st.tutorialResetMsg}
               </span>
             </div>
           )}
@@ -605,7 +560,7 @@ export default function SettingsPage() {
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-[#C54738] hover:bg-rose-50 border border-rose-200 transition-colors cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                <span>{language === "gu" ? "ડેમો ડેટાબેઝ પુનઃસ્થાપિત કરો" : "Reset Demo Database"}</span>
+                <span>{st.resetDemoDbBtn}</span>
               </button>
 
               <button
@@ -614,7 +569,7 @@ export default function SettingsPage() {
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-[#B26A1B] hover:bg-[#FAF6E9] border border-[#49352F]/15 transition-colors cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                <span>{language === "gu" ? "ટ્યુટોરીયલ અને ઑનબોર્ડિંગ રીસેટ કરો" : "Reset Tutorial & Onboarding"}</span>
+                <span>{st.resetTutorialBtn}</span>
               </button>
             </div>
 
@@ -625,13 +580,7 @@ export default function SettingsPage() {
             >
               <Save className="w-3.5 h-3.5" />
               <span>
-                {language === "gu"
-                  ? isSaving
-                    ? "સાચવી રહ્યું છે..."
-                    : "સેટિંગ્સ સાચવો"
-                  : isSaving
-                    ? "Saving..."
-                    : "Save Settings"}
+                {isSaving ? st.savingSettings : st.saveSettingsBtn}
               </span>
             </button>
           </div>
@@ -643,12 +592,10 @@ export default function SettingsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#49352F]/40 backdrop-blur-sm p-4">
           <div className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl border border-[#49352F]/12 text-[#49352F]">
             <h3 className="text-base font-bold text-[#49352F] font-heading">
-              {language === "gu" ? "ડેમો ડેટા પુનઃસ્થાપિત કરવો છે?" : "Reset Demo Data?"}
+              {st.resetModalTitle}
             </h3>
             <p className="text-xs text-[#7A6862] mt-2">
-              {language === "gu"
-                ? "આનાથી ૧૫ ડેમો વિદ્યાર્થીઓ, પ્રારંભિક મૂલ્યાંકન ગુણ, શીખવાની ખામીઓ અને ઉપચાર યોજનાઓ તેમની મૂળ સ્થિતિમાં પુનઃસ્થાપિત થશે."
-                : "This will restore the 15 demonstration students, initial assessment scores, learning gaps, and remedial plans to their original state."}
+              {st.resetModalDesc}
             </p>
             <div className="mt-5 flex items-center justify-end gap-2">
               <button
@@ -656,7 +603,7 @@ export default function SettingsPage() {
                 onClick={() => setShowResetConfirm(false)}
                 className="px-3.5 py-1.5 text-xs font-semibold text-[#7A6862] hover:bg-[#FAF6E9] hover:text-[#49352F] rounded-xl transition-colors cursor-pointer"
               >
-                {language === "gu" ? "રદ કરો" : "Cancel"}
+                {st.cancelBtn}
               </button>
               <button
                 type="button"
@@ -664,13 +611,7 @@ export default function SettingsPage() {
                 onClick={handleResetDemo}
                 className="px-4 py-1.5 text-xs font-semibold bg-[#C54738] hover:bg-[#C54738]/90 text-white rounded-xl shadow-xs transition-colors cursor-pointer disabled:opacity-50"
               >
-                {isResetting
-                  ? language === "gu"
-                    ? "રીસેટ થઈ રહ્યું છે..."
-                    : "Resetting..."
-                  : language === "gu"
-                    ? "પુષ્ટિ કરો અને રીસેટ કરો"
-                    : "Confirm Reset"}
+                {isResetting ? st.resettingBtn : st.confirmResetBtn}
               </button>
             </div>
           </div>

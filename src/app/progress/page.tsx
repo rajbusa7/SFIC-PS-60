@@ -43,8 +43,8 @@ import {
 } from "recharts";
 
 export default function ProgressTrackingPage() {
-  const { t, language, formatSubject, formatClass } = useLanguage();
-  const isGu = language === "gu";
+  const { t, tr, language, formatSubject, formatClass, formatStatus, formatDate } = useLanguage();
+  const pg = t.progress;
 
   const [loading, setLoading] = useState(true);
   const [progressData, setProgressData] = useState<any>(null);
@@ -249,12 +249,10 @@ export default function ProgressTrackingPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 print:hidden">
           <div>
             <h1 className="text-xl sm:text-2xl font-extrabold text-[#49352F] tracking-tight font-heading">
-              {isGu ? "વર્ગ અધ્યયન પ્રગતિ અને પ્રભુત્વ પ્રવાહો" : "Class Learning Progress & Mastery Trends"}
+              {pg.title}
             </h1>
             <p className="text-xs sm:text-sm text-[#7A6862] mt-0.5">
-              {isGu
-                ? "ઉપચારાત્મક હસ્તક્ષેપ પછી સાચા ટકાવારી-ગુણ (pp) ડેલ્ટા વૃદ્ધિનું માપન કરતું પ્રયોગમૂલક મૂલ્યાંકન."
-                : "Empirical before-and-after evaluation measuring true percentage-point (pp) delta growth following remedial intervention."}
+              {pg.pageDescription}
             </p>
           </div>
 
@@ -265,7 +263,7 @@ export default function ProgressTrackingPage() {
               className="px-3 py-2 rounded-xl border border-[#49352F]/15 bg-white text-[#49352F] hover:bg-[#FAF6E9] transition-colors text-xs font-bold flex items-center gap-1.5 shadow-xs"
             >
               <Printer className="w-4 h-4 text-[#7A6862]" />
-              <span>{isGu ? "પ્રિન્ટ રિપોર્ટ (A4)" : "Print Report (A4)"}</span>
+              <span>{pg.printReportA4}</span>
             </button>
             <button
               onClick={handleExportCSV}
@@ -273,7 +271,7 @@ export default function ProgressTrackingPage() {
               className="px-3 py-2 rounded-xl bg-[#49352F] text-[#FAF6E9] hover:bg-[#382823] transition-colors text-xs font-bold flex items-center gap-1.5 shadow-xs"
             >
               <Download className="w-4 h-4 text-[#F2CAB3]" />
-              <span>{isGu ? "CSV એક્સપોર્ટ" : "Export CSV"}</span>
+              <span>{pg.exportCsv}</span>
             </button>
           </div>
         </div>
@@ -281,15 +279,15 @@ export default function ProgressTrackingPage() {
         {/* Printable Header for A4 Printout only */}
         <div className="hidden print:block border-b-2 border-black pb-4 mb-4">
           <h1 className="text-2xl font-bold text-black">
-            {isGu ? "વર્ગ અધ્યયન પ્રગતિ અને પ્રભુત્વ પ્રવાહો રિપોર્ટ" : "StudySaathi AI - Academic Progress & Mastery Report"}
+            {pg.printReportTitle}
           </h1>
           <p className="text-sm text-gray-700">
-            {isGu ? "ગુજરાત પ્રાથમિક શાળા શિક્ષણ પ્લેટફોર્મ" : "Gujarat Primary Education Board - Student Academic Analytics"}
+            {pg.printReportSub}
           </p>
           <div className="text-xs text-gray-600 mt-2 flex gap-4">
-            <span>Date: {new Date().toLocaleDateString("en-IN")}</span>
-            <span>Total Students: {kpis.totalStudentsTracked}</span>
-            <span>Class Average: {kpis.overallClassAverage}%</span>
+            <span>{tr("progress.printDate", { date: formatDate(new Date().toISOString()) })}</span>
+            <span>{tr("progress.printTotalStudents", { count: kpis.totalStudentsTracked })}</span>
+            <span>{tr("progress.printClassAvg", { avg: kpis.overallClassAverage })}</span>
           </div>
         </div>
 
@@ -303,30 +301,30 @@ export default function ProgressTrackingPage() {
           >
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-semibold uppercase tracking-wider text-[#2E7D5E]">
-                {isGu ? "પ્રગતિ દર્શાવતા વિદ્યાર્થીઓ" : "Students Showing Growth"}
+                {pg.studentsShowingGrowth}
               </span>
               <TrendingUp className="w-4 h-4 text-[#2E7D5E]" />
             </div>
             <div className="text-2xl sm:text-3xl font-extrabold text-[#2E7D5E] mt-1 font-heading">
-              {kpis.studentsShowingGrowth} {isGu ? "વિદ્યાર્થીઓ" : "Students"}
+              {kpis.studentsShowingGrowth} {pg.studentsUnit}
             </div>
             <span className="text-[11px] text-[#7A6862] mt-1 block font-medium">
-              {isGu ? "સકારાત્મક ટકાવારી-ગુણ ફેરફાર" : "Positive percentage-point delta"}
+              {pg.positiveDeltaDesc}
             </span>
           </Card>
 
           <Card className="border-l-4 border-l-[#B26A1B]">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-semibold uppercase tracking-wider text-[#B26A1B]">
-                {isGu ? "પૂર્ણ થયેલ હસ્તક્ષેપ" : "Interventions Completed"}
+                {pg.interventionsCompleted}
               </span>
               <Award className="w-4 h-4 text-[#B26A1B]" />
             </div>
             <div className="text-2xl sm:text-3xl font-extrabold text-[#B26A1B] mt-1 font-heading">
-              {kpis.interventionsCompleted} {isGu ? "યોજનાઓ" : "Plans"}
+              {kpis.interventionsCompleted} {pg.plansUnit}
             </div>
             <span className="text-[11px] text-[#7A6862] mt-1 block font-medium">
-              {isGu ? "પ્રમાણિત મહાવરા સત્રો" : "Validated practice sessions"}
+              {pg.validatedSessionsDesc}
             </span>
           </Card>
 
@@ -338,30 +336,30 @@ export default function ProgressTrackingPage() {
           >
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-semibold uppercase tracking-wider text-[#49352F]">
-                {isGu ? "ઉકેલાયેલી ખામીઓ" : "Gaps Resolved"}
+                {pg.gapsResolved}
               </span>
               <CheckCircle2 className="w-4 h-4 text-[#49352F]" />
             </div>
             <div className="text-2xl sm:text-3xl font-extrabold text-[#49352F] mt-1 font-heading">
-              {kpis.gapsResolved} {isGu ? "ખામીઓ" : "Gaps"}
+              {kpis.gapsResolved} {pg.gapsUnit}
             </div>
             <span className="text-[11px] text-[#7A6862] mt-1 block font-medium">
-              {isGu ? "≥૮૦% પ્રભુત્વ સિદ્ધ કર્યું" : "Met ≥80% mastery"}
+              {pg.metMasteryDesc}
             </span>
           </Card>
 
           <Card className="border-l-4 border-l-[#C54738]">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-semibold uppercase tracking-wider text-[#C54738]">
-                {isGu ? "સક્રિય હસ્તક્ષેપ" : "Active Interventions"}
+                {pg.activeInterventions}
               </span>
               <AlertCircle className="w-4 h-4 text-[#C54738]" />
             </div>
             <div className="text-2xl sm:text-3xl font-extrabold text-[#C54738] mt-1 font-heading">
-              {kpis.activeInterventions} {isGu ? "ખામીઓ" : "Gaps"}
+              {kpis.activeInterventions} {pg.gapsUnit}
             </div>
             <span className="text-[11px] text-[#7A6862] mt-1 block font-medium">
-              {isGu ? "ચાલુ ઉપચાર મહાવરો" : "Ongoing remedial practice"}
+              {pg.ongoingRemedialDesc}
             </span>
           </Card>
         </div>
@@ -372,11 +370,11 @@ export default function ProgressTrackingPage() {
             <div className="flex items-center gap-2">
               <Target className="w-4 h-4 text-[#B26A1B]" />
               <span className="text-xs font-bold text-[#49352F] uppercase tracking-wider">
-                {isGu ? "સમગ્ર ૧૪ શૈક્ષણિક પ્રદર્શન મેટ્રિક્સ" : "All 14 Academic Performance Metrics"}
+                {pg.all14MetricsTitle}
               </span>
               {activeKpiFilter && (
                 <span className="inline-flex items-center gap-1 bg-[#49352F] text-[#FAF6E9] px-2 py-0.5 rounded-full text-[10px] font-bold">
-                  {isGu ? "ફિલ્ટર સક્રિય:" : "Active:"} {activeKpiFilter}
+                  {pg.activeFilterLabel} {activeKpiFilter}
                   <button
                     onClick={() => setActiveKpiFilter(null)}
                     className="hover:text-red-300 ml-1"
@@ -391,7 +389,7 @@ export default function ProgressTrackingPage() {
               onClick={() => setShowAllKpis(!showAllKpis)}
               className="text-xs font-semibold text-[#B26A1B] hover:text-[#49352F] flex items-center gap-1"
             >
-              <span>{showAllKpis ? (isGu ? "સંકોચો" : "Collapse") : (isGu ? "વિસ્તૃત કરો" : "Expand All")}</span>
+              <span>{showAllKpis ? pg.collapseBtn : pg.expandAllBtn}</span>
               {showAllKpis ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
             </button>
           </div>
@@ -403,7 +401,7 @@ export default function ProgressTrackingPage() {
                 className="p-2.5 rounded-xl bg-[#FAF6E9]/60 border border-[#49352F]/10 cursor-pointer hover:bg-[#FAF6E9]"
               >
                 <span className="text-[10px] text-[#7A6862] block font-medium">
-                  {isGu ? "૧. કુલ ટ્રેક કરેલા વિદ્યાર્થીઓ" : "1. Total Tracked"}
+                  {pg.m1TotalTracked}
                 </span>
                 <span className="text-lg font-extrabold text-[#49352F]">{kpis.totalStudentsTracked}</span>
               </div>
@@ -415,7 +413,7 @@ export default function ProgressTrackingPage() {
                 }`}
               >
                 <span className="text-[10px] text-[#2E7D5E] block font-medium">
-                  {isGu ? "૨. વૃદ્ધિ દર્શાવતા" : "2. Showing Growth"}
+                  {pg.m2ShowingGrowth}
                 </span>
                 <span className="text-lg font-extrabold text-[#2E7D5E]">{kpis.studentsShowingGrowth}</span>
               </div>
@@ -427,7 +425,7 @@ export default function ProgressTrackingPage() {
                 }`}
               >
                 <span className="text-[10px] text-[#C54738] block font-medium">
-                  {isGu ? "૩. ઘટાડો દર્શાવતા" : "3. Showing Decline"}
+                  {pg.m3ShowingDecline}
                 </span>
                 <span className="text-lg font-extrabold text-[#C54738]">{kpis.studentsShowingDecline}</span>
               </div>
@@ -439,7 +437,7 @@ export default function ProgressTrackingPage() {
                 }`}
               >
                 <span className="text-[10px] text-[#7A6862] block font-medium">
-                  {isGu ? "૪. સ્થિર પ્રદર્શન" : "4. Maintaining"}
+                  {pg.m4Maintaining}
                 </span>
                 <span className="text-lg font-extrabold text-[#7A6862]">{kpis.studentsMaintaining}</span>
               </div>
@@ -451,7 +449,7 @@ export default function ProgressTrackingPage() {
                 }`}
               >
                 <span className="text-[10px] text-[#2E7D5E] block font-medium">
-                  {isGu ? "૫. પ્રભુત્વ સિદ્ધ (≥૮૦%)" : "5. Mastery (≥80%)"}
+                  {pg.m5Mastery}
                 </span>
                 <span className="text-lg font-extrabold text-[#2E7D5E]">{kpis.studentsMastery}</span>
               </div>
@@ -463,28 +461,28 @@ export default function ProgressTrackingPage() {
                 }`}
               >
                 <span className="text-[10px] text-[#C54738] block font-medium">
-                  {isGu ? "૬. સહાય જરૂરી (<૬૦%)" : "6. Needing Support"}
+                  {pg.m6Support}
                 </span>
                 <span className="text-lg font-extrabold text-[#C54738]">{kpis.studentsNeedingSupport}</span>
               </div>
 
               <div className="p-2.5 rounded-xl bg-[#FAF6E9]/60 border border-[#49352F]/10">
                 <span className="text-[10px] text-[#7A6862] block font-medium">
-                  {isGu ? "૭. કુલ કસોટીઓ" : "7. Total Tests"}
+                  {pg.m7TotalTests}
                 </span>
                 <span className="text-lg font-extrabold text-[#49352F]">{kpis.totalAssessmentsCompleted}</span>
               </div>
 
               <div className="p-2.5 rounded-xl bg-[#FAF6E9]/60 border border-[#49352F]/10">
                 <span className="text-[10px] text-[#7A6862] block font-medium">
-                  {isGu ? "૮. અધ્યયન પ્રવૃત્તિઓ" : "8. Activities Done"}
+                  {pg.m8ActivitiesDone}
                 </span>
                 <span className="text-lg font-extrabold text-[#B26A1B]">{kpis.totalActivitiesCompleted}</span>
               </div>
 
               <div className="p-2.5 rounded-xl bg-[#FAF6E9]/60 border border-[#49352F]/10">
                 <span className="text-[10px] text-[#7A6862] block font-medium">
-                  {isGu ? "૧૨. વર્ગ સરેરાશ સ્કોર" : "12. Class Average"}
+                  {pg.m12ClassAvg}
                 </span>
                 <span className="text-lg font-extrabold text-[#49352F]">{kpis.overallClassAverage}%</span>
               </div>
@@ -496,7 +494,7 @@ export default function ProgressTrackingPage() {
                 }`}
               >
                 <span className="text-[10px] text-[#B26A1B] block font-medium">
-                  {isGu ? "૧૪. તાજેતરની કસોટી વિના" : "14. No Recent Test"}
+                  {pg.m14NoRecentTest}
                 </span>
                 <span className="text-lg font-extrabold text-[#B26A1B]">{kpis.studentsWithoutRecentAssessments}</span>
               </div>
@@ -512,7 +510,7 @@ export default function ProgressTrackingPage() {
               <Search className="w-4 h-4 text-[#7A6862] absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
-                placeholder={isGu ? "વિદ્યાર્થીનું નામ, ID અથવા સંકલ્પના શોધો..." : "Search student name, ID or concept..."}
+                placeholder={pg.searchPlaceholder}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-[#49352F]/15 bg-[#FAF6E9]/40 text-[#49352F] placeholder:text-[#7A6862]/60 focus:bg-white focus:outline-hidden focus:ring-1 focus:ring-[#49352F]"
@@ -532,7 +530,7 @@ export default function ProgressTrackingPage() {
               {/* Standard Filter */}
               <div className="flex items-center gap-1.5">
                 <span className="text-xs font-semibold text-[#7A6862]">
-                  {isGu ? "ધોરણ:" : "Std:"}
+                  {pg.stdLabel}
                 </span>
                 <select
                   value={standardFilter}
@@ -540,22 +538,19 @@ export default function ProgressTrackingPage() {
                   aria-label="Filter by standard"
                   className="rounded-xl border border-[#49352F]/15 bg-[#FAF6E9] px-2.5 py-1.5 text-xs font-semibold text-[#49352F] outline-hidden cursor-pointer"
                 >
-                  <option value="all">{isGu ? "બધા ધોરણ (૧-૮)" : "All Standards"}</option>
-                  <option value="1">Std 1</option>
-                  <option value="2">Std 2</option>
-                  <option value="3">Std 3</option>
-                  <option value="4">Std 4</option>
-                  <option value="5">Std 5</option>
-                  <option value="6">Std 6</option>
-                  <option value="7">Std 7</option>
-                  <option value="8">Std 8</option>
+                  <option value="all">{pg.allStandards}</option>
+                  {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+                    <option key={n} value={String(n)}>
+                      {formatClass(n)}
+                    </option>
+                  ))}
                 </select>
               </div>
 
               {/* Subject Filter */}
               <div className="flex items-center gap-1.5">
                 <span className="text-xs font-semibold text-[#7A6862]">
-                  {isGu ? "વિષય:" : "Subject:"}
+                  {pg.subjectLabel}
                 </span>
                 <select
                   value={subjectFilter}
@@ -563,7 +558,7 @@ export default function ProgressTrackingPage() {
                   aria-label="Filter by subject"
                   className="rounded-xl border border-[#49352F]/15 bg-[#FAF6E9] px-2.5 py-1.5 text-xs font-semibold text-[#49352F] outline-hidden cursor-pointer"
                 >
-                  <option value="all">{isGu ? "બધા વિષયો" : "All Subjects"}</option>
+                  <option value="all">{pg.allSubjects}</option>
                   <option value="MATH">{formatSubject("MATH")}</option>
                   <option value="ENG">{formatSubject("ENG")}</option>
                   <option value="GUJ">{formatSubject("GUJ")}</option>
@@ -577,7 +572,7 @@ export default function ProgressTrackingPage() {
               {/* Mastery Status Filter */}
               <div className="flex items-center gap-1.5">
                 <span className="text-xs font-semibold text-[#7A6862]">
-                  {isGu ? "સ્થિતિ:" : "Status:"}
+                  {pg.statusLabel}
                 </span>
                 <select
                   value={masteryFilter}
@@ -585,10 +580,10 @@ export default function ProgressTrackingPage() {
                   aria-label="Filter by mastery status"
                   className="rounded-xl border border-[#49352F]/15 bg-[#FAF6E9] px-2.5 py-1.5 text-xs font-semibold text-[#49352F] outline-hidden cursor-pointer"
                 >
-                  <option value="all">{isGu ? "બધી સ્થિતિ" : "All Status"}</option>
-                  <option value="mastered">{isGu ? "સિદ્ધ (≥૮૦%)" : "Mastered (≥80%)"}</option>
-                  <option value="developing">{isGu ? "પ્રગતિ હેઠળ (૬૦-૭૯%)" : "Developing (60-79%)"}</option>
-                  <option value="needsSupport">{isGu ? "સહાય જરૂરી (<૬૦%)" : "Needs Support (<60%)"}</option>
+                  <option value="all">{pg.allStatus}</option>
+                  <option value="mastered">{pg.masteredOpt}</option>
+                  <option value="developing">{pg.developingOpt}</option>
+                  <option value="needsSupport">{pg.needsSupportOpt}</option>
                 </select>
               </div>
 
@@ -605,7 +600,7 @@ export default function ProgressTrackingPage() {
                   className="px-2.5 py-1.5 text-xs font-bold text-[#C54738] hover:bg-[#C54738]/10 rounded-xl transition-colors flex items-center gap-1"
                 >
                   <RefreshCw className="w-3 h-3" />
-                  <span>{isGu ? "રીસેટ" : "Reset"}</span>
+                  <span>{pg.resetBtn}</span>
                 </button>
               )}
             </div>
@@ -622,10 +617,10 @@ export default function ProgressTrackingPage() {
               <div className="space-y-1.5 flex-1">
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-bold text-[#49352F] uppercase tracking-wider">
-                    {isGu ? "શિક્ષક ચેતવણી અને તાત્કાલિક ધ્યાનાકર્ષક બાબતો" : "Teacher Actionable Alerts & Declining Trends"}
+                    {pg.teacherAlertsTitle}
                   </h4>
                   <span className="text-[10px] text-[#7A6862] font-semibold">
-                    {progressData.teacherAlerts.length} {isGu ? "ચેતવણીઓ" : "alerts"}
+                    {tr("progress.alertsCount", { count: progressData.teacherAlerts.length })}
                   </span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-1">
@@ -642,7 +637,7 @@ export default function ProgressTrackingPage() {
                         href={`/students/${alert.studentId}`}
                         className="px-2.5 py-1 rounded-lg bg-[#FAF6E9] text-[#B26A1B] hover:text-[#49352F] text-[11px] font-bold shrink-0 transition-colors"
                       >
-                        {isGu ? "પગલાં લો" : "Review"}
+                        {pg.reviewBtn}
                       </Link>
                     </div>
                   ))}
@@ -657,14 +652,10 @@ export default function ProgressTrackingPage() {
           <CardHeader>
             <div>
               <CardTitle>
-                {isGu
-                  ? "મૂળ આધાર વિરુદ્ધ તાજેતરનું પુનઃમૂલ્યાંકન સરખામણી"
-                  : "Baseline vs. Latest Reassessment Comparison"}
+                {pg.beforeAfterTitle}
               </CardTitle>
               <CardDescription>
-                {isGu
-                  ? "ઉપચાર કાર્ય પહેલા અને પછીના વિદ્યાર્થી ગુણ દર્શાવતી વાસ્તવિક સરખામણી. ડેલ્ટા ચોક્કસ ટકાવારી-ગુણ (pp) માં ગણવામાં આવે છે."
-                  : "Empirical comparison showing student scores before and after remedial action. Delta is calculated in absolute percentage points (pp)."}
+                {pg.beforeAfterDesc}
               </CardDescription>
             </div>
           </CardHeader>
@@ -706,13 +697,13 @@ export default function ProgressTrackingPage() {
                   <Bar
                     dataKey="Baseline"
                     fill="#C9BDAF"
-                    name={isGu ? "પ્રારંભિક આધાર સ્કોર" : "Initial Baseline Score"}
+                    name={pg.baselineBarName}
                     radius={[4, 4, 0, 0]}
                   />
                   <Bar
                     dataKey="Latest"
                     fill="#2E7D5E"
-                    name={isGu ? "ઉપચાર પછીનો સ્કોર" : "Post-Intervention Score"}
+                    name={pg.latestBarName}
                     radius={[4, 4, 0, 0]}
                   />
                 </BarChart>
@@ -721,12 +712,10 @@ export default function ProgressTrackingPage() {
               <div className="h-full flex flex-col items-center justify-center text-center p-6 bg-[#FAF6E9]/40 rounded-2xl border border-dashed border-[#49352F]/20">
                 <BookOpen className="w-8 h-8 text-[#7A6862]/60 mb-2" />
                 <h4 className="text-xs font-bold text-[#49352F]">
-                  {isGu ? "પસંદ કરેલ ફિલ્ટર માટે કોઈ બહુ-મૂલ્યાંકન સરખામણી ઉપલબ્ધ નથી" : "No Before-and-After Comparisons Available for Current Filter"}
+                  {pg.noComparisonTitle}
                 </h4>
                 <p className="text-[11px] text-[#7A6862] max-w-md mt-1">
-                  {isGu
-                    ? "આ ચાર્ટ એવા વિદ્યાર્થીઓને દર્શાવે છે જેમણે મૂળ આધાર કસોટી અને ઉપચાર પછીની પુનઃકસોટી બંને પૂર્ણ કરી છે. અન્ય વિષય અથવા 'બધા ધોરણ' પસંદ કરો."
-                    : "This visualization displays students with both initial diagnostic baseline and post-remediation reassessment evaluations. Try switching to 'All Standards' or 'Mathematics'."}
+                  {pg.noComparisonDesc}
                 </p>
               </div>
             )}
@@ -745,7 +734,7 @@ export default function ProgressTrackingPage() {
               }`}
             >
               <BookOpen className="w-3.5 h-3.5" />
-              <span>{isGu ? "સંકલ્પના-સ્તર પ્રભુત્વ ખાતાવહી" : "Concept-Level Mastery Ledger"}</span>
+              <span>{pg.tabLedger}</span>
               <span className="ml-1 text-[10px] px-1.5 py-0.2 rounded-full bg-black/20">
                 {filteredConceptItems.length}
               </span>
@@ -760,7 +749,7 @@ export default function ProgressTrackingPage() {
               }`}
             >
               <Users className="w-3.5 h-3.5" />
-              <span>{isGu ? "વિદ્યાર્થી પ્રદર્શન પત્રક" : "Student Performance Records"}</span>
+              <span>{pg.tabStudents}</span>
               <span className="ml-1 text-[10px] px-1.5 py-0.2 rounded-full bg-black/20">
                 {filteredStudentRecords.length}
               </span>
@@ -768,9 +757,7 @@ export default function ProgressTrackingPage() {
           </div>
 
           <span className="text-xs text-[#7A6862]">
-            {isGu ? "કુલ નોંધણી:" : "Showing:"}{" "}
-            {activeViewTab === "ledger" ? filteredConceptItems.length : filteredStudentRecords.length}{" "}
-            {isGu ? "રેકોર્ડ" : "records"}
+            {tr("progress.showingRecords", { count: activeViewTab === "ledger" ? filteredConceptItems.length : filteredStudentRecords.length })}
           </span>
         </div>
 
@@ -780,12 +767,10 @@ export default function ProgressTrackingPage() {
             <CardHeader>
               <div>
                 <CardTitle>
-                  {isGu ? "સંકલ્પના-સ્તર પ્રભુત્વ ખાતાવહી" : "Concept-Level Mastery Ledger"}
+                  {pg.ledgerTitle}
                 </CardTitle>
                 <CardDescription>
-                  {isGu
-                    ? "મૂળ સ્કોર, પુનઃમૂલ્યાંકન અને ગણતરી કરેલ ટકાવારી-ગુણ ડેલ્ટાની વિગતવાર નોંધણી"
-                    : "Detailed audit trail of baseline score, reassessment, and calculated percentage-point delta"}
+                  {pg.ledgerDesc}
                 </CardDescription>
               </div>
             </CardHeader>
@@ -794,14 +779,14 @@ export default function ProgressTrackingPage() {
               <table className="w-full text-left text-xs">
                 <thead className="bg-[#FAF6E9] border-b border-[#49352F]/10 text-[#7A6862] uppercase tracking-wider text-[10px]">
                   <tr>
-                    <th className="p-3">{isGu ? "વિદ્યાર્થી" : "Student"}</th>
-                    <th className="p-3">{isGu ? "વિષય અને સંકલ્પના" : "Subject & Concept"}</th>
-                    <th className="p-3">{isGu ? "મૂલ્યાંકનો" : "Evaluations"}</th>
-                    <th className="p-3">{isGu ? "પ્રારંભિક સ્કોર" : "Initial Score"}</th>
-                    <th className="p-3">{isGu ? "તાજેતરનો સ્કોર" : "Latest Score"}</th>
-                    <th className="p-3">{isGu ? "ફેરફાર (ગુણ)" : "Change (pp)"}</th>
-                    <th className="p-3">{isGu ? "પ્રભુત્વ સ્થિતિ" : "Mastery Status"}</th>
-                    <th className="p-3 text-right">{isGu ? "વિગતવાર જુઓ" : "Action"}</th>
+                    <th className="p-3">{pg.colStudent}</th>
+                    <th className="p-3">{pg.colSubjectConcept}</th>
+                    <th className="p-3">{pg.colEvaluations}</th>
+                    <th className="p-3">{pg.colInitialScore}</th>
+                    <th className="p-3">{pg.colLatestScore}</th>
+                    <th className="p-3">{pg.colChangePp}</th>
+                    <th className="p-3">{pg.colMasteryStatus}</th>
+                    <th className="p-3 text-right">{pg.colAction}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#49352F]/10">
@@ -825,7 +810,7 @@ export default function ProgressTrackingPage() {
                           </td>
                           <td className="p-3 font-semibold text-[#49352F]">
                             {/* Strictly displays exact count of evaluated results */}
-                            {item.attemptsCount} {isGu ? "કસોટી(ઓ)" : "test(s)"}
+                            {tr("progress.testsCountUnit", { count: item.attemptsCount })}
                           </td>
                           <td className="p-3 font-medium text-[#7A6862]">
                             {item.hasSufficientEvidence ? `${item.initialPercentage}%` : "—"}
@@ -853,7 +838,7 @@ export default function ProgressTrackingPage() {
                               </div>
                             ) : (
                               <span className="text-[10px] text-[#7A6862] italic">
-                                {isGu ? "એક જ અવલોકન" : "Single Observation"}
+                                {pg.singleObservation}
                               </span>
                             )}
                           </td>
@@ -868,11 +853,7 @@ export default function ProgressTrackingPage() {
                               }
                               size="sm"
                             >
-                              {isMastered
-                                ? isGu ? "સિદ્ધ" : "Mastered"
-                                : item.latestPercentage >= 60
-                                ? isGu ? "પ્રગતિ હેઠળ" : "Developing"
-                                : isGu ? "સહાય જરૂરી" : "Needs Support"}
+                              {formatStatus(isMastered ? "Mastered" : item.latestPercentage >= 60 ? "Developing" : "Needs Support")}
                             </Badge>
                           </td>
                           <td className="p-3 text-right">
@@ -888,7 +869,7 @@ export default function ProgressTrackingPage() {
                               className="font-bold text-[#B26A1B] hover:text-[#49352F] inline-flex items-center gap-1 bg-[#FAF6E9] px-2.5 py-1 rounded-lg border border-[#49352F]/10 text-xs transition-colors"
                             >
                               <Eye className="w-3.5 h-3.5" />
-                              <span>{isGu ? "જુઓ" : "View"}</span>
+                              <span>{pg.viewBtn}</span>
                             </button>
                           </td>
                         </tr>
@@ -897,7 +878,7 @@ export default function ProgressTrackingPage() {
                   ) : (
                     <tr>
                       <td colSpan={8} className="p-8 text-center text-xs text-[#7A6862]">
-                        {isGu ? "કોઈ મેળ ખાતા સંકલ્પના રેકોર્ડ મળ્યા નથી" : "No concept records found matching your filters."}
+                        {pg.noConceptRecords}
                       </td>
                     </tr>
                   )}
@@ -913,12 +894,10 @@ export default function ProgressTrackingPage() {
             <CardHeader>
               <div>
                 <CardTitle>
-                  {isGu ? "વિદ્યાર્થી પ્રદર્શન અને પ્રગતિ પત્રક" : "Student Performance & Academic Mastery"}
+                  {pg.studentsTitle}
                 </CardTitle>
                 <CardDescription>
-                  {isGu
-                    ? "વિદ્યાર્થી વાઇઝ સરેરાશ સ્કોર, ડેલ્ટા પ્રવાહ, પ્રવૃત્તિ પૂર્ણતા અને શિક્ષક ભલામણો"
-                    : "Comprehensive student-level audit measuring average score, overall delta trend, activities, and individual remediation."}
+                  {pg.studentsDesc}
                 </CardDescription>
               </div>
             </CardHeader>
@@ -927,16 +906,16 @@ export default function ProgressTrackingPage() {
               <table className="w-full text-left text-xs">
                 <thead className="bg-[#FAF6E9] border-b border-[#49352F]/10 text-[#7A6862] uppercase tracking-wider text-[10px]">
                   <tr>
-                    <th className="p-3">{isGu ? "વિદ્યાર્થી" : "Student"}</th>
-                    <th className="p-3">{isGu ? "ધોરણ / વર્ગ" : "Standard / Section"}</th>
-                    <th className="p-3 text-center">{isGu ? "કસોટીઓ" : "Assessments"}</th>
-                    <th className="p-3 text-center">{isGu ? "પ્રવૃત્તિઓ" : "Activities"}</th>
-                    <th className="p-3 text-center">{isGu ? "પ્રારંભિક" : "Initial"}</th>
-                    <th className="p-3 text-center">{isGu ? "તાજેતરનો" : "Latest"}</th>
-                    <th className="p-3 text-center">{isGu ? "પ્રગતિ ડેલ્ટા" : "Delta (pp)"}</th>
-                    <th className="p-3 text-center">{isGu ? "ચોકસાઈ" : "Accuracy"}</th>
-                    <th className="p-3">{isGu ? "પ્રભુત્વ સ્થિતિ" : "Status"}</th>
-                    <th className="p-3 text-right">{isGu ? "ક્રિયા" : "Action"}</th>
+                    <th className="p-3">{pg.colStudent}</th>
+                    <th className="p-3">{pg.colStdSection}</th>
+                    <th className="p-3 text-center">{pg.colAssessments}</th>
+                    <th className="p-3 text-center">{pg.colActivities}</th>
+                    <th className="p-3 text-center">{pg.colInitial}</th>
+                    <th className="p-3 text-center">{pg.colLatest}</th>
+                    <th className="p-3 text-center">{pg.colDelta}</th>
+                    <th className="p-3 text-center">{pg.colAccuracy}</th>
+                    <th className="p-3">{pg.colStatus}</th>
+                    <th className="p-3 text-right">{pg.colAction}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#49352F]/10">
@@ -961,7 +940,7 @@ export default function ProgressTrackingPage() {
                             {s.assessmentsAttempted}
                           </td>
                           <td className="p-3 text-center text-[#B26A1B] font-semibold">
-                            {s.activitiesCompleted} {isGu ? "પૂર્ણ" : "done"}
+                            {tr("progress.doneCountUnit", { count: s.activitiesCompleted })}
                           </td>
                           <td className="p-3 text-center text-[#7A6862]">
                             {s.initialScore !== null ? `${s.initialScore}%` : "—"}
@@ -984,7 +963,7 @@ export default function ProgressTrackingPage() {
                               </span>
                             ) : (
                               <span className="text-[10px] text-[#7A6862] italic">
-                                {s.assessmentsAttempted === 1 ? (isGu ? "૧ કસોટી" : "1 test") : "—"}
+                                {s.assessmentsAttempted === 1 ? pg.oneTest : "—"}
                               </span>
                             )}
                           </td>
@@ -1003,15 +982,11 @@ export default function ProgressTrackingPage() {
                                 }
                                 size="sm"
                               >
-                                {isMastered
-                                  ? isGu ? "સિદ્ધ" : "Mastered"
-                                  : (s.latestScore ?? 0) >= 60
-                                  ? isGu ? "પ્રગતિ હેઠળ" : "Developing"
-                                  : isGu ? "સહાય જરૂરી" : "Needs Support"}
+                                {formatStatus(isMastered ? "Mastered" : (s.latestScore ?? 0) >= 60 ? "Developing" : "Needs Support")}
                               </Badge>
                             ) : (
                               <span className="text-[10px] text-[#7A6862] italic">
-                                {isGu ? "બાકી" : "Pending"}
+                                {pg.pendingLabel}
                               </span>
                             )}
                           </td>
@@ -1021,7 +996,7 @@ export default function ProgressTrackingPage() {
                               className="font-bold text-[#B26A1B] hover:text-[#49352F] inline-flex items-center gap-1 bg-[#FAF6E9] px-2.5 py-1 rounded-lg border border-[#49352F]/10 text-xs transition-colors"
                             >
                               <Eye className="w-3.5 h-3.5" />
-                              <span>{isGu ? "પ્રોફાઇલ" : "Details"}</span>
+                              <span>{pg.detailsBtn}</span>
                             </button>
                           </td>
                         </tr>
@@ -1030,7 +1005,7 @@ export default function ProgressTrackingPage() {
                   ) : (
                     <tr>
                       <td colSpan={10} className="p-8 text-center text-xs text-[#7A6862]">
-                        {isGu ? "કોઈ મેળ ખાતા વિદ્યાર્થીઓ મળ્યા નથી" : "No students found matching your filters."}
+                        {pg.noStudentsFound}
                       </td>
                     </tr>
                   )}

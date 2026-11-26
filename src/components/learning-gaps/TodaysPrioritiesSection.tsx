@@ -33,7 +33,8 @@ export function TodaysPrioritiesSection({
   activeCategory,
   onSelectCategory,
 }: TodaysPrioritiesSectionProps) {
-  const { language } = useLanguage();
+  const { t, tr } = useLanguage();
+  const pr = t.priorities;
 
   const handleTileClick = (category: PriorityQueueCategory) => {
     if (activeCategory === category) {
@@ -46,7 +47,7 @@ export function TodaysPrioritiesSection({
   const categories = [
     {
       id: "immediate" as PriorityQueueCategory,
-      label: language === "gu" ? "તાત્કાલિક સહાય જરૂરી" : "Need Immediate Support",
+      label: pr.immediateLabel,
       count: priorities.immediateSupportCount,
       icon: AlertCircle,
       iconColor: "text-[#C54738]",
@@ -54,11 +55,11 @@ export function TodaysPrioritiesSection({
       borderActive: "border-[#C54738] bg-[#FBECE9] ring-2 ring-[#C54738]/20",
       borderInactive: "border-[#C54738]/25 bg-white hover:bg-[#FBECE9]/50",
       accentDot: "bg-[#C54738]",
-      description: language === "gu" ? "સહાય મર્યાદા નીચેના સક્રિય ગેપ" : "Active gaps below support threshold",
+      description: pr.immediateDesc,
     },
     {
       id: "developing" as PriorityQueueCategory,
-      label: language === "gu" ? "સતત મહાવરો જરૂરી" : "Need Continued Practice",
+      label: pr.developingLabel,
       count: priorities.developingCount,
       icon: Clock,
       iconColor: "text-[#B26A1B]",
@@ -66,11 +67,11 @@ export function TodaysPrioritiesSection({
       borderActive: "border-[#B26A1B] bg-[#FAF6E9] ring-2 ring-[#B26A1B]/20",
       borderInactive: "border-[#B26A1B]/25 bg-white hover:bg-[#FAF6E9]/50",
       accentDot: "bg-[#B26A1B]",
-      description: language === "gu" ? "વિકાસશીલ વિદ્યાર્થીઓ" : "Students developing toward mastery",
+      description: pr.developingDesc,
     },
     {
       id: "reassess" as PriorityQueueCategory,
-      label: language === "gu" ? "પુનઃમૂલ્યાંકન માટે તૈયાર" : "Ready to Reassess",
+      label: pr.reassessLabel,
       count: priorities.readyToReassessCount,
       icon: RotateCcw,
       iconColor: "text-[#2E7D5E]",
@@ -78,11 +79,11 @@ export function TodaysPrioritiesSection({
       borderActive: "border-[#2E7D5E] bg-[#EAF4EE] ring-2 ring-[#2E7D5E]/20",
       borderInactive: "border-[#2E7D5E]/25 bg-white hover:bg-[#EAF4EE]/50",
       accentDot: "bg-[#2E7D5E]",
-      description: language === "gu" ? "ઉપચાર પૂર્ણ થયેલ વિદ્યાર્થીઓ" : "Completed intervention due for check",
+      description: pr.reassessDesc,
     },
     {
       id: "mastered" as PriorityQueueCategory,
-      label: language === "gu" ? "તાજેતરમાં નિપુણ" : "Recently Mastered",
+      label: pr.masteredLabel,
       count: priorities.recentlyMasteredCount,
       icon: CheckCircle2,
       iconColor: "text-[#2E7D5E]",
@@ -90,7 +91,7 @@ export function TodaysPrioritiesSection({
       borderActive: "border-[#2E7D5E] bg-[#EAF4EE] ring-2 ring-[#2E7D5E]/20",
       borderInactive: "border-[#49352F]/15 bg-white hover:bg-[#EAF4EE]/40",
       accentDot: "bg-[#2E7D5E]",
-      description: language === "gu" ? "છેલ્લા ૭ દિવસમાં મેળવેલ નિપુણતા" : "Mastered within the last 7 days",
+      description: pr.masteredDesc,
     },
   ];
 
@@ -98,7 +99,7 @@ export function TodaysPrioritiesSection({
   if (priorities.reopenedGapsCount > 0) {
     categories.push({
       id: "reopened" as PriorityQueueCategory,
-      label: language === "gu" ? "પુનઃ ખુલેલા ગેપ" : "Reopened Gaps",
+      label: pr.reopenedLabel,
       count: priorities.reopenedGapsCount,
       icon: AlertTriangle,
       iconColor: "text-[#C54738]",
@@ -106,7 +107,7 @@ export function TodaysPrioritiesSection({
       borderActive: "border-[#C54738] bg-[#FBECE9] ring-2 ring-[#C54738]/20",
       borderInactive: "border-[#C54738]/30 bg-white hover:bg-[#FBECE9]/50",
       accentDot: "bg-[#C54738]",
-      description: language === "gu" ? "અગાઉ નિપુણ પરંતુ ઘટેલા સ્કોર" : "Previously mastered, fell below threshold",
+      description: pr.reopenedDesc,
     });
   }
 
@@ -120,18 +121,16 @@ export function TodaysPrioritiesSection({
         <div className="flex items-center gap-2">
           <Zap className="w-4 h-4 text-[#B26A1B]" />
           <h2 className="font-heading text-sm font-black tracking-tight text-[#49352F] uppercase">
-            {language === "gu" ? "આજના પ્રાથમિક કાર્યો (એક્શન કતાર)" : "Today's Priorities"}
+            {pr.title}
           </h2>
           <Badge variant="saffron" size="sm">
-            {priorities.totalActionableStudents} {language === "gu" ? "વિદ્યાર્થીઓ" : "Actionable"}
+            {tr("priorities.actionableCount", { count: priorities.totalActionableStudents })}
           </Badge>
         </div>
 
         <div className="flex items-center gap-2">
           <span className="text-[11px] text-[#7A6862] hidden sm:inline">
-            {language === "gu"
-              ? "ગેપ લિસ્ટ ફિલ્ટર કરવા કેટેગરી પર ક્લિક કરો"
-              : "Click a category below to filter student list"}
+            {pr.subtitle}
           </span>
           {activeCategory && (
             <button
@@ -139,7 +138,7 @@ export function TodaysPrioritiesSection({
               onClick={() => onSelectCategory(null)}
               className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#FAF6E9] border border-[#B26A1B]/30 text-[#8D4E10] hover:bg-[#F2CAB3]/40 cursor-pointer transition-colors"
             >
-              <span>{language === "gu" ? "ફિલ્ટર દૂર કરો" : "Clear Priority Filter"}</span>
+              <span>{pr.clearFilterBtn}</span>
               <X className="w-3 h-3 text-[#C54738]" />
             </button>
           )}
@@ -178,7 +177,7 @@ export function TodaysPrioritiesSection({
                   {cat.count}
                 </span>
                 <span className="text-[10px] text-[#7A6862] truncate">
-                  {cat.count === 1 ? "student" : "students"}
+                  {cat.count === 1 ? pr.studentSingular : pr.studentPlural}
                 </span>
               </div>
             </button>

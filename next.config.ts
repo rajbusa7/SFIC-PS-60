@@ -28,12 +28,7 @@ const nextConfig: NextConfig = {
   },
   async rewrites() {
     return {
-      beforeFiles: [
-        {
-          source: "/",
-          destination: "/landing-pages/inner-green-3d.html",
-        },
-      ],
+      beforeFiles: [],
     };
   },
 };

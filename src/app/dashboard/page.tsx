@@ -96,7 +96,8 @@ const TeacherManagementSection = dynamic(
 function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { t, language, formatSubject, formatClass, formatPriority } = useLanguage();
+  const { t, tr, formatSubject, formatClass, formatPriority, formatStatus } = useLanguage();
+  const db = t.dashboard;
   const { user, role, assignments, selectedSubject: authSelectedSubject, setSelectedSubject: setAuthSelectedSubject, assignmentNotice } = useAuth();
   const isTeacher = user?.role === "teacher" || role === "teacher";
   const isAdmin = user?.role === "admin" || role === "admin";
@@ -508,7 +509,7 @@ function DashboardContent() {
             {isTeacher && activeSubject !== "all" && (
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-[#49352F]/15 shadow-xs text-xs">
                 <span className="text-[#7A6862] font-medium">
-                  {language === "gu" ? "વિષય:" : "Subject:"}
+                  {db.subjectLabel}
                 </span>
                 <span className="font-bold text-[#B26A1B]">
                   {formatSubject(activeSubject)}
@@ -519,7 +520,7 @@ function DashboardContent() {
                     onClick={() => setShowSwitchSubjectModal(true)}
                     className="ml-1 text-[11px] font-bold text-[#B26A1B] hover:text-[#8F5213] underline cursor-pointer"
                   >
-                    {language === "gu" ? "બદલો" : "Switch Subject"}
+                    {db.switchSubjectBtn}
                   </button>
                 )}
               </div>
@@ -532,17 +533,13 @@ function DashboardContent() {
               className="rounded-xl border border-[#49352F]/15 bg-white px-3 py-1.5 text-xs font-semibold text-[#49352F] shadow-xs outline-hidden cursor-pointer"
             >
               <option value="all">
-                {language === "gu"
-                  ? isTeacher
-                    ? `સોંપેલ વર્ગો (${permittedGrades.join(", ")})`
-                    : "બધા વર્ગો (૧-૫)"
-                  : isTeacher
-                  ? `All Assigned Classes (${permittedGrades.join(", ")})`
-                  : "All Classes (1-5)"}
+                {isTeacher
+                  ? tr("dashboard.assignedClassesAll", { classes: permittedGrades.join(", ") })
+                  : db.allClasses1to5}
               </option>
               {permittedGrades.map((g) => (
                 <option key={g} value={String(g)}>
-                  {language === "gu" ? `ધોરણ ${g}` : `Class ${g}`}
+                  {formatClass(g)}
                 </option>
               ))}
             </select>
@@ -567,10 +564,10 @@ function DashboardContent() {
                 onClick={() => setDashboardView("overview")}
                 className="text-xs font-bold text-[#49352F] hover:underline flex items-center gap-1 cursor-pointer"
               >
-                &larr; {language === "gu" ? "ડેશબોર્ડ પર પાછા જાઓ" : "Back to Classroom Overview"}
+                {db.backToOverview}
               </button>
               <Link href="/settings" className="text-xs text-[#7A6862] hover:text-[#49352F] font-medium">
-                {language === "gu" ? "સેટિંગ્સ પેજ ખોલો" : "Open Settings"} &rarr;
+                {db.openSettings} &rarr;
               </Link>
             </div>
             <TeacherManagementSection />
@@ -602,16 +599,14 @@ function DashboardContent() {
                   <div>
                     <div className="flex items-center gap-2">
                       <h3 className="font-heading text-sm font-bold text-[#49352F]">
-                        {language === "gu" ? "શાળા સંચાલક નિયંત્રણ કેન્દ્ર" : "School Administrator Control Center"}
+                        {db.adminControlCenter}
                       </h3>
                       <Badge variant="saffron" size="sm">
-                        {language === "gu" ? "શિક્ષક વ્યવસ્થાપન" : "Teacher Management"}
+                        {db.teacherManagementBadge}
                       </Badge>
                     </div>
                     <p className="text-xs text-[#7A6862] mt-0.5">
-                      {language === "gu"
-                        ? "શિક્ષકો ઉમેરો, વિષયો અને વર્ગો ૧-૫ સોંપો, અને પરવાનગીઓ સંચાલિત કરો."
-                        : "Manage faculty members, assign subjects and classes 1-5, and update academic permissions."}
+                      {db.adminControlDesc}
                     </p>
                   </div>
                 </div>
@@ -622,8 +617,8 @@ function DashboardContent() {
                     onClick={() => setDashboardView("teachers")}
                     className="rounded-xl text-xs w-full md:w-auto cursor-pointer"
                   >
-                    <Users className="w-3.5 h-3.5 mr-1.5" />
-                    <span>{language === "gu" ? "શિક્ષક વ્યવસ્થાપન ખોલો" : "Open Teacher Management"}</span>
+                    <Users className="w-3.5 h-3.5 me-1.5" />
+                    <span>{db.openTeacherMgmt}</span>
                   </Button>
                 </div>
               </div>
@@ -645,18 +640,14 @@ function DashboardContent() {
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <h2 className="font-heading text-sm sm:text-base font-bold text-[#49352F]">
-                      {language === "gu"
-                        ? "નવા શિક્ષક છો? StudySaathi AI કેવી રીતે વાપરવું તે જાણો"
-                        : "New Teacher? Learn How to Handle StudySaathi AI"}
+                      {db.newTeacherTitle}
                     </h2>
                     <Badge variant="saffron" size="sm">
-                      {language === "gu" ? "માર્ગદર્શિત ટૂર" : "Interactive Tour"}
+                      {db.interactiveTourBadge}
                     </Badge>
                   </div>
                   <p className="text-xs text-[#7A6862] max-w-2xl leading-relaxed">
-                    {language === "gu"
-                      ? "પ્રાથમિક શાળાના શિક્ષકો માટે તૈયાર કરેલી ૧ મિનિટની ઇન્ટરેક્ટિવ ટૂર જુઓ અથવા સંપૂર્ણ માર્ગદર્શિકા કેન્દ્ર અને પ્રિન્ટેબલ ડેસ્ક શીટ ખોલો."
-                      : "Designed for Gujarat primary teachers: spot gaps early (<60%), deploy 5-step concrete manipulatives, and verify student mastery."}
+                    {db.newTeacherSubtitle}
                   </p>
                 </div>
               </div>
@@ -671,7 +662,7 @@ function DashboardContent() {
                   className="rounded-xl text-xs font-bold shadow-xs flex-1 md:flex-initial cursor-pointer"
                 >
                   <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
-                  <span>{language === "gu" ? "ટૂર શરૂ કરો (૧ મિનિટ)" : "Start Interactive Tour"}</span>
+                  <span>{db.startInteractiveTour}</span>
                 </Button>
 
                 <Link href="/tutorial" className="flex-1 md:flex-initial">
@@ -681,7 +672,7 @@ function DashboardContent() {
                     className="rounded-xl text-xs bg-white hover:bg-[#F2CAB3] text-[#49352F] border border-[#49352F]/15 w-full cursor-pointer"
                   >
                     <BookOpen className="w-3.5 h-3.5 mr-1.5 text-[#B26A1B]" />
-                    <span>{language === "gu" ? "ટ્યુટોરિયલ કેન્દ્ર" : "Tutorial Center"}</span>
+                    <span>{db.tutorialCenterBtn}</span>
                   </Button>
                 </Link>
 
@@ -693,7 +684,7 @@ function DashboardContent() {
                     title="Print Desk Reference Sheet"
                   >
                     <FileSpreadsheet className="w-3.5 h-3.5 mr-1 text-[#2E7D5E]" />
-                    <span>{language === "gu" ? "પ્રિન્ટ ગાઈડ" : "Print Guide"}</span>
+                    <span>{db.printGuideBtn}</span>
                   </Button>
                 </Link>
               </div>
@@ -708,12 +699,8 @@ function DashboardContent() {
                 variant="indigo"
                 description={
                   selectedGrade !== null
-                    ? language === "gu"
-                      ? `ધોરણ ${selectedGrade}`
-                      : `Class ${selectedGrade}`
-                    : language === "gu"
-                    ? "ધોરણ ૧ થી ૫"
-                    : "Classes 1 to 5"
+                    ? formatClass(selectedGrade)
+                    : db.classesRange1to5
                 }
                 sparklineData={[12, 13, 14, 15, 15]}
               />
@@ -723,12 +710,12 @@ function DashboardContent() {
                 value={studentsWithGaps}
                 icon={AlertTriangle}
                 variant="coral"
-                description={language === "gu" ? "સ્કોર < ૬૦% મર્યાદા" : "Score < 60% threshold"}
+                description={db.studentsRequiringSupportDesc}
                 sparklineData={[6, 5, 5, 4, 4]}
                 change={{
                   value: "-20%",
                   trend: "down",
-                  label: language === "gu" ? "ખામીઓ ઘટી રહી છે" : "gaps closing",
+                  label: db.gapsClosing,
                 }}
               />
 
@@ -737,7 +724,7 @@ function DashboardContent() {
                 value={activePlansCount}
                 icon={Layers}
                 variant="saffron"
-                description={language === "gu" ? "૫-પગલાં પ્રવૃત્તિ આધારિત" : "5-step manipulatives"}
+                description={db.activeLearningGapsDesc}
                 sparklineData={[1, 2, 3, 3, 3]}
               />
 
@@ -746,12 +733,12 @@ function DashboardContent() {
                 value="+50 pp"
                 icon={TrendingUp}
                 variant="mint"
-                description={language === "gu" ? "આરવ: ૩૫% -> ૮૫%" : "Aarav: 35% -> 85%"}
+                description={db.reassessedGainDesc}
                 sparklineData={[35, 45, 60, 75, 85]}
                 change={{
                   value: "+50 pp",
                   trend: "up",
-                  label: language === "gu" ? "સિદ્ધિમાં વધારો" : "mastery breakthrough",
+                  label: db.masteryBreakthrough,
                 }}
               />
             </div>
@@ -766,21 +753,17 @@ function DashboardContent() {
                   <div className="flex items-center gap-2">
                     <span className="p-1.5 rounded-xl bg-[#F2DCB5]/80 border border-[#49352F]/15 text-[#49352F] text-xs font-bold flex items-center gap-1 shadow-xs">
                       <Sparkles className="w-3.5 h-3.5 text-[#B26A1B]" />
-                      {language === "gu" ? "શિક્ષણ સિદ્ધિ" : "Pedagogical Win"}
+                      {db.pedagogicalWin}
                     </span>
                     <Badge variant="mint" size="sm">
-                      {language === "gu" ? "પ્રભુત્વ પ્રમાણિત" : "Mastery Verified"}
+                      {db.masteryVerified}
                     </Badge>
                   </div>
                   <h3 className="font-heading text-lg font-bold text-[#49352F]">
-                    {language === "gu"
-                      ? "આરવ પટેલ (ધોરણ ૪-અ) સેતુ પાર કર્યો: ૩૫% → ૮૫% (+૫૦ ગુણ)"
-                      : "Aarav Patel (Class 4A) Crosses The Bridge: 35% → 85% (+50 pp)"}
+                    {db.aaravWinTitle}
                   </h3>
                   <p className="text-xs text-[#7A6862] max-w-2xl leading-relaxed">
-                    {language === "gu"
-                      ? "મૂર્ત સાધનો અને સંખ્યા રેખા કાર્યપત્રિકા સાથે ૫-પગલાંના ઉપચારાત્મક કાર્ય બાદ, આરવે રચનાત્મક પુનઃમૂલ્યાંકનમાં શેષ સાથે સમાન વહેંચણીમાં સિદ્ધિ મેળવી."
-                      : "Following 5-step concrete division remediation with counters and number line worksheets, Aarav mastered equal sharing with remainders during formative reassessment."}
+                    {db.aaravWinDesc}
                   </p>
                 </div>
 
@@ -793,19 +776,13 @@ function DashboardContent() {
                   >
                     <PartyPopper className="w-4 h-4 mr-1.5" aria-hidden="true" />
                     <span>
-                      {hasCelebrated
-                        ? language === "gu"
-                          ? "ઉજવણી કરી!"
-                          : "Celebrated!"
-                        : language === "gu"
-                        ? "ઉજવણી કરો"
-                        : "Celebrate Win"}
+                      {hasCelebrated ? db.celebrated : db.celebrateWin}
                     </span>
                   </Button>
 
                   <Link href="/students/std-aarav">
                     <Button variant="outline" size="sm" className="rounded-full text-xs">
-                      {language === "gu" ? "આરવનું વિશ્લેષણ →" : "Inspect Aarav →"}
+                      {db.inspectAarav}
                     </Button>
                   </Link>
                 </div>
@@ -816,7 +793,7 @@ function DashboardContent() {
                 <BridgeProgress
                   score={85}
                   previousScore={35}
-                  studentName={language === "gu" ? "આરવ પટેલ" : "Aarav Patel"}
+                  studentName={db.aaravStudentName}
                   height="md"
                 />
               </div>
@@ -829,16 +806,14 @@ function DashboardContent() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <h3 className="font-heading text-base font-bold text-[#49352F]">
-                      {language === "gu"
-                        ? "વર્ગ પ્રભુત્વ હીટમેપ (વિદ્યાર્થીઓ × સંકલ્પનાઓ)"
-                        : "Class Mastery Heatmap (Students × Concepts)"}
+                      {db.heatmapTitle}
                     </h3>
                     <Badge variant="saffron" size="sm">
-                      {language === "gu" ? "ઇન્ટરેક્ટિવ 3D" : "Interactive 3D"}
+                      {db.heatmapBadge}
                     </Badge>
                   </div>
                   <span className="text-[11px] text-[#7A6862]">
-                    {language === "gu" ? "3D વ્યુ ફેરવવા ડ્રેગ કરો" : "Drag to rotate 3D view"}
+                    {db.heatmapHint}
                   </span>
                 </div>
 
@@ -858,9 +833,7 @@ function DashboardContent() {
                       {t.dashboard.subjectProficiency || "Subject Proficiency"}
                     </h3>
                     <p className="text-xs text-[#7A6862] mt-0.5">
-                      {language === "gu"
-                        ? "હાલની સરેરાશ વિરુદ્ધ મૂળ આધાર"
-                        : "Current cohort average vs baseline"}
+                      {db.subjectProficiencySubtitle}
                     </p>
 
                     <div className="h-[220px] w-full mt-4">
@@ -883,13 +856,13 @@ function DashboardContent() {
                             dataKey="score"
                             fill="#2E7D5E"
                             radius={[6, 6, 0, 0]}
-                            name={language === "gu" ? "વર્તમાન સ્કોર" : "Current Score"}
+                            name={db.currentScore}
                           />
                           <Bar
                             dataKey="baseline"
                             fill="#F2CAB3"
                             radius={[6, 6, 0, 0]}
-                            name={language === "gu" ? "મૂળ સ્કોર" : "Baseline"}
+                            name={db.baselineScore}
                           />
                         </BarChart>
                       </ResponsiveContainer>
@@ -899,14 +872,14 @@ function DashboardContent() {
                   <div className="pt-3 border-t border-[#49352F]/10 flex items-center justify-between text-[11px] text-[#7A6862]">
                     <div className="flex items-center gap-1.5">
                       <span className="w-2.5 h-2.5 rounded-xs bg-[#2E7D5E]" />
-                      <span>{language === "gu" ? "વર્તમાન %" : "Current %"}</span>
+                      <span>{db.currentPercent}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <span className="w-2.5 h-2.5 rounded-xs bg-[#F2CAB3] border border-[#49352F]/15" />
-                      <span>{language === "gu" ? "મૂળ આધાર %" : "Baseline %"}</span>
+                      <span>{db.baselinePercent}</span>
                     </div>
                     <Link href="/reports" className="text-[#8D4E10] hover:underline font-bold">
-                      {language === "gu" ? "સંપૂર્ણ અહેવાલ →" : "Full Reports →"}
+                      {db.fullReports}
                     </Link>
                   </div>
                 </Card>
@@ -920,22 +893,20 @@ function DashboardContent() {
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="font-heading text-base font-bold text-[#49352F]">
-                      {language === "gu"
-                        ? `વિષયવાર ગુણ અને મૂલ્યાંકન સંચાલન — ${formatSubject(activeSubject !== "all" ? activeSubject : "MATH")}`
-                        : `Subject-Wise Marks & Competency Management — ${formatSubject(activeSubject !== "all" ? activeSubject : "MATH")}`}
+                      {tr("dashboard.marksMgmtTitle", {
+                        subject: formatSubject(activeSubject !== "all" ? activeSubject : "MATH"),
+                      })}
                     </h3>
                     <Badge variant="saffron" size="sm">
                       {activeSubject !== "all" ? activeSubject : "MATH"}
                     </Badge>
                   </div>
                   <p className="text-xs text-[#7A6862] mt-0.5">
-                    {language === "gu"
-                      ? "સોંપેલ વર્ગોના વિદ્યાર્થીઓના ગુણ દાખલ કરો, સંપાદિત કરો અને વાસ્તવિક સમયમાં ખામી શોધો."
-                      : "Directly enter or update assessment scores and remarks for authorized students in your assigned classes."}
+                    {db.marksMgmtDesc}
                   </p>
                 </div>
                 <div className="text-xs text-[#7A6862] font-medium">
-                  {filteredStudents.length} {language === "gu" ? "વિદ્યાર્થીઓ ઉપલબ્ધ" : "Students in view"}
+                  {tr("dashboard.studentsInView", { count: filteredStudents.length })}
                 </div>
               </div>
 
@@ -943,13 +914,13 @@ function DashboardContent() {
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
                     <tr className="border-b border-[#49352F]/10 text-[#7A6862] font-semibold">
-                      <th className="py-2.5 px-3">{language === "gu" ? "વિદ્યાર્થી" : "Student"}</th>
-                      <th className="py-2.5 px-3">{language === "gu" ? "વર્ગ" : "Class"}</th>
-                      <th className="py-2.5 px-3">{language === "gu" ? "મૂલ્યાંકન સંકલ્પના" : "Assessment Concept"}</th>
-                      <th className="py-2.5 px-3 text-center">{language === "gu" ? "મેળવેલ ગુણ / કુલ ગુણ" : "Marks / Max"}</th>
-                      <th className="py-2.5 px-3 text-center">{language === "gu" ? "પ્રભુત્વ સ્થિતિ" : "Status"}</th>
-                      <th className="py-2.5 px-3">{language === "gu" ? "શિક્ષક નોંધ" : "Teacher Remarks"}</th>
-                      <th className="py-2.5 px-3 text-right">{language === "gu" ? "ક્રિયા" : "Action"}</th>
+                      <th className="py-2.5 px-3">{db.colStudent}</th>
+                      <th className="py-2.5 px-3">{db.colClass}</th>
+                      <th className="py-2.5 px-3">{db.colConcept}</th>
+                      <th className="py-2.5 px-3 text-center">{db.colMarksMax}</th>
+                      <th className="py-2.5 px-3 text-center">{db.colStatus}</th>
+                      <th className="py-2.5 px-3">{db.colRemarks}</th>
+                      <th className="py-2.5 px-3 text-right">{db.colAction}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#49352F]/8">
@@ -1004,13 +975,13 @@ function DashboardContent() {
                               variant={pct >= 80 ? "mint" : pct >= 60 ? "saffron" : "coral"}
                               size="sm"
                             >
-                              {pct}% {pct >= 80 ? "Mastered" : pct >= 60 ? "Developing" : "Needs Support"}
+                              {pct}% {formatStatus(pct >= 80 ? "Mastered" : pct >= 60 ? "Developing" : "Needs Support")}
                             </Badge>
                           </td>
                           <td className="py-3 px-3">
                             <input
                               type="text"
-                              placeholder={language === "gu" ? "નોંધ લખો..." : "Add remark..."}
+                              placeholder={db.remarkPlaceholder}
                               value={editingScores[st.id]?.notes ?? (studentResult?.notes || "")}
                               onChange={(e) => handleNotesChange(st.id, e.target.value)}
                               className="w-full min-w-[130px] px-2.5 py-1 text-xs rounded-lg border border-[#49352F]/15 bg-white text-[#49352F] focus:border-[#B26A1B] outline-hidden placeholder:text-[#7A6862]/60"
@@ -1025,11 +996,11 @@ function DashboardContent() {
                               className="rounded-xl text-xs px-3 h-7 font-bold shadow-xs cursor-pointer"
                             >
                               {isSaving ? (
-                                <span>Saving...</span>
+                                <span>{db.savingBtn}</span>
                               ) : isSaved ? (
-                                <span className="text-emerald-700 font-bold">Saved!</span>
+                                <span className="text-emerald-700 font-bold">{db.savedBtn}</span>
                               ) : (
-                                <span>Save</span>
+                                <span>{db.saveBtn}</span>
                               )}
                             </Button>
                           </td>
@@ -1052,14 +1023,12 @@ function DashboardContent() {
                     <ContextualHelp termKey="masteryThreshold" />
                   </div>
                   <p className="text-xs text-[#7A6862]">
-                    {language === "gu"
-                      ? "૬૦% મર્યાદાથી નીચે ચિહ્નિત થયેલા વિદ્યાર્થીઓ કે જેમને સક્રિય સહાયની જરૂર છે"
-                      : "Students flagged below the 60% developing threshold needing active intervention"}
+                    {db.attentionListSubtitle}
                   </p>
                 </div>
                 <Link href="/learning-gaps">
                   <Button variant="outline" size="sm" className="rounded-full text-xs">
-                    {language === "gu" ? "બધી ખામીઓ જુઓ →" : "View All Gaps →"}
+                    {db.viewAllGaps}
                   </Button>
                 </Link>
               </div>
@@ -1067,9 +1036,7 @@ function DashboardContent() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 min-w-0">
                 {immediateAttentionGaps.length === 0 ? (
                   <div className="col-span-full py-8 text-center bg-[#FAF6E9] rounded-2xl border border-[#49352F]/10 text-xs text-[#7A6862]">
-                    {language === "gu"
-                      ? "આ વર્ગ માટે કોઈ તાકીદની સહાયની જરૂર નથી. બધા વિદ્યાર્થીઓ પ્રગતિ પર છે."
-                      : "No immediate intervention required for this class. All students are on track."}
+                    {db.noImmediateAttention}
                   </div>
                 ) : (
                   immediateAttentionGaps.slice(0, 6).map((item) => {
@@ -1114,7 +1081,7 @@ function DashboardContent() {
 
                         <p className="text-xs text-[#49352F] leading-relaxed bg-[#FAF6E9] p-2.5 rounded-xl border border-[#49352F]/10">
                           <span className="text-[#7A6862] font-semibold block text-[10px] uppercase">
-                            {language === "gu" ? "શા માટે ચિહ્નિત:" : "Why Flagged:"}
+                            {db.whyFlagged}
                           </span>
                           {item.reason}
                         </p>
@@ -1129,7 +1096,7 @@ function DashboardContent() {
                               size="sm"
                               className="rounded-full text-xs h-7 px-3 cursor-pointer"
                             >
-                              {language === "gu" ? "યોજના બનાવો →" : "Generate Plan →"}
+                              {db.generatePlanBtn}
                             </Button>
                           </Link>
                         </div>
@@ -1151,12 +1118,10 @@ function DashboardContent() {
             <div className="flex items-center justify-between pb-2 border-b border-[#49352F]/10">
               <div>
                 <h3 className="font-heading text-lg font-bold text-[#49352F]">
-                  {language === "gu" ? "વિષય બદલો (Switch Subject)" : "Switch Assigned Subject"}
+                  {db.switchSubjectTitle}
                 </h3>
                 <p className="text-xs text-[#7A6862]">
-                  {language === "gu"
-                    ? "તમારા સોંપેલ વિષયોમાંથી એક પસંદ કરો:"
-                    : "Select from your assigned teaching subjects:"}
+                  {db.switchSubjectDesc}
                 </p>
               </div>
               <button
@@ -1172,7 +1137,7 @@ function DashboardContent() {
               {assignments.map((asg) => {
                 const isSelected = activeSubject === asg.subjectCode;
                 const classesText = asg.grades && asg.grades.length > 0
-                  ? (language === "gu" ? `વર્ગો: ${asg.grades.slice().sort().join(", ")}` : `Classes: ${asg.grades.slice().sort().join(", ")}`)
+                  ? tr("dashboard.classesPrefix", { classes: asg.grades.slice().sort().join(", ") })
                   : "";
 
                 return (
@@ -1202,7 +1167,7 @@ function DashboardContent() {
                       )}
                     </div>
                     {isSelected && (
-                      <span className="text-xs font-bold text-[#B26A1B]">Active</span>
+                      <span className="text-xs font-bold text-[#B26A1B]">{db.activeTag}</span>
                     )}
                   </button>
                 );

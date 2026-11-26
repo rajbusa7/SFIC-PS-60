@@ -202,7 +202,7 @@ function FormattedContent({ text }: { text: string }) {
 
 export function GlobalShikshaBot() {
   const pathname = usePathname();
-  const { language } = useLanguage();
+  const { t, tr, language, languageMeta } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -228,10 +228,7 @@ export function GlobalShikshaBot() {
       {
         id: "welcome-" + Date.now(),
         sender: "bot",
-        text:
-          language === "gu"
-            ? "નમસ્તે! હું ChatGPT જેવો જ જનરલ-પર્પઝ AI સહાયક છું. આપ મને પ્રોગ્રામિંગ, વિજ્ઞાન, ગણિત, શિક્ષણ, આઈડિયા કે કોઈપણ વિષય પર પ્રશ્ન પૂછી શકો છો. હું કેવી રીતે મદદ કરી શકું?"
-            : "Hello! I am your general-purpose AI assistant. You can ask me anything about programming, science, mathematics, education, creative writing, translation, or school queries. How can I help you today?",
+        text: t.assistantBot.welcome,
         time: "Just now",
       },
     ]);
@@ -242,10 +239,7 @@ export function GlobalShikshaBot() {
     {
       id: "welcome",
       sender: "bot",
-      text:
-        language === "gu"
-          ? "નમસ્તે! હું શિક્ષાસેતુ AI સહાયક છું. આપ મને પ્રોગ્રામિંગ, વિજ્ઞાન, ગણિત, શિક્ષણ, આઈડિયા કે કોઈપણ વિષય પર પ્રશ્ન પૂછી શકો છો. હું કેવી રીતે મદદ કરી શકું?"
-          : "Hello! I am your general-purpose AI assistant. You can ask me anything about programming, science, mathematics, education, creative writing, translation, or school queries. How can I help you today?",
+      text: t.assistantBot.welcome,
       time: "Just now",
     },
   ]);
@@ -254,20 +248,20 @@ export function GlobalShikshaBot() {
 
   const suggestedPrompts = [
     {
-      label: language === "gu" ? "આર્ટિફિશિયલ ઇન્ટેલિજન્સ શું છે?" : "What is AI?",
+      label: t.assistantBot.p1Label,
       query: "What is artificial intelligence?",
     },
     {
-      label: language === "gu" ? "પાયથોન કેલ્ક્યુલેટર" : "Python Calculator",
+      label: t.assistantBot.p2Label,
       query: "Write a simple Python calculator.",
     },
     {
-      label: language === "gu" ? "આજે કોને મદદની જરૂર છે?" : "Who needs help today?",
+      label: t.assistantBot.p3Label,
       query: "Who needs immediate help today in Class 4?",
     },
     {
-      label: language === "gu" ? "ગુજરાતી અનુવાદ" : "Translate to Gujarati",
-      query: "Translate Good morning into Gujarati.",
+      label: t.assistantBot.p4Label,
+      query: `Translate "Good morning" into ${languageMeta.name}.`,
     },
   ];
 
@@ -311,7 +305,7 @@ export function GlobalShikshaBot() {
         body: JSON.stringify({
           message: text,
           history: historyPayload,
-          language: language === "gu" ? "gu" : "en",
+          language,
           userRole: "teacher",
         }),
       });
@@ -320,10 +314,7 @@ export function GlobalShikshaBot() {
 
       if (!res.ok || !data.success) {
         const errorMsg =
-          data.error ||
-          (language === "gu"
-            ? "હું અત્યારે ઉત્તર જનરેટ કરવામાં અસમર્થ છું. કૃપા કરીને ફરી પ્રયાસ કરો."
-            : "I'm temporarily unable to generate a response. Please try again.");
+          data.error || t.assistantBot.errorUnable;
 
         setMessages((prev) => [
           ...prev,
@@ -353,16 +344,14 @@ export function GlobalShikshaBot() {
           time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         },
       ]);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : "Network error";
       setMessages((prev) => [
         ...prev,
         {
           id: Math.random().toString(36).substring(7),
           sender: "bot",
-          text:
-            language === "gu"
-              ? "નેટવર્ક સમસ્યા: AI સેવા સાથે કનેક્ટ થઈ શક્યું નથી. કૃપા કરીને ફરી પ્રયાસ કરો."
-              : `I'm temporarily unable to generate a response. ${err?.message || "Network error"}. Please try again.`,
+          text: tr("assistantBot.errorNetwork", { error: errMsg }),
           time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
           isError: true,
           failedText: text,
@@ -394,12 +383,12 @@ export function GlobalShikshaBot() {
           {/* Persistent speech callout badge for new teachers */}
           <div className="absolute right-full mr-3 top-2 px-3 py-1.5 rounded-2xl bg-white border border-[#49352F]/15 text-[11px] font-bold text-[#49352F] shadow-[0_4px_16px_rgba(73,53,47,0.1)] whitespace-nowrap pointer-events-none hidden sm:flex items-center gap-1.5">
             <Lightbulb className="w-3.5 h-3.5 text-[#8D4E10] shrink-0" aria-hidden="true" />
-            <span>{language === "gu" ? "વેબસાઇટ ટૂર માટે અહીં ક્લિક કરો" : "New here? Click for website tour"}</span>
+            <span>{t.assistantBot.tourCallout}</span>
           </div>
 
           {/* Hover tooltip label */}
           <span className="absolute right-full mr-3 px-3 py-1.5 rounded-xl bg-[#49352F] text-white text-xs font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-xl">
-            {language === "gu" ? "StudySaathi AI સહાયક" : "StudySaathi AI Assistant"}
+            {t.assistantBot.tooltipLabel}
           </span>
         </button>
       )}
@@ -420,7 +409,7 @@ export function GlobalShikshaBot() {
                     ChatGPT Powered
                   </span>
                 </div>
-                <p className="text-[10px] text-[#7A6862]">{language === "gu" ? "સામાન્ય અને શાળાકીય AI સહાયક" : "General-Purpose AI Assistant"}</p>
+                <p className="text-[10px] text-[#7A6862]">{t.assistantBot.subtitle}</p>
               </div>
             </div>
 
@@ -428,11 +417,11 @@ export function GlobalShikshaBot() {
               <button
                 type="button"
                 onClick={handleNewChat}
-                title={language === "gu" ? "નવી વાતચીત શરૂ કરો" : "Start New Chat"}
+                title={t.assistantBot.newChatTitle}
                 className="flex items-center gap-1 px-2 py-1 rounded-xl bg-white hover:bg-[#FAF6E9] text-[11px] font-semibold text-[#49352F] border border-[#49352F]/15 transition-all shadow-xs active:scale-95 cursor-pointer"
               >
                 <RotateCcw className="w-3 h-3 text-[#B26A1B]" />
-                <span className="hidden sm:inline">{language === "gu" ? "નવી ચેટ" : "New Chat"}</span>
+                <span className="hidden sm:inline">{t.assistantBot.newChat}</span>
               </button>
 
               <button
@@ -468,7 +457,9 @@ export function GlobalShikshaBot() {
                   }`}
                 >
                   {msg.sender === "bot" && !msg.isError ? (
-                    <FormattedContent text={msg.text} />
+                    <FormattedContent
+                      text={msg.id.startsWith("welcome") ? t.assistantBot.welcome : msg.text}
+                    />
                   ) : (
                     <p className="whitespace-pre-wrap">{msg.text}</p>
                   )}
@@ -479,7 +470,7 @@ export function GlobalShikshaBot() {
                       className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-[#8D2B22]/30 text-[11px] font-semibold text-[#8D2B22] hover:bg-[#FAF6E9] transition-colors cursor-pointer shadow-xs active:scale-95"
                     >
                       <RefreshCw className="w-3 h-3 text-[#8D2B22]" />
-                      <span>{language === "gu" ? "ફરી પ્રયાસ કરો (Retry)" : "Retry"}</span>
+                      <span>{t.assistantBot.retry}</span>
                     </button>
                   )}
                   <span
@@ -496,7 +487,7 @@ export function GlobalShikshaBot() {
             {isLoading && (
               <div className="flex items-center gap-2 text-[#7A6862] text-xs italic">
                 <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#B26A1B]" />
-                <span>{language === "gu" ? "AI ઉત્તર તૈયાર કરી રહ્યું છે..." : "AI is generating response..."}</span>
+                <span>{t.assistantBot.generating}</span>
               </div>
             )}
             <div ref={messagesEndRef} />
@@ -511,7 +502,7 @@ export function GlobalShikshaBot() {
               className="shrink-0 text-[11px] font-bold text-white bg-[#49352F] hover:bg-[#2C1F1B] px-3 py-1 rounded-full transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95"
             >
               <Sparkles className="w-3 h-3 text-[#F2CAB3]" />
-              <span>{language === "gu" ? "વેબસાઇટ ટૂર" : "Tour"}</span>
+              <span>{t.assistantBot.tourChip}</span>
             </button>
             {suggestedPrompts.map((p, idx) => (
               <button
@@ -537,11 +528,7 @@ export function GlobalShikshaBot() {
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              placeholder={
-                language === "gu"
-                  ? "કંઈપણ પૂછો (પ્રોગ્રામિંગ, વિજ્ઞાન, ગણિત, શિક્ષણ)..."
-                  : "Ask anything (programming, science, math, education)..."
-              }
+              placeholder={t.assistantBot.inputPlaceholder}
               className="flex-1 px-3 py-2 rounded-xl bg-white border border-[#49352F]/15 text-xs text-[#49352F] placeholder-[#7A6862] focus:outline-hidden focus:border-[#F2CAB3]"
             />
             <Button

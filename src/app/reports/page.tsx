@@ -53,8 +53,8 @@ import {
 } from "recharts";
 
 export default function ReportsPage() {
-  const { t, language, formatSubject, formatPriority, formatStatus, formatClass } = useLanguage();
-  const isGu = language === "gu";
+  const { t, tr, language, formatSubject, formatPriority, formatStatus, formatClass, formatDate } = useLanguage();
+  const rp = t.reports;
 
   // Top Mode Tabs: Reports System vs Intelligent Worksheet Generator vs History
   const [activeMainTab, setActiveMainTab] = useState<"reports" | "generator" | "history">("reports");
@@ -75,7 +75,7 @@ export default function ReportsPage() {
   const [wsType, setWsType] = useState("remedial");
   const [wsDifficulty, setWsDifficulty] = useState("Medium");
   const [wsQuestionCount, setWsQuestionCount] = useState(5);
-  const [wsLanguage, setWsLanguage] = useState<"en" | "gu">(isGu ? "gu" : "en");
+  const [wsLanguage, setWsLanguage] = useState<"en" | "gu">(language === "gu" ? "gu" : "en");
   const [wsStudentId, setWsStudentId] = useState("std-aarav");
   const [wsIsAdaptive, setWsIsAdaptive] = useState(true);
   const [generatingWs, setGeneratingWs] = useState(false);
@@ -254,16 +254,14 @@ export default function ReportsPage() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="font-heading text-2xl sm:text-3xl font-extrabold text-[#49352F] tracking-tight">
-                {isGu ? "સત્તાવાર પ્રગતિ પત્રક અને કાર્યપત્રક કેન્દ્ર" : "Official Report Cards & Intelligent Worksheets"}
+                {rp.pageHeading}
               </h1>
               <Badge variant="saffron" size="sm">
-                {isGu ? "A4 પ્રિન્ટ તૈયાર" : "A4 Print Ready"}
+                {rp.a4PrintReady}
               </Badge>
             </div>
             <p className="text-xs sm:text-sm text-[#7A6862] mt-1">
-              {isGu
-                ? "ગુજરાત પ્રાથમિક શિક્ષણ બોર્ડ માન્ય ૧૭ અહેવાલ પ્રકારો અને સ્વાયત્ત AI કાર્યપત્રક નિર્માતા."
-                : "Printable Gujarat primary progress cards, 17 academic report types, and AI adaptive classroom worksheets."}
+              {rp.pageSubheading}
             </p>
           </div>
 
@@ -275,7 +273,7 @@ export default function ReportsPage() {
               className="rounded-full text-xs font-semibold border-[#49352F]/15 bg-white text-[#49352F]"
             >
               <Download className="w-3.5 h-3.5 mr-1 text-[#B26A1B]" />
-              <span>{isGu ? "CSV એક્સપોર્ટ" : "Export CSV"}</span>
+              <span>{rp.exportCsvBtn}</span>
             </Button>
             <Button
               variant="saffron"
@@ -284,7 +282,7 @@ export default function ReportsPage() {
               className="rounded-full text-xs font-bold shadow-md"
             >
               <Printer className="w-3.5 h-3.5 mr-1" />
-              <span>{isGu ? "રિપોર્ટ પ્રિન્ટ કરો" : "Print Report (A4)"}</span>
+              <span>{rp.printReportBtn}</span>
             </Button>
           </div>
         </div>
@@ -301,7 +299,7 @@ export default function ReportsPage() {
             }`}
           >
             <FileText className="w-4 h-4 text-[#F2CAB3]" />
-            <span>{isGu ? "શૈક્ષણિક અહેવાલ કેન્દ્ર (૧૭ પ્રકારો)" : "Academic Reports (17 Types)"}</span>
+            <span>{rp.tabReports}</span>
           </button>
 
           <button
@@ -314,7 +312,7 @@ export default function ReportsPage() {
             }`}
           >
             <BrainCircuit className="w-4 h-4 text-[#B26A1B]" />
-            <span>{isGu ? "AI કાર્યપત્રક નિર્માતા" : "Intelligent Worksheet Generator"}</span>
+            <span>{rp.tabGenerator}</span>
           </button>
 
           <button
@@ -327,7 +325,7 @@ export default function ReportsPage() {
             }`}
           >
             <Clock className="w-4 h-4 text-[#2E7D5E]" />
-            <span>{isGu ? "કાર્યપત્રક ઇતિહાસ અને મૂલ્યાંકન" : "Worksheet History & Evaluation"}</span>
+            <span>{rp.tabHistory}</span>
             <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-black/20 text-white">
               {savedWorksheets.length}
             </span>
@@ -345,7 +343,7 @@ export default function ReportsPage() {
                 {/* 17 Report Types Dropdown */}
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold text-[#49352F]">
-                    {isGu ? "અહેવાલ પ્રકાર:" : "Report Type:"}
+                    {rp.reportTypeLabel}
                   </span>
                   <select
                     value={reportType}
@@ -353,60 +351,57 @@ export default function ReportsPage() {
                     aria-label="Select Academic Report Type"
                     className="rounded-xl border border-[#49352F]/15 bg-[#FAF6E9] px-3 py-1.5 text-xs font-bold text-[#49352F] outline-hidden cursor-pointer"
                   >
-                    <optgroup label={isGu ? "વ્યક્તિગત અને પોર્ટફોલિયો" : "Individual & Portfolio"}>
-                      <option value="student">{isGu ? "A. વ્યક્તિગત શૈક્ષણિક અહેવાલ" : "A. Individual Student Academic Report"}</option>
-                      <option value="portfolio">{isGu ? "B. સંપૂર્ણ શૈક્ષણિક પોર્ટફોલિયો" : "B. Complete Student Academic Portfolio"}</option>
-                      <option value="parentSummary">{isGu ? "O. વાલી-અનુકૂળ સારાંશ" : "O. Parent-Friendly Summary"}</option>
-                      <option value="ptm">{isGu ? "P. વાલી-શિક્ષક બેઠક (PTM) અહેવાલ" : "P. Parent-Teacher Meeting (PTM) Report"}</option>
+                    <optgroup label={rp.groupIndividual}>
+                      <option value="student">{rp.optStudent}</option>
+                      <option value="portfolio">{rp.optPortfolio}</option>
+                      <option value="parentSummary">{rp.optParentSummary}</option>
+                      <option value="ptm">{rp.optPtm}</option>
                     </optgroup>
-                    <optgroup label={isGu ? "વિષય અને સંકલ્પના પ્રગતિ" : "Curriculum & Concept Mastery"}>
-                      <option value="subject">{isGu ? "C. વિષયવાર પ્રદર્શન અહેવાલ" : "C. Subject-Wise Performance Report"}</option>
-                      <option value="chapter">{isGu ? "D. પ્રકરણવાર પ્રગતિ અહેવાલ" : "D. Chapter-Wise Performance Report"}</option>
-                      <option value="conceptMastery">{isGu ? "E. સંકલ્પના પ્રભુત્વ ખાતાવહી" : "E. Topic-Wise Concept Mastery Report"}</option>
+                    <optgroup label={rp.groupCurriculum}>
+                      <option value="subject">{rp.optSubject}</option>
+                      <option value="chapter">{rp.optChapter}</option>
+                      <option value="conceptMastery">{rp.optConceptMastery}</option>
                     </optgroup>
-                    <optgroup label={isGu ? "સમયગાળા અને વૃદ્ધિ અહેવાલો" : "Temporal & Growth Tracking"}>
-                      <option value="weekly">{isGu ? "G. સાપ્તાહિક પ્રગતિ પત્રક" : "G. Weekly Progress Report"}</option>
-                      <option value="monthly">{isGu ? "F. માસિક શિક્ષણ પ્રગતિ અહેવાલ" : "F. Monthly Learning Progress Report"}</option>
-                      <option value="term">{isGu ? "H. સત્રવાર (Term-1) મૂલ્યાંકન અહેવાલ" : "H. Term-Wise Academic Report"}</option>
-                      <option value="annual">{isGu ? "I. વાર્ષિક શૈક્ષણિક વૃદ્ધિ અહેવાલ" : "I. Annual Academic Growth Report"}</option>
+                    <optgroup label={rp.groupTemporal}>
+                      <option value="weekly">{rp.optWeekly}</option>
+                      <option value="monthly">{rp.optMonthly}</option>
+                      <option value="term">{rp.optTerm}</option>
+                      <option value="annual">{rp.optAnnual}</option>
                     </optgroup>
-                    <optgroup label={isGu ? "નિદાન અને ઉપચાર" : "Diagnostics & Remedial"}>
-                      <option value="gapDiagnostic">{isGu ? "J. શીખવાની ખામી નિદાન અહેવાલ" : "J. Learning Gap Diagnostic Report"}</option>
-                      <option value="remedial">{isGu ? "K. ઉપચારાત્મક સુધારણા અહેવાલ" : "K. Remedial Improvement Report"}</option>
-                      <option value="reassessment">{isGu ? "L. પુનઃમૂલ્યાંકન (Reassessment) અહેવાલ" : "L. Reassessment Report"}</option>
+                    <optgroup label={rp.groupDiagnostics}>
+                      <option value="gapDiagnostic">{rp.optGapDiagnostic}</option>
+                      <option value="remedial">{rp.optRemedial}</option>
+                      <option value="reassessment">{rp.optReassessment}</option>
                     </optgroup>
-                    <optgroup label={isGu ? "વર્ગવ્યાપી અને હાજરી" : "Classwide & Activities"}>
-                      <option value="classPerformance">{isGu ? "M. વર્ગ પ્રદર્શન સારાંશ" : "M. Class Performance Report"}</option>
-                      <option value="classGap">{isGu ? "N. વર્ગ ખામીઓનું વ્યાપક ઓડિટ" : "N. Class Learning-Gap Audit"}</option>
-                      <option value="attendanceActivity">{isGu ? "Q. પ્રવૃત્તિ અને હાજરી અહેવાલ" : "Q. Student Attendance & Activity Report"}</option>
+                    <optgroup label={rp.groupClasswide}>
+                      <option value="classPerformance">{rp.optClassPerformance}</option>
+                      <option value="classGap">{rp.optClassGap}</option>
+                      <option value="attendanceActivity">{rp.optAttendanceActivity}</option>
                     </optgroup>
                   </select>
                 </div>
 
                 {/* Standard Chooser */}
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-semibold text-[#7A6862]">{isGu ? "ધોરણ:" : "Std:"}</span>
+                  <span className="text-xs font-semibold text-[#7A6862]">{rp.stdFilterLabel}</span>
                   <select
                     value={gradeFilter}
                     onChange={(e) => setGradeFilter(e.target.value)}
                     aria-label="Filter report by standard"
                     className="rounded-xl border border-[#49352F]/15 bg-[#FAF6E9] px-2.5 py-1.5 text-xs font-semibold text-[#49352F] cursor-pointer"
                   >
-                    <option value="1">Std 1</option>
-                    <option value="2">Std 2</option>
-                    <option value="3">Std 3</option>
-                    <option value="4">Std 4</option>
-                    <option value="5">Std 5</option>
-                    <option value="6">Std 6</option>
-                    <option value="7">Std 7</option>
-                    <option value="8">Std 8</option>
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+                      <option key={n} value={String(n)}>
+                        {formatClass(n)}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
                 {/* Student Chooser (if student-specific report) */}
                 {!["classGap", "classPerformance"].includes(reportType) && (
                   <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-semibold text-[#7A6862]">{isGu ? "વિદ્યાર્થી:" : "Student:"}</span>
+                    <span className="text-xs font-semibold text-[#7A6862]">{rp.studentFilterLabel}</span>
                     <select
                       value={selectedStudentId}
                       onChange={(e) => setSelectedStudentId(e.target.value)}
@@ -436,17 +431,13 @@ export default function ReportsPage() {
                   </div>
                   <div>
                     <h2 className="font-heading text-lg sm:text-xl font-black text-[#49352F] tracking-tight uppercase">
-                      {isGu ? "મોડેલ પ્રાથમિક શાળા, ગાંધીનગર" : "Model Primary School, Gandhinagar"}
+                      {rp.schoolTitle}
                     </h2>
                     <p className="text-xs text-[#7A6862] font-semibold mt-0.5">
-                      {isGu
-                        ? "ગુજરાત રાજ્ય પ્રાથમિક શિક્ષણ વિભાગ • SFIC સમસ્યા નિવેદન PS-60"
-                        : "Gujarat State Primary Education Department • SFIC Problem Statement PS-60"}
+                      {rp.deptSubtitle}
                     </p>
                     <p className="text-[11px] text-[#7A6862]/80">
-                      {isGu
-                        ? "શાળા કોડ: GUJ-GNR-042 • શૈક્ષણિક વર્ષ: ૨૦૨૬-૨૭"
-                        : "School Code: GUJ-GNR-042 • Academic Year: 2026–27"}
+                      {rp.schoolMeta}
                     </p>
                   </div>
                 </div>
@@ -454,13 +445,13 @@ export default function ReportsPage() {
                 <div className="text-right">
                   <span className="px-2.5 py-1 rounded-md bg-[#49352F] text-white font-mono text-[10px] font-bold uppercase">
                     {reportType === "parentSummary"
-                      ? isGu ? "વાલી સારાંશ પત્રક" : "Parent Summary Letter"
+                      ? rp.badgeParentSummary
                       : reportType === "classGap"
-                      ? isGu ? "વર્ગ ખામી ઓડિટ" : "Class Gap Audit"
-                      : isGu ? "સત્તાવાર પ્રગતિ પત્રક" : "Official Report Card"}
+                      ? rp.badgeClassGap
+                      : rp.badgeOfficialReport}
                   </span>
                   <div className="text-[11px] text-[#7A6862] mt-1.5 font-medium">
-                    {isGu ? "તૈયાર કરેલ:" : "Generated:"} {new Date().toLocaleDateString(isGu ? "gu-IN" : "en-IN")}
+                    {rp.generatedLabel} {formatDate(new Date().toISOString())}
                   </div>
                 </div>
               </div>
@@ -474,19 +465,19 @@ export default function ReportsPage() {
                   <div className="bg-[#FAF6E9] p-4 rounded-2xl border border-[#49352F]/15 grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
                     <div>
                       <span className="text-[#7A6862] font-semibold block uppercase text-[10px]">
-                        {isGu ? "વિદ્યાર્થીનું નામ" : "Student Name"}
+                        {rp.studentNameHeading}
                       </span>
                       <span className="text-sm font-bold text-[#49352F]">{selectedStudent?.displayName}</span>
                     </div>
                     <div>
                       <span className="text-[#7A6862] font-semibold block uppercase text-[10px]">
-                        {isGu ? "રોલ કોડ / ID" : "Roll Code / ID"}
+                        {rp.rollCodeHeading}
                       </span>
                       <span className="text-sm font-mono font-bold text-[#49352F]">{selectedStudent?.rollNumber}</span>
                     </div>
                     <div>
                       <span className="text-[#7A6862] font-semibold block uppercase text-[10px]">
-                        {isGu ? "વર્ગ અને વિભાગ" : "Class & Section"}
+                        {rp.classSectionHeading}
                       </span>
                       <span className="text-sm font-bold text-[#49352F]">
                         {formatClass(`Class ${selectedStudent?.grade}-${selectedStudent?.section || "A"}`)}
@@ -494,7 +485,7 @@ export default function ReportsPage() {
                     </div>
                     <div>
                       <span className="text-[#7A6862] font-semibold block uppercase text-[10px]">
-                        {isGu ? "કુલ સરેરાશ સ્કોર" : "Overall Average Score"}
+                        {rp.overallAvgHeading}
                       </span>
                       <span className="text-sm font-bold text-[#2E7D5E]">{metrics.averageScore || 0}%</span>
                     </div>
@@ -503,13 +494,13 @@ export default function ReportsPage() {
                   {/* Concept Mastery & Learning Bridge */}
                   <div className="space-y-3">
                     <h3 className="font-heading text-sm font-extrabold text-[#49352F] uppercase tracking-wider">
-                      {isGu ? "સંકલ્પના પ્રભુત્વ અને અધ્યયન સેતુ" : "Concept Mastery & The Learning Bridge"}
+                      {rp.conceptMasteryBridge}
                     </h3>
 
                     <div className="space-y-3">
                       {conceptBreakdown.length === 0 ? (
                         <div className="p-5 text-center text-xs text-[#7A6862] bg-[#FAF6E9] rounded-2xl border border-[#49352F]/15">
-                          {isGu ? "હાલમાં કોઈ મૂલ્યાંકન ડેટા નથી." : "No concept evaluations currently recorded."}
+                          {rp.noConceptEvals}
                         </div>
                       ) : (
                         conceptBreakdown.map((c: any) => (
@@ -525,7 +516,7 @@ export default function ReportsPage() {
                                   variant={c.latestScore >= 80 ? "mastered" : c.latestScore >= 60 ? "developing" : "needsSupport"}
                                   size="sm"
                                 >
-                                  {c.masteryStatus}
+                                  {formatStatus(c.masteryStatus)}
                                 </Badge>
                               </div>
                             </div>
@@ -536,10 +527,10 @@ export default function ReportsPage() {
                               height="sm"
                             />
                             <div className="flex items-center justify-between text-[11px] text-[#7A6862] border-t border-[#49352F]/10 pt-1.5">
-                              <span>{isGu ? "મૂલ્યાંકનો:" : "Evaluations:"} {c.evaluationsCount} {isGu ? "કસોટી" : "tests"}</span>
+                              <span>{rp.evaluationsLabel} {tr("reports.testsCountText", { count: c.evaluationsCount })}</span>
                               {c.deltaPercentagePoints !== null && (
                                 <span className={`font-bold ${c.deltaPercentagePoints >= 0 ? "text-[#2E7D5E]" : "text-[#C54738]"}`}>
-                                  {isGu ? "ડેલ્ટા:" : "Delta:"} {c.deltaPercentagePoints > 0 ? "+" : ""}{c.deltaPercentagePoints} pp
+                                  {rp.deltaLabel} {c.deltaPercentagePoints > 0 ? "+" : ""}{c.deltaPercentagePoints} pp
                                 </span>
                               )}
                             </div>
@@ -553,7 +544,7 @@ export default function ReportsPage() {
                   {studentPlans.length > 0 && (
                     <div className="space-y-3">
                       <h3 className="font-heading text-sm font-extrabold text-[#49352F] uppercase tracking-wider">
-                        {isGu ? "સૂચિત ૫-પગલાં પ્રવૃત્તિ આધારિત ઉપચાર પગલાં" : "Prescribed 5-Step Concrete Remedial Actions"}
+                        {rp.prescribedActionsTitle}
                       </h3>
                       {studentPlans.map((p: any) => (
                         <div key={p.id} className="p-4 rounded-2xl bg-[#FAF6E9] border border-[#49352F]/15 text-xs space-y-2 shadow-2xs">
@@ -564,10 +555,10 @@ export default function ReportsPage() {
                             </span>
                           </div>
                           <p className="text-[#49352F]">
-                            <strong>{isGu ? "શિક્ષણશાસ્ત્રીય ઉદ્દેશ્ય:" : "Pedagogical Objective:"}</strong> {p.learningObjective}
+                            <strong>{rp.pedagogicalObjectiveLabel}</strong> {p.learningObjective}
                           </p>
                           <p className="text-[#49352F]">
-                            <strong>{isGu ? "ઉપયોગમાં લીધેલ સાધનો:" : "Manipulatives Used:"}</strong> {p.requiredMaterials?.join(", ")}
+                            <strong>{rp.manipulativesUsedLabel}</strong> {p.requiredMaterials?.join(", ")}
                           </p>
                         </div>
                       ))}
@@ -581,26 +572,26 @@ export default function ReportsPage() {
                 <div className="space-y-6">
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <div className="p-3.5 rounded-2xl bg-[#FAF6E9] border border-[#49352F]/15 text-center">
-                      <span className="text-[10px] text-[#7A6862] uppercase font-bold block">{isGu ? "કુલ કસોટીઓ" : "Total Tests Taken"}</span>
+                      <span className="text-[10px] text-[#7A6862] uppercase font-bold block">{rp.totalTestsTaken}</span>
                       <span className="text-2xl font-extrabold text-[#49352F] mt-1 block">{metrics.totalAssessments || 0}</span>
                     </div>
                     <div className="p-3.5 rounded-2xl bg-[#FAF6E9] border border-[#49352F]/15 text-center">
-                      <span className="text-[10px] text-[#7A6862] uppercase font-bold block">{isGu ? "ચોકસાઈ દર" : "Question Accuracy"}</span>
+                      <span className="text-[10px] text-[#7A6862] uppercase font-bold block">{rp.questionAccuracy}</span>
                       <span className="text-2xl font-extrabold text-[#2E7D5E] mt-1 block">{metrics.accuracy || 0}%</span>
                     </div>
                     <div className="p-3.5 rounded-2xl bg-[#FAF6E9] border border-[#49352F]/15 text-center">
-                      <span className="text-[10px] text-[#7A6862] uppercase font-bold block">{isGu ? "અધ્યયન પ્રવૃત્તિઓ" : "Activities Completed"}</span>
+                      <span className="text-[10px] text-[#7A6862] uppercase font-bold block">{rp.activitiesCompleted}</span>
                       <span className="text-2xl font-extrabold text-[#B26A1B] mt-1 block">{metrics.activitiesCompleted || 0}</span>
                     </div>
                     <div className="p-3.5 rounded-2xl bg-[#FAF6E9] border border-[#49352F]/15 text-center">
-                      <span className="text-[10px] text-[#7A6862] uppercase font-bold block">{isGu ? "મેળવેલ XP" : "Total XP Earned"}</span>
+                      <span className="text-[10px] text-[#7A6862] uppercase font-bold block">{rp.totalXpEarned}</span>
                       <span className="text-2xl font-extrabold text-[#49352F] mt-1 block">{metrics.xpEarned || 0} XP</span>
                     </div>
                   </div>
 
                   <div className="bg-white rounded-2xl border border-[#49352F]/15 p-4 shadow-2xs space-y-3">
                     <h4 className="font-heading text-sm font-bold text-[#49352F] uppercase">
-                      {isGu ? "લાંબા ગાળાની સંકલ્પના સિદ્ધિ માર્ગરેખા" : "Longitudinal Concept Mastery Trajectory"}
+                      {rp.longitudinalTrajectory}
                     </h4>
                     <div className="h-56 w-full">
                       <ResponsiveContainer width="100%" height="100%">
@@ -609,8 +600,8 @@ export default function ReportsPage() {
                           <XAxis dataKey="conceptName" tick={{ fontSize: 10, fill: "#7A6862" }} />
                           <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: "#7A6862" }} />
                           <Tooltip />
-                          <Bar dataKey="initialScore" fill="#C9BDAF" name="Initial Baseline %" radius={[4, 4, 0, 0]} />
-                          <Bar dataKey="latestScore" fill="#2E7D5E" name="Latest Score %" radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="initialScore" fill="#C9BDAF" name={rp.initialBaselineBar} radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="latestScore" fill="#2E7D5E" name={rp.latestScoreBar} radius={[4, 4, 0, 0]} />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
@@ -622,26 +613,26 @@ export default function ReportsPage() {
               {reportType === "subject" && (
                 <div className="space-y-6">
                   <h3 className="font-heading text-base font-bold text-[#49352F]">
-                    {isGu ? "વિષયવાર પ્રદર્શન અને પ્રકરણ પ્રગતિ" : "Subject-Wise Academic Performance & Curriculum Progress"}
+                    {rp.subjectWiseHeading}
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {subjectBreakdown.map((sb: any) => (
                       <div key={sb.subjectCode} className="p-4 rounded-2xl bg-[#FAF6E9] border border-[#49352F]/15 space-y-3 shadow-2xs">
                         <div className="flex items-center justify-between">
-                          <span className="font-bold text-sm text-[#49352F]">{sb.subjectName} ({sb.subjectCode})</span>
+                          <span className="font-bold text-sm text-[#49352F]">{formatSubject(sb.subjectCode)} ({sb.subjectCode})</span>
                           <span className="text-lg font-black text-[#2E7D5E]">{sb.averageScore}%</span>
                         </div>
                         <div className="space-y-1 text-xs text-[#7A6862]">
                           <div className="flex justify-between">
-                            <span>{isGu ? "ચકાસાયેલ સંકલ્પનાઓ:" : "Concepts Evaluated:"}</span>
+                            <span>{rp.conceptsEvaluatedLabel}</span>
                             <span className="font-bold text-[#49352F]">{sb.conceptsTested}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span>{isGu ? "સિદ્ધ સંકલ્પનાઓ (≥૮૦%):" : "Mastered Topics:"}</span>
+                            <span>{rp.masteredTopicsLabel}</span>
                             <span className="font-bold text-[#2E7D5E]">{sb.masteredCount}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span>{isGu ? "સહાય જરૂરી સંકલ્પનાઓ (<૬૦%):" : "Requiring Support:"}</span>
+                            <span>{rp.requiringSupportLabel}</span>
                             <span className="font-bold text-[#C54738]">{sb.supportCount}</span>
                           </div>
                         </div>
@@ -668,21 +659,21 @@ export default function ReportsPage() {
                     <table className="w-full text-left text-xs">
                       <thead className="bg-[#FAF6E9] border-b border-[#49352F]/15 text-[#7A6862] uppercase text-[10px]">
                         <tr>
-                          <th className="p-3">{isGu ? "વિષય" : "Subject"}</th>
-                          <th className="p-3">{isGu ? "સરેરાશ %" : "Average %"}</th>
-                          <th className="p-3">{isGu ? "ગ્રેડ" : "Grade"}</th>
-                          <th className="p-3">{isGu ? "સ્થિતિ" : "Status"}</th>
+                          <th className="p-3">{rp.colSubject}</th>
+                          <th className="p-3">{rp.colAveragePct}</th>
+                          <th className="p-3">{rp.colGrade}</th>
+                          <th className="p-3">{rp.colStatus}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-[#49352F]/10">
                         {termData.subjectsGraded?.map((sg: any) => (
                           <tr key={sg.subjectCode} className="hover:bg-[#FAF6E9]/40">
-                            <td className="p-3 font-bold text-[#49352F]">{sg.subjectName}</td>
+                            <td className="p-3 font-bold text-[#49352F]">{formatSubject(sg.subjectCode)}</td>
                             <td className="p-3 font-semibold text-[#49352F]">{sg.averageScore}%</td>
                             <td className="p-3 font-bold text-[#B26A1B]">{sg.gradeLetter}</td>
                             <td className="p-3">
                               <Badge variant={sg.averageScore >= 80 ? "mastered" : sg.averageScore >= 60 ? "developing" : "needsSupport"} size="sm">
-                                {sg.averageScore >= 80 ? "Mastered" : sg.averageScore >= 60 ? "Developing" : "Needs Support"}
+                                {formatStatus(sg.averageScore >= 80 ? "Mastered" : sg.averageScore >= 60 ? "Developing" : "Needs Support")}
                               </Badge>
                             </td>
                           </tr>
@@ -698,23 +689,24 @@ export default function ReportsPage() {
                 <div className="space-y-5">
                   <div className="flex items-center justify-between text-xs text-[#7A6862] pb-2 border-b border-[#49352F]/15">
                     <span className="font-bold text-sm text-[#49352F]">
-                      {isGu
-                        ? `ધોરણ ${gradeFilter}-અ શીખવાની ખામીઓનું વ્યાપક ઓડિટ (${classMetrics.totalGaps || 0} ખામીઓ)`
-                        : `Class ${gradeFilter}-A Learning-Gap Comprehensive Audit (${classMetrics.totalGaps || 0} Gaps)`}
+                      {tr("reports.classGapAuditSummary", {
+                        cls: formatClass(gradeFilter, "A"),
+                        count: classMetrics.totalGaps || 0,
+                      })}
                     </span>
-                    <span>{isGu ? "મર્યાદા: ૬૦% પ્રગતિશીલ • ૮૦% પ્રભુત્વ" : "Threshold: 60% Developing • 80% Mastery"}</span>
+                    <span>{rp.thresholdScaleHint}</span>
                   </div>
 
                   <div className="rounded-2xl border border-[#49352F]/15 overflow-hidden bg-white shadow-2xs">
                     <table className="w-full text-left text-xs">
                       <thead className="bg-[#FAF6E9] border-b border-[#49352F]/15 text-[#7A6862] uppercase text-[10px]">
                         <tr>
-                          <th className="p-3">{isGu ? "વિદ્યાર્થી" : "Student"}</th>
-                          <th className="p-3">{isGu ? "વિષય" : "Subject"}</th>
-                          <th className="p-3">{isGu ? "સંકલ્પના અવરોધ" : "Concept Roadblock"}</th>
-                          <th className="p-3">{isGu ? "તાજેતરનો %" : "Latest %"}</th>
-                          <th className="p-3">{isGu ? "અગ્રતા" : "Priority"}</th>
-                          <th className="p-3">{isGu ? "સ્થિતિ" : "Status"}</th>
+                          <th className="p-3">{rp.colStudent}</th>
+                          <th className="p-3">{rp.colSubject}</th>
+                          <th className="p-3">{rp.colRoadblock}</th>
+                          <th className="p-3">{rp.colLatestPct}</th>
+                          <th className="p-3">{rp.colPriority}</th>
+                          <th className="p-3">{rp.colStatus}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-[#49352F]/10">
@@ -759,12 +751,10 @@ export default function ReportsPage() {
                 <div className="space-y-6">
                   <div className="p-5 rounded-2xl bg-gradient-to-r from-[#F2DCB5]/50 to-[#F2CAB3]/40 border border-[#49352F]/15">
                     <h3 className="font-heading text-base font-bold text-[#49352F]">
-                      {isGu ? `${selectedStudent?.displayName} ના વાલીશ્રી,` : `Dear Parents / Guardians of ${selectedStudent?.displayName},`}
+                      {tr("reports.dearParents", { name: selectedStudent?.displayName || "" })}
                     </h3>
                     <p className="text-xs text-[#7A6862] mt-1 leading-relaxed">
-                      {isGu
-                        ? "મોડેલ પ્રાથમિક શાળા ખાતે, અમે દરેક બાળકની વ્યક્તિગત શીખવાની શૈલીને સમજવા અને કોઈ મૂળભૂત સંકલ્પનાઓ છૂટી ન જાય તે સુનિશ્ચિત કરવા StudySaathi AI નો ઉપયોગ કરીએ છીએ. આ સારાંશ તમારા બાળકની શક્તિઓ અને ઘેર તેમને સહાય કરવાના સરળ, આનંદપ્રદ ઉપાયો દર્શાવે છે."
-                        : "At Model Primary School, we use StudySaathi AI to understand each child's individual learning style and ensure no fundamental concepts are missed. This summary highlights what your child does well and simple, fun ways you can support them at home."}
+                      {rp.parentSummaryIntro}
                     </p>
                   </div>
 
@@ -772,25 +762,25 @@ export default function ReportsPage() {
                     <div className="p-4 rounded-2xl bg-white border border-[#49352F]/15 space-y-2 shadow-2xs">
                       <h4 className="font-bold text-[#2E7D5E] flex items-center gap-1.5 text-sm">
                         <CheckCircle2 className="w-4 h-4 text-[#2E7D5E]" />
-                        <span>{isGu ? "શક્તિઓ અને પ્રગતિના ક્ષેત્રો" : "Areas of Strength & Growth"}</span>
+                        <span>{rp.areasOfStrength}</span>
                       </h4>
                       <ul className="space-y-1.5 text-[#7A6862] ml-4 list-disc text-xs">
-                        <li>{isGu ? "વર્ગખંડમાં સક્રિય ભાગીદારી અને સર્જનાત્મક સમસ્યા નિવારણ." : "Active classroom participation and creative problem-solving."}</li>
-                        <li>{isGu ? "પર્યાવરણ અને વાર્તા સત્રો દરમિયાન મજબૂત જિજ્ઞાસા." : "Strong curiosity during science, environmental, and storytelling lessons."}</li>
-                        <li>{isGu ? "દ્રશ્ય આકૃતિઓ અને મૂર્ત વસ્તુઓ સાથે કામ કરતી વખતે સતત સુધારો દર્શાવે છે." : "Shows steady improvement when working with visual diagrams and hands-on objects."}</li>
+                        <li>{rp.strengthBullet1}</li>
+                        <li>{rp.strengthBullet2}</li>
+                        <li>{rp.strengthBullet3}</li>
                       </ul>
                     </div>
 
                     <div className="p-4 rounded-2xl bg-white border border-[#49352F]/15 space-y-2 shadow-2xs">
                       <h4 className="font-bold text-[#B26A1B] flex items-center gap-1.5 text-sm">
                         <Sparkles className="w-4 h-4 text-[#B26A1B]" />
-                        <span>{isGu ? "હાલમાં અભ્યાસ હેઠળની સંકલ્પનાઓ" : "Concepts Currently Practicing"}</span>
+                        <span>{rp.conceptsPracticing}</span>
                       </h4>
                       {studentGaps.map((g: any) => (
                         <div key={g.id} className="p-2.5 rounded-xl bg-[#FAF6E9] border border-[#49352F]/10">
                           <span className="font-bold text-[#49352F]">{g.conceptName}</span>
                           <p className="text-[11px] text-[#7A6862] mt-0.5">
-                            {isGu ? "ધ્યાન કેન્દ્રિત: રોજિંદી વસ્તુઓનો ઉપયોગ કરીને સરખી વહેંચણીનો મહાવરો." : "Focus: Practicing equal grouping using everyday objects like spoons or beads."}
+                            {rp.focusDefaultDesc}
                           </p>
                         </div>
                       ))}
@@ -799,17 +789,13 @@ export default function ReportsPage() {
 
                   <div className="p-4 rounded-2xl bg-white border border-[#49352F]/15 text-xs space-y-1.5 shadow-2xs">
                     <span className="font-bold text-[#49352F]">
-                      {isGu ? "ઘર માટે ભલામણ કરેલ દૈનિક પ્રવૃત્તિઓ:" : "Recommended Everyday Home Activities:"}
+                      {rp.recommendedHomeActs}
                     </span>
                     <p className="text-[#7A6862]">
-                      {isGu
-                        ? "• સમાન વહેંચણી તરીકે ભાગાકારને દ્રઢ કરવા માટે નાસ્તાની વહેંચણી (દા.ત. ૧૨ બિસ્કિટ ૩ સભ્યો વચ્ચે) માં ૧૦ મિનિટ ફાળવો."
-                        : "• Spend 10 minutes sharing snacks (e.g. 12 biscuits among 3 family members) to reinforce division as equal sharing."}
+                      {rp.homeAct1}
                     </p>
                     <p className="text-[#7A6862]">
-                      {isGu
-                        ? "• દરરોજ રાત્રે ૧૫ મિનિટ વાર્તા વાંચવા માટે પ્રોત્સાહિત કરો."
-                        : "• Encourage daily 15-minute Gujarati and English bedtime story reading."}
+                      {rp.homeAct2}
                     </p>
                   </div>
                 </div>
@@ -821,25 +807,25 @@ export default function ReportsPage() {
                   <div className="p-4 rounded-2xl bg-[#FAF6E9] border border-[#49352F]/15">
                     <h4 className="font-bold text-sm text-[#49352F] flex items-center gap-2">
                       <HeartHandshake className="w-4 h-4 text-[#B26A1B]" />
-                      <span>{isGu ? "વાલી-શિક્ષક પરામર્શ મુદ્દાઓ અને સંયુક્ત સમજૂતી" : "Parent-Teacher Consultation Agenda & Joint Action Plan"}</span>
+                      <span>{rp.ptmTitle}</span>
                     </h4>
                     <p className="text-xs text-[#7A6862] mt-1">
-                      {isGu ? "આ અહેવાલ PTM દરમિયાન વાલી સાથે ચર્ચા કરવા માટે નક્કર શૈક્ષણિક વિગતો પૂરી પાડે છે." : "Structured agenda points and evidence-based progress for the upcoming PTM meeting."}
+                      {rp.ptmSubtitle}
                     </p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                     <div className="p-4 rounded-2xl bg-white border border-[#49352F]/15 space-y-2">
-                      <span className="font-bold text-[#49352F] uppercase block">{isGu ? "શિક્ષક અવલોકન" : "Teacher Observations"}</span>
+                      <span className="font-bold text-[#49352F] uppercase block">{rp.teacherObservations}</span>
                       <p className="text-[#7A6862]">
-                        {selectedStudent?.displayName} {isGu ? "વર્ગખંડમાં મહેનતુ છે પરંતુ ભાગાકારના શાબ્દિક દાખલામાં મૂંઝવણ અનુભવે છે." : "is attentive and cooperative. Shows noticeable hesitation during multi-step division word problems."}
+                        {tr("reports.ptmObservationNote", { name: selectedStudent?.displayName || "" })}
                       </p>
                     </div>
 
                     <div className="p-4 rounded-2xl bg-white border border-[#49352F]/15 space-y-2">
-                      <span className="font-bold text-[#2E7D5E] uppercase block">{isGu ? "સંયુક્ત લક્ષ્યો" : "Agreed Goals for Next Month"}</span>
+                      <span className="font-bold text-[#2E7D5E] uppercase block">{rp.agreedGoals}</span>
                       <p className="text-[#7A6862]">
-                        {isGu ? "૧. દરરોજ ૧૦ મિનિટ ભાગાકાર મહાવરો. ૨. સાપ્તાહિક કાર્યપત્રક પૂર્ણતા." : "1. Daily 10-minute division practice at home. 2. 100% completion of assigned remedial worksheets."}
+                        {rp.ptmGoalsNote}
                       </p>
                     </div>
                   </div>
@@ -851,15 +837,15 @@ export default function ReportsPage() {
                 <div className="space-y-5">
                   <div className="grid grid-cols-3 gap-3 text-center text-xs">
                     <div className="p-3 rounded-2xl bg-[#FAF6E9] border border-[#49352F]/15">
-                      <span className="text-[10px] text-[#7A6862] font-bold block">{isGu ? "હાજરી ટકાવારી" : "Attendance Rate"}</span>
+                      <span className="text-[10px] text-[#7A6862] font-bold block">{rp.attendanceRate}</span>
                       <span className="text-2xl font-black text-[#2E7D5E] mt-1 block">94%</span>
                     </div>
                     <div className="p-3 rounded-2xl bg-[#FAF6E9] border border-[#49352F]/15">
-                      <span className="text-[10px] text-[#7A6862] font-bold block">{isGu ? "કુલ પ્રવૃત્તિ સત્રો" : "Activity Sessions"}</span>
+                      <span className="text-[10px] text-[#7A6862] font-bold block">{rp.activitySessions}</span>
                       <span className="text-2xl font-black text-[#B26A1B] mt-1 block">{metrics.activitiesCompleted || 0}</span>
                     </div>
                     <div className="p-3 rounded-2xl bg-[#FAF6E9] border border-[#49352F]/15">
-                      <span className="text-[10px] text-[#7A6862] font-bold block">{isGu ? "કાર્યપત્રક પૂર્ણતા" : "Worksheets Submitted"}</span>
+                      <span className="text-[10px] text-[#7A6862] font-bold block">{rp.worksheetsSubmitted}</span>
                       <span className="text-2xl font-black text-[#49352F] mt-1 block">{metrics.worksheetsCompleted || 0}</span>
                     </div>
                   </div>
@@ -871,28 +857,28 @@ export default function ReportsPage() {
                 <div>
                   <div className="h-10 border-b border-dashed border-[#49352F]/30" />
                   <span className="block mt-1.5 font-bold text-[#49352F]">
-                    {isGu ? "વર્ગ શિક્ષકની સહી" : "Class Teacher Signature"}
+                    {rp.sigTeacher}
                   </span>
                   <span className="text-[10px] text-[#7A6862]">
-                    {isGu ? "પૂજા શર્મા (પ્રાથમિક શિક્ષિકા)" : "Pooja Sharma (Primary Educator)"}
+                    {rp.sigTeacherName}
                   </span>
                 </div>
                 <div>
                   <div className="h-10 border-b border-dashed border-[#49352F]/30" />
                   <span className="block mt-1.5 font-bold text-[#49352F]">
-                    {isGu ? "આચાર્યશ્રી / સંચાલક" : "Principal / Administrator"}
+                    {rp.sigPrincipal}
                   </span>
                   <span className="text-[10px] text-[#7A6862]">
-                    {isGu ? "આચાર્ય આર.કે. ત્રિવેદી" : "Principal R.K. Trivedi"}
+                    {rp.sigPrincipalName}
                   </span>
                 </div>
                 <div>
                   <div className="h-10 border-b border-dashed border-[#49352F]/30" />
                   <span className="block mt-1.5 font-bold text-[#49352F]">
-                    {isGu ? "વાલીની સહી" : "Parent / Guardian Signature"}
+                    {rp.sigParent}
                   </span>
                   <span className="text-[10px] text-[#7A6862]">
-                    {isGu ? "તારીખ: ____________" : "Date: ____________"}
+                    {rp.sigDateBlank}
                   </span>
                 </div>
               </div>
@@ -911,11 +897,11 @@ export default function ReportsPage() {
                 <div className="flex items-center gap-2">
                   <BrainCircuit className="w-5 h-5 text-[#B26A1B]" />
                   <h3 className="text-base font-extrabold text-[#49352F] font-heading">
-                    {isGu ? "સ્માર્ટ કાર્યપત્રક જનરેટર (ધોરણ ૧ થી ૮)" : "Intelligent Curriculum Worksheet Generator (Std 1–8)"}
+                    {rp.wsGenHeading}
                   </h3>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-[#7A6862] font-semibold">{isGu ? "AI અનુકૂલિત મોડ:" : "Adaptive Mode:"}</span>
+                  <span className="text-xs text-[#7A6862] font-semibold">{rp.adaptiveModeLabel}</span>
                   <button
                     type="button"
                     onClick={() => setWsIsAdaptive(!wsIsAdaptive)}
@@ -923,7 +909,7 @@ export default function ReportsPage() {
                       wsIsAdaptive ? "bg-[#2E7D5E] text-white" : "bg-gray-200 text-gray-700"
                     }`}
                   >
-                    {wsIsAdaptive ? (isGu ? "સક્રિય (વિદ્યાર્થી-વિશિષ્ટ)" : "ON (Adaptive)") : "OFF"}
+                    {wsIsAdaptive ? rp.adaptiveOn : rp.adaptiveOff}
                   </button>
                 </div>
               </div>
@@ -932,86 +918,86 @@ export default function ReportsPage() {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                 {/* Standard */}
                 <div>
-                  <label className="font-bold text-[#49352F] block mb-1">{isGu ? "ધોરણ / વર્ગ" : "Standard / Class"}</label>
+                  <label className="font-bold text-[#49352F] block mb-1">{rp.lblStdClass}</label>
                   <select
                     value={wsGrade}
                     onChange={(e) => setWsGrade(Number(e.target.value))}
                     className="w-full rounded-xl border border-[#49352F]/15 bg-[#FAF6E9] p-2 font-semibold text-[#49352F]"
                   >
                     {[1, 2, 3, 4, 5, 6, 7, 8].map((g) => (
-                      <option key={g} value={g}>Std {g}</option>
+                      <option key={g} value={g}>{formatClass(g)}</option>
                     ))}
                   </select>
                 </div>
 
                 {/* Subject */}
                 <div>
-                  <label className="font-bold text-[#49352F] block mb-1">{isGu ? "વિષય" : "Subject"}</label>
+                  <label className="font-bold text-[#49352F] block mb-1">{rp.lblSubject}</label>
                   <select
                     value={wsSubject}
                     onChange={(e) => setWsSubject(e.target.value)}
                     className="w-full rounded-xl border border-[#49352F]/15 bg-[#FAF6E9] p-2 font-semibold text-[#49352F]"
                   >
-                    <option value="MATH">{isGu ? "ગણિત (Math)" : "Mathematics"}</option>
-                    <option value="ENG">{isGu ? "અંગ્રેજી (English)" : "English"}</option>
-                    <option value="GUJ">{isGu ? "ગુજરાતી (Gujarati)" : "Gujarati"}</option>
-                    <option value="EVS">{isGu ? "પર્યાવરણ (EVS)" : "Environmental Studies"}</option>
-                    <option value="SCI">{isGu ? "વિજ્ઞાન (Science)" : "Science"}</option>
-                    <option value="SST">{isGu ? "સામાજિક વિજ્ઞાન (SSt)" : "Social Science"}</option>
-                    <option value="HIN">{isGu ? "હિન્દી (Hindi)" : "Hindi"}</option>
+                    <option value="MATH">{formatSubject("MATH")}</option>
+                    <option value="ENG">{formatSubject("ENG")}</option>
+                    <option value="GUJ">{formatSubject("GUJ")}</option>
+                    <option value="EVS">{formatSubject("EVS")}</option>
+                    <option value="SCI">{formatSubject("SCI")}</option>
+                    <option value="SST">{formatSubject("SST")}</option>
+                    <option value="HIN">{formatSubject("HIN")}</option>
                   </select>
                 </div>
 
                 {/* Worksheet Type (12 Types) */}
                 <div>
-                  <label className="font-bold text-[#49352F] block mb-1">{isGu ? "કાર્યપત્રક પ્રકાર" : "Worksheet Type"}</label>
+                  <label className="font-bold text-[#49352F] block mb-1">{rp.lblWsType}</label>
                   <select
                     value={wsType}
                     onChange={(e) => setWsType(e.target.value)}
                     className="w-full rounded-xl border border-[#49352F]/15 bg-[#FAF6E9] p-2 font-semibold text-[#49352F]"
                   >
-                    <option value="practice">{isGu ? "અભ્યાસ કાર્યપત્રક (Practice)" : "Practice Worksheet"}</option>
-                    <option value="chapter">{isGu ? "પ્રકરણ કાર્યપત્રક (Chapter)" : "Chapter Worksheet"}</option>
-                    <option value="topic">{isGu ? "સંકલ્પના કાર્યપત્રક (Topic)" : "Topic Worksheet"}</option>
-                    <option value="revision">{isGu ? "પુનરાવર્તન કાર્યપત્રક (Revision)" : "Revision Worksheet"}</option>
-                    <option value="diagnostic">{isGu ? "નિદાન કાર્યપત્રક (Diagnostic)" : "Diagnostic Worksheet"}</option>
-                    <option value="remedial">{isGu ? "ઉપચાર કાર્યપત્રક (Remedial)" : "Remedial Worksheet"}</option>
-                    <option value="assessment">{isGu ? "મૂલ્યાંકન કાર્યપત્રક (Assessment)" : "Assessment Worksheet"}</option>
-                    <option value="challenge">{isGu ? "પડકારરૂપ કાર્યપત્રક (Challenge)" : "Challenge Worksheet"}</option>
-                    <option value="homework">{isGu ? "ગૃહકાર્ય (Homework)" : "Homework Worksheet"}</option>
-                    <option value="mixed_practice">{isGu ? "મિશ્ર મહાવરો (Mixed Practice)" : "Mixed Practice Worksheet"}</option>
-                    <option value="exam_prep">{isGu ? "પરીક્ષા તૈયારી (Exam Prep)" : "Exam Preparation Worksheet"}</option>
-                    <option value="mastery">{isGu ? "પ્રભુત્વ કસોટી (Mastery)" : "Mastery Worksheet"}</option>
+                    <option value="practice">{rp.wsPractice}</option>
+                    <option value="chapter">{rp.wsChapter}</option>
+                    <option value="topic">{rp.wsTopic}</option>
+                    <option value="revision">{rp.wsRevision}</option>
+                    <option value="diagnostic">{rp.wsDiagnostic}</option>
+                    <option value="remedial">{rp.wsRemedial}</option>
+                    <option value="assessment">{rp.wsAssessment}</option>
+                    <option value="challenge">{rp.wsChallenge}</option>
+                    <option value="homework">{rp.wsHomework}</option>
+                    <option value="mixed_practice">{rp.wsMixed}</option>
+                    <option value="exam_prep">{rp.wsExamPrep}</option>
+                    <option value="mastery">{rp.wsMastery}</option>
                   </select>
                 </div>
 
                 {/* Difficulty */}
                 <div>
-                  <label className="font-bold text-[#49352F] block mb-1">{isGu ? "મુશ્કેલી સ્તર" : "Difficulty Tier"}</label>
+                  <label className="font-bold text-[#49352F] block mb-1">{rp.lblDifficulty}</label>
                   <select
                     value={wsDifficulty}
                     onChange={(e) => setWsDifficulty(e.target.value)}
                     className="w-full rounded-xl border border-[#49352F]/15 bg-[#FAF6E9] p-2 font-semibold text-[#49352F]"
                   >
-                    <option value="Easy">{isGu ? "સરળ (Easy / Foundational)" : "Easy (Foundational)"}</option>
-                    <option value="Medium">{isGu ? "મધ્યમ (Medium / Standard)" : "Medium (Standard)"}</option>
-                    <option value="Hard">{isGu ? "કઠિન (Hard / Advanced)" : "Hard (Advanced Problem Solving)"}</option>
-                    <option value="Mixed">{isGu ? "મિશ્ર (Mixed / All Tiers)" : "Mixed (Balanced)"}</option>
+                    <option value="Easy">{rp.diffEasy}</option>
+                    <option value="Medium">{rp.diffMedium}</option>
+                    <option value="Hard">{rp.diffHard}</option>
+                    <option value="Mixed">{rp.diffMixed}</option>
                   </select>
                 </div>
 
                 {/* Target Student */}
                 <div>
-                  <label className="font-bold text-[#49352F] block mb-1">{isGu ? "વિદ્યાર્થી લક્ષ્ય" : "Target Student"}</label>
+                  <label className="font-bold text-[#49352F] block mb-1">{rp.lblTargetStudent}</label>
                   <select
                     value={wsStudentId}
                     onChange={(e) => setWsStudentId(e.target.value)}
                     className="w-full rounded-xl border border-[#49352F]/15 bg-[#FAF6E9] p-2 font-semibold text-[#49352F]"
                   >
-                    <option value="class">{isGu ? "આખો વર્ગ (Entire Class)" : "Entire Class"}</option>
+                    <option value="class">{rp.entireClass}</option>
                     {students.map((s: any) => (
                       <option key={s.id} value={s.id}>
-                        {s.displayName} (Std {s.grade})
+                        {s.displayName} ({formatClass(s.grade)})
                       </option>
                     ))}
                   </select>
@@ -1019,29 +1005,28 @@ export default function ReportsPage() {
 
                 {/* Question Count */}
                 <div>
-                  <label className="font-bold text-[#49352F] block mb-1">{isGu ? "પ્રશ્નોની સંખ્યા" : "Questions Count"}</label>
+                  <label className="font-bold text-[#49352F] block mb-1">{rp.lblQuestionsCount}</label>
                   <select
                     value={wsQuestionCount}
                     onChange={(e) => setWsQuestionCount(Number(e.target.value))}
                     className="w-full rounded-xl border border-[#49352F]/15 bg-[#FAF6E9] p-2 font-semibold text-[#49352F]"
                   >
-                    <option value={3}>3 {isGu ? "પ્રશ્નો" : "Questions"}</option>
-                    <option value={5}>5 {isGu ? "પ્રશ્નો" : "Questions"}</option>
-                    <option value={8}>8 {isGu ? "પ્રશ્નો" : "Questions"}</option>
-                    <option value={10}>10 {isGu ? "પ્રશ્નો" : "Questions"}</option>
+                    {[3, 5, 8, 10].map((c) => (
+                      <option key={c} value={c}>{tr("reports.questionsCountOption", { count: c })}</option>
+                    ))}
                   </select>
                 </div>
 
                 {/* Language */}
                 <div>
-                  <label className="font-bold text-[#49352F] block mb-1">{isGu ? "ભાષા" : "Language"}</label>
+                  <label className="font-bold text-[#49352F] block mb-1">{rp.lblLanguage}</label>
                   <select
                     value={wsLanguage}
                     onChange={(e) => setWsLanguage(e.target.value as any)}
                     className="w-full rounded-xl border border-[#49352F]/15 bg-[#FAF6E9] p-2 font-semibold text-[#49352F]"
                   >
-                    <option value="en">English</option>
-                    <option value="gu">ગુજરાતી (Gujarati)</option>
+                    <option value="en">{rp.langEnglish}</option>
+                    <option value="gu">{rp.langGujarati}</option>
                   </select>
                 </div>
 
@@ -1053,7 +1038,7 @@ export default function ReportsPage() {
                     disabled={generatingWs}
                     className="w-full text-xs font-bold py-2 rounded-xl shadow-xs"
                   >
-                    {generatingWs ? (isGu ? "બનાવી રહ્યા છીએ..." : "Generating...") : (isGu ? "કાર્યપત્રક બનાવો" : "Generate Worksheet")}
+                    {generatingWs ? rp.generatingWs : rp.generateWorksheetBtn}
                   </Button>
                 </div>
               </div>
@@ -1061,7 +1046,7 @@ export default function ReportsPage() {
               {/* 3-Tier Bundle Button */}
               <div className="pt-2 border-t border-[#49352F]/10 flex items-center justify-between">
                 <span className="text-[11px] text-[#7A6862]">
-                  {isGu ? "વર્ગખંડ માટે એક સાથે ૩ સ્તર (સહાય, મધ્યમ, ઉચ્ચ) ની પ્રતો તૈયાર કરો:" : "Generate 3 differentiated tiers (Support, Developing, Advanced) simultaneously:"}
+                  {rp.bundleHint}
                 </span>
                 <Button
                   variant="outline"
@@ -1071,7 +1056,7 @@ export default function ReportsPage() {
                   className="text-xs font-bold rounded-xl border-[#B26A1B] text-[#B26A1B]"
                 >
                   <Layers className="w-3.5 h-3.5 mr-1" />
-                  <span>{isGu ? "૩-સ્તરીય વર્ગખંડ બંડલ બનાવો" : "Generate 3-Tier Classroom Bundle"}</span>
+                  <span>{rp.generateBundleBtn}</span>
                 </Button>
               </div>
             </div>
@@ -1096,7 +1081,7 @@ export default function ReportsPage() {
 
                   <div className="text-right text-xs text-[#7A6862]">
                     <span className="px-2.5 py-1 rounded-md bg-[#49352F] text-white font-mono text-[10px] font-bold block mb-1">
-                      {currentWorksheet.difficulty} Tier
+                      {tr("reports.tierBadge", { tier: currentWorksheet.difficulty })}
                     </span>
                     <span>{wsLanguage === "gu" ? "કુલ ગુણ:" : "Total Marks:"} <strong>{currentWorksheet.totalMarks}</strong></span>
                     <span className="block">{wsLanguage === "gu" ? "સમય:" : "Time:"} {currentWorksheet.estimatedMinutes} mins</span>
@@ -1111,11 +1096,11 @@ export default function ReportsPage() {
                   </div>
                   <div>
                     <span>{wsLanguage === "gu" ? "ધોરણ / વિભાગ:" : "Class & Section:"}</span>{" "}
-                    <strong>Std {currentWorksheet.grade}-{currentWorksheet.section}</strong>
+                    <strong>{formatClass(currentWorksheet.grade, currentWorksheet.section)}</strong>
                   </div>
                   <div>
                     <span>{wsLanguage === "gu" ? "તારીખ:" : "Date:"}</span>{" "}
-                    <strong>{new Date().toLocaleDateString(wsLanguage === "gu" ? "gu-IN" : "en-IN")}</strong>
+                    <strong>{formatDate(new Date().toISOString())}</strong>
                   </div>
                 </div>
 
@@ -1183,7 +1168,7 @@ export default function ReportsPage() {
                       className="text-xs font-bold text-[#B26A1B] hover:text-[#49352F] flex items-center gap-1.5"
                     >
                       <Award className="w-4 h-4" />
-                      <span>{showAnswerKey ? (isGu ? "શિક્ષક ઉત્તરાવલી છુપાવો" : "Hide Teacher Answer Key") : (isGu ? "શિક્ષક ઉત્તરાવલી અને મૂલ્યાંકન માર્ગદર્શિકા જુઓ" : "View Teacher Answer Key & Evaluation Rubric")}</span>
+                      <span>{showAnswerKey ? rp.hideAnswerKey : rp.viewAnswerKey}</span>
                       {showAnswerKey ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                     </button>
 
@@ -1201,7 +1186,7 @@ export default function ReportsPage() {
                       className="text-xs font-bold rounded-xl"
                     >
                       <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
-                      <span>{isGu ? "વિદ્યાર્થી ઉત્તર મૂલ્યાંકન કરો" : "Evaluate / Record Student Scores"}</span>
+                      <span>{rp.evaluateRecordBtn}</span>
                     </Button>
                   </div>
 
@@ -1209,20 +1194,20 @@ export default function ReportsPage() {
                     <div className="p-4 rounded-2xl bg-[#FAF6E9] border border-[#B26A1B]/30 space-y-3 text-xs animate-in fade-in duration-200">
                       <div className="font-bold text-[#49352F] uppercase text-xs flex items-center justify-between">
                         <span>{wsLanguage === "gu" ? "સત્તાવાર શિક્ષક ઉત્તરાવલી અને પદ્ધતિ" : "Official Teacher Answer Key & Marking Criteria"}</span>
-                        <span>Total: {currentWorksheet.teacherAnswerKey.totalMarks} Marks</span>
+                        <span>{tr("reports.totalMarksBadge", { marks: currentWorksheet.teacherAnswerKey.totalMarks })}</span>
                       </div>
                       <div className="space-y-2.5">
                         {currentWorksheet.teacherAnswerKey.answers?.map((ans: any) => (
                           <div key={ans.questionNumber} className="p-2.5 rounded-xl bg-white border border-[#49352F]/10 space-y-1">
                             <div className="flex justify-between font-bold text-[#49352F]">
-                              <span>Q{ans.questionNumber}: Correct Answer: {String(ans.correctAnswer)}</span>
-                              <span>[{ans.marks} Marks]</span>
+                              <span>{tr("reports.qCorrectPrefix", { num: ans.questionNumber, answer: String(ans.correctAnswer) })}</span>
+                              <span>{tr("reports.wsMarksTag", { marks: ans.marks })}</span>
                             </div>
                             <p className="text-[#7A6862] text-[11px]">
-                              <strong>Explanation:</strong> {wsLanguage === "gu" ? ans.stepExplanationGujarati : ans.stepExplanation}
+                              <strong>{rp.explanationLabel}</strong> {wsLanguage === "gu" ? ans.stepExplanationGujarati : ans.stepExplanation}
                             </p>
                             {ans.rubricCriteria && (
-                              <p className="text-[10px] text-[#B26A1B] italic">Rubric: {ans.rubricCriteria}</p>
+                              <p className="text-[10px] text-[#B26A1B] italic">{tr("reports.rubricPrefix", { text: ans.rubricCriteria })}</p>
                             )}
                           </div>
                         ))}
@@ -1258,9 +1243,9 @@ export default function ReportsPage() {
           <Card>
             <CardHeader>
               <div>
-                <CardTitle>{isGu ? "કાર્યપત્રક ઇતિહાસ અને મૂલ્યાંકન પત્રક" : "Generated Worksheets & Student Evaluation Audit"}</CardTitle>
+                <CardTitle>{rp.historyHeading}</CardTitle>
                 <CardDescription>
-                  {isGu ? "અગાઉ તૈયાર કરેલ તમામ કાર્યપત્રકો, સોંપેલ વિદ્યાર્થીઓ અને મેળવેલ ગુણની વિગત" : "Archive of generated curriculum worksheets, target students, recorded evaluation scores, and printables."}
+                  {rp.historySub}
                 </CardDescription>
               </div>
             </CardHeader>
@@ -1269,13 +1254,13 @@ export default function ReportsPage() {
               <table className="w-full text-left text-xs">
                 <thead className="bg-[#FAF6E9] border-b border-[#49352F]/15 text-[#7A6862] uppercase text-[10px]">
                   <tr>
-                    <th className="p-3">{isGu ? "કાર્યપત્રક શીર્ષક" : "Worksheet Title"}</th>
-                    <th className="p-3">{isGu ? "ધોરણ / વિષય" : "Grade & Subject"}</th>
-                    <th className="p-3">{isGu ? "પ્રકાર" : "Type"}</th>
-                    <th className="p-3">{isGu ? "લક્ષિત વિદ્યાર્થી" : "Target Student"}</th>
-                    <th className="p-3 text-center">{isGu ? "ગુણ" : "Total Marks"}</th>
-                    <th className="p-3 text-center">{isGu ? "તારીખ" : "Date"}</th>
-                    <th className="p-3 text-right">{isGu ? "ક્રિયાઓ" : "Actions"}</th>
+                    <th className="p-3">{rp.colWsTitle}</th>
+                    <th className="p-3">{rp.colGradeSubject}</th>
+                    <th className="p-3">{rp.colType}</th>
+                    <th className="p-3">{rp.colTargetStudent}</th>
+                    <th className="p-3 text-center">{rp.colTotalMarks}</th>
+                    <th className="p-3 text-center">{rp.colDate}</th>
+                    <th className="p-3 text-right">{rp.colActions}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#49352F]/10">
@@ -1287,7 +1272,7 @@ export default function ReportsPage() {
                           <span className="text-[10px] text-[#7A6862]">{ws.chapter}</span>
                         </td>
                         <td className="p-3 font-semibold text-[#49352F]">
-                          Std {ws.grade} • {formatSubject(ws.subjectCode)}
+                          {formatClass(ws.grade)} • {formatSubject(ws.subjectCode)}
                         </td>
                         <td className="p-3">
                           <span className="px-2 py-0.5 rounded-full bg-[#FAF6E9] border border-[#49352F]/15 text-[10px] font-bold text-[#49352F] capitalize">
@@ -1295,13 +1280,13 @@ export default function ReportsPage() {
                           </span>
                         </td>
                         <td className="p-3 font-bold text-[#B26A1B]">
-                          {ws.targetStudentName || "Class"}
+                          {ws.targetStudentName || rp.classTargetFallback}
                         </td>
                         <td className="p-3 text-center font-bold text-[#49352F]">
                           {ws.totalMarks}
                         </td>
                         <td className="p-3 text-center text-[#7A6862] text-[11px]">
-                          {new Date(ws.createdAt).toLocaleDateString()}
+                          {formatDate(ws.createdAt)}
                         </td>
                         <td className="p-3 text-right">
                           <div className="flex items-center justify-end gap-1.5">
@@ -1311,7 +1296,7 @@ export default function ReportsPage() {
                                 setActiveMainTab("generator");
                               }}
                               className="px-2 py-1 rounded-lg bg-[#FAF6E9] text-[#49352F] hover:bg-[#F2CAB3]/40 text-xs font-bold transition-colors"
-                              title="View Worksheet"
+                              title={rp.viewWsTitle}
                             >
                               <Eye className="w-3.5 h-3.5" />
                             </button>
@@ -1325,14 +1310,14 @@ export default function ReportsPage() {
                                 setEvalScores(initialScores);
                               }}
                               className="px-2 py-1 rounded-lg bg-[#2E7D5E]/15 text-[#2E7D5E] hover:bg-[#2E7D5E]/25 text-xs font-bold transition-colors"
-                              title="Evaluate Student Answers"
+                              title={rp.evalStudentTitle}
                             >
                               <Award className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => handleDeleteWorksheet(ws.id)}
                               className="p-1 rounded-lg text-rose-500 hover:bg-rose-50 transition-colors"
-                              title="Delete Worksheet"
+                              title={rp.deleteWsTitle}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -1343,7 +1328,7 @@ export default function ReportsPage() {
                   ) : (
                     <tr>
                       <td colSpan={7} className="p-8 text-center text-xs text-[#7A6862]">
-                        {isGu ? "કોઈ સંગ્રહિત કાર્યપત્રકો મળ્યા નથી. નવું બનાવવા 'AI કાર્યપત્રક નિર્માતા' ટેબ ખોલો." : "No saved worksheets found. Open the Generator tab to create one."}
+                        {rp.noSavedWs}
                       </td>
                     </tr>
                   )}
@@ -1359,7 +1344,7 @@ export default function ReportsPage() {
             <div className="w-full max-w-xl bg-white border border-[#49352F]/15 rounded-3xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between border-b border-[#49352F]/10 pb-3">
                 <h3 className="font-heading text-base font-bold text-[#49352F]">
-                  {isGu ? "વિદ્યાર્થી ગુણ મૂલ્યાંકન નોંધણી" : "Evaluate & Record Student Marks"}
+                  {rp.evalModalTitle}
                 </h3>
                 <button
                   onClick={() => setEvaluatingWs(null)}
@@ -1370,7 +1355,7 @@ export default function ReportsPage() {
               </div>
 
               <div className="text-xs text-[#7A6862]">
-                Worksheet: <strong>{evaluatingWs.title}</strong> • Student: <strong>{evaluatingWs.targetStudentName || "Student"}</strong>
+                {tr("reports.evalMetaSummary", { title: evaluatingWs.title, student: evaluatingWs.targetStudentName || rp.evalStudentFallback })}
               </div>
 
               <div className="space-y-3 pt-2">
@@ -1378,10 +1363,10 @@ export default function ReportsPage() {
                   <div key={q.id} className="p-3 rounded-xl bg-[#FAF6E9] border border-[#49352F]/10 flex items-center justify-between gap-4 text-xs">
                     <div className="min-w-0">
                       <span className="font-bold text-[#49352F]">Q{q.questionNumber}: {q.questionText}</span>
-                      <p className="text-[11px] text-[#7A6862] mt-0.5">Correct: {String(q.correctAnswer)}</p>
+                      <p className="text-[11px] text-[#7A6862] mt-0.5">{tr("reports.evalCorrectPrefix", { answer: String(q.correctAnswer) })}</p>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
-                      <span className="font-semibold text-[#7A6862]">Marks:</span>
+                      <span className="font-semibold text-[#7A6862]">{rp.evalMarksLabel}</span>
                       <input
                         type="number"
                         min="0"
@@ -1403,12 +1388,12 @@ export default function ReportsPage() {
 
               <div>
                 <label className="text-xs font-bold text-[#49352F] block mb-1">
-                  {isGu ? "શિક્ષક પ્રતિસાદ / નોંધ:" : "Teacher Observation / Pedagogical Feedback:"}
+                  {rp.evalCommentsLabel}
                 </label>
                 <textarea
                   value={evalComments}
                   onChange={(e) => setEvalComments(e.target.value)}
-                  placeholder={isGu ? "વિદ્યાર્થીની ભૂલો અથવા સુધારણા પર નોંધ..." : "Notes on repeated misconceptions or praise..."}
+                  placeholder={rp.evalCommentsPlaceholder}
                   className="w-full rounded-xl border border-[#49352F]/15 bg-[#FAF6E9] p-2.5 text-xs text-[#49352F]"
                   rows={2}
                 />
@@ -1416,10 +1401,10 @@ export default function ReportsPage() {
 
               <div className="flex justify-end gap-2 pt-2 border-t border-[#49352F]/10">
                 <Button variant="outline" size="sm" onClick={() => setEvaluatingWs(null)}>
-                  {isGu ? "રદ કરો" : "Cancel"}
+                  {rp.cancelBtn}
                 </Button>
                 <Button variant="saffron" size="sm" onClick={handleSaveEvaluation}>
-                  {isGu ? "ગુણ સાચવો અને પરિણામ અપડેટ કરો" : "Save Evaluation & Update Results"}
+                  {rp.saveEvalBtn}
                 </Button>
               </div>
             </div>

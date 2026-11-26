@@ -4,6 +4,7 @@ import React from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { useLanguage } from "@/context/LanguageContext";
 import type {
   ClassHeatmapData,
   ClassHeatmapFilter,
@@ -36,6 +37,8 @@ export function ClassLearningGapHeatmap({
   selectedClass = "cls-4a",
   onSelectClass,
 }: ClassLearningGapHeatmapProps) {
+  const { t, tr, formatStatus, formatSubject } = useLanguage();
+  const hm = t.heatmap;
   const { competencies, className, totalClassStudents } = heatmapData;
 
   const handleCellClick = (
@@ -79,14 +82,14 @@ export function ClassLearningGapHeatmap({
           <div>
             <div className="flex items-center gap-2">
               <h3 className="font-heading text-sm sm:text-base font-bold text-[#49352F]">
-                Class Learning Gap Heatmap
+                {hm.title}
               </h3>
               <Badge variant="saffron" size="sm">
-                Interactive Matrix
+                {hm.interactiveMatrixBadge}
               </Badge>
             </div>
             <p className="text-[11px] text-[#7A6862]">
-              Cohort distribution of competencies. Click any cell to isolate and view those specific students below.
+              {hm.subtitle}
             </p>
           </div>
         </div>
@@ -96,7 +99,7 @@ export function ClassLearningGapHeatmap({
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FAF6E9] border border-[#49352F]/15 text-xs text-[#49352F]">
             <Users className="w-3.5 h-3.5 text-[#B26A1B]" />
             <span className="font-semibold">{className}</span>
-            <span className="text-[10px] text-[#7A6862]">({totalClassStudents} Students)</span>
+            <span className="text-[10px] text-[#7A6862]">{tr("heatmap.studentsCountLabel", { count: totalClassStudents })}</span>
           </div>
 
           {activeFilter && (
@@ -107,7 +110,7 @@ export function ClassLearningGapHeatmap({
               className="rounded-full text-xs font-bold text-[#C54738] border-[#C54738]/30 hover:bg-[#FBECE9] bg-white cursor-pointer"
             >
               <X className="w-3.5 h-3.5 mr-1" />
-              <span>Clear Filter</span>
+              <span>{hm.clearFilter}</span>
             </Button>
           )}
         </div>
@@ -119,7 +122,7 @@ export function ClassLearningGapHeatmap({
           <div className="flex items-center gap-2">
             <Filter className="w-3.5 h-3.5 text-[#B26A1B] shrink-0" />
             <span className="text-[#49352F]">
-              Active Heatmap Filter:{" "}
+              {hm.activeFilterLabel}{" "}
               <strong className="text-[#49352F]">{activeFilter.competencyName}</strong>
               {" • "}
               <span
@@ -131,7 +134,7 @@ export function ClassLearningGapHeatmap({
                     : "text-[#2E7D5E]"
                 }`}
               >
-                {activeFilter.status}
+                {formatStatus(activeFilter.status || "Needs Support")}
               </span>
             </span>
           </div>
@@ -141,7 +144,7 @@ export function ClassLearningGapHeatmap({
             onClick={() => onSelectFilter(null)}
             className="text-[11px] font-bold text-[#7A6862] hover:text-[#C54738] flex items-center gap-1 underline underline-offset-2 cursor-pointer"
           >
-            <span>Show All Learning Gaps</span>
+            <span>{hm.showAllGaps}</span>
             <X className="w-3 h-3" />
           </button>
         </div>
@@ -184,7 +187,7 @@ export function ClassLearningGapHeatmap({
                       }
                       size="sm"
                     >
-                      {comp.subjectName}
+                      {formatSubject(comp.subjectCode)}
                     </Badge>
                   </div>
 
@@ -194,20 +197,20 @@ export function ClassLearningGapHeatmap({
                       <div
                         style={{ width: `${supportPct}%` }}
                         className="bg-[#C54738] h-full"
-                        title={`Needs Support: ${comp.needsSupportCount} (${supportPct}%)`}
+                        title={`${formatStatus("Needs Support")}: ${comp.needsSupportCount} (${supportPct}%)`}
                       />
                       <div
                         style={{ width: `${devPct}%` }}
                         className="bg-[#B26A1B] h-full"
-                        title={`Developing: ${comp.developingCount} (${devPct}%)`}
+                        title={`${formatStatus("Developing")}: ${comp.developingCount} (${devPct}%)`}
                       />
                       <div
                         style={{ width: `${mastPct}%` }}
                         className="bg-[#2E7D5E] h-full"
-                        title={`Mastered: ${comp.masteredCount} (${mastPct}%)`}
+                        title={`${formatStatus("Mastered")}: ${comp.masteredCount} (${mastPct}%)`}
                       />
                     </div>
-                    <span>{comp.totalStudents} assessed</span>
+                    <span>{tr("heatmap.assessedCount", { count: comp.totalStudents })}</span>
                   </div>
                 </div>
 
@@ -224,7 +227,7 @@ export function ClassLearningGapHeatmap({
                         ? "bg-[#C54738] text-white border-2 border-[#991B1B] shadow-md ring-2 ring-[#C54738]/25 scale-[1.02]"
                         : "bg-[#FBECE9] text-[#C54738] border border-[#C54738]/25 hover:bg-[#F2CAB3]/60 hover:border-[#C54738]/50"
                     }`}
-                    title={`Click to show ${comp.needsSupportCount} students needing support in ${comp.competencyName}`}
+                    title={tr("heatmap.cellTooltipNeedsSupport", { count: comp.needsSupportCount, concept: comp.competencyName })}
                   >
                     <span className="font-heading font-extrabold text-sm sm:text-base leading-none">
                       {comp.needsSupportCount}
@@ -234,7 +237,7 @@ export function ClassLearningGapHeatmap({
                         isSupportActive ? "text-white" : "text-[#A93327]"
                       }`}
                     >
-                      Needs Support
+                      {formatStatus("Needs Support")}
                     </span>
                   </button>
 
@@ -249,7 +252,7 @@ export function ClassLearningGapHeatmap({
                         ? "bg-[#B26A1B] text-white border-2 border-[#8D4E10] shadow-md ring-2 ring-[#B26A1B]/25 scale-[1.02]"
                         : "bg-[#FFFBEB] text-[#B26A1B] border border-[#B26A1B]/25 hover:bg-[#F2CAB3]/60 hover:border-[#B26A1B]/50"
                     }`}
-                    title={`Click to show ${comp.developingCount} students developing in ${comp.competencyName}`}
+                    title={tr("heatmap.cellTooltipDeveloping", { count: comp.developingCount, concept: comp.competencyName })}
                   >
                     <span className="font-heading font-extrabold text-sm sm:text-base leading-none">
                       {comp.developingCount}
@@ -259,7 +262,7 @@ export function ClassLearningGapHeatmap({
                         isDevActive ? "text-white" : "text-[#8D4E10]"
                       }`}
                     >
-                      Developing
+                      {formatStatus("Developing")}
                     </span>
                   </button>
 
@@ -274,7 +277,7 @@ export function ClassLearningGapHeatmap({
                         ? "bg-[#2E7D5E] text-white border-2 border-[#1B503B] shadow-md ring-2 ring-[#2E7D5E]/25 scale-[1.02]"
                         : "bg-[#EAF4EE] text-[#2E7D5E] border border-[#2E7D5E]/25 hover:bg-[#2E7D5E]/15 hover:border-[#2E7D5E]/50"
                     }`}
-                    title={`Click to show ${comp.masteredCount} students who mastered ${comp.competencyName}`}
+                    title={tr("heatmap.cellTooltipMastered", { count: comp.masteredCount, concept: comp.competencyName })}
                   >
                     <span className="font-heading font-extrabold text-sm sm:text-base leading-none">
                       {comp.masteredCount}
@@ -284,7 +287,7 @@ export function ClassLearningGapHeatmap({
                         isMastActive ? "text-white" : "text-[#215A43]"
                       }`}
                     >
-                      Mastered
+                      {formatStatus("Mastered")}
                     </span>
                   </button>
                 </div>

@@ -34,7 +34,8 @@ import {
 } from "lucide-react";
 
 function StudentsPageContent() {
-  const { t, language } = useLanguage();
+  const { t, tr, formatClass } = useLanguage();
+  const st = t.students;
   const { searchTerm, setSearchTerm, selectedClass, setSelectedClass, gradeNumber } = useFilter();
 
   const [students, setStudents] = useState<any[]>([]);
@@ -118,12 +119,7 @@ function StudentsPageContent() {
       if (resultsData.success) setResults(resultsData.results || []);
     } catch (e) {
       console.error("Failed to load students", e);
-      showToast(
-        language === "gu"
-          ? "વિદ્યાર્થીઓ લાવવામાં નિષ્ફળતા"
-          : "Failed to load students from database",
-        "error"
-      );
+      showToast(st.loadFailedToast, "error");
     } finally {
       setLoading(false);
     }
@@ -201,25 +197,16 @@ function StudentsPageContent() {
       if (data.success) {
         broadcastDataUpdate("students", "delete", deleteTarget.id);
         showToast(
-          language === "gu"
-            ? `${deleteTarget.name} ને સફળતાપૂર્વક દૂર કરવામાં આવ્યા.`
-            : `${deleteTarget.name} was successfully removed from database.`,
+          tr("students.removedToast", { name: deleteTarget.name }),
           "success"
         );
         setDeleteTarget(null);
         await fetchStudents();
       } else {
-        showToast(
-          data.error ||
-            (language === "gu" ? "વિદ્યાર્થી દૂર કરવામાં નિષ્ફળ" : "Failed to remove student"),
-          "error"
-        );
+        showToast(data.error || st.removeFailedToast, "error");
       }
     } catch {
-      showToast(
-        language === "gu" ? "નેટવર્ક ભૂલ: દૂર કરી શકાયું નથી" : "Network error deleting student",
-        "error"
-      );
+      showToast(st.networkDeleteError, "error");
     } finally {
       setIsDeleting(false);
     }
@@ -314,11 +301,7 @@ function StudentsPageContent() {
             <input
               type="text"
               aria-label="Search students by name, roll number, or learning gap"
-              placeholder={
-                language === "gu"
-                  ? "વિદ્યાર્થીનું નામ, રોલ નંબર અથવા વિષય શોધો..."
-                  : "Search students by name, roll number, or learning gap..."
-              }
+              placeholder={st.searchPlaceholder}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full h-12 rounded-2xl border-2 border-[#49352F]/15 bg-[#FAF6E9] py-2.5 pl-12 pr-10 text-sm text-[#49352F] placeholder-[#7A6862] focus:border-[#F2CAB3] focus:bg-white focus:ring-4 focus:ring-[#F2CAB3]/30 outline-hidden transition-all shadow-inner"
@@ -338,7 +321,7 @@ function StudentsPageContent() {
 
           <div data-tour="students-filter" className="flex items-center gap-3 shrink-0 flex-wrap">
             <span className="text-xs font-bold text-[#49352F]">
-              {language === "gu" ? "વર્ગ:" : "Class:"}
+              {st.classFilter}
             </span>
             <select
               value={activeGrade}
@@ -346,19 +329,15 @@ function StudentsPageContent() {
               onChange={(e) => handleGradeFilterChange(e.target.value)}
               className="rounded-xl border border-[#49352F]/15 bg-[#FAF6E9] px-3.5 py-2 text-xs font-bold text-[#49352F] outline-hidden cursor-pointer"
             >
-              <option value="all">
-                {language === "gu" ? "બધા વર્ગો (૧-૫)" : "All Classes (1-5)"}
-              </option>
-              <option value="1">{language === "gu" ? "ધોરણ ૧" : "Class 1"}</option>
-              <option value="2">{language === "gu" ? "ધોરણ ૨" : "Class 2"}</option>
-              <option value="3">{language === "gu" ? "ધોરણ ૩" : "Class 3"}</option>
-              <option value="4">{language === "gu" ? "ધોરણ ૪" : "Class 4"}</option>
-              <option value="5">{language === "gu" ? "ધોરણ ૫" : "Class 5"}</option>
+              <option value="all">{st.allClassesOption}</option>
+              <option value="1">{formatClass(1)}</option>
+              <option value="2">{formatClass(2)}</option>
+              <option value="3">{formatClass(3)}</option>
+              <option value="4">{formatClass(4)}</option>
+              <option value="5">{formatClass(5)}</option>
             </select>
             <span className="text-xs font-semibold text-[#7A6862] ml-1">
-              {language === "gu"
-                ? `${filteredStudents.length} વિદ્યાર્થીઓ દર્શાવે છે`
-                : `Showing ${filteredStudents.length} students`}
+              {tr("students.showingCount", { count: filteredStudents.length })}
             </span>
           </div>
         </Card>
@@ -394,16 +373,12 @@ function StudentsPageContent() {
               <Users className="w-8 h-8" />
             </div>
             <h3 className="font-heading text-lg font-bold text-[#49352F]">
-              {language === "gu" ? "કોઈ વિદ્યાર્થી મળ્યા નથી" : "No Students Found"}
+              {st.noStudentsFoundTitle}
             </h3>
             <p className="text-xs sm:text-sm text-[#7A6862] max-w-md mx-auto mt-1 mb-5">
               {searchTerm
-                ? language === "gu"
-                  ? `"${searchTerm}" માટે કોઈ મેળ ખાતો વિદ્યાર્થી નથી. તમારી શોધ સાફ કરવાનો પ્રયાસ કરો.`
-                  : `No students match the search term "${searchTerm}". Try adjusting your filters.`
-                : language === "gu"
-                ? "આ વર્ગ માટે હજી સુધી કોઈ વિદ્યાર્થી નોંધાયા નથી. પ્રથમ વિદ્યાર્થી ઉમેરો."
-                : "No students are enrolled for this selection. Register your first student to begin."}
+                ? tr("students.searchNoMatch", { term: searchTerm })
+                : st.noEnrolledYet}
             </p>
             <div className="flex items-center justify-center gap-3">
               {searchTerm && (
@@ -413,7 +388,7 @@ function StudentsPageContent() {
                   onClick={() => setSearchTerm("")}
                   className="rounded-full text-xs"
                 >
-                  {language === "gu" ? "શોધ સાફ કરો" : "Clear Search"}
+                  {st.clearSearchBtn}
                 </Button>
               )}
               <Button
@@ -423,7 +398,7 @@ function StudentsPageContent() {
                 className="rounded-full text-xs font-bold"
               >
                 <PlusCircle className="w-3.5 h-3.5 mr-1" />
-                <span>{language === "gu" ? "વિદ્યાર્થી ઉમેરો" : "Add Student"}</span>
+                <span>{st.addStudentBtn}</span>
               </Button>
             </div>
           </Card>
@@ -467,7 +442,7 @@ function StudentsPageContent() {
                           </Link>
                           {isDemoCase && (
                             <Badge variant="saffron" size="sm">
-                              {language === "gu" ? "ડેમો કેસ" : "Demo Case"}
+                              {st.demoCaseBadge}
                             </Badge>
                           )}
                         </div>
@@ -479,9 +454,7 @@ function StudentsPageContent() {
 
                     <div className="flex flex-col items-end gap-1">
                       <Badge variant="outline" size="sm">
-                        {language === "gu"
-                          ? `ધોરણ ${std.grade}-${std.section}`
-                          : `Class ${std.grade}-${std.section}`}
+                        {formatClass(std.grade, std.section)}
                       </Badge>
                       <span className="text-[10px] text-[#7A6862] font-medium hidden sm:inline">
                         Model Primary School
@@ -501,20 +474,20 @@ function StudentsPageContent() {
                     {!hasAssessments ? (
                       <Badge variant="outline" size="sm" className="bg-[#FAF6E9] border-[#49352F]/15 text-[#7A6862]">
                         <Clock className="w-3 h-3 mr-1 text-[#B26A1B]" aria-hidden="true" />
-                        <span>{language === "gu" ? "મૂલ્યાંકન બાકી" : "Assessment Pending"}</span>
+                        <span>{st.assessmentPending}</span>
                       </Badge>
                     ) : gapCount > 0 ? (
                       <Badge data-tour={isDemoCase ? "aarav-gap-badge" : undefined} variant="needsSupport" size="sm" dot>
                         <AlertTriangle className="w-3 h-3 mr-1 text-[#C54738]" aria-hidden="true" />
                         <span>
-                          {language === "gu"
-                            ? `${gapCount} સક્રિય ખામીઓ`
-                            : `${gapCount} Active Gap${gapCount > 1 ? "s" : ""}`}
+                          {gapCount === 1
+                            ? st.activeGapSingle
+                            : tr("students.activeGapsCount", { count: gapCount })}
                         </span>
                       </Badge>
                     ) : (
                       <Badge variant="mastered" size="sm" dot>
-                        <span>{language === "gu" ? "પ્રગતિશીલ" : "On Track"}</span>
+                        <span>{st.onTrackBadge}</span>
                       </Badge>
                     )}
                   </div>
@@ -525,11 +498,7 @@ function StudentsPageContent() {
                       type="button"
                       onClick={() => setEditingStudent(std)}
                       className="p-1.5 rounded-lg text-[#7A6862]/60 hover:text-[#B26A1B] hover:bg-[#F2CAB3]/30 transition-colors cursor-pointer"
-                      title={
-                        language === "gu"
-                          ? `${std.displayName} ની વિગતો સંપાદિત કરો`
-                          : `Edit ${std.displayName}`
-                      }
+                      title={tr("students.editTooltip", { name: std.displayName })}
                       aria-label={`Edit ${std.displayName}`}
                     >
                       <Edit className="w-3.5 h-3.5" />
@@ -540,9 +509,7 @@ function StudentsPageContent() {
                       type="button"
                       onClick={() => setDeleteTarget({ id: std.id, name: std.displayName })}
                       className="p-1.5 rounded-lg text-[#7A6862]/60 hover:text-[#C54738] hover:bg-[#C54738]/10 transition-colors cursor-pointer"
-                      title={
-                        language === "gu" ? `${std.displayName} ને દૂર કરો` : `Remove ${std.displayName}`
-                      }
+                      title={tr("students.removeStudentTitle", { name: std.displayName })}
                       aria-label={`Remove ${std.displayName}`}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -554,7 +521,7 @@ function StudentsPageContent() {
                         size="sm"
                         className="text-xs text-[#B26A1B] hover:text-[#49352F]"
                       >
-                        <span>{t.students.viewProfile || "3D Profile →"}</span>
+                        <span>{st.viewProfile}</span>
                       </Button>
                     </Link>
                   </div>
@@ -572,12 +539,7 @@ function StudentsPageContent() {
           onClose={() => setShowAddModal(false)}
           onSuccess={() => {
             fetchStudents();
-            showToast(
-              language === "gu"
-                ? "નવો વિદ્યાર્થી સફળતાપૂર્વક સાચવવામાં આવ્યો."
-                : "New student saved successfully to database.",
-              "success"
-            );
+            showToast(st.registeredToast, "success");
           }}
         />
       )}
@@ -590,12 +552,7 @@ function StudentsPageContent() {
           onClose={() => setEditingStudent(null)}
           onSuccess={() => {
             fetchStudents();
-            showToast(
-              language === "gu"
-                ? "વિદ્યાર્થીની માહિતી સફળતાપૂર્વક અપડેટ કરવામાં આવી."
-                : "Student details successfully updated.",
-              "success"
-            );
+            showToast(st.updatedToast, "success");
           }}
         />
       )}
@@ -608,12 +565,7 @@ function StudentsPageContent() {
           existingCodes={students.map((s) => s.studentCode)}
           onSuccess={() => {
             fetchStudents();
-            showToast(
-              language === "gu"
-                ? "વિદ્યાર્થીઓની બેચ સફળતાપૂર્વક આયાત કરવામાં આવી."
-                : "Student roster imported successfully.",
-              "success"
-            );
+            showToast(st.importedToast, "success");
           }}
         />
       )}
@@ -623,14 +575,8 @@ function StudentsPageContent() {
         <Dialog
           isOpen={Boolean(deleteTarget)}
           onClose={() => setDeleteTarget(null)}
-          title={
-            language === "gu" ? "વિદ્યાર્થી કાઢી નાખવાની પુષ્ટિ કરો" : "Confirm Student Deletion"
-          }
-          description={
-            language === "gu"
-              ? `શું તમે ખરેખર ${deleteTarget.name} ને કાયમ માટે કાઢી નાખવા માંગો છો? આ ક્રિયા તેમના તમામ લર્નિંગ ગેપ્સ, એસેસમેન્ટ રેકોર્ડ્સ અને રિમીડિયલ પ્લાનને પણ ડેટાબેઝમાંથી સુરક્ષિત રીતે દૂર કરશે.`
-              : `Are you sure you want to permanently delete ${deleteTarget.name}? This will also safely cascade-remove their learning gaps, assessment records, and remedial plans from the database.`
-          }
+          title={st.deleteConfirmTitle}
+          description={tr("students.deleteConfirmDesc", { name: deleteTarget.name })}
           maxWidth="sm"
         >
           <div className="pt-4 flex items-center justify-end gap-3">
@@ -641,7 +587,7 @@ function StudentsPageContent() {
               disabled={isDeleting}
               className="rounded-full text-xs"
             >
-              {language === "gu" ? "રદ કરો" : "Cancel"}
+              {t.common.cancel}
             </Button>
             <Button
               variant="coral"
@@ -653,12 +599,12 @@ function StudentsPageContent() {
               {isDeleting ? (
                 <>
                   <Sparkles className="w-3.5 h-3.5 animate-spin mr-1" />
-                  <span>{language === "gu" ? "કાઢી રહ્યું છે..." : "Deleting..."}</span>
+                  <span>{st.deletingBtn}</span>
                 </>
               ) : (
                 <>
                   <Trash2 className="w-3.5 h-3.5 mr-1" />
-                  <span>{language === "gu" ? "હા, કાઢી નાખો" : "Delete Student"}</span>
+                  <span>{st.confirmDeleteBtn}</span>
                 </>
               )}
             </Button>

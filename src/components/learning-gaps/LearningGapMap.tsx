@@ -3,6 +3,7 @@
 import React from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   buildLearningGapMap,
   LearningGapMapData,
@@ -30,6 +31,9 @@ interface LearningGapMapProps {
 }
 
 export function LearningGapMap({ gap, studentName }: LearningGapMapProps) {
+  const { t, tr, formatStatus, formatClass } = useLanguage();
+  const gm = t.gapMap;
+
   const mapData: LearningGapMapData = React.useMemo(() => {
     return buildLearningGapMap(gap);
   }, [gap]);
@@ -42,7 +46,7 @@ export function LearningGapMap({ gap, studentName }: LearningGapMapProps) {
       return (
         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-[#C54738] text-white shadow-xs">
           <Target className="w-3 h-3" />
-          <span>ROOT GAP (REMEDIATE FIRST)</span>
+          <span>{gm.rootGapBadge}</span>
         </span>
       );
     }
@@ -50,7 +54,7 @@ export function LearningGapMap({ gap, studentName }: LearningGapMapProps) {
       return (
         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-[#B26A1B] text-white shadow-xs">
           <AlertTriangle className="w-3 h-3" />
-          <span>CURRENT GAP (FLAGGED)</span>
+          <span>{gm.currentGapBadge}</span>
         </span>
       );
     }
@@ -58,14 +62,14 @@ export function LearningGapMap({ gap, studentName }: LearningGapMapProps) {
       return (
         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#49352F] text-[#FAF6E9] shadow-xs">
           <ShieldAlert className="w-3 h-3 text-[#F2CAB3]" />
-          <span>AFFECTED CONCEPT (BLOCKED)</span>
+          <span>{gm.affectedBadge}</span>
         </span>
       );
     }
     return (
       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#2E7D5E]/15 text-[#2E7D5E] border border-[#2E7D5E]/20">
         <CheckCircle2 className="w-3 h-3" />
-        <span>PREREQUISITE</span>
+        <span>{gm.prerequisiteBadge}</span>
       </span>
     );
   };
@@ -77,14 +81,14 @@ export function LearningGapMap({ gap, studentName }: LearningGapMapProps) {
         return (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#EAF4EE] text-[#2E7D5E] border border-[#2E7D5E]/25">
             <CheckCircle2 className="w-3 h-3 text-[#2E7D5E]" />
-            <span>Mastered</span>
+            <span>{formatStatus("Mastered")}</span>
           </span>
         );
       case "Developing":
         return (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FFFBEB] text-[#B26A1B] border border-[#B26A1B]/25">
             <Clock className="w-3 h-3 text-[#B26A1B]" />
-            <span>Developing</span>
+            <span>{formatStatus("Developing")}</span>
           </span>
         );
       case "Needs Support":
@@ -92,7 +96,7 @@ export function LearningGapMap({ gap, studentName }: LearningGapMapProps) {
         return (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FBECE9] text-[#C54738] border border-[#C54738]/25">
             <AlertTriangle className="w-3 h-3 text-[#C54738]" />
-            <span>Needs Support</span>
+            <span>{formatStatus("Needs Support")}</span>
           </span>
         );
     }
@@ -125,25 +129,25 @@ export function LearningGapMap({ gap, studentName }: LearningGapMapProps) {
           </div>
           <div>
             <h4 className="font-heading font-extrabold text-sm sm:text-base text-[#49352F]">
-              Learning Gap Map • Prerequisite Dependency Graph
+              {gm.title}
             </h4>
             <p className="text-[11px] text-[#7A6862]">
-              Interactive visual progression distinguishing foundational root obstacles from target difficulties.
+              {gm.subtitle}
             </p>
           </div>
         </div>
 
         {/* Status Legend Pill Group */}
         <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
-          <span className="font-semibold text-[#7A6862] mr-1">Status:</span>
+          <span className="font-semibold text-[#7A6862] mr-1">{gm.statusLegendLabel}</span>
           <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-[#EAF4EE] text-[#2E7D5E] font-medium border border-[#2E7D5E]/20">
-            <CheckCircle2 className="w-2.5 h-2.5" /> Mastered
+            <CheckCircle2 className="w-2.5 h-2.5" /> {formatStatus("Mastered")}
           </span>
           <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-[#FFFBEB] text-[#B26A1B] font-medium border border-[#B26A1B]/20">
-            <Clock className="w-2.5 h-2.5" /> Developing
+            <Clock className="w-2.5 h-2.5" /> {formatStatus("Developing")}
           </span>
           <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-[#FBECE9] text-[#C54738] font-medium border border-[#C54738]/20">
-            <AlertTriangle className="w-2.5 h-2.5" /> Needs Support
+            <AlertTriangle className="w-2.5 h-2.5" /> {formatStatus("Needs Support")}
           </span>
         </div>
       </div>
@@ -157,20 +161,24 @@ export function LearningGapMap({ gap, studentName }: LearningGapMapProps) {
             </span>
             <div>
               <span className="font-bold text-[#49352F]">
-                Root Obstacle Identified:{" "}
+                {gm.rootObstacleIdentified}{" "}
                 <span className="text-[#C54738] underline decoration-wavy underline-offset-2">
                   {rootGap.name}
                 </span>
               </span>
               <p className="text-[11px] text-[#7A6862] mt-0.5">
-                {studentName ? `${studentName}'s` : "Student's"} difficulty in{" "}
-                <strong>{currentGap?.name}</strong> stems directly from an unmastered prerequisite in{" "}
-                <strong>{rootGap.name}</strong>.
+                {tr("gapMap.rootDescription", {
+                  possessive: studentName
+                    ? tr("gapMap.studentPossessiveNamed", { name: studentName })
+                    : gm.studentPossessiveDefault,
+                  current: currentGap?.name || "",
+                  root: rootGap.name,
+                })}
               </p>
             </div>
           </div>
           <Badge variant="coral" size="sm">
-            Action: Remediate {rootGap.name} First
+            {tr("gapMap.remediateFirstBadge", { root: rootGap.name })}
           </Badge>
         </div>
       )}
@@ -204,7 +212,7 @@ export function LearningGapMap({ gap, studentName }: LearningGapMapProps) {
                       {getRoleBadge(node.role, node.isRoot, node.isCurrent)}
                       {node.grade && (
                         <span className="text-[10px] text-[#7A6862] font-semibold bg-[#FAF6E9] px-2 py-0.5 rounded-full border border-[#49352F]/10">
-                          Class {node.grade}
+                          {formatClass(node.grade)}
                         </span>
                       )}
                     </div>
@@ -259,8 +267,8 @@ export function LearningGapMap({ gap, studentName }: LearningGapMapProps) {
                       }
                     >
                       {isTransitionBlocked
-                        ? "Prerequisite Obstacle (Blocks Progression)"
-                        : "Prerequisite Flow (Enables Mastery)"}
+                        ? gm.blockedProgression
+                        : gm.enablesMastery}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -283,7 +291,7 @@ export function LearningGapMap({ gap, studentName }: LearningGapMapProps) {
       <div className="p-3.5 sm:p-4 rounded-xl bg-white border border-[#49352F]/12 space-y-2.5">
         <div className="flex items-center gap-1.5 text-xs font-bold text-[#49352F]">
           <Layers className="w-4 h-4 text-[#B26A1B]" />
-          <span>Recommended Learning Order (Pedagogical Remediation Sequence)</span>
+          <span>{gm.recommendedOrderTitle}</span>
         </div>
 
         {/* Step-by-Step Flow Badges */}
@@ -319,12 +327,12 @@ export function LearningGapMap({ gap, studentName }: LearningGapMapProps) {
                   <span>{conceptName}</span>
                   {isRootStep && (
                     <span className="text-[9.5px] uppercase font-bold text-[#C54738]">
-                      (Root)
+                      {gm.rootTag}
                     </span>
                   )}
                   {isCurrentStep && (
                     <span className="text-[9.5px] uppercase font-bold text-[#B26A1B]">
-                      (Target)
+                      {gm.targetTag}
                     </span>
                   )}
                 </div>
@@ -339,12 +347,11 @@ export function LearningGapMap({ gap, studentName }: LearningGapMapProps) {
 
         {/* Actionable Pedagogical Insight */}
         <p className="text-[11px] text-[#7A6862] leading-relaxed pt-1 border-t border-[#49352F]/10">
-          <strong className="text-[#49352F]">Pedagogical Rationale:</strong> Rather
-          than repeatedly drilling the student on <em>{currentGap?.name}</em>, the
-          teacher should first remediate the Root Gap (
-          <strong>{rootGap?.name || currentGap?.name}</strong>) using hands-on concrete
-          manipulatives. Once prerequisite mastery is solidified, progression into{" "}
-          <em>{currentGap?.name}</em> and downstream competencies proceeds naturally.
+          <strong className="text-[#49352F]">{gm.rationalePrefix}</strong>{" "}
+          {tr("gapMap.rationaleBody", {
+            current: currentGap?.name || "",
+            root: rootGap?.name || currentGap?.name || "",
+          })}
         </p>
       </div>
     </div>

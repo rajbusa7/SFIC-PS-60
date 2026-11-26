@@ -18,6 +18,7 @@ import {
 import { AudioRecorder } from "../audio/AudioRecorder";
 import { AudioPlayer } from "../audio/AudioPlayer";
 import type { SupportedLanguage } from "@/lib/types";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface Message {
   id: string;
@@ -44,14 +45,6 @@ interface NoticeAssistantChatProps {
   onNoticeSelect?: (noticeId: string) => void;
 }
 
-const SUGGESTED_QUESTIONS = [
-  "When is the next Parent-Teacher Meeting (PTM)?",
-  "What is the homework deadline for Grade 5 Science?",
-  "What are the requirements for Annual Sports Day?",
-  "What documents are required for mid-term exams?",
-  "When will the school reopen after Diwali break?",
-];
-
 export function NoticeAssistantChat({
   parentId = "par-001",
   studentId = "std-01",
@@ -60,11 +53,14 @@ export function NoticeAssistantChat({
   className = "",
   onNoticeSelect,
 }: NoticeAssistantChatProps) {
+  const { t, tr, formatClass } = useLanguage();
+  const no = t.notices;
+  const suggestedQuestions = [no.nacQ1, no.nacQ2, no.nacQ3, no.nacQ4, no.nacQ5];
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "msg-welcome",
       sender: "ai",
-      text: `Namaste! I am the StudySaathi AI School Notice Assistant. I can answer questions about school announcements, exam dates, schedules, and fee reminders for ${studentName} (Grade ${studentGrade}). Every answer is strictly grounded in official school records.`,
+      text: "",
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     },
   ]);
@@ -74,6 +70,7 @@ export function NoticeAssistantChat({
   const [error, setError] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const msgSeqRef = useRef(0);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -83,8 +80,9 @@ export function NoticeAssistantChat({
     const q = (questionText || input).trim();
     if (!q) return;
 
+    msgSeqRef.current += 1;
     const userMsg: Message = {
-      id: `usr-${Date.now()}`,
+      id: `usr-${msgSeqRef.current}`,
       sender: "user",
       text: q,
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
@@ -109,11 +107,12 @@ export function NoticeAssistantChat({
 
       const data = await res.json();
       if (!res.ok || !data.success) {
-        throw new Error(data.error || "Failed to retrieve answer.");
+        throw new Error(data.error || no.nacErrRetrieve);
       }
 
+      msgSeqRef.current += 1;
       const aiMsg: Message = {
-        id: `ai-${Date.now()}`,
+        id: `ai-${msgSeqRef.current}`,
         sender: "ai",
         text: data.answer,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
@@ -126,11 +125,12 @@ export function NoticeAssistantChat({
       setMessages((prev) => [...prev, aiMsg]);
     } catch (err: any) {
       console.error("Assistant query error:", err);
-      setError(err.message || "Could not answer question at this time.");
+      setError(err.message || no.nacErrCouldNotAnswer);
+      msgSeqRef.current += 1;
       const errorMsg: Message = {
-        id: `err-${Date.now()}`,
+        id: `err-${msgSeqRef.current}`,
         sender: "ai",
-        text: "I could not find an official school notice regarding this topic. Please contact the class teacher directly.",
+        text: no.nacFallbackNoNotice,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         confidence: "low",
       };
@@ -153,16 +153,16 @@ export function NoticeAssistantChat({
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-[#2E7D5E]" />
             <h3 className="text-base font-bold text-[#49352F]">
-              AI School Notice Assistant
+              {no.nacHeading}
             </h3>
           </div>
           <p className="text-xs text-[#49352F]/70">
-            Factual Q&amp;A answering parent queries strictly from official notices (Data isolated for {studentName}).
+            {tr("notices.nacSubtitle", { name: studentName })}
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-[11px] font-semibold text-[#49352F]/70">Voice/Language:</span>
+          <span className="text-[11px] font-semibold text-[#49352F]/70">{no.nacVoiceLangLabel}</span>
           <select
             value={selectedLanguage}
             onChange={(e) => setSelectedLanguage(e.target.value as SupportedLanguage)}
@@ -179,9 +179,9 @@ export function NoticeAssistantChat({
       <div className="py-2.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar border-b border-[#49352F]/5">
         <span className="text-[11px] font-bold text-[#49352F]/60 shrink-0 flex items-center gap-1">
           <HelpCircle className="w-3 h-3 text-[#2E7D5E]" />
-          Suggested:
+          {no.nacSuggestedLabel}
         </span>
-        {SUGGESTED_QUESTIONS.map((q, idx) => (
+        {suggestedQuestions.map((q, idx) => (
           <button
             key={idx}
             type="button"
@@ -210,18 +210,22 @@ export function NoticeAssistantChat({
             >
               <div className="flex items-center justify-between gap-3 mb-1.5">
                 <span className="font-bold text-[11px] opacity-80">
-                  {m.sender === "user" ? "You" : "StudySaathi AI Assistant"}
+                  {m.sender === "user" ? no.nacSenderYou : no.nacSenderAi}
                 </span>
                 <span className="text-[10px] opacity-60">{m.timestamp}</span>
               </div>
 
-              <p className="whitespace-pre-wrap">{m.text}</p>
+              <p className="whitespace-pre-wrap">
+                {m.id === "msg-welcome"
+                  ? tr("notices.nacWelcomeMessage", { name: studentName, gradeLabel: formatClass(studentGrade) || `Grade ${studentGrade}` })
+                  : m.text}
+              </p>
 
               {/* Cited Notices Reference */}
               {m.citedNotices && m.citedNotices.length > 0 && (
                 <div className="mt-3 pt-2.5 border-t border-[#49352F]/10">
                   <span className="text-[10px] font-bold text-[#49352F]/70 block mb-1 uppercase tracking-wider">
-                    Official Notice Sources:
+                    {no.nacOfficialSourcesLabel}
                   </span>
                   <div className="space-y-1.5">
                     {m.citedNotices.map((n) => (
@@ -253,7 +257,7 @@ export function NoticeAssistantChat({
                           ? "bg-blue-100 text-blue-800"
                           : "bg-amber-100 text-amber-800"
                       }`}>
-                        {m.confidence.toUpperCase()} CONFIDENCE
+                        {tr("notices.nacConfidenceLabel", { level: m.confidence.toUpperCase() })}
                       </span>
                     )}
                     {m.provider && (
@@ -266,7 +270,7 @@ export function NoticeAssistantChat({
                   <AudioPlayer
                     text={m.text}
                     language={selectedLanguage}
-                    buttonLabel="Listen"
+                    buttonLabel={no.nacListenBtn}
                   />
                 </div>
               )}
@@ -279,7 +283,7 @@ export function NoticeAssistantChat({
             <div className="bg-[#FAF6E9] border border-[#49352F]/15 rounded-2xl rounded-bl-none p-4 max-w-[70%]">
               <div className="flex items-center gap-2 text-xs font-semibold text-[#49352F]">
                 <Loader2 className="w-4 h-4 animate-spin text-[#2E7D5E]" />
-                <span>Searching school notices &amp; generating factual answer...</span>
+                <span>{no.nacSearchingNotices}</span>
               </div>
             </div>
           </div>
@@ -294,7 +298,7 @@ export function NoticeAssistantChat({
           <AudioRecorder
             language={selectedLanguage}
             onTranscript={handleVoiceInput}
-            buttonLabel="Speak"
+            buttonLabel={no.nacSpeakBtn}
           />
 
           <input
@@ -307,7 +311,7 @@ export function NoticeAssistantChat({
                 handleSend();
               }
             }}
-            placeholder="Ask anything about school notices, dates, exams, or homework..."
+            placeholder={no.nacInputPlaceholder}
             className="flex-1 px-3.5 py-2.5 text-xs sm:text-sm rounded-xl bg-[#FAF6E9]/60 border border-[#49352F]/20 text-[#49352F] focus:outline-none focus:ring-2 focus:ring-[#F2CAB3]"
           />
 
@@ -316,7 +320,7 @@ export function NoticeAssistantChat({
             onClick={() => handleSend()}
             disabled={isLoading || !input.trim()}
             className="p-2.5 rounded-xl bg-[#49352F] text-white hover:bg-[#49352F]/90 transition-all shadow-sm active:scale-95 disabled:opacity-50 cursor-pointer"
-            aria-label="Send message"
+            aria-label={no.nacSendAriaLabel}
           >
             <Send className="w-4 h-4" />
           </button>

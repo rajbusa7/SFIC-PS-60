@@ -18,6 +18,7 @@ import {
   Layers,
 } from "lucide-react";
 import type { AiProviderName, AiTaskType, AiProviderConfig, AiUsageMetric } from "@/lib/types";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface ProviderStatus {
   provider: AiProviderName;
@@ -28,34 +29,17 @@ interface ProviderStatus {
   keyPreview: string | null;
 }
 
-const TASK_NAMES: Record<AiTaskType, { title: string; desc: string }> = {
-  chat: {
-    title: "General AI Chatbot",
-    desc: "Interactive question-answering, pedagogy advice, and bilingual curriculum guidance.",
-  },
-  simplification: {
-    title: "School Notice Simplification",
-    desc: "Transforms complex notices into simple sentences while preserving dates and rules.",
-  },
-  translation: {
-    title: "Multilingual Indian Language Translation",
-    desc: "Translates between English, Gujarati, and Hindi with named entity preservation.",
-  },
-  speech_to_text: {
-    title: "Voice-to-Text Dictation (ASR)",
-    desc: "Transcribes teacher voice notices into text for Gujarati, Hindi, and English.",
-  },
-  text_to_speech: {
-    title: "Text-to-Speech Audio (TTS)",
-    desc: "Synthesizes native speech playback for translated announcements.",
-  },
-  assistant: {
-    title: "School Notice Q&A Assistant",
-    desc: "Retrieval-augmented factual answering grounded strictly in school notices.",
-  },
-};
-
 export function AdminAiProviderSettings() {
+  const { t, tr } = useLanguage();
+  const ap = t.aiProviders;
+  const TASK_NAMES: Record<AiTaskType, { title: string; desc: string }> = {
+    chat: { title: ap.taskChatTitle, desc: ap.taskChatDesc },
+    simplification: { title: ap.taskSimplificationTitle, desc: ap.taskSimplificationDesc },
+    translation: { title: ap.taskTranslationTitle, desc: ap.taskTranslationDesc },
+    speech_to_text: { title: ap.taskSttTitle, desc: ap.taskSttDesc },
+    text_to_speech: { title: ap.taskTtsTitle, desc: ap.taskTtsDesc },
+    assistant: { title: ap.taskAssistantTitle, desc: ap.taskAssistantDesc },
+  };
   const [configs, setConfigs] = useState<AiProviderConfig[]>([]);
   const [providerStatuses, setProviderStatuses] = useState<ProviderStatus[]>([]);
   const [metricsSummary, setMetricsSummary] = useState<{
@@ -117,7 +101,7 @@ export function AdminAiProviderSettings() {
           [provider]: {
             success: false,
             latencyMs: 0,
-            message: data.error || "Ping request failed.",
+            message: data.error || ap.pingFailed,
           },
         }));
       }
@@ -127,7 +111,7 @@ export function AdminAiProviderSettings() {
         [provider]: {
           success: false,
           latencyMs: 0,
-          message: err.message || "Network error",
+          message: err.message || ap.networkError,
         },
       }));
     } finally {
@@ -171,7 +155,7 @@ export function AdminAiProviderSettings() {
       const data = await res.json();
       if (res.ok && data.success) {
         setConfigs(data.data);
-        setSaveNotification(`Provider routing for ${TASK_NAMES[task]?.title || task} updated.`);
+        setSaveNotification(tr("aiProviders.routingUpdated", { task: TASK_NAMES[task]?.title || task }));
         setTimeout(() => setSaveNotification(null), 3000);
       }
     } catch (e: any) {
@@ -185,7 +169,7 @@ export function AdminAiProviderSettings() {
     return (
       <div className="p-8 text-center bg-white rounded-2xl border border-[#49352F]/15">
         <Loader2 className="w-6 h-6 animate-spin text-[#49352F] mx-auto mb-2" />
-        <p className="text-sm font-semibold text-[#49352F]">Loading AI Provider Architectures &amp; Telemetry...</p>
+        <p className="text-sm font-semibold text-[#49352F]">{ap.loading}</p>
       </div>
     );
   }
@@ -206,13 +190,13 @@ export function AdminAiProviderSettings() {
           <div>
             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#F2CAB3]/40 border border-[#49352F]/10 text-xs font-bold text-[#49352F] mb-1">
               <Layers className="w-3.5 h-3.5 text-[#2E7D5E]" />
-              Modular Multi-AI Architecture
+              {ap.badgeArchitecture}
             </div>
             <h2 className="text-lg font-bold text-[#49352F]">
-              AI Provider Connectivity &amp; Orchestration
+              {ap.heading}
             </h2>
             <p className="text-xs text-[#49352F]/70">
-              Configure primary and fallback providers, perform live connectivity pings, and inspect real-time latency and usage costs.
+              {ap.subtitle}
             </p>
           </div>
 
@@ -222,7 +206,7 @@ export function AdminAiProviderSettings() {
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-[#2E7D5E] text-white hover:bg-[#25684E] transition-all"
             >
               <Cpu className="w-3.5 h-3.5" />
-              <span>Full AI Dashboard</span>
+              <span>{ap.fullDashboardLink}</span>
             </Link>
             <button
               type="button"
@@ -230,7 +214,7 @@ export function AdminAiProviderSettings() {
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-white border border-[#49352F]/20 text-[#49352F] hover:bg-[#FAF6E9] transition-all cursor-pointer"
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              <span>Refresh Telemetry</span>
+              <span>{ap.refreshTelemetryBtn}</span>
             </button>
           </div>
         </div>
@@ -240,7 +224,7 @@ export function AdminAiProviderSettings() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-5">
             <div className="p-3 bg-white rounded-xl border border-[#49352F]/10">
               <div className="flex items-center justify-between text-xs font-semibold text-[#49352F]/70">
-                <span>Total AI Calls</span>
+                <span>{ap.totalCallsCard}</span>
                 <Activity className="w-3.5 h-3.5" />
               </div>
               <div className="mt-1 text-2xl font-black text-[#49352F]">
@@ -248,47 +232,47 @@ export function AdminAiProviderSettings() {
               </div>
               <div className="text-[11px] text-[#2E7D5E] font-medium mt-0.5">
                 {metricsSummary.totalRequests > 0
-                  ? `${Math.round(((metricsSummary.totalRequests - metricsSummary.errorCount) / metricsSummary.totalRequests) * 100)}% Success Rate`
-                  : "Ready for requests"}
+                  ? tr("aiProviders.successRateSuffix", { rate: Math.round(((metricsSummary.totalRequests - metricsSummary.errorCount) / metricsSummary.totalRequests) * 100) })
+                  : ap.readyForRequests}
               </div>
             </div>
 
             <div className="p-3 bg-white rounded-xl border border-[#49352F]/10">
               <div className="flex items-center justify-between text-xs font-semibold text-[#49352F]/70">
-                <span>Avg Latency</span>
+                <span>{ap.avgLatencyCard}</span>
                 <Clock className="w-3.5 h-3.5" />
               </div>
               <div className="mt-1 text-2xl font-black text-[#49352F]">
                 {metricsSummary.averageLatencyMs}ms
               </div>
               <div className="text-[11px] text-[#49352F]/60 mt-0.5">
-                Across active providers
+                {ap.acrossActiveProviders}
               </div>
             </div>
 
             <div className="p-3 bg-white rounded-xl border border-[#49352F]/10">
               <div className="flex items-center justify-between text-xs font-semibold text-[#49352F]/70">
-                <span>Error Count</span>
+                <span>{ap.errorCountCard}</span>
                 <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
               </div>
               <div className="mt-1 text-2xl font-black text-amber-900">
                 {metricsSummary.errorCount}
               </div>
               <div className="text-[11px] text-[#49352F]/60 mt-0.5">
-                Handled via graceful fallbacks
+                {ap.gracefulFallbacksHint}
               </div>
             </div>
 
             <div className="p-3 bg-white rounded-xl border border-[#49352F]/10">
               <div className="flex items-center justify-between text-xs font-semibold text-[#49352F]/70">
-                <span>Est. API Cost</span>
+                <span>{ap.estApiCostCard}</span>
                 <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
               </div>
               <div className="mt-1 text-2xl font-black text-emerald-900">
                 ${metricsSummary.totalCostUsd.toFixed(4)}
               </div>
               <div className="text-[11px] text-emerald-700 font-medium mt-0.5">
-                Optimized token usage
+                {ap.optimizedTokenUsage}
               </div>
             </div>
           </div>
@@ -306,7 +290,7 @@ export function AdminAiProviderSettings() {
       <div>
         <h3 className="text-sm font-bold text-[#49352F] uppercase tracking-wider mb-3 flex items-center gap-2">
           <Server className="w-4 h-4 text-[#2E7D5E]" />
-          Provider Connection Status &amp; Real API Ping
+          {ap.providerStatusHeading}
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -322,32 +306,32 @@ export function AdminAiProviderSettings() {
                     <div>
                       <h4 className="text-sm font-bold text-[#49352F]">{p.name}</h4>
                       <span className="text-[11px] text-[#49352F]/60 font-mono block">
-                        {p.keyPreview || "No API key configured in .env"}
+                        {p.keyPreview || ap.noKeyConfigured}
                       </span>
                     </div>
 
                     {p.configured ? (
                       <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
                         <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                        Configured
+                        {ap.configuredBadge}
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
                         <AlertTriangle className="w-3 h-3 text-amber-600" />
-                        Unconfigured
+                        {ap.unconfiguredBadge}
                       </span>
                     )}
                   </div>
 
                   <div className="space-y-1.5 my-3 text-[11px] text-[#49352F]/80">
                     <div className="flex justify-between">
-                      <span className="font-semibold text-[#49352F]/60">Capabilities:</span>
+                      <span className="font-semibold text-[#49352F]/60">{ap.capabilitiesLabel}</span>
                       <span className="font-medium text-right capitalize">
-                        {p.supportedTasks.map((t) => t.replace(/_/g, " ")).join(", ")}
+                        {p.supportedTasks.map((tItem) => tItem.replace(/_/g, " ")).join(", ")}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="font-semibold text-[#49352F]/60">Languages:</span>
+                      <span className="font-semibold text-[#49352F]/60">{ap.languagesLabel}</span>
                       <span className="font-medium uppercase text-right">
                         {p.supportedLanguages.join(", ")}
                       </span>
@@ -365,12 +349,12 @@ export function AdminAiProviderSettings() {
                     {pingingProvider === p.provider ? (
                       <>
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        <span>Sending Live Ping...</span>
+                        <span>{ap.sendingLivePing}</span>
                       </>
                     ) : (
                       <>
                         <Activity className="w-3.5 h-3.5 text-[#2E7D5E]" />
-                        <span>Test API Connectivity Ping</span>
+                        <span>{ap.testPingBtn}</span>
                       </>
                     )}
                   </button>
@@ -390,7 +374,7 @@ export function AdminAiProviderSettings() {
                       )}
                       <div>
                         <div className="font-bold">
-                          {ping.success ? `Connected (${ping.latencyMs}ms)` : "Ping Failed"}
+                          {ping.success ? tr("aiProviders.connectedStatus", { ms: ping.latencyMs }) : ap.pingFailedTitle}
                         </div>
                         <div className="text-[10px] opacity-90">{ping.message}</div>
                       </div>
@@ -407,10 +391,10 @@ export function AdminAiProviderSettings() {
       <div className="bg-white border border-[#49352F]/15 rounded-2xl p-6 shadow-sm">
         <h3 className="text-sm font-bold text-[#49352F] uppercase tracking-wider mb-2 flex items-center gap-2">
           <Cpu className="w-4 h-4 text-[#2E7D5E]" />
-          Task Routing &amp; Automatic Fallback Engine
+          {ap.taskRoutingHeading}
         </h3>
         <p className="text-xs text-[#49352F]/70 mb-4">
-          Route each AI pipeline to your preferred primary service. If the primary service experiences rate limits or outages, StudySaathi seamlessly executes the configured fallback without crashing the user interface.
+          {ap.taskRoutingDesc}
         </p>
 
         <div className="divide-y divide-[#49352F]/10 border border-[#49352F]/10 rounded-xl overflow-hidden">
@@ -440,7 +424,7 @@ export function AdminAiProviderSettings() {
                   {/* Primary Provider */}
                   <div>
                     <label className="block text-[10px] font-bold text-[#49352F]/70 mb-0.5 uppercase tracking-wider">
-                      Primary Provider
+                      {ap.primaryProviderLabel}
                     </label>
                     <select
                       value={config.primaryProvider}
@@ -449,18 +433,18 @@ export function AdminAiProviderSettings() {
                       }
                       className="px-2.5 py-1.5 text-xs rounded-lg bg-[#FAF6E9] border border-[#49352F]/20 text-[#49352F] font-semibold focus:outline-none focus:ring-1 focus:ring-[#F2CAB3]"
                     >
-                      <option value="gemini">Google Gemini 2.5 Flash</option>
-                      <option value="openai">OpenAI (GPT-4o-mini / Whisper / TTS)</option>
-                      <option value="google_translate">Google Cloud Translation v2</option>
-                      <option value="bhashini">Bhashini ULCA (Govt of India)</option>
-                      <option value="offline_fallback">Local Deterministic Engine</option>
+                      <option value="gemini">{ap.optGemini}</option>
+                      <option value="openai">{ap.optOpenai}</option>
+                      <option value="google_translate">{ap.optGoogleTranslate}</option>
+                      <option value="bhashini">{ap.optBhashini}</option>
+                      <option value="offline_fallback">{ap.optOffline}</option>
                     </select>
                   </div>
 
                   {/* Fallback Provider */}
                   <div>
                     <label className="block text-[10px] font-bold text-[#49352F]/70 mb-0.5 uppercase tracking-wider">
-                      Fallback Provider
+                      {ap.fallbackProviderLabel}
                     </label>
                     <select
                       value={config.fallbackProvider || "offline_fallback"}
@@ -469,18 +453,18 @@ export function AdminAiProviderSettings() {
                       }
                       className="px-2.5 py-1.5 text-xs rounded-lg bg-[#FAF6E9] border border-[#49352F]/20 text-[#49352F] font-semibold focus:outline-none focus:ring-1 focus:ring-[#F2CAB3]"
                     >
-                      <option value="offline_fallback">Local Deterministic Engine</option>
-                      <option value="gemini">Google Gemini 2.5 Flash</option>
-                      <option value="openai">OpenAI</option>
-                      <option value="google_translate">Google Cloud Translation</option>
-                      <option value="bhashini">Bhashini ULCA</option>
+                      <option value="offline_fallback">{ap.optOffline}</option>
+                      <option value="gemini">{ap.optGemini}</option>
+                      <option value="openai">{ap.optOpenaiShort}</option>
+                      <option value="google_translate">{ap.optGoogleTranslateShort}</option>
+                      <option value="bhashini">{ap.optBhashiniShort}</option>
                     </select>
                   </div>
 
                   {/* Enabled Toggle */}
                   <div className="flex flex-col items-center">
                     <label className="block text-[10px] font-bold text-[#49352F]/70 mb-0.5 uppercase tracking-wider">
-                      Status
+                      {ap.statusLabel}
                     </label>
                     <button
                       type="button"
@@ -491,7 +475,7 @@ export function AdminAiProviderSettings() {
                           : "bg-gray-100 text-gray-600 border border-gray-300"
                       }`}
                     >
-                      {config.enabled ? "Active" : "Disabled"}
+                      {config.enabled ? ap.activeBtn : ap.disabledBtn}
                     </button>
                   </div>
                 </div>
@@ -506,20 +490,20 @@ export function AdminAiProviderSettings() {
         <div className="bg-white border border-[#49352F]/15 rounded-2xl p-6 shadow-sm">
           <h3 className="text-sm font-bold text-[#49352F] uppercase tracking-wider mb-3 flex items-center gap-2">
             <Activity className="w-4 h-4 text-[#2E7D5E]" />
-            Recent AI Telemetry &amp; Request Audit Log
+            {ap.telemetryHeading}
           </h3>
 
           <div className="overflow-x-auto rounded-xl border border-[#49352F]/10">
             <table className="w-full text-left text-xs">
               <thead className="bg-[#FAF6E9] text-[#49352F] font-bold border-b border-[#49352F]/10">
                 <tr>
-                  <th className="py-2 px-3">Timestamp</th>
-                  <th className="py-2 px-3">Pipeline Task</th>
-                  <th className="py-2 px-3">Provider</th>
-                  <th className="py-2 px-3">Model</th>
-                  <th className="py-2 px-3">Latency</th>
-                  <th className="py-2 px-3">Est. Cost</th>
-                  <th className="py-2 px-3">Status</th>
+                  <th className="py-2 px-3">{ap.thTimestamp}</th>
+                  <th className="py-2 px-3">{ap.thPipelineTask}</th>
+                  <th className="py-2 px-3">{ap.thProvider}</th>
+                  <th className="py-2 px-3">{ap.thModel}</th>
+                  <th className="py-2 px-3">{ap.thLatency}</th>
+                  <th className="py-2 px-3">{ap.thEstCost}</th>
+                  <th className="py-2 px-3">{ap.thStatus}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#49352F]/5 bg-white font-mono text-[11px]">
@@ -532,17 +516,17 @@ export function AdminAiProviderSettings() {
                       {m.task.replace(/_/g, " ")}
                     </td>
                     <td className="py-2 px-3 uppercase text-[#49352F]">{m.provider}</td>
-                    <td className="py-2 px-3 text-[#49352F]/70">{m.model || "default"}</td>
+                    <td className="py-2 px-3 text-[#49352F]/70">{m.model || ap.modelDefaultFallback}</td>
                     <td className="py-2 px-3 text-[#49352F]">{m.latencyMs}ms</td>
                     <td className="py-2 px-3 text-emerald-800">${(m.estimatedCostUsd || 0).toFixed(5)}</td>
                     <td className="py-2 px-3">
                       {m.success ? (
                         <span className="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded font-sans font-bold">
-                          SUCCESS
+                          {ap.statusSuccessBadge}
                         </span>
                       ) : (
                         <span className="text-[10px] text-red-700 bg-red-50 px-1.5 py-0.5 rounded font-sans font-bold">
-                          ERROR
+                          {ap.statusErrorBadge}
                         </span>
                       )}
                     </td>

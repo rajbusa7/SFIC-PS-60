@@ -26,7 +26,8 @@ export function StudentCsvModal({
   existingCodes: string[];
   onSuccess: () => void;
 }) {
-  const { language } = useLanguage();
+  const { t, tr, formatClass } = useLanguage();
+  const sc = t.studentCsv;
   const [csvContent, setCsvContent] = useState("");
   const [parsedRows, setParsedRows] = useState<ParsedStudentRow[]>([]);
   const [parseErrors, setParseErrors] = useState<string[]>([]);
@@ -64,11 +65,7 @@ MPS-3A-06,Pranav Dave,3,A,Hands-on visual learner`;
   const parseCsv = (text: string) => {
     const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
     if (lines.length < 2) {
-      setParseErrors([
-        language === "gu"
-          ? "CSV માં હેડર પંક્તિ અને ઓછામાં ઓછી ૧ વિદ્યાર્થી પંક્તિ હોવી આવશ્યક છે."
-          : "CSV must contain a header row and at least 1 student row.",
-      ]);
+      setParseErrors([sc.minRowsError]);
       return;
     }
 
@@ -80,11 +77,7 @@ MPS-3A-06,Pranav Dave,3,A,Hands-on visual learner`;
     const notesIdx = header.indexOf("notes");
 
     if (codeIdx === -1 || nameIdx === -1 || gradeIdx === -1 || sectionIdx === -1) {
-      setParseErrors([
-        language === "gu"
-          ? "CSV હેડરમાં આવશ્યક કૉલમ્સ હોવા આવશ્યક છે: studentCode, displayName, grade, section"
-          : "CSV header must contain required columns: studentCode, displayName, grade, section",
-      ]);
+      setParseErrors([sc.missingColumnsError]);
       return;
     }
 
@@ -101,19 +94,11 @@ MPS-3A-06,Pranav Dave,3,A,Hands-on visual learner`;
       const notes = notesIdx !== -1 ? parts[notesIdx] : "";
 
       if (!studentCode || !displayName) {
-        errors.push(
-          language === "gu"
-            ? `પંક્તિ ${i + 1}: વિદ્યાર્થી કોડ અથવા નામ ખૂટે છે.`
-            : `Row ${i + 1}: Missing student code or display name.`
-        );
+        errors.push(tr("studentCsv.missingRowFieldsError", { row: i + 1 }));
         continue;
       }
       if (isNaN(grade) || grade < 1 || grade > 5) {
-        errors.push(
-          language === "gu"
-            ? `પંક્તિ ${i + 1}: ધોરણ ૧ થી ૫ વચ્ચેની સંખ્યા હોવી આવશ્યક છે.`
-            : `Row ${i + 1}: Grade must be a number between 1 and 5.`
-        );
+        errors.push(tr("studentCsv.gradeRangeError", { row: i + 1 }));
         continue;
       }
 
@@ -159,11 +144,7 @@ MPS-3A-06,Pranav Dave,3,A,Hands-on visual learner`;
       onSuccess();
       onClose();
     } catch {
-      setParseErrors([
-        language === "gu"
-          ? "આયાત દરમિયાન ક્ષતિ આવી. કૃપા કરીને પુનઃપ્રયાસ કરો."
-          : "An error occurred during import. Please retry.",
-      ]);
+      setParseErrors([sc.importError]);
     } finally {
       setIsImporting(false);
     }
@@ -173,16 +154,8 @@ MPS-3A-06,Pranav Dave,3,A,Hands-on visual learner`;
     <Dialog
       isOpen={isOpen}
       onClose={onClose}
-      title={
-        language === "gu"
-          ? "CSV દ્વારા વિદ્યાર્થી યાદી આયાત કરો"
-          : "Import Student Roster via CSV"
-      }
-      description={
-        language === "gu"
-          ? "સ્વચાલિત ડુપ્લિકેટ શોધ અને ડેટા માન્યતા સાથે વર્ગખંડ યાદીઓ અપલોડ કરો."
-          : "Upload classroom lists with automatic duplicate detection and data validation."
-      }
+      title={sc.title}
+      description={sc.description}
       maxWidth="xl"
     >
       <div className="space-y-4">
@@ -190,9 +163,7 @@ MPS-3A-06,Pranav Dave,3,A,Hands-on visual learner`;
         <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
           <div className="flex items-center gap-2 text-xs text-slate-700">
             <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-            <span>
-              {language === "gu" ? "સત્તાવાર નમૂનાની જરૂર છે?" : "Need the official template?"}
-            </span>
+            <span>{sc.needTemplate}</span>
           </div>
           <button
             type="button"
@@ -200,7 +171,7 @@ MPS-3A-06,Pranav Dave,3,A,Hands-on visual learner`;
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>{language === "gu" ? "નમૂના CSV ડાઉનલોડ કરો" : "Download Sample CSV"}</span>
+            <span>{sc.downloadSample}</span>
           </button>
         </div>
 
@@ -208,7 +179,7 @@ MPS-3A-06,Pranav Dave,3,A,Hands-on visual learner`;
         <div className="border-2 border-dashed border-slate-200 hover:border-indigo-400 rounded-xl p-6 text-center transition-colors">
           <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
           <label className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 cursor-pointer">
-            <span>{language === "gu" ? "CSV ફાઇલ પસંદ કરવા માટે ક્લિક કરો" : "Click to select CSV file"}</span>
+            <span>{sc.clickToSelect}</span>
             <input
               type="file"
               accept=".csv"
@@ -216,11 +187,7 @@ MPS-3A-06,Pranav Dave,3,A,Hands-on visual learner`;
               className="hidden"
             />
           </label>
-          <p className="text-[11px] text-slate-400 mt-1">
-            {language === "gu"
-              ? "૨MB સુધીની UTF-8 એન્કોડેડ .csv ફાઇલો"
-              : "UTF-8 encoded .csv files up to 2MB"}
-          </p>
+          <p className="text-[11px] text-slate-400 mt-1">{sc.fileHint}</p>
         </div>
 
         {/* Errors list */}
@@ -228,10 +195,10 @@ MPS-3A-06,Pranav Dave,3,A,Hands-on visual learner`;
           <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 space-y-1">
             <div className="flex items-center gap-1.5 text-xs font-bold text-rose-800">
               <AlertCircle className="w-4 h-4" />
-              <span>{language === "gu" ? "માન્યતા ચેતવણીઓ:" : "Validation Warnings:"}</span>
+              <span>{sc.validationWarnings}</span>
             </div>
             {parseErrors.map((err, i) => (
-              <p key={i} className="text-[11px] text-rose-700 ml-5">
+              <p key={i} className="text-[11px] text-rose-700 ms-5">
                 • {err}
               </p>
             ))}
@@ -242,26 +209,22 @@ MPS-3A-06,Pranav Dave,3,A,Hands-on visual learner`;
         {parsedRows.length > 0 && (
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
-              <span>
-                {language === "gu"
-                  ? `પૂર્વાવલોકન (${parsedRows.length} રેકોર્ડ્સ મળ્યા)`
-                  : `Preview (${parsedRows.length} records found)`}
-              </span>
+              <span>{tr("studentCsv.previewCount", { count: parsedRows.length })}</span>
               <span className="text-emerald-600">
-                {language === "gu"
-                  ? `${parsedRows.filter((r) => !r.isDuplicate).length} આયાત માટે તૈયાર`
-                  : `${parsedRows.filter((r) => !r.isDuplicate).length} ready to import`}
+                {tr("studentCsv.readyCount", {
+                  count: parsedRows.filter((r) => !r.isDuplicate).length,
+                })}
               </span>
             </div>
 
             <div className="max-h-48 overflow-y-auto rounded-xl border border-slate-200 text-xs">
-              <table className="w-full text-left">
+              <table className="w-full text-start">
                 <thead className="bg-slate-50 text-[11px] font-bold text-slate-600 uppercase border-b border-slate-200">
                   <tr>
-                    <th className="p-2">{language === "gu" ? "કોડ" : "Code"}</th>
-                    <th className="p-2">{language === "gu" ? "નામ" : "Name"}</th>
-                    <th className="p-2">{language === "gu" ? "વર્ગ" : "Class"}</th>
-                    <th className="p-2">{language === "gu" ? "સ્થિતિ" : "Status"}</th>
+                    <th className="p-2">{sc.colCode}</th>
+                    <th className="p-2">{sc.colName}</th>
+                    <th className="p-2">{sc.colClass}</th>
+                    <th className="p-2">{sc.colStatus}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -269,17 +232,15 @@ MPS-3A-06,Pranav Dave,3,A,Hands-on visual learner`;
                     <tr key={i} className={r.isDuplicate ? "bg-amber-50/50" : ""}>
                       <td className="p-2 font-mono font-medium">{r.studentCode}</td>
                       <td className="p-2">{r.displayName}</td>
-                      <td className="p-2">
-                        {language === "gu" ? `ધોરણ ${r.grade}-${r.section}` : `Class ${r.grade}-${r.section}`}
-                      </td>
+                      <td className="p-2">{formatClass(r.grade, r.section)}</td>
                       <td className="p-2">
                         {r.isDuplicate ? (
                           <span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-bold">
-                            {language === "gu" ? "ડુપ્લિકેટ અવગણાયું" : "Duplicate Skipped"}
+                            {sc.duplicateSkipped}
                           </span>
                         ) : (
                           <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-bold">
-                            {language === "gu" ? "માન્ય" : "Valid"}
+                            {sc.validStatus}
                           </span>
                         )}
                       </td>
@@ -298,7 +259,7 @@ MPS-3A-06,Pranav Dave,3,A,Hands-on visual learner`;
             onClick={onClose}
             className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
           >
-            {language === "gu" ? "રદ કરો" : "Cancel"}
+            {t.common.cancel}
           </button>
           <button
             type="button"
@@ -307,12 +268,10 @@ MPS-3A-06,Pranav Dave,3,A,Hands-on visual learner`;
             className="px-5 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-xs transition-colors cursor-pointer disabled:opacity-50"
           >
             {isImporting
-              ? language === "gu"
-                ? "આયાત થઈ રહ્યું છે..."
-                : "Importing..."
-              : language === "gu"
-              ? `${parsedRows.filter((r) => !r.isDuplicate).length} વિદ્યાર્થીઓ આયાત કરો`
-              : `Import ${parsedRows.filter((r) => !r.isDuplicate).length} Students`}
+              ? sc.importingBtn
+              : tr("studentCsv.importStudentsBtn", {
+                  count: parsedRows.filter((r) => !r.isDuplicate).length,
+                })}
           </button>
         </div>
       </div>

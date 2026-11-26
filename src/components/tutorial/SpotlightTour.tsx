@@ -36,7 +36,7 @@ interface TargetRect {
 export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps = {}) {
   const router = useRouter();
   const pathname = usePathname();
-  const { t, language } = useLanguage();
+  const { tr } = useLanguage();
   const {
     tutorialOpen,
     tutorialMode,
@@ -59,17 +59,7 @@ export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps
 
   // Helper to resolve translation string by key path
   const resolveText = (keyPath: string, fallback: string = ""): string => {
-    try {
-      const parts = keyPath.split(".");
-      let val: any = t;
-      for (const p of parts) {
-        if (!val || typeof val !== "object") return fallback;
-        val = val[p];
-      }
-      return typeof val === "string" ? val : fallback;
-    } catch {
-      return fallback;
-    }
+    return tr(keyPath, undefined, fallback);
   };
 
   // Scroll active target into view once when step changes
@@ -309,12 +299,10 @@ export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps
             </div>
             <div>
               <span className="text-[10px] font-bold tracking-wider uppercase text-[#3DDBA9]">
-                {badgeText || (language === "gu" ? "માર્ગદર્શિત ટૂર" : "Interactive Tour")}
+                {badgeText || tr("spotlight.interactiveTour")}
               </span>
               <div className="text-[11px] font-semibold text-slate-300">
-                {language === "gu"
-                  ? `પગલું ${tutorialStep + 1} / ${steps.length}`
-                  : `Step ${tutorialStep + 1} of ${steps.length}`}
+                {tr("spotlight.stepCounter", { current: tutorialStep + 1, total: steps.length })}
               </div>
             </div>
           </div>
@@ -323,7 +311,7 @@ export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps
             type="button"
             onClick={closeTutorial}
             className="p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-            aria-label={language === "gu" ? "ટૂર બંધ કરો" : "Close tour"}
+            aria-label={tr("spotlight.closeAria")}
           >
             <X className="w-4 h-4" />
           </button>
@@ -342,9 +330,7 @@ export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps
           <div className="mt-2.5 p-2.5 rounded-2xl bg-white/5 border border-white/10 flex items-start gap-2 text-[11px] text-amber-200/90 leading-snug">
             <Lightbulb className="w-4 h-4 text-amber-300 shrink-0 mt-0.5" aria-hidden="true" />
             <span>
-              {language === "gu"
-                ? "શિક્ષાબોટ ટિપ: તમે ઉપરના ટૂલબારમાંથી અથવા 'Esc' દબાવીને આ ટૂર ગમે ત્યારે ફરી જોઈ શકો છો."
-                : "ShikshaBot tip: You can replay this guided walkthrough anytime from the top bar or press 'Esc' to exit."}
+              {tr("spotlight.tip")}
             </span>
           </div>
         </div>
@@ -373,8 +359,8 @@ export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps
                 onClick={handleBack}
                 className="px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer flex items-center gap-1 min-h-[38px]"
               >
-                <ChevronLeft className="w-3.5 h-3.5" />
-                <span>{language === "gu" ? "પાછળ" : "Back"}</span>
+                <ChevronLeft className="w-3.5 h-3.5 rtl:rotate-180" />
+                <span>{tr("spotlight.back")}</span>
               </button>
             )}
 
@@ -386,13 +372,9 @@ export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps
               <span>
                 {isLast
                   ? currentStep.ctaTextKey
-                    ? resolveText(currentStep.ctaTextKey, "Finish Tour")
-                    : language === "gu"
-                    ? "સમાપ્ત કરો"
-                    : "Finish Tour"
-                  : language === "gu"
-                  ? "આગળ"
-                  : "Next"}
+                    ? resolveText(currentStep.ctaTextKey, tr("spotlight.finish"))
+                    : tr("spotlight.finish")
+                  : tr("spotlight.next")}
               </span>
               {isLast ? (
                 <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />

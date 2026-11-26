@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
+import { LanguageSelector } from "@/components/shared/LanguageSelector";
 import { useAuth } from "@/context/AuthContext";
 import { broadcastDataUpdate } from "@/lib/events";
 import {
@@ -40,7 +41,8 @@ interface AiWorkspaceViewProps {
 
 export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWorkspaceViewProps) {
   const searchParams = useSearchParams();
-  const { language, setLanguage } = useLanguage();
+  const { t, tr, language, formatSubject, formatClass, formatStatus, formatPriority } = useLanguage();
+  const ai = t.ai;
   const { user, role } = useAuth();
 
   const queryTab = (searchParams?.get("tab") as AiTab) || defaultTab;
@@ -103,9 +105,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
   // -------------------------------------------------------------
   // TAB 1: AI TUTOR STATE
   // -------------------------------------------------------------
-  const [tutorQuery, setTutorQuery] = useState(
-    "My Class 4 students are struggling with division. How can I teach equal sharing?"
-  );
+  const [tutorQuery, setTutorQuery] = useState(ai.tutorChip1);
   const [tutorGrade, setTutorGrade] = useState<number>(4);
   const [tutorSubject, setTutorSubject] = useState("Mathematics");
   const [tutorLoading, setTutorLoading] = useState(false);
@@ -148,10 +148,10 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
           isLive: data.isAiGenerated,
         });
       } else {
-        setTutorError(data.error || "Failed to generate AI tutor explanation.");
+        setTutorError(data.error || ai.errTutorGen);
       }
     } catch {
-      setTutorError("Network error contacting AI Tutor service.");
+      setTutorError(ai.errTutorNet);
     } finally {
       setTutorLoading(false);
     }
@@ -197,7 +197,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           studentId: selectedStudentId,
-          studentName: student?.displayName || "Student",
+          studentName: student?.displayName || ai.defaultStudentLabel,
           studentClass: analyzerClass,
           subject: analyzerSubject,
           conceptName: analyzerConcept,
@@ -217,10 +217,10 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
           isLive: data.analysis.isAiGenerated,
         });
       } else {
-        setAnalyzerError(data.error || "Failed to analyze student gap.");
+        setAnalyzerError(data.error || ai.errGapGen);
       }
     } catch {
-      setAnalyzerError("Network error contacting AI Gap Analyzer.");
+      setAnalyzerError(ai.errGapNet);
     } finally {
       setAnalyzerLoading(false);
     }
@@ -266,7 +266,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           studentId: remStudentId,
-          studentName: student?.displayName || "Student",
+          studentName: student?.displayName || ai.defaultStudentLabel,
           conceptId: remConceptId,
           conceptName: remConceptName,
           subjectCode: remSubject,
@@ -287,10 +287,10 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
           rawGenerated: data.rawGenerated,
         });
       } else {
-        setRemError(data.error || "Failed to generate AI remedial plan.");
+        setRemError(data.error || ai.errRemGen);
       }
     } catch {
-      setRemError("Network error contacting AI Remedial Plan service.");
+      setRemError(ai.errRemNet);
     } finally {
       setRemLoading(false);
     }
@@ -355,7 +355,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
           language,
           questionType: wsType,
           studentName: targetStudent?.displayName,
-          studentGapContext: targetGap?.reason || (wsPersonalize ? "Needs division support" : undefined),
+          studentGapContext: targetGap?.reason || (wsPersonalize ? ai.defaultGapContext : undefined),
         }),
       });
       const data = await res.json();
@@ -368,10 +368,10 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
           note: data.note,
         });
       } else {
-        setWsError(data.error || "Failed to generate worksheet.");
+        setWsError(data.error || ai.errWsGen);
       }
     } catch {
-      setWsError("Network error generating worksheet.");
+      setWsError(ai.errWsNet);
     } finally {
       setWsLoading(false);
     }
@@ -382,14 +382,12 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
   // -------------------------------------------------------------
   const [assistantInput, setAssistantInput] = useState("");
   const [assistantMessages, setAssistantMessages] = useState<
-    { role: "user" | "assistant"; content: string; isAiGenerated?: boolean; modelUsed?: string }[]
+    { role: "user" | "assistant"; content: string; isWelcome?: boolean; isAiGenerated?: boolean; modelUsed?: string }[]
   >([
     {
       role: "assistant",
-      content:
-        language === "gu"
-          ? "નમસ્તે! હું StudySaathi પ્રાથમિક શિક્ષક સહાયક છું. હું આપને પાયાની સંકલ્પનાઓ શીખવવામાં, ઉપચારાત્મક પ્રવૃત્તિઓ ગોઠવવામાં અને વર્ગખંડના શિક્ષણ ત્રુટિ ડેટાનું વિશ્લેષણ કરવામાં મદદ કરી શકું છું. આપ શું પૂછવા માંગો છો?"
-          : "Hello! I am your StudySaathi Primary Teacher AI Assistant. I can help you with foundational FLN concepts, manipulative-based remedial plans, worksheet ideas, or summarizing your classroom's latest assessment gaps. How can I support your teaching today?",
+      content: ai.wsAssistantWelcome,
+      isWelcome: true,
     },
   ]);
   const [assistantLoading, setAssistantLoading] = useState(false);
@@ -430,7 +428,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
           ...newMessages,
           {
             role: "assistant",
-            content: "Sorry, I encountered an issue processing your request. Please try again.",
+            content: ai.errAssistantGen,
           },
         ]);
       }
@@ -439,7 +437,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
         ...newMessages,
         {
           role: "assistant",
-          content: "Network error communicating with the Teacher Assistant service.",
+          content: ai.errAssistantNet,
         },
       ]);
     } finally {
@@ -458,16 +456,14 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                 <Sparkles className="w-5 h-5 animate-pulse" />
               </span>
               <span className="text-xs font-mono font-bold uppercase tracking-[0.2em] text-[#B26A1B]">
-                StudySaathi AI Intelligence Hub
+                {ai.hubBadge}
               </span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight mt-2 text-[#49352F]">
-              {language === "gu" ? "StudySaathi ઇન્ટરેક્ટિવ AI વર્કસ્પેસ" : "Functional AI Workspace"}
+              {ai.wsHeading}
             </h2>
             <p className="text-xs sm:text-sm text-[#7A6862] mt-1 max-w-2xl leading-relaxed">
-              {language === "gu"
-                ? "વાસ્તવિક શૈક્ષણિક AI ક્ષમતાઓ: શિક્ષા ટ્યુટર, ત્રુટિ વિશ્લેષક, ઉપચાર યોજના જનરેટર અને સ્માર્ટ વર્કશીટ નિર્માતા."
-                : "Fully functional pedagogical AI capabilities: AI Tutor, Learning-Gap Analyzer, Remedial Plan Generator, Worksheet Creator, and Teacher Assistant."}
+              {ai.wsSubtitle}
             </p>
           </div>
 
@@ -481,8 +477,8 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
               }`}
               title={
                 aiStatus.isLive
-                  ? "Live external model connection active."
-                  : "No external key configured (GEMINI_API_KEY). Transparent offline pedagogical fallback active."
+                  ? ai.aiStatusLiveTooltip
+                  : ai.aiStatusOfflineTooltip
               }
             >
               <span
@@ -492,35 +488,12 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
               />
               <span>
                 {aiStatus.isLive
-                  ? `Live AI: ${aiStatus.model || "Gemini"}`
-                  : "Offline Pedagogical Fallback"}
+                  ? tr("ai.aiStatusLiveLabel", { model: aiStatus.model || "Gemini" })
+                  : ai.aiStatusOfflineLabel}
               </span>
             </div>
 
-            <div className="flex items-center rounded-xl bg-white border border-[#49352F]/15 p-1 text-xs shadow-xs">
-              <button
-                type="button"
-                onClick={() => setLanguage("en")}
-                className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
-                  language === "en"
-                    ? "bg-[#F2CAB3] text-[#49352F] shadow-xs border border-[#49352F]/15"
-                    : "text-[#7A6862] hover:text-[#49352F]"
-                }`}
-              >
-                English
-              </button>
-              <button
-                type="button"
-                onClick={() => setLanguage("gu")}
-                className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
-                  language === "gu"
-                    ? "bg-[#F2CAB3] text-[#49352F] shadow-xs border border-[#49352F]/15"
-                    : "text-[#7A6862] hover:text-[#49352F]"
-                }`}
-              >
-                ગુજરાતી
-              </button>
-            </div>
+            <LanguageSelector variant="default" />
           </div>
         </div>
 
@@ -536,7 +509,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
             }`}
           >
             <GraduationCap className="w-4 h-4 text-[#B26A1B]" />
-            <span>{language === "gu" ? "૧. AI ટ્યુટર" : "1. AI Tutor"}</span>
+            <span>{ai.wsTabTutor}</span>
           </button>
 
           <button
@@ -549,7 +522,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
             }`}
           >
             <AlertTriangle className="w-4 h-4 text-[#C54738]" />
-            <span>{language === "gu" ? "૨. અધ્યયન ત્રુટિ વિશ્લેષક" : "2. Learning-Gap Analyzer"}</span>
+            <span>{ai.wsTabAnalyzer}</span>
           </button>
 
           <button
@@ -562,7 +535,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
             }`}
           >
             <ClipboardList className="w-4 h-4 text-[#2E7D5E]" />
-            <span>{language === "gu" ? "૩. ઉપચાર યોજના નિર્માતા" : "3. Remedial Plan Generator"}</span>
+            <span>{ai.wsTabRemedial}</span>
           </button>
 
           <button
@@ -575,7 +548,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
             }`}
           >
             <FileSpreadsheet className="w-4 h-4 text-[#B26A1B]" />
-            <span>{language === "gu" ? "૪. વર્કશીટ નિર્માતા" : "4. Worksheet Generator"}</span>
+            <span>{ai.wsTabWorksheet}</span>
           </button>
 
           <button
@@ -588,7 +561,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
             }`}
           >
             <Bot className="w-4 h-4 text-[#2E7D5E]" />
-            <span>{language === "gu" ? "૫. શિક્ષક સહાયક" : "5. Teacher Assistant"}</span>
+            <span>{ai.wsTabAssistant}</span>
           </button>
         </div>
       </div>
@@ -603,10 +576,10 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
               <div>
                 <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                   <GraduationCap className="w-5 h-5 text-indigo-600" />
-                  <span>Primary Classroom AI Tutor</span>
+                  <span>{ai.tutorCardTitle}</span>
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Ask how to teach any primary concept using concrete manipulatives, child-friendly analogies, and 3 practice questions.
+                  {ai.tutorCardDesc}
                 </p>
               </div>
 
@@ -616,11 +589,9 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                   onChange={(e) => setTutorGrade(Number(e.target.value))}
                   className="rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-700"
                 >
-                  <option value={1}>Class 1</option>
-                  <option value={2}>Class 2</option>
-                  <option value={3}>Class 3</option>
-                  <option value={4}>Class 4</option>
-                  <option value={5}>Class 5</option>
+                  {[1, 2, 3, 4, 5].map((g) => (
+                    <option key={g} value={g}>{formatClass(g)}</option>
+                  ))}
                 </select>
 
                 <select
@@ -628,26 +599,24 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                   onChange={(e) => setTutorSubject(e.target.value)}
                   className="rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-700"
                 >
-                  <option value="Mathematics">Mathematics</option>
-                  <option value="English">English</option>
-                  <option value="Gujarati">Gujarati</option>
-                  <option value="EVS">EVS</option>
+                  <option value="Mathematics">{formatSubject("MATH")}</option>
+                  <option value="English">{formatSubject("ENG")}</option>
+                  <option value="Gujarati">{formatSubject("GUJ")}</option>
+                  <option value="EVS">{formatSubject("EVS")}</option>
                 </select>
               </div>
             </div>
 
             <div className="py-3">
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
-                Suggested Teacher Queries (Click to load):
+                {ai.suggestedQueriesLabel}
               </span>
               <div className="flex flex-wrap gap-2">
                 {[
-                  "My Class 4 students are struggling with division. How can I teach equal sharing?",
-                  "How can I teach fractions using rotis or paper folding in Class 4?",
-                  "How can I explain 2-digit subtraction with borrowing using matchstick bundles?",
-                  language === "gu"
-                    ? "ધોરણ ૪ માં ભાગાકારની સમાન વહેંચણી કાંકરા દ્વારા કેવી રીતે શીખવવી?"
-                    : "Engaging Gujarati vowel matras activity for Grade 3",
+                  ai.tutorChip1,
+                  ai.tutorChip2,
+                  ai.tutorChip3,
+                  ai.tutorChip4,
                 ].map((chip, idx) => (
                   <button
                     key={idx}
@@ -671,14 +640,14 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                   rows={3}
                   value={tutorQuery}
                   onChange={(e) => setTutorQuery(e.target.value)}
-                  placeholder="Enter your teaching question... e.g. 'My Class 4 students are struggling with division. How can I teach equal sharing?'"
+                  placeholder={ai.tutorTextareaPlaceholder}
                   className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 p-3.5 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-hidden transition-all"
                 />
               </div>
 
               <div className="flex items-center justify-between">
                 <span className="text-[11px] text-slate-400">
-                  Supports English & Gujarati • Aligned with Gujarat Primary Curriculum
+                  {ai.tutorCurriculumNote}
                 </span>
 
                 <button
@@ -689,12 +658,12 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                   {tutorLoading ? (
                     <>
                       <RotateCcw className="w-3.5 h-3.5 animate-spin" />
-                      <span>Generating Lesson Support...</span>
+                      <span>{ai.tutorGeneratingBtn}</span>
                     </>
                   ) : (
                     <>
                       <Send className="w-3.5 h-3.5" />
-                      <span>Ask AI Tutor</span>
+                      <span>{ai.askButton}</span>
                     </>
                   )}
                 </button>
@@ -715,11 +684,11 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800 text-[10px] font-bold">
-                      AI Pedagogical Lesson Guide
+                      {ai.tutorResultHeader}
                     </span>
                     {tutorMeta && (
                       <span className="text-[11px] text-slate-400 font-mono">
-                        {tutorMeta.isAiGenerated ? `Generated live via ${tutorMeta.modelUsed}` : "Offline Pedagogical Rule Engine"}
+                        {tutorMeta.isAiGenerated ? tr("ai.generatedLiveVia", { model: tutorMeta.modelUsed }) : ai.offlineRuleEngine}
                       </span>
                     )}
                   </div>
@@ -735,7 +704,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
                   >
                     {copiedId === "tutor" ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span>{copiedId === "tutor" ? "Copied" : "Copy"}</span>
+                    <span>{copiedId === "tutor" ? ai.copied : ai.copyResponse}</span>
                   </button>
                   <button
                     type="button"
@@ -743,7 +712,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition-colors cursor-pointer"
                   >
                     <Printer className="w-3.5 h-3.5" />
-                    <span>Print Guide</span>
+                    <span>{ai.printGuideBtn}</span>
                   </button>
                 </div>
               </div>
@@ -751,7 +720,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
               <div className="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-100 space-y-1">
                 <span className="text-xs font-bold uppercase tracking-wider text-indigo-900 flex items-center gap-1.5">
                   <BookOpen className="w-4 h-4 text-indigo-600" />
-                  <span>Child-Friendly Explanation (Primary Level)</span>
+                  <span>{ai.childFriendlyTitle}</span>
                 </span>
                 <p className="text-xs sm:text-sm text-slate-800 leading-relaxed font-medium">
                   {tutorResponse.simpleExplanation}
@@ -761,7 +730,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
               <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-100 space-y-1">
                 <span className="text-xs font-bold uppercase tracking-wider text-emerald-900 flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  <span>Concrete Classroom Demonstration (Low-Cost TLM)</span>
+                  <span>{ai.concreteDemoTitle}</span>
                 </span>
                 <p className="text-xs sm:text-sm text-slate-800 leading-relaxed">
                   {tutorResponse.classroomExample}
@@ -770,7 +739,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
 
               <div className="space-y-3">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-500 block">
-                  Step-by-Step Teaching Sequence:
+                  {ai.stepByStepTitle}
                 </span>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {tutorResponse.stepByStepActivity?.map((step: any, i: number) => (
@@ -788,7 +757,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                         {step.durationMinutes && (
                           <span className="inline-flex items-center gap-1 text-[10px] text-slate-400 font-normal">
                             <Clock className="w-3 h-3 text-slate-400" aria-hidden="true" />
-                            <span>{step.durationMinutes}m</span>
+                            <span>{tr("ai.minutesShort", { min: step.durationMinutes })}</span>
                           </span>
                         )}
                       </div>
@@ -802,7 +771,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
 
               <div className="space-y-3 pt-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-500 block">
-                  Three Progressive Practice Questions:
+                  {ai.practiceQuestionsTitle}
                 </span>
                 <div className="space-y-3">
                   {tutorResponse.practiceQuestions?.map((pq: any, idx: number) => {
@@ -815,7 +784,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                         <div className="flex items-start justify-between gap-3">
                           <div className="space-y-1 flex-1">
                             <span className="text-xs font-bold text-indigo-700">
-                              Question {pq.questionNumber || idx + 1}:
+                              {tr("ai.questionNumLabel", { num: pq.questionNumber || idx + 1 })}
                             </span>
                             <p className="text-xs sm:text-sm font-semibold text-slate-900">
                               {pq.question}
@@ -828,7 +797,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                             }
                             className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 shrink-0 cursor-pointer"
                           >
-                            <span>{isExpanded ? "Hide Answer" : "Reveal Answer"}</span>
+                            <span>{isExpanded ? ai.hideAnswer : ai.revealAnswer}</span>
                             {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                           </button>
                         </div>
@@ -849,10 +818,10 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                         {isExpanded && (
                           <div className="p-3 rounded-xl bg-emerald-50/80 border border-emerald-200 text-xs space-y-1 animate-fadeIn">
                             <div className="font-bold text-emerald-900">
-                              Correct Answer: <span className="font-semibold">{pq.answer}</span>
+                              {ai.correctAnswerLabel} <span className="font-semibold">{pq.answer}</span>
                             </div>
                             <p className="text-emerald-800">
-                              <strong>Explanation:</strong> {pq.explanation}
+                              <strong>{ai.explanationLabel}</strong> {pq.explanation}
                             </p>
                           </div>
                         )}
@@ -866,7 +835,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                 <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200 text-xs text-amber-900">
                   <span className="font-bold flex items-center gap-1.5 mb-1">
                     <HelpCircle className="w-4 h-4 text-amber-600" />
-                    <span>Actionable Teacher Pedagogy Tip:</span>
+                    <span>{ai.pedagogyTipLabel}</span>
                   </span>
                   <p>{tutorResponse.teacherPedagogyTip}</p>
                 </div>
@@ -885,16 +854,16 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
             <div>
               <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5 text-amber-500" />
-                <span>AI Learning-Gap Diagnostic Analyzer</span>
+                <span>{ai.analyzerCardTitle}</span>
               </h3>
               <p className="text-xs text-slate-500 mt-0.5">
-                Input student assessment evidence to calculate deterministic scores and trigger AI-guided pedagogical gap explanations without medical or subjective labeling.
+                {ai.analyzerCardDesc}
               </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-slate-100">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Select Student</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">{ai.selectStudentLabel}</label>
                 <select
                   value={selectedStudentId}
                   onChange={(e) => handleStudentSelect(e.target.value)}
@@ -902,33 +871,33 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                 >
                   {students.map((s) => (
                     <option key={s.id} value={s.id}>
-                      {s.displayName} (Class {s.grade}-{s.section})
+                      {s.displayName} ({formatClass(s.grade, s.section)})
                     </option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Subject</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">{ai.subjectLabel}</label>
                 <select
                   value={analyzerSubject}
                   onChange={(e) => setAnalyzerSubject(e.target.value)}
                   className="w-full rounded-xl border border-slate-200 p-2 text-xs font-semibold text-slate-900 focus:border-indigo-500 outline-hidden"
                 >
-                  <option value="MATH">Mathematics (ગણિત)</option>
-                  <option value="ENG">English (અંગ્રેજી)</option>
-                  <option value="GUJ">Gujarati (ગુજરાતી)</option>
-                  <option value="EVS">EVS (પર્યાવરણ)</option>
+                  <option value="MATH">{formatSubject("MATH")}</option>
+                  <option value="ENG">{formatSubject("ENG")}</option>
+                  <option value="GUJ">{formatSubject("GUJ")}</option>
+                  <option value="EVS">{formatSubject("EVS")}</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Target Concept Evaluated</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">{ai.targetConceptLabel}</label>
                 <input
                   type="text"
                   value={analyzerConcept}
                   onChange={(e) => setAnalyzerConcept(e.target.value)}
-                  placeholder="e.g. Division Basics & Equal Sharing"
+                  placeholder={ai.targetConceptPlaceholder}
                   className="w-full rounded-xl border border-slate-200 p-2 text-xs font-semibold text-slate-900 focus:border-indigo-500 outline-hidden"
                 />
               </div>
@@ -936,7 +905,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Marks Obtained</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">{ai.marksObtainedLabel}</label>
                 <input
                   type="number"
                   min="0"
@@ -948,7 +917,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Maximum Marks</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">{ai.maxMarksLabel}</label>
                 <input
                   type="number"
                   min="1"
@@ -962,20 +931,20 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Teacher Observations / Specific Errors Recorded:
+                {ai.teacherObsLabel}
               </label>
               <textarea
                 rows={2}
                 value={teacherObs}
                 onChange={(e) => setTeacherObs(e.target.value)}
-                placeholder="Record observations, e.g. 'Struggled with Q3 word problem dividing 15 laddus into 3 boxes. Confused division with subtraction.'"
+                placeholder={ai.teacherObsPlaceholder}
                 className="w-full rounded-xl border border-slate-200 p-2.5 text-xs text-slate-900 focus:border-indigo-500 outline-hidden"
               />
             </div>
 
             <div className="flex items-center justify-between pt-2">
               <div className="text-[11px] text-slate-400">
-                Deterministic thresholds: <strong>Mastered (&ge;80%)</strong> • <strong>Developing (60-79%)</strong> • <strong>Needs Support (&lt;60%)</strong>
+                {ai.thresholdsNotePrefix} <strong>{ai.thresholdMastered}</strong> • <strong>{ai.thresholdDeveloping}</strong> • <strong>{ai.thresholdNeedsSupport}</strong>
               </div>
 
               <button
@@ -987,12 +956,12 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                 {analyzerLoading ? (
                   <>
                     <RotateCcw className="w-3.5 h-3.5 animate-spin" />
-                    <span>Analyzing Assessment Evidence...</span>
+                    <span>{ai.analyzingBtn}</span>
                   </>
                 ) : (
                   <>
                     <Sparkles className="w-3.5 h-3.5" />
-                    <span>Analyze Learning Gap</span>
+                    <span>{ai.analyzeBtn}</span>
                   </>
                 )}
               </button>
@@ -1010,7 +979,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
               <div className="p-4 rounded-2xl bg-slate-900 text-white space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-mono uppercase tracking-wider text-cyan-400 font-bold">
-                    Deterministic Mathematical Calculation
+                    {ai.deterministicCalcLabel}
                   </span>
                   <span
                     className={`text-xs px-2.5 py-0.5 rounded-full font-bold ${
@@ -1021,8 +990,8 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                         : "bg-rose-500/20 text-rose-300 border border-rose-500/40"
                     }`}
                   >
-                    {analyzerResult.deterministicMetrics.masteryStatus} (
-                    {analyzerResult.deterministicMetrics.priority} Priority)
+                    {formatStatus(analyzerResult.deterministicMetrics.masteryStatus)} (
+                    {formatPriority(analyzerResult.deterministicMetrics.priority)} {ai.prioritySuffix})
                   </span>
                 </div>
 
@@ -1032,10 +1001,10 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                   </span>
                   <span className="text-xs text-slate-300">
                     ({analyzerResult.deterministicMetrics.marksObtained} /{" "}
-                    {analyzerResult.deterministicMetrics.maximumMarks} marks)
+                    {analyzerResult.deterministicMetrics.maximumMarks} {ai.marksUnit})
                   </span>
                   <span className="text-xs text-slate-400 ml-auto hidden sm:inline">
-                    Threshold Rule: {analyzerResult.deterministicMetrics.operationalThresholdApplied}
+                    {ai.thresholdRuleLabel} {analyzerResult.deterministicMetrics.operationalThresholdApplied}
                   </span>
                 </div>
               </div>
@@ -1044,17 +1013,17 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                 <div className="flex items-center justify-between">
                   <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-indigo-600" />
-                    <span>Evidence-Based Pedagogical Diagnosis</span>
+                    <span>{ai.pedagogicalDiagHeading}</span>
                   </h3>
                   <span className="text-[11px] text-slate-400 font-mono">
                     {analyzerResult.isAiGenerated
-                      ? `Live AI: ${analyzerResult.modelUsed}`
-                      : "Deterministic Gujarat Primary Pedagogical Rules"}
+                      ? tr("ai.aiStatusLiveLabel", { model: analyzerResult.modelUsed })
+                      : ai.deterministicRulesLabel}
                   </span>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-1">
-                  <span className="font-bold text-slate-800 block">Observable Assessment Evidence:</span>
+                  <span className="font-bold text-slate-800 block">{ai.observableEvidenceLabel}</span>
                   <p className="text-slate-700 leading-relaxed">
                     {analyzerResult.aiPedagogicalDiagnosis.evidenceSummary}
                   </p>
@@ -1062,7 +1031,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
 
                 <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200 text-xs space-y-1">
                   <span className="font-bold text-amber-900 block">
-                    Underlying Conceptual Misconception:
+                    {ai.underlyingMisconceptionLabel}
                   </span>
                   <p className="text-amber-800 leading-relaxed">
                     {analyzerResult.aiPedagogicalDiagnosis.underlyingMisconception}
@@ -1071,7 +1040,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
 
                 {analyzerResult.aiPedagogicalDiagnosis.prerequisiteGapsIdentified?.length > 0 && (
                   <div className="space-y-1 text-xs">
-                    <span className="font-bold text-slate-700">Identified Prerequisite Gaps:</span>
+                    <span className="font-bold text-slate-700">{ai.prereqGapsLabel}</span>
                     <div className="flex flex-wrap gap-1.5 pt-1">
                       {analyzerResult.aiPedagogicalDiagnosis.prerequisiteGapsIdentified.map(
                         (gapItem: string, idx: number) => (
@@ -1089,7 +1058,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
 
                 <div className="space-y-2 pt-2">
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-500 block">
-                    Recommended Classroom Remedial Interventions:
+                    {ai.recommendedInterventionsLabel}
                   </span>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {analyzerResult.aiPedagogicalDiagnosis.recommendedRemedialActivities?.map(
@@ -1102,7 +1071,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                           <p className="text-slate-600">{act.description}</p>
                           <span className="inline-flex items-center gap-1 text-[11px] text-slate-500 pt-1">
                             <Package className="w-3.5 h-3.5 text-indigo-500 shrink-0" aria-hidden="true" />
-                            <span><strong>Materials:</strong> {act.concreteMaterials}</span>
+                            <span><strong>{ai.materialsLabel}</strong> {act.concreteMaterials}</span>
                           </span>
                         </div>
                       )
@@ -1112,13 +1081,13 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
 
                 <div className="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
-                    <span className="font-bold text-indigo-950 block">Suggested Reassessment:</span>
+                    <span className="font-bold text-indigo-950 block">{ai.suggestedReassessmentLabel}</span>
                     <p className="text-indigo-800 mt-0.5">
-                      {analyzerResult.aiPedagogicalDiagnosis.suggestedReassessmentMethod?.format} (within{" "}
-                      {analyzerResult.aiPedagogicalDiagnosis.suggestedReassessmentMethod?.timelineDays} days).
+                      {analyzerResult.aiPedagogicalDiagnosis.suggestedReassessmentMethod?.format} (
+                      {tr("ai.withinDays", { days: analyzerResult.aiPedagogicalDiagnosis.suggestedReassessmentMethod?.timelineDays })}).
                     </p>
                     <span className="text-[11px] text-indigo-600 block mt-0.5">
-                      Mastery Criterion:{" "}
+                      {ai.masteryCriterionLabel}{" "}
                       {analyzerResult.aiPedagogicalDiagnosis.suggestedReassessmentMethod?.masteryCriterion}
                     </span>
                   </div>
@@ -1135,7 +1104,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                     }}
                     className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-xs transition-colors cursor-pointer shrink-0"
                   >
-                    <span>Generate AI Remedial Plan →</span>
+                    <span>{ai.generateRemedialFromGapBtn} <span className="rtl:inline-block rtl:rotate-180">→</span></span>
                   </button>
                 </div>
 
@@ -1159,10 +1128,10 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
               <div>
                 <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                   <ClipboardList className="w-5 h-5 text-purple-600" />
-                  <span>AI Remedial Plan Generator</span>
+                  <span>{ai.remCardTitle}</span>
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Generate an authentic 5-step remedial curriculum for Gujarat primary schools using the student&apos;s actual assessment results.
+                  {ai.remCardDesc}
                 </p>
               </div>
 
@@ -1174,7 +1143,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                 >
                   {students.map((s) => (
                     <option key={s.id} value={s.id}>
-                      {s.displayName} (Class {s.grade}-{s.section})
+                      {s.displayName} ({formatClass(s.grade, s.section)})
                     </option>
                   ))}
                 </select>
@@ -1183,7 +1152,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Concept to Remediate</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">{ai.remConceptLabel}</label>
                 <input
                   type="text"
                   value={remConceptName}
@@ -1193,21 +1162,21 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Subject Code</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">{ai.remSubjectCodeLabel}</label>
                 <select
                   value={remSubject}
                   onChange={(e) => setRemSubject(e.target.value)}
                   className="w-full rounded-xl border border-slate-200 p-2 text-xs font-semibold text-slate-900"
                 >
-                  <option value="MATH">MATH (Mathematics)</option>
-                  <option value="ENG">ENG (English)</option>
-                  <option value="GUJ">GUJ (Gujarati)</option>
-                  <option value="EVS">EVS (Environmental Studies)</option>
+                  <option value="MATH">{formatSubject("MATH")}</option>
+                  <option value="ENG">{formatSubject("ENG")}</option>
+                  <option value="GUJ">{formatSubject("GUJ")}</option>
+                  <option value="EVS">{formatSubject("EVS")}</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Recent Baseline Score (%)</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">{ai.remBaselineLabel}</label>
                 <input
                   type="number"
                   min="0"
@@ -1221,7 +1190,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Identified Conceptual Gap / Evidence:
+                {ai.remGapEvidenceLabel}
               </label>
               <textarea
                 rows={2}
@@ -1233,7 +1202,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
 
             <div className="flex items-center justify-between pt-2">
               <span className="text-[11px] text-slate-400">
-                Targeted for Gujarat Primary Schools • Generates 5 Steps + Low-Cost TLM + Practice Questions
+                {ai.remScopeNote}
               </span>
 
               <button
@@ -1245,12 +1214,12 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                 {remLoading ? (
                   <>
                     <RotateCcw className="w-3.5 h-3.5 animate-spin" />
-                    <span>Generating Plan...</span>
+                    <span>{ai.remGeneratingBtn}</span>
                   </>
                 ) : (
                   <>
                     <Sparkles className="w-3.5 h-3.5" />
-                    <span>Generate AI Remedial Plan</span>
+                    <span>{ai.remGenerateBtn}</span>
                   </>
                 )}
               </button>
@@ -1269,10 +1238,10 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800 text-[10px] font-bold">
-                      Remedial Action Plan
+                      {ai.remActionPlanBadge}
                     </span>
                     <span className="text-xs text-slate-400">
-                      Student: <strong>{remPlan.studentName}</strong> (Class 4-A)
+                      {ai.remStudentLabel} <strong>{remPlan.studentName}</strong> ({formatClass(remPlan.grade || 4, remPlan.section)})
                     </span>
                   </div>
                   <h3 className="text-xl font-black text-slate-900 mt-1">
@@ -1290,10 +1259,10 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                     <Save className="w-3.5 h-3.5" aria-hidden="true" />
                     <span>
                       {remSaveStatus === "saving"
-                        ? "Saving..."
+                        ? ai.remSavingBtn
                         : remSaveStatus === "saved"
-                        ? "Saved to Database"
-                        : "Save to Remedial Plans"}
+                        ? ai.remSavedBtn
+                        : ai.remSaveBtn}
                     </span>
                   </button>
 
@@ -1303,26 +1272,26 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                     className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
                   >
                     <Printer className="w-3.5 h-3.5" />
-                    <span>Print Plan</span>
+                    <span>{ai.printPlanBtn}</span>
                   </button>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="p-4 rounded-2xl bg-purple-50/70 border border-purple-100 text-xs space-y-1">
-                  <span className="font-bold text-purple-950 block">Target Learning Objective:</span>
+                  <span className="font-bold text-purple-950 block">{ai.targetObjectiveLabel}</span>
                   <p className="text-purple-900 leading-relaxed">{remPlan.learningObjective}</p>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-100 text-xs space-y-1">
-                  <span className="font-bold text-indigo-950 block">Identified Gap & Need:</span>
+                  <span className="font-bold text-indigo-950 block">{ai.identifiedNeedLabel}</span>
                   <p className="text-indigo-900 leading-relaxed">{remPlan.recommendationReason}</p>
                 </div>
               </div>
 
               <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-1">
                 <span className="font-bold text-slate-800 block">
-                  Low-Cost Materials (Local TLM):
+                  {ai.lowCostMaterialsLabel}
                 </span>
                 <div className="flex flex-wrap gap-2 pt-1">
                   {remPlan.requiredMaterials?.map((mat: string, idx: number) => (
@@ -1340,9 +1309,9 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                    5-Step Targeted Remedial Sequence (Total: {remPlan.estimatedMinutes} mins):
+                    {tr("ai.fiveStepSeqLabel", { minutes: remPlan.estimatedMinutes })}
                   </span>
-                  <span className="text-xs text-slate-400">Editable by Teacher</span>
+                  <span className="text-xs text-slate-400">{ai.editableByTeacher}</span>
                 </div>
 
                 <div className="space-y-2.5">
@@ -1360,7 +1329,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                         </span>
                         <span className="inline-flex items-center gap-1 text-slate-400 font-normal">
                           <Clock className="w-3 h-3 text-slate-400" aria-hidden="true" />
-                          <span>{step.durationMinutes} mins</span>
+                          <span>{tr("ai.minutesFull", { min: step.durationMinutes })}</span>
                         </span>
                       </div>
                       <p className="text-slate-600 pl-7 leading-relaxed">{step.description}</p>
@@ -1372,14 +1341,14 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                 <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200">
                   <span className="font-bold text-amber-950 block mb-1">
-                    Reassessment Method & Mastery Criteria:
+                    {ai.reassessCriteriaLabel}
                   </span>
                   <p className="text-amber-900">{remPlan.reassessmentCriteria}</p>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200">
                   <span className="font-bold text-emerald-950 block mb-1">
-                    Teacher Pedagogical Advice:
+                    {ai.teacherAdviceLabel}
                   </span>
                   <p className="text-emerald-900">{remPlan.teacherInstructions}</p>
                 </div>
@@ -1399,96 +1368,93 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
               <div>
                 <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                   <FileSpreadsheet className="w-5 h-5 text-emerald-600" />
-                  <span>AI Classroom Worksheet & Practice Generator</span>
+                  <span>{ai.wsCardTitle}</span>
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Generate printable primary worksheets with step-by-step answer keys and optional personalized gap alignment.
+                  {ai.wsCardDesc}
                 </p>
               </div>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Class Grade</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">{ai.classGradeLabel}</label>
                 <select
                   value={wsGrade}
                   onChange={(e) => setWsGrade(Number(e.target.value))}
                   className="w-full rounded-xl border border-slate-200 p-2 text-xs font-semibold text-slate-900"
                 >
-                  <option value={1}>Class 1</option>
-                  <option value={2}>Class 2</option>
-                  <option value={3}>Class 3</option>
-                  <option value={4}>Class 4</option>
-                  <option value={5}>Class 5</option>
+                  {[1, 2, 3, 4, 5].map((g) => (
+                    <option key={g} value={g}>{formatClass(g)}</option>
+                  ))}
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Subject</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">{ai.subjectLabel}</label>
                 <select
                   value={wsSubject}
                   onChange={(e) => setWsSubject(e.target.value)}
                   className="w-full rounded-xl border border-slate-200 p-2 text-xs font-semibold text-slate-900"
                 >
-                  <option value="MATH">Mathematics</option>
-                  <option value="ENG">English</option>
-                  <option value="GUJ">Gujarati</option>
-                  <option value="EVS">EVS</option>
+                  <option value="MATH">{formatSubject("MATH")}</option>
+                  <option value="ENG">{formatSubject("ENG")}</option>
+                  <option value="GUJ">{formatSubject("GUJ")}</option>
+                  <option value="EVS">{formatSubject("EVS")}</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Difficulty</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">{ai.difficultyLabel}</label>
                 <select
                   value={wsDifficulty}
                   onChange={(e) => setWsDifficulty(e.target.value as any)}
                   className="w-full rounded-xl border border-slate-200 p-2 text-xs font-semibold text-slate-900"
                 >
-                  <option value="Easy">Easy (Foundational)</option>
-                  <option value="Medium">Medium (Grade-Level)</option>
-                  <option value="Challenging">Challenging</option>
+                  <option value="Easy">{ai.diffEasy}</option>
+                  <option value="Medium">{ai.diffMedium}</option>
+                  <option value="Challenging">{ai.diffChallenging}</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Question Count</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">{ai.questionCountLabel}</label>
                 <select
                   value={wsCount}
                   onChange={(e) => setWsCount(Number(e.target.value))}
                   className="w-full rounded-xl border border-slate-200 p-2 text-xs font-semibold text-slate-900"
                 >
-                  <option value={3}>3 Questions</option>
-                  <option value={5}>5 Questions</option>
-                  <option value={8}>8 Questions</option>
-                  <option value={10}>10 Questions</option>
+                  {[3, 5, 8, 10].map((c) => (
+                    <option key={c} value={c}>{tr("ai.nQuestions", { count: c })}</option>
+                  ))}
                 </select>
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Concept</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">{ai.conceptLabel}</label>
                 <input
                   type="text"
                   value={wsConcept}
                   onChange={(e) => setWsConcept(e.target.value)}
-                  placeholder="e.g. Division Basics & Equal Sharing"
+                  placeholder={ai.targetConceptPlaceholder}
                   className="w-full rounded-xl border border-slate-200 p-2 text-xs font-semibold text-slate-900"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Question Type</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">{ai.questionTypeLabel}</label>
                 <select
                   value={wsType}
                   onChange={(e) => setWsType(e.target.value)}
                   className="w-full rounded-xl border border-slate-200 p-2 text-xs font-semibold text-slate-900"
                 >
-                  <option value="mixed">Mixed (MCQ, Short Answer, Word Problem)</option>
-                  <option value="mcq">Multiple Choice Only</option>
-                  <option value="short_answer">Short Answer Only</option>
-                  <option value="word_problems">Word Problems Only</option>
-                  <option value="fill_blanks">Fill in the Blanks</option>
+                  <option value="mixed">{ai.qTypeMixed}</option>
+                  <option value="mcq">{ai.qTypeMcq}</option>
+                  <option value="short_answer">{ai.qTypeShort}</option>
+                  <option value="word_problems">{ai.qTypeWord}</option>
+                  <option value="fill_blanks">{ai.qTypeFill}</option>
                 </select>
               </div>
             </div>
@@ -1502,7 +1468,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                   className="rounded text-indigo-600 focus:ring-indigo-500"
                 />
                 <span className="font-semibold text-slate-800">
-                  Personalize worksheet based on student learning gap
+                  {ai.personalizeLabel}
                 </span>
               </label>
 
@@ -1514,7 +1480,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                 >
                   {students.map((s) => (
                     <option key={s.id} value={s.id}>
-                      Target: {s.displayName}
+                      {tr("ai.targetPrefix", { name: s.displayName })}
                     </option>
                   ))}
                 </select>
@@ -1523,7 +1489,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
 
             <div className="flex items-center justify-between pt-2">
               <span className="text-[11px] text-slate-400">
-                Formatted for clean A4 printing • Teacher answer key included
+                {ai.wsPrintNote}
               </span>
 
               <button
@@ -1535,12 +1501,12 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                 {wsLoading ? (
                   <>
                     <RotateCcw className="w-3.5 h-3.5 animate-spin" />
-                    <span>Generating Worksheet...</span>
+                    <span>{ai.wsGeneratingBtn}</span>
                   </>
                 ) : (
                   <>
                     <Sparkles className="w-3.5 h-3.5" />
-                    <span>Generate Printable Worksheet</span>
+                    <span>{ai.wsGenerateBtn}</span>
                   </>
                 )}
               </button>
@@ -1557,9 +1523,9 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-slate-700">Worksheet Generated:</span>
+                  <span className="text-xs font-bold text-slate-700">{ai.wsGeneratedLabel}</span>
                   <span className="text-xs bg-emerald-100 text-emerald-800 font-semibold px-2 py-0.5 rounded-full">
-                    {wsResult.questions?.length} Verified Questions
+                    {tr("ai.wsVerifiedQuestions", { count: wsResult.questions?.length || 0 })}
                   </span>
                 </div>
 
@@ -1569,7 +1535,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                     onClick={() => setShowAnswerKeys(!showAnswerKeys)}
                     className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
                   >
-                    {showAnswerKeys ? "Hide Answer Key" : "Show Answer Key & Solutions"}
+                    {showAnswerKeys ? ai.hideAnswerKey : ai.showAnswerKey}
                   </button>
                   <button
                     type="button"
@@ -1577,7 +1543,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                     className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs cursor-pointer"
                   >
                     <Printer className="w-3.5 h-3.5" />
-                    <span>Print Worksheet</span>
+                    <span>{ai.printWorksheetBtn}</span>
                   </button>
                 </div>
               </div>
@@ -1591,18 +1557,18 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                     {wsResult.worksheetTitle}
                   </h4>
                   <div className="flex flex-wrap items-center justify-center gap-4 text-xs font-semibold text-slate-600 pt-1">
-                    <span>Class: {wsResult.grade}-A</span>
-                    <span>Subject: {wsResult.subject}</span>
-                    <span>Concept: {wsResult.concept}</span>
-                    <span>Total Marks: {wsResult.totalMarks}</span>
-                    <span>Time: {wsResult.estimatedMinutes} mins</span>
+                    <span>{tr("ai.wsMetaClass", { grade: formatClass(wsResult.grade) })}</span>
+                    <span>{tr("ai.wsMetaSubject", { subject: formatSubject(wsResult.subject) })}</span>
+                    <span>{tr("ai.wsMetaConcept", { concept: wsResult.concept })}</span>
+                    <span>{tr("ai.wsMetaTotalMarks", { marks: wsResult.totalMarks })}</span>
+                    <span>{tr("ai.wsMetaTime", { minutes: wsResult.estimatedMinutes })}</span>
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between text-xs font-bold py-3 border-b border-slate-200">
-                  <div>Student Name: ___________________________________</div>
-                  <div>Roll No: _______</div>
-                  <div>Date: ____________</div>
+                  <div>{ai.wsStudentNameLine} ___________________________________</div>
+                  <div>{ai.wsRollNoLine} _______</div>
+                  <div>{ai.wsDateLine} ____________</div>
                 </div>
 
                 {wsResult.personalizedStudentNote && (
@@ -1613,7 +1579,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                 )}
 
                 <div className="py-3 text-xs text-slate-600 italic">
-                  <strong>Instructions:</strong> {wsResult.instructions}
+                  <strong>{ai.wsInstructionsLabel}</strong> {wsResult.instructions}
                 </div>
 
                 <div className="space-y-6 pt-2">
@@ -1621,11 +1587,11 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                     <div key={idx} className="space-y-2">
                       <div className="flex items-start justify-between gap-3 text-xs sm:text-sm">
                         <div className="font-semibold text-slate-900 flex-1">
-                          <span className="font-bold mr-1.5">Q{q.questionNumber || idx + 1}.</span>
+                          <span className="font-bold mr-1.5">{tr("ai.wsQuestionShort", { num: q.questionNumber || idx + 1 })}</span>
                           <span>{q.questionText}</span>
                         </div>
                         <span className="text-xs font-bold text-slate-400 shrink-0">
-                          [{q.marks || 2} Marks]
+                          {tr("ai.wsMarksBracket", { marks: q.marks || 2 })}
                         </span>
                       </div>
 
@@ -1647,10 +1613,10 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                       {showAnswerKeys && (
                         <div className="mt-2 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs space-y-1 print:hidden">
                           <div className="font-bold text-emerald-900">
-                            Answer Key: <span className="font-semibold">{q.answerKey}</span>
+                            {ai.wsAnswerKeyLabel} <span className="font-semibold">{q.answerKey}</span>
                           </div>
                           <div className="text-emerald-800">
-                            <strong>Step-by-Step Solution:</strong> {q.stepExplanation}
+                            <strong>{ai.wsStepSolutionLabel}</strong> {q.stepExplanation}
                           </div>
                         </div>
                       )}
@@ -1676,17 +1642,17 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                 </div>
                 <div>
                   <h3 className="font-bold text-sm text-slate-900">
-                    StudySaathi Teacher AI Assistant
+                    {ai.assistantHeaderTitle}
                   </h3>
                   <p className="text-[11px] text-slate-500">
-                    Pedagogical coaching, foundational lesson ideas, & authorized classroom telemetry
+                    {ai.assistantHeaderDesc}
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
                 <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-cyan-100 text-cyan-800 font-bold">
-                  {role === "admin" ? "Admin Access" : "Teacher Mode"}
+                  {role === "admin" ? ai.roleBadgeAdmin : ai.roleBadgeTeacher}
                 </span>
               </div>
             </div>
@@ -1716,11 +1682,11 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                           : "bg-white border border-slate-200 text-slate-800 rounded-tl-none shadow-xs space-y-2 whitespace-pre-line"
                       }`}
                     >
-                      {msg.content}
+                      {msg.isWelcome ? ai.wsAssistantWelcome : msg.content}
 
                       {!isUser && msg.modelUsed && (
                         <div className="pt-2 border-t border-slate-100 text-[10px] text-slate-400 font-mono">
-                          {msg.isAiGenerated ? `Generated live via ${msg.modelUsed}` : "Offline Pedagogical Rule Engine"}
+                          {msg.isAiGenerated ? tr("ai.generatedLiveVia", { model: msg.modelUsed }) : ai.offlineRuleEngine}
                         </div>
                       )}
                     </div>
@@ -1731,17 +1697,17 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
               {assistantLoading && (
                 <div className="flex items-center gap-2 text-xs text-slate-400 pl-10">
                   <RotateCcw className="w-3.5 h-3.5 animate-spin text-cyan-600" />
-                  <span>Analyzing classroom telemetry & pedagogical context...</span>
+                  <span>{ai.assistantAnalyzing}</span>
                 </div>
               )}
             </div>
 
             <div className="px-4 py-2 border-t border-slate-100 bg-white flex flex-wrap gap-2">
               {[
-                "Summarize all Class 4 learning gaps",
-                "How to introduce fractions using rotis or paper folding?",
-                "What remedial strategies work best for students scoring under 40%?",
-                "Suggest a quick 5-minute exit ticket for multiplication",
+                ai.assistantChip1,
+                ai.assistantChip2,
+                ai.assistantChip3,
+                ai.assistantChip4,
               ].map((chip, idx) => (
                 <button
                   key={idx}
@@ -1767,7 +1733,7 @@ export function AiWorkspaceView({ defaultTab = "tutor", embedded = false }: AiWo
                   type="text"
                   value={assistantInput}
                   onChange={(e) => setAssistantInput(e.target.value)}
-                  placeholder="Ask about remedial strategies, classroom TLM, or student gaps..."
+                  placeholder={ai.assistantInputPlaceholder}
                   className="flex-1 rounded-xl border border-slate-200 px-3.5 py-2 text-xs text-slate-900 placeholder-slate-400 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-hidden"
                 />
                 <button

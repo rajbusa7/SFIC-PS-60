@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Volume2, Play, Pause, Square, Loader2, Sparkles, AlertCircle } from "lucide-react";
 import type { SupportedLanguage } from "@/lib/types";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface AudioPlayerProps {
   text: string;
@@ -17,8 +18,11 @@ export function AudioPlayer({
   language,
   voice,
   className = "",
-  buttonLabel = "Listen",
+  buttonLabel,
 }: AudioPlayerProps) {
+  const { t, tr } = useLanguage();
+  const au = t.audio;
+  const resolvedLabel = buttonLabel ?? au.listenDefault;
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -139,20 +143,38 @@ export function AudioPlayer({
 
   const fallbackToBrowserSpeech = () => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) {
-      setError("Speech synthesis not supported in this browser.");
+      setError(au.ttsNotSupported);
       return;
     }
 
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    const langMap: Record<string, string> = {
+    const SPEECH_LOCALE_MAP: Record<string, string> = {
+      en: "en-IN",
       gu: "gu-IN",
       hi: "hi-IN",
-      en: "en-IN",
       mr: "mr-IN",
+      bn: "bn-IN",
+      pa: "pa-IN",
       ta: "ta-IN",
+      te: "te-IN",
+      kn: "kn-IN",
+      ml: "ml-IN",
+      as: "as-IN",
+      or: "or-IN",
+      ur: "ur-IN",
+      sa: "sa-IN",
+      ne: "ne-IN",
+      kok: "kok-IN",
+      mai: "mai-IN",
+      brx: "brx-IN",
+      doi: "doi-IN",
+      ks: "ks-IN",
+      mni: "mni-IN",
+      sat: "sat-IN",
+      sd: "sd-IN",
     };
-    utterance.lang = langMap[language] || "en-IN";
+    utterance.lang = SPEECH_LOCALE_MAP[language] || "en-IN";
     utterance.rate = 0.95;
 
     // Find native voice if available
@@ -171,7 +193,7 @@ export function AudioPlayer({
 
     utterance.onerror = (e) => {
       setIsPlaying(false);
-      setError(`Audio synthesis could not play: ${e.error}`);
+      setError(tr("audio.ttsPlayError", { error: e.error }));
     };
 
     window.speechSynthesis.speak(utterance);
@@ -188,23 +210,23 @@ export function AudioPlayer({
             ? "bg-[#49352F] text-[#FAF6E9] border-[#49352F]"
             : "bg-[#F4F1E1] hover:bg-[#F2CAB3]/50 text-[#49352F] border-[#49352F]/15 active:scale-95"
         }`}
-        title={`Listen to message in ${language.toUpperCase()}`}
-        aria-label={`${buttonLabel} audio in ${language}`}
+        title={tr("audio.listenTitle", { lang: language.toUpperCase() })}
+        aria-label={tr("audio.listenAria", { label: resolvedLabel, lang: language.toUpperCase() })}
       >
         {isLoading ? (
           <>
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            <span>Loading...</span>
+            <span>{au.loading}</span>
           </>
         ) : isPlaying ? (
           <>
             <Pause className="w-3.5 h-3.5 fill-current" />
-            <span>Pause</span>
+            <span>{au.pause}</span>
           </>
         ) : (
           <>
             <Volume2 className="w-3.5 h-3.5" />
-            <span>{buttonLabel}</span>
+            <span>{resolvedLabel}</span>
           </>
         )}
       </button>
@@ -214,8 +236,8 @@ export function AudioPlayer({
           type="button"
           onClick={handleStop}
           className="p-1 rounded-md text-[#49352F] hover:bg-[#49352F]/10 border border-[#49352F]/15 transition-colors cursor-pointer"
-          title="Stop playback"
-          aria-label="Stop audio"
+          title={au.stopTitle}
+          aria-label={au.stopAria}
         >
           <Square className="w-3 h-3 fill-current" />
         </button>

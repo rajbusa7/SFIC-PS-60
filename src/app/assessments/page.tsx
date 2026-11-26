@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 
 export default function AssessmentsPage() {
-  const { t, language, formatSubject, formatClass } = useLanguage();
+  const { t, formatSubject, formatClass } = useLanguage();
 
   const [assessments, setAssessments] = useState<any[]>([]);
   const [concepts, setConcepts] = useState<any[]>([]);
@@ -88,7 +88,7 @@ export default function AssessmentsPage() {
         <div className="flex items-center justify-between p-3 rounded-2xl bg-white/95 border border-[#49352F]/12 shadow-[0_4px_16px_rgba(73,53,47,0.04)]">
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-[#7A6862]">
-              {language === "gu" ? "વિષય દ્વારા ફિલ્ટર કરો:" : "Filter by Subject:"}
+              {t.assessments.filterBySubjectLabel}
             </span>
             <select
               value={subjectFilter}
@@ -96,7 +96,7 @@ export default function AssessmentsPage() {
               onChange={(e) => setSubjectFilter(e.target.value)}
               className="rounded-xl border border-[#49352F]/15 bg-[#FAF6E9] px-3 py-1.5 text-xs font-semibold text-[#49352F] outline-hidden cursor-pointer"
             >
-              <option value="all">{language === "gu" ? "બધા વિષયો" : "All Subjects"}</option>
+              <option value="all">{t.assessments.allSubjects}</option>
               <option value="MATH">{formatSubject("MATH")}</option>
               <option value="ENG">{formatSubject("ENG")}</option>
               <option value="GUJ">{formatSubject("GUJ")}</option>
@@ -104,7 +104,7 @@ export default function AssessmentsPage() {
             </select>
           </div>
           <span className="text-xs text-[#7A6862]">
-            {filteredAssessments.length} {language === "gu" ? "મૂલ્યાંકન રેકોર્ડ્સ" : "assessment records"}
+            {filteredAssessments.length} {t.assessments.recordsCountSuffix}
           </span>
         </div>
 
@@ -128,12 +128,8 @@ export default function AssessmentsPage() {
                       }`}
                     >
                       {asm.status === "published"
-                        ? language === "gu"
-                          ? "પ્રકાશિત અને વિશ્લેષિત"
-                          : "Published & Analyzed"
-                        : language === "gu"
-                        ? "ડ્રાફ્ટ"
-                        : "Draft"}
+                        ? t.assessments.publishedAnalyzed
+                        : t.assessments.draftStatus}
                     </span>
                   </div>
 
@@ -147,7 +143,7 @@ export default function AssessmentsPage() {
                       <span>{asm.assessmentDate}</span>
                     </span>
                     <span>
-                      {language === "gu" ? "કુલ ગુણ:" : "Max Marks:"}{" "}
+                      {t.assessments.maxMarksPrefix}{" "}
                       <strong className="text-[#49352F]">{asm.maxMarks}</strong>
                     </span>
                   </div>
@@ -155,7 +151,7 @@ export default function AssessmentsPage() {
                   {/* Concepts evaluated */}
                   <div className="mt-3 pt-3 border-t border-[#49352F]/10">
                     <span className="text-[11px] font-semibold text-[#7A6862] uppercase tracking-wider block mb-1">
-                      {language === "gu" ? "મૂલ્યાંકન કરાયેલ સંકલ્પનાઓ:" : "Target Concepts Assessed:"}
+                      {t.assessments.targetConceptsAssessed}
                     </span>
                     <div className="flex flex-wrap gap-1">
                       {conceptNames.map((name, idx) => (
@@ -176,8 +172,8 @@ export default function AssessmentsPage() {
                     href={`/students`}
                     className="inline-flex items-center gap-1 text-xs font-bold text-[#B26A1B] hover:text-[#49352F]"
                   >
-                    <span>{language === "gu" ? "વિદ્યાર્થી ગુણ જુઓ" : "View Student Scores"}</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <span>{t.assessments.viewStudentScores}</span>
+                    <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
                   </Link>
                 </div>
               </Card>

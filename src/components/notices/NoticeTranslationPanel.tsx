@@ -18,6 +18,7 @@ import {
 import { AudioPlayer } from "../audio/AudioPlayer";
 import type { SchoolNotice, NoticeTranslation, SupportedLanguage } from "@/lib/types";
 import { ALL_LANGUAGES } from "@/lib/i18n/registry";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface NoticeTranslationPanelProps {
   notice: SchoolNotice;
@@ -37,6 +38,8 @@ export function NoticeTranslationPanel({
   onTranslationUpdated,
   className = "",
 }: NoticeTranslationPanelProps) {
+  const { t, tr, formatClass } = useLanguage();
+  const no = t.notices;
   const [selectedLang, setSelectedLang] = useState<SupportedLanguage>("gu");
   const [isTranslating, setIsTranslating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -71,7 +74,7 @@ export function NoticeTranslationPanel({
 
       const data = await res.json();
       if (!res.ok || !data.success) {
-        throw new Error(data.error || "Translation failed.");
+        throw new Error(data.error || no.ntpErrTranslationFailed);
       }
 
       if (onTranslationUpdated) {
@@ -79,7 +82,7 @@ export function NoticeTranslationPanel({
       }
     } catch (err: any) {
       console.error("Translation error:", err);
-      setError(err.message || "Failed to generate translation.");
+      setError(err.message || no.ntpErrGenerateFailed);
     } finally {
       setIsTranslating(false);
     }
@@ -103,7 +106,7 @@ export function NoticeTranslationPanel({
 
       const data = await res.json();
       if (!res.ok || !data.success) {
-        throw new Error(data.error || "Failed to save edited translation.");
+        throw new Error(data.error || no.ntpErrSaveEditedFailed);
       }
 
       setIsEditing(false);
@@ -111,7 +114,7 @@ export function NoticeTranslationPanel({
         onTranslationUpdated(data.data);
       }
     } catch (err: any) {
-      setError(err.message || "Failed to save translation edit.");
+      setError(err.message || no.ntpErrSaveEditFailed);
     } finally {
       setIsTranslating(false);
     }
@@ -179,11 +182,11 @@ export function NoticeTranslationPanel({
           <div className="flex items-center gap-2">
             <Languages className="w-4 h-4 text-[#2E7D5E]" />
             <h3 className="text-base font-bold text-[#49352F]">
-              Multilingual Translations & Speech
+              {no.ntpHeading}
             </h3>
           </div>
           <p className="text-xs text-[#49352F]/70">
-            Real AI translations ensuring Indian regional scripts (Gujarati & Hindi) accurately preserve dates, names, and rules.
+            {no.ntpSubtitle}
           </p>
         </div>
 
@@ -223,12 +226,12 @@ export function NoticeTranslationPanel({
           <div>
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold text-[#49352F] uppercase tracking-wider">
-                Source Reference ({(notice.originalLanguage ?? "en").toUpperCase()})
+                {tr("notices.ntpSourceReference", { lang: (notice.originalLanguage ?? "en").toUpperCase() })}
               </span>
               <AudioPlayer
                 text={notice.simplifiedContent || notice.originalContent}
                 language={notice.originalLanguage ?? "en"}
-                buttonLabel="Listen Original"
+                buttonLabel={no.ntpListenOriginal}
               />
             </div>
 
@@ -238,8 +241,8 @@ export function NoticeTranslationPanel({
           </div>
 
           <div className="mt-4 pt-3 border-t border-[#49352F]/10 flex items-center justify-between text-[11px] text-[#49352F]/60">
-            <span>Reading Level: {(notice.readingLevel || "simple").replace("_", " ")}</span>
-            <span>Target: {notice.targetClassGrade ? `Grade ${notice.targetClassGrade}` : "All Classes"}</span>
+            <span>{no.ntpReadingLevel} {(notice.readingLevel || "simple").replace("_", " ")}</span>
+            <span>{no.ntpTargetLabel} {notice.targetClassGrade ? (formatClass(notice.targetClassGrade) || `${notice.targetClassGrade}`) : no.ntpAllClasses}</span>
           </div>
         </div>
 
@@ -256,11 +259,11 @@ export function NoticeTranslationPanel({
                   {activeTranslation.isApprovedByTeacher ? (
                     <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
                       <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                      Approved
+                      {no.ntpApprovedBadge}
                     </span>
                   ) : (
                     <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
-                      Pending Approval
+                      {no.ntpPendingApproval}
                     </span>
                   )}
                 </div>
@@ -269,7 +272,7 @@ export function NoticeTranslationPanel({
                 <AudioPlayer
                   text={activeTranslation.translatedContent}
                   language={selectedLang}
-                  buttonLabel="Listen"
+                  buttonLabel={no.ntpListenBtn}
                 />
               </div>
 
@@ -288,14 +291,14 @@ export function NoticeTranslationPanel({
                       onClick={() => setIsEditing(false)}
                       className="px-3 py-1 rounded text-xs font-semibold text-[#49352F] hover:bg-[#FAF6E9]"
                     >
-                      Cancel
+                      {no.ntpCancelBtn}
                     </button>
                     <button
                       type="button"
                       onClick={handleSaveEdit}
                       className="px-3 py-1 rounded text-xs font-bold bg-[#49352F] text-white hover:bg-[#49352F]/90 cursor-pointer"
                     >
-                      Save & Approve
+                      {no.ntpSaveApproveBtn}
                     </button>
                   </div>
                 </div>
@@ -309,8 +312,8 @@ export function NoticeTranslationPanel({
                 <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-800 flex items-start gap-1.5">
                   <AlertTriangle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold">Flagged for review: </span>
-                    <span>{activeTranslation.flagReason || "Flagged as inaccurate"}</span>
+                    <span className="font-bold">{no.ntpFlaggedForReview}</span>
+                    <span>{activeTranslation.flagReason || no.ntpFlaggedFallback}</span>
                   </div>
                 </div>
               )}
@@ -319,7 +322,7 @@ export function NoticeTranslationPanel({
             <div className="text-center py-8">
               <Languages className="w-8 h-8 text-[#49352F]/30 mx-auto mb-2" />
               <p className="text-sm font-semibold text-[#49352F]">
-                No {LANGUAGE_LABELS[selectedLang]?.label} translation generated yet.
+                {tr("notices.ntpNoTranslationYet", { language: LANGUAGE_LABELS[selectedLang]?.label || selectedLang.toUpperCase() })}
               </p>
               <button
                 type="button"
@@ -330,12 +333,12 @@ export function NoticeTranslationPanel({
                 {isTranslating ? (
                   <>
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>Translating with AI...</span>
+                    <span>{no.ntpTranslatingAi}</span>
                   </>
                 ) : (
                   <>
                     <Sparkles className="w-3.5 h-3.5 text-[#2E7D5E]" />
-                    <span>Generate Translation ({LANGUAGE_LABELS[selectedLang]?.scriptName})</span>
+                    <span>{tr("notices.ntpGenerateTranslation", { script: LANGUAGE_LABELS[selectedLang]?.scriptName || selectedLang.toUpperCase() })}</span>
                   </>
                 )}
               </button>
@@ -350,10 +353,10 @@ export function NoticeTranslationPanel({
                   type="button"
                   onClick={handleCopy}
                   className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium text-[#49352F] hover:bg-[#FAF6E9] border border-[#49352F]/15 cursor-pointer transition-colors"
-                  title="Copy translated text"
+                  title={no.ntpCopyTitle}
                 >
                   {copied ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                  <span>{copied ? "Copied!" : "Copy"}</span>
+                  <span>{copied ? no.ntpCopied : no.ntpCopy}</span>
                 </button>
 
                 <button
@@ -365,7 +368,7 @@ export function NoticeTranslationPanel({
                   className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium text-[#49352F] hover:bg-[#FAF6E9] border border-[#49352F]/15 cursor-pointer transition-colors"
                 >
                   <Edit3 className="w-3 h-3" />
-                  <span>Edit</span>
+                  <span>{no.ntpEdit}</span>
                 </button>
 
                 <button
@@ -373,10 +376,10 @@ export function NoticeTranslationPanel({
                   onClick={() => handleTranslateLanguage(selectedLang)}
                   disabled={isTranslating}
                   className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium text-[#49352F] hover:bg-[#FAF6E9] border border-[#49352F]/15 cursor-pointer transition-colors"
-                  title="Re-translate with AI"
+                  title={no.ntpReTranslateTitle}
                 >
                   <RotateCcw className={`w-3 h-3 ${isTranslating ? "animate-spin" : ""}`} />
-                  <span>Re-translate</span>
+                  <span>{no.ntpReTranslate}</span>
                 </button>
               </div>
 
@@ -385,10 +388,10 @@ export function NoticeTranslationPanel({
                   type="button"
                   onClick={() => setFlagModalOpen(true)}
                   className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium text-amber-900 hover:bg-amber-50 border border-amber-200 cursor-pointer transition-colors"
-                  title="Flag inaccurate translation"
+                  title={no.ntpFlagTitle}
                 >
                   <Flag className="w-3 h-3 text-amber-700" />
-                  <span>Flag</span>
+                  <span>{no.ntpFlag}</span>
                 </button>
 
                 <button
@@ -401,7 +404,7 @@ export function NoticeTranslationPanel({
                   }`}
                 >
                   <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>{activeTranslation.isApprovedByTeacher ? "Approved" : "Approve Translation"}</span>
+                  <span>{activeTranslation.isApprovedByTeacher ? no.ntpApprovedBadge : no.ntpApproveTranslation}</span>
                 </button>
               </div>
             </div>
@@ -415,16 +418,16 @@ export function NoticeTranslationPanel({
           <div className="bg-white rounded-2xl p-5 max-w-md w-full shadow-xl border border-[#49352F]/20">
             <h4 className="text-sm font-bold text-[#49352F] flex items-center gap-2 mb-2">
               <Flag className="w-4 h-4 text-amber-600" />
-              Flag Incorrect Translation
+              {no.ntpFlagModalTitle}
             </h4>
             <p className="text-xs text-[#49352F]/70 mb-3">
-              Help improve AI accuracy by specifying what was translated incorrectly (e.g. grammar, date distortion, or mistranslated school term).
+              {no.ntpFlagModalDesc}
             </p>
             <textarea
               rows={3}
               value={flagReason}
               onChange={(e) => setFlagReason(e.target.value)}
-              placeholder="e.g. 'Science Fair' was translated confusingly or the date was distorted..."
+              placeholder={no.ntpFlagPlaceholder}
               className="w-full p-2.5 text-xs rounded-lg border border-[#49352F]/20 text-[#49352F] focus:outline-none focus:ring-2 focus:ring-[#F2CAB3]"
             />
             <div className="mt-3 flex items-center justify-end gap-2">
@@ -433,7 +436,7 @@ export function NoticeTranslationPanel({
                 onClick={() => setFlagModalOpen(false)}
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold text-[#49352F] hover:bg-[#FAF6E9]"
               >
-                Cancel
+                {no.ntpCancelBtn}
               </button>
               <button
                 type="button"
@@ -441,7 +444,7 @@ export function NoticeTranslationPanel({
                 disabled={!flagReason.trim()}
                 className="px-4 py-1.5 rounded-lg text-xs font-bold bg-amber-700 text-white hover:bg-amber-800 disabled:opacity-50 cursor-pointer"
               >
-                Submit Flag
+                {no.ntpSubmitFlag}
               </button>
             </div>
           </div>

@@ -1,0 +1,22 @@
+{
+  "activities": {
+    "title": "Interactive Learning Activities",
+    "subtitle": "Gamified, manipulative-first digital exercises designed for primary school students in Gujarati & English.",
+    "pageTitle": "Interactive Learning Activities",
+    "pageSubtitle": "Gamified, manipulative-first digital exercises designed for primary school students in Gujarati & English.",
+    "practiceBadge": "Student Practice Sandbox",
+    "filterSubject": "Subject:",
+    "allSubjects": "All Subjects",
+    "filterGrade": "Grade:",
+    "allGrades": "All Grades",
+    "launchActivity": "Start Activity",
+    "questionNumber": "Question {curr} of {total}",
+    "submitAnswer": "Submit Answer",
+    "nextQuestion": "Next Question",
+    "correctFeedback": "Excellent! That's correct!",
+    "incorrectFeedback": "Let's try again! Hint: Use the visual counters.",
+    "scoreSummary": "Activity Completed! Your Score: {score}%",
+    "playAgain": "Try Again",
+    "backToActivities": "Back to Activities"
+  }
+}

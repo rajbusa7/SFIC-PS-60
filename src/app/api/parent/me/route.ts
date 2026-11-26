@@ -79,6 +79,8 @@ export async function GET(request: Request) {
         role: session.role,
         schoolId: session.schoolId,
         provider: session.provider,
+        preferredLanguage: parentProfile?.preferredLanguage || "en",
+        preferredScript: parentProfile?.preferredScript || undefined,
       },
       parentProfile,
       linkedStudents,

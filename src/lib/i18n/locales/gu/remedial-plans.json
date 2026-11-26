@@ -1,0 +1,33 @@
+{
+  "remedialPlans": {
+    "title": "૫-પગલાંની મૂર્ત ઉપચારાત્મક શિક્ષણ યોજનાઓ",
+    "subtitle": "મૂર્ત સાધનો (મણકા, કાઉન્ટર્સ, સંખ્યા રેખા, ફ્લેશકાર્ડ્સ) દ્વારા શિક્ષણ ત્રુટિઓ દૂર કરવાની પદ્ધતિસરની યોજનાઓ.",
+    "pageTitle": "૫-પગલાંની મૂર્ત ઉપચારાત્મક શિક્ષણ યોજનાઓ",
+    "pageSubtitle": "મૂર્ત સાધનો (મણકા, કાઉન્ટર્સ, સંખ્યા રેખા, ફ્લેશકાર્ડ્સ) દ્વારા શિક્ષણ ત્રુટિઓ દૂર કરવાની પદ્ધતિસરની યોજનાઓ.",
+    "activeCurriculaBadge": "સક્રિય અભ્યાસક્રમ",
+    "printA4Plans": "A4 યોજના પ્રિન્ટ કરો",
+    "generatePlanBtn": "યોજના બનાવો",
+    "filterByStatus": "સ્થિતિ મુજબ ફિલ્ટર:",
+    "allStatuses": "બધી સ્થિતિ",
+    "activePlansCount": "{count} સક્રિય ઉપચાર યોજનાઓ",
+    "planForStudent": "{name} માટે ઉપચાર યોજના",
+    "classLabel": "ધોરણ {grade}-{section}",
+    "studentCodeLabel": "રોલ #{code}",
+    "stepsCompleted": "૫ માંથી {count} પગલાં પૂર્ણ",
+    "interactiveStepChecklist": "૫-પગલાંની શિક્ષણ પદ્ધતિ ચેકલિસ્ટ:",
+    "stepNumberLabel": "પગલું {num}",
+    "minDuration": "{minutes} મિનિટ",
+    "stepDone": "પૂર્ણ",
+    "markComplete": "પગલું પૂર્ણ ચિહ્નિત કરો",
+    "teachingGuidelines": "વર્ગખંડ શિક્ષણ માર્ગદર્શિકા અને સાધનો:",
+    "physicalManipulatives": "મૂર્ત ભૌતિક સાધનો:",
+    "visualDiagrams": "દ્રશ્ય રેખાચિત્રો અને મોડેલ્સ:",
+    "studentPractice": "વિદ્યાર્થી ઇન્ટરેક્ટિવ મહાવરો:",
+    "launchActivityBtn": "પ્રવૃત્તિ શરૂ કરો",
+    "printWorksheetBtn": "વર્કશીટ પ્રિન્ટ કરો",
+    "approvePlanBtn": "યોજના મંજૂર કરો",
+    "reassessStudentBtn": "પુનઃમૂલ્યાંકન નોંધો",
+    "completedBadge": "પૂર્ણ અને પ્રમાણિત",
+    "noPlansFound": "પસંદ કરેલ ફિલ્ટરમાં કોઈ ઉપચાર યોજનાઓ મળી નથી."
+  }
+}

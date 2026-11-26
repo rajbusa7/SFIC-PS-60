@@ -366,6 +366,20 @@ export async function ensurePostgresSchema(): Promise<void> {
         ALTER TABLE parent_profiles ADD COLUMN IF NOT EXISTS phone VARCHAR(32);
         CREATE INDEX IF NOT EXISTS idx_parent_profiles_phone ON parent_profiles(phone);
 
+        -- Ensure multilingual preferences columns & non-restrictive constraints
+        ALTER TABLE schools DROP CONSTRAINT IF EXISTS schools_preferred_language_check;
+        ALTER TABLE schools ALTER COLUMN preferred_language TYPE VARCHAR(24);
+        ALTER TABLE school_settings DROP CONSTRAINT IF EXISTS school_settings_preferred_language_check;
+        ALTER TABLE school_settings ALTER COLUMN preferred_language TYPE VARCHAR(24);
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS preferred_language VARCHAR(24) DEFAULT 'en';
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS preferred_script VARCHAR(16);
+        CREATE INDEX IF NOT EXISTS idx_users_preferred_language ON users(preferred_language);
+        ALTER TABLE parent_profiles ALTER COLUMN preferred_language TYPE VARCHAR(24);
+        ALTER TABLE parent_profiles ADD COLUMN IF NOT EXISTS preferred_script VARCHAR(16);
+        ALTER TABLE subjects ADD COLUMN IF NOT EXISTS localizations JSONB DEFAULT '{}'::jsonb;
+        ALTER TABLE concepts ADD COLUMN IF NOT EXISTS localizations JSONB DEFAULT '{}'::jsonb;
+        ALTER TABLE learning_activities ADD COLUMN IF NOT EXISTS localizations JSONB DEFAULT '{}'::jsonb;
+
         -- Update demo accounts with baseline verified phone numbers
         UPDATE users SET phone = '+919876543210' WHERE id = 'usr-teacher-01' AND phone IS NULL;
         UPDATE users SET phone = '+919876543211' WHERE id = 'usr-admin-01' AND phone IS NULL;
@@ -1345,7 +1359,7 @@ export const postgresUserDb = {
     const pool = getPostgresPool()!;
     const { rows } = await pool.query(
       `SELECT id, name, email, role, school_id as "schoolId", google_id as "googleId", 
-              avatar_url as "avatarUrl", provider, status, created_at as "createdAt", updated_at as "updatedAt" 
+              avatar_url as "avatarUrl", provider, status, preferred_language as "preferredLanguage", preferred_script as "preferredScript", created_at as "createdAt", updated_at as "updatedAt" 
        FROM users ORDER BY created_at ASC`
     );
     return rows;
@@ -1356,6 +1370,7 @@ export const postgresUserDb = {
     const { rows } = await pool.query(
       `SELECT id, name, email, role, school_id as "schoolId", google_id as "googleId", 
               avatar_url as "avatarUrl", provider, status, password_hash as "passwordHash",
+              preferred_language as "preferredLanguage", preferred_script as "preferredScript",
               created_at as "createdAt", updated_at as "updatedAt" 
        FROM users WHERE id = $1 LIMIT 1`,
       [id]
@@ -1368,6 +1383,7 @@ export const postgresUserDb = {
     const { rows } = await pool.query(
       `SELECT id, name, email, role, school_id as "schoolId", google_id as "googleId", 
               avatar_url as "avatarUrl", provider, status, password_hash as "passwordHash",
+              preferred_language as "preferredLanguage", preferred_script as "preferredScript",
               created_at as "createdAt", updated_at as "updatedAt" 
        FROM users WHERE LOWER(email) = LOWER($1) LIMIT 1`,
       [email.trim()]
@@ -1380,6 +1396,7 @@ export const postgresUserDb = {
     const { rows } = await pool.query(
       `SELECT id, name, email, phone, role, school_id as "schoolId", google_id as "googleId", 
               avatar_url as "avatarUrl", provider, status, password_hash as "passwordHash",
+              preferred_language as "preferredLanguage", preferred_script as "preferredScript",
               created_at as "createdAt", updated_at as "updatedAt" 
        FROM users WHERE google_id = $1 LIMIT 1`,
       [googleId]
@@ -1395,6 +1412,7 @@ export const postgresUserDb = {
     const { rows } = await pool.query(
       `SELECT id, name, email, phone, role, school_id as "schoolId", google_id as "googleId", 
               avatar_url as "avatarUrl", provider, status, password_hash as "passwordHash",
+              preferred_language as "preferredLanguage", preferred_script as "preferredScript",
               created_at as "createdAt", updated_at as "updatedAt" 
        FROM users 
        WHERE phone = $1 OR phone = $2 OR RIGHT(phone, 10) = $3 LIMIT 1`,
@@ -1412,9 +1430,9 @@ export const postgresUserDb = {
 
     const id = userData.id || `usr-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
     const { rows } = await pool.query(
-      `INSERT INTO users (id, name, email, phone, role, school_id, google_id, avatar_url, provider, password_hash, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-       RETURNING id, name, email, phone, role, school_id as "schoolId", google_id as "googleId", avatar_url as "avatarUrl", provider, status, created_at as "createdAt", updated_at as "updatedAt"`,
+      `INSERT INTO users (id, name, email, phone, role, school_id, google_id, avatar_url, provider, password_hash, status, preferred_language, preferred_script)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+       RETURNING id, name, email, phone, role, school_id as "schoolId", google_id as "googleId", avatar_url as "avatarUrl", provider, status, preferred_language as "preferredLanguage", preferred_script as "preferredScript", created_at as "createdAt", updated_at as "updatedAt"`,
       [
         id,
         userData.name || "Educator",
@@ -1427,6 +1445,8 @@ export const postgresUserDb = {
         userData.provider || "local",
         userData.passwordHash || null,
         userData.status || "active",
+        userData.preferredLanguage || "en",
+        userData.preferredScript || null,
       ]
     );
     return rows[0];
@@ -1449,9 +1469,11 @@ export const postgresUserDb = {
           role = COALESCE($6, role),
           password_hash = COALESCE($7, password_hash),
           status = COALESCE($8, status),
+          preferred_language = COALESCE($9, preferred_language),
+          preferred_script = COALESCE($10, preferred_script),
           updated_at = CURRENT_TIMESTAMP
-        WHERE id = $9
-        RETURNING id, name, email, role, school_id as "schoolId", google_id as "googleId", avatar_url as "avatarUrl", provider, status, created_at as "createdAt", updated_at as "updatedAt"`,
+        WHERE id = $11
+        RETURNING id, name, email, role, school_id as "schoolId", google_id as "googleId", avatar_url as "avatarUrl", provider, status, preferred_language as "preferredLanguage", preferred_script as "preferredScript", created_at as "createdAt", updated_at as "updatedAt"`,
         [
           userData.name || null,
           userData.googleId || null,
@@ -1461,6 +1483,8 @@ export const postgresUserDb = {
           userData.role || null,
           userData.passwordHash || null,
           userData.status || null,
+          userData.preferredLanguage || null,
+          userData.preferredScript || null,
           existing.id,
         ]
       );
@@ -1486,9 +1510,11 @@ export const postgresUserDb = {
         avatar_url = COALESCE($4, avatar_url),
         status = COALESCE($5, status),
         password_hash = COALESCE($6, password_hash),
+        preferred_language = COALESCE($7, preferred_language),
+        preferred_script = COALESCE($8, preferred_script),
         updated_at = CURRENT_TIMESTAMP
-      WHERE id = $7
-      RETURNING id, name, email, role, school_id as "schoolId", google_id as "googleId", avatar_url as "avatarUrl", provider, status, created_at as "createdAt", updated_at as "updatedAt"`,
+      WHERE id = $9
+      RETURNING id, name, email, role, school_id as "schoolId", google_id as "googleId", avatar_url as "avatarUrl", provider, status, preferred_language as "preferredLanguage", preferred_script as "preferredScript", created_at as "createdAt", updated_at as "updatedAt"`,
       [
         updates.name || null,
         updates.role || null,
@@ -1496,6 +1522,8 @@ export const postgresUserDb = {
         updates.avatarUrl || null,
         updates.status || null,
         updates.passwordHash || null,
+        updates.preferredLanguage || null,
+        updates.preferredScript || null,
         id,
       ]
     );
@@ -1510,11 +1538,27 @@ export const postgresUserDb = {
 };
 
 export const postgresParentDb = {
+  async updateParentPreferences(
+    userId: string,
+    prefs: { preferredLanguage?: string; preferredScript?: string }
+  ): Promise<boolean> {
+    const pool = getPostgresPool();
+    if (!pool) return false;
+    const res = await pool.query(
+      `UPDATE parent_profiles SET
+         preferred_language = COALESCE($1, preferred_language),
+         preferred_script = COALESCE($2, preferred_script),
+         updated_at = CURRENT_TIMESTAMP
+       WHERE user_id = $3`,
+      [prefs.preferredLanguage || null, prefs.preferredScript || null, userId]
+    );
+    return (res.rowCount ?? 0) > 0;
+  },
   async getParentByUserId(userId: string): Promise<ParentProfile | null> {
     const pool = getPostgresPool()!;
     const { rows: profileRows } = await pool.query(
       `SELECT id, user_id as "userId", name, email, phone, 
-              preferred_language as "preferredLanguage", relationship, 
+              preferred_language as "preferredLanguage", preferred_script as "preferredScript", relationship, 
               created_at as "createdAt", updated_at as "updatedAt"
        FROM parent_profiles WHERE user_id = $1 LIMIT 1`,
       [userId]
@@ -1537,7 +1581,7 @@ export const postgresParentDb = {
     const national = cleaned.slice(-10);
     const { rows: profileRows } = await pool.query(
       `SELECT id, user_id as "userId", name, email, phone, 
-              preferred_language as "preferredLanguage", relationship, 
+              preferred_language as "preferredLanguage", preferred_script as "preferredScript", relationship, 
               created_at as "createdAt", updated_at as "updatedAt"
        FROM parent_profiles 
        WHERE phone = $1 OR phone = $2 OR RIGHT(phone, 10) = $3 LIMIT 1`,
@@ -1558,7 +1602,7 @@ export const postgresParentDb = {
     const pool = getPostgresPool()!;
     const { rows: profileRows } = await pool.query(
       `SELECT id, user_id as "userId", name, email, phone, 
-              preferred_language as "preferredLanguage", relationship, 
+              preferred_language as "preferredLanguage", preferred_script as "preferredScript", relationship, 
               created_at as "createdAt", updated_at as "updatedAt"
        FROM parent_profiles WHERE id = $1 LIMIT 1`,
       [id]

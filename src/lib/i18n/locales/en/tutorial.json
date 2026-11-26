@@ -1,0 +1,135 @@
+{
+  "tutorial": {
+    "pageTitle": "Help & Tutorial Center",
+    "badge": "Gujarat Primary Teacher Guide",
+    "heroTitle": "Learn StudySaathi AI in 5 Minutes",
+    "heroSubtitle": "Visual, short, and bilingual guide for Gujarat primary teachers to spot foundational gaps early, take 5-step remedial action, and verify student mastery.",
+    "replayTour": "Replay Guided Tour",
+    "quickStartPrint": "Download / Print Quick-Start Guide",
+    "searchPlaceholder": "Search tutorials, guides, and FAQs...",
+    "trySandbox": "Try Interactive Sandbox",
+    "activeTabLessons": "Step-by-Step Lessons",
+    "activeTabWorkflow": "How It Works (4 Steps)",
+    "activeTabSandbox": "Interactive Demo Sandbox",
+    "activeTabFaq": "Offline FAQs",
+    "activeTabGlossary": "Bilingual Glossary",
+    "activeTabTips": "Rural Classroom Tips",
+    "tour": {
+      "welcomeBadge": "Welcome to StudySaathi",
+      "finishBadge": "Ready to Explore",
+      "tryAaravCta": "Try Demo Student: Aarav Patel",
+      "aaravCase": {
+        "badge": "Demo Case Walkthrough",
+        "step1Title": "Aarav Patel (Class 4-A) Case Study",
+        "step1Desc": "Meet Aarav Patel, diagnosed with foundational division hurdles after scoring 35% on baseline diagnostic assessments.",
+        "step2Title": "Automatic Learning Gap Flag",
+        "step2Desc": "Because 35% is strictly below the 60% mastery threshold, StudySaathi AI flagged an active gap requiring targeted intervention.",
+        "step3Title": "Student Roster & Search",
+        "step3Desc": "Teachers can quickly filter by class or search by name to track individual progress without paperwork.",
+        "step4Title": "Inspect 3D Remedial Profile",
+        "step4Desc": "Click to explore Aarav's 5-step concrete bean-counting remedial plan, practice activities, and +50 percentage-point recovery.",
+        "ctaText": "Open Aarav's Profile →"
+      },
+      "dashboard": {
+        "step1": {
+          "title": "Welcome to StudySaathi AI",
+          "desc": "Your offline-first companion designed for Gujarat primary teachers to spot foundational gaps early and deliver structured support."
+        },
+        "step2": {
+          "title": "Classroom KPI Overview",
+          "desc": "Monitor enrolled students, see who needs support, track active 5-step plans, and measure verified score improvements."
+        },
+        "step3": {
+          "title": "Immediate Attention Roster",
+          "desc": "Students scoring below 60% are flagged here immediately with their priority level and root-cause concept."
+        },
+        "step4": {
+          "title": "Curriculum Proficiency Heatmap",
+          "desc": "Visual competency distribution across Math, Gujarati, and EVS. Instantly see which concepts need class-wide focus."
+        },
+        "step5": {
+          "title": "Quick Sidebar Navigation",
+          "desc": "Easily switch between Student Rosters, Diagnostic Assessments, Learning Gaps, Remedial Plans, and Reports."
+        },
+        "step6": {
+          "title": "Bilingual Language Switcher",
+          "desc": "Toggle between English and Gujarati anytime. Works 100% offline without reloading or losing your work."
+        },
+        "step7": {
+          "title": "SaathiBot Pedagogical Assistant",
+          "desc": "Tap here anytime to ask pedagogical questions, get lesson recommendations, or trigger guided page walkthroughs."
+        },
+        "step8": {
+          "title": "You're All Set!",
+          "desc": "Click below to open the sample case for Aarav Patel (Class 4) and see a complete 35% to 85% remedial recovery."
+        }
+      },
+      "students": {
+        "searchTitle": "Fast Student Search",
+        "searchDesc": "Quickly locate any student by typing their name or roll number. Works instantly with zero lag.",
+        "filterTitle": "Class & Grade Filter",
+        "filterDesc": "Filter your view between Class 3, 4, and 5 to focus on a single cohort.",
+        "tableTitle": "Student Roster & Status",
+        "tableDesc": "See each student's current proficiency tag (Needs Support, Developing, Mastered) and recent assessment scores.",
+        "addTitle": "Add or Import Students",
+        "addDesc": "Register a new student with basic details or import your whole class roster via simple CSV."
+      },
+      "studentDetail": {
+        "scoresTitle": "Diagnostic Concept Mastery",
+        "scoresDesc": "Breakdown of baseline diagnostic scores across key foundational curriculum concepts.",
+        "reasonTitle": "Why Flagged (Pedagogical Root Cause)",
+        "reasonDesc": "Clear explanation of why this gap occurred and the exact misconception blocking further progress.",
+        "planTitle": "Generate 5-Step Remedial Plan",
+        "planDesc": "One-click generation of a structured concrete intervention plan using physical manipulatives.",
+        "reassessTitle": "Formative Reassessment & Delta",
+        "reassessDesc": "After completing the remedial steps, enter the re-test score here to celebrate objective percentage-point gain."
+      },
+      "learningGaps": {
+        "thresholdTitle": "60% Mastery Benchmark Rule",
+        "thresholdDesc": "Any score strictly under 60% automatically flags a foundational learning gap requiring targeted support.",
+        "whyFlaggedTitle": "Transparent Educational Rationale",
+        "whyFlaggedDesc": "Our offline engine details the exact developmental reasoning so you can tailor your classroom guidance.",
+        "actionPlanTitle": "Direct Remediation Link",
+        "actionPlanDesc": "Jump straight into the targeted 5-step concrete plan tailored specifically for this student and concept."
+      },
+      "remedialPlans": {
+        "fiveStepsTitle": "5-Step Concrete Remedial Flow",
+        "fiveStepsDesc": "Starts with physical manipulatives (beads, counters) before advancing to visual diagrams and abstract symbols.",
+        "markDoneTitle": "Track Teaching Milestones",
+        "markDoneDesc": "Check off each intervention step as you teach it in class to monitor remedial progression.",
+        "printTitle": "One-Click A4 Worksheet",
+        "printDesc": "Print clean, ink-friendly worksheets designed for rural Gujarat primary school desktop printers."
+      },
+      "reports": {
+        "cardTitle": "Comprehensive Student Portfolio",
+        "cardDesc": "Complete academic snapshot displaying initial gaps, completed interventions, and reassessment deltas.",
+        "printTitle": "Print Official Progress Report",
+        "printDesc": "Generate high-contrast parent-teacher progress sheets ready for sharing during parent meetings."
+      }
+    }
+  },
+  "checklist": {
+    "title": "Get Started in 4 Steps",
+    "subtitle": "Your quick teacher onboarding checklist",
+    "step1": "Review your class overview & attention list",
+    "step2": "Open a student who needs support (Aarav)",
+    "step3": "Generate a 5-step concrete remedial plan",
+    "step4": "Enter a re-test score & verify improvement (+pp)",
+    "allDone": "You're all set! 4 of 4 completed",
+    "readyBadge": "Classroom Ready",
+    "dismiss": "Dismiss checklist",
+    "showAgain": "Show onboarding checklist",
+    "progress": "Progress"
+  },
+  "help": {
+    "masteryThresholdTitle": "60% Mastery Threshold",
+    "masteryThresholdDesc": "Scores below 60% trigger an automatic Learning Gap flag. 60-79% is Developing, and 80%+ marks Mastered.",
+    "gapDetectionTitle": "Learning Gap Detection",
+    "gapDetectionDesc": "Transparent deterministic rules compare diagnostic test results to curriculum learning outcomes.",
+    "deltaTitle": "Percentage-Point Improvement (+pp)",
+    "deltaDesc": "Absolute numerical score gain between the baseline diagnostic test and post-intervention reassessment.",
+    "remedialPlanTitle": "5-Step Remedial Plan",
+    "remedialPlanDesc": "Concrete-Pictorial-Abstract intervention structure starting with tactile objects (beads, counters).",
+    "learnMore": "Learn more in Tutorial"
+  }
+}

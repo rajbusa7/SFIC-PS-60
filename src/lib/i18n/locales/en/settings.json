@@ -1,0 +1,24 @@
+{
+  "settings": {
+    "pageTitle": "Institutional & System Settings",
+    "pageSubtitle": "Configure school profiles, academic terms, interface themes, and bilingual language preferences.",
+    "saveSettingsBtn": "Save Settings",
+    "savingSettings": "Saving...",
+    "savedNotification": "Settings saved successfully.",
+    "institutionalTab": "Institutional Profile",
+    "academicYearTab": "Academic Calendar",
+    "appearanceTab": "Appearance & Language",
+    "schoolNameLabel": "School Name",
+    "schoolCodeLabel": "UDISE+ School Code",
+    "principalNameLabel": "Principal / Administrator Name",
+    "contactEmailLabel": "Official Contact Email",
+    "currentTermLabel": "Current Academic Term",
+    "term1": "Term 1 (June - October)",
+    "term2": "Term 2 (November - April)",
+    "masteryThresholdLabel": "System-wide Mastery Benchmark Threshold (%)",
+    "languagePreferenceLabel": "Default Platform Language",
+    "englishOption": "English (Default)",
+    "gujaratiOption": "ગુજરાતી (Gujarati)",
+    "themePreferenceLabel": "Interface Theme Mode"
+  }
+}

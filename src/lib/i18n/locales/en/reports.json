@@ -1,0 +1,25 @@
+{
+  "reports": {
+    "title": "Student Portfolios & Printable Worksheets",
+    "subtitle": "Generate ink-friendly A4 worksheets and comprehensive parent-teacher diagnostic reports for rural Gujarat schools.",
+    "pageTitle": "Student Portfolios & Printable Worksheets",
+    "pageSubtitle": "Generate ink-friendly A4 worksheets and comprehensive parent-teacher diagnostic reports for rural Gujarat schools.",
+    "printReportBtn": "Print Report",
+    "downloadPdfBtn": "Download PDF",
+    "generateWorksheetBtn": "Generate Worksheet",
+    "worksheetType": "Worksheet Type",
+    "remedialDivisionWorksheet": "Division with Manipulatives & Number Lines (Class 4)",
+    "fractionsVisualWorksheet": "Fraction Strips & Equal Sharing (Class 5)",
+    "gujaratiVowelsWorksheet": "Gujarati Vowel Blends & Word Practice (Class 3)",
+    "selectStudent": "Select Student:",
+    "allStudents": "All Students in Class",
+    "worksheetReady": "Worksheet is ready to print.",
+    "teacherCopy": "Teacher Copy with Answer Key",
+    "studentCopy": "Student Practice Worksheet",
+    "schoolHeader": "Model Primary School, Gandhinagar • Gujarat State Board",
+    "studentNameLabel": "Student Name: {name}",
+    "rollNumberLabel": "Roll No: {code}",
+    "dateLabel": "Date: {date}",
+    "gradeLabel": "Grade: Class {grade}-{section}"
+  }
+}

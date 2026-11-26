@@ -1,0 +1,33 @@
+{
+  "remedialPlans": {
+    "title": "5-Step Concrete Remedial Plans",
+    "subtitle": "Targeted step-by-step manipulative pathways (counting beads, number lines, flashcards) to close student learning gaps.",
+    "pageTitle": "5-Step Concrete Remedial Plans",
+    "pageSubtitle": "Targeted step-by-step manipulative pathways (counting beads, number lines, flashcards) to close student learning gaps.",
+    "activeCurriculaBadge": "Active Curricula",
+    "printA4Plans": "Print A4 Plans",
+    "generatePlanBtn": "Generate Plan",
+    "filterByStatus": "Filter by Status:",
+    "allStatuses": "All Statuses",
+    "activePlansCount": "{count} active remedial plans",
+    "planForStudent": "Remedial Plan for {name}",
+    "classLabel": "Class {grade}-{section}",
+    "studentCodeLabel": "Roll #{code}",
+    "stepsCompleted": "{count} of 5 Steps Completed",
+    "interactiveStepChecklist": "5-Step Pedagogical Progression Checklist:",
+    "stepNumberLabel": "Step {num}",
+    "minDuration": "{minutes} mins",
+    "stepDone": "Done",
+    "markComplete": "Mark Step Done",
+    "teachingGuidelines": "Classroom Teaching Guidelines & Manipulatives:",
+    "physicalManipulatives": "Physical Manipulatives:",
+    "visualDiagrams": "Visual Diagrams & Models:",
+    "studentPractice": "Student Interactive Practice:",
+    "launchActivityBtn": "Launch Interactive Activity",
+    "printWorksheetBtn": "Print Worksheet",
+    "approvePlanBtn": "Approve Plan",
+    "reassessStudentBtn": "Record Reassessment",
+    "completedBadge": "Completed & Verified",
+    "noPlansFound": "No remedial plans found matching your criteria."
+  }
+}

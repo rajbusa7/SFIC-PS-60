@@ -1,0 +1,24 @@
+{
+  "settings": {
+    "pageTitle": "સંસ્થાકીય અને સિસ્ટમ સેટિંગ્સ",
+    "pageSubtitle": "શાળા પ્રોફાઇલ, શૈક્ષણિક સત્રો, થીમ દેખાવ અને દ્વિભાષી ભાષા પસંદગીઓ ગોઠવો.",
+    "saveSettingsBtn": "સેટિંગ્સ સાચવો",
+    "savingSettings": "સાચવી રહ્યું છે...",
+    "savedNotification": "સેટિંગ્સ સફળતાપૂર્વક સાચવવામાં આવ્યા.",
+    "institutionalTab": "સંસ્થાકીય પ્રોફાઇલ",
+    "academicYearTab": "શૈક્ષણિક કેલેન્ડર",
+    "appearanceTab": "દેખાવ અને ભાષા",
+    "schoolNameLabel": "શાળાનું નામ",
+    "schoolCodeLabel": "UDISE+ શાળા કોડ",
+    "principalNameLabel": "આચાર્ય / સંચાલકનું નામ",
+    "contactEmailLabel": "સત્તાવાર ઇમેઇલ",
+    "currentTermLabel": "વર્તમાન શૈક્ષણિક સત્ર",
+    "term1": "પ્રથમ સત્ર (જૂન - ઓક્ટોબર)",
+    "term2": "દ્વિતીય સત્ર (નવેમ્બર - એપ્રિલ)",
+    "masteryThresholdLabel": "સમગ્ર શાળા માટે નિપુણતા બેન્ચમાર્ક થ્રેશોલ્ડ (%)",
+    "languagePreferenceLabel": "પ્રાથમિક પ્લેટફોર્મ ભાષા",
+    "englishOption": "English (અંગ્રેજી)",
+    "gujaratiOption": "ગુજરાતી (Gujarati)",
+    "themePreferenceLabel": "ઇન્ટરફેસ થીમ મોડ"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "assessments": {
+    "title": "Diagnostic Assessments & Results",
+    "subtitle": "Record baseline diagnostic exams, track formative quizzes, and trigger automatic learning gap detection.",
+    "pageTitle": "Diagnostic Assessments & Results",
+    "pageSubtitle": "Record baseline diagnostic exams, track formative quizzes, and trigger automatic learning gap detection.",
+    "newAssessmentBtn": "New Assessment",
+    "recordScoresBtn": "Record Scores",
+    "filterSubject": "Subject:",
+    "allSubjects": "All Subjects",
+    "filterClass": "Class:",
+    "allClasses": "All Classes",
+    "recordedAssessments": "Recorded Assessments ({count})",
+    "assessmentName": "Assessment Title",
+    "subjectCol": "Subject",
+    "classCol": "Class",
+    "dateCol": "Date",
+    "studentsCountCol": "Students Tested",
+    "averageScoreCol": "Average Score",
+    "actionsCol": "Actions",
+    "viewResults": "View Results",
+    "recordScoresModalTitle": "Record Assessment Scores",
+    "selectAssessment": "Select Assessment",
+    "scorePercentage": "Score (%)",
+    "enterScorePlaceholder": "0 - 100",
+    "notesPlaceholder": "Observations or specific error patterns...",
+    "saveScoresBtn": "Save Scores",
+    "scoresSavedSuccess": "Scores recorded successfully. Learning gaps recalculated.",
+    "noAssessments": "No assessments found for this filter."
+  }
+}

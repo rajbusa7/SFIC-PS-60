@@ -1,0 +1,19 @@
+{
+  "progress": {
+    "title": "Class Learning Progress & Mastery Trends",
+    "subtitle": "Objective percentage-point (+pp) improvement tracking across students, subjects, and curriculum concepts.",
+    "pageTitle": "Class Learning Progress & Mastery Trends",
+    "pageSubtitle": "Objective percentage-point (+pp) improvement tracking across students, subjects, and curriculum concepts.",
+    "overallClassAverage": "Overall Class Average",
+    "remedialSuccessRate": "Remedial Plan Success Rate",
+    "averageDeltaGain": "Average Reassessment Gain",
+    "studentsAtMastery": "Students at Mastery (≥80%)",
+    "subjectCompetencyTrends": "Subject Competency Trends",
+    "conceptMasteryDistribution": "Concept-by-Concept Mastery Distribution",
+    "studentProgressLeaderboard": "Student Reassessment Gain Leaderboard",
+    "initialScoreCol": "Initial Score",
+    "retestScoreCol": "Re-test Score",
+    "gainDeltaCol": "Verified Gain (+pp)",
+    "statusCol": "Final Status"
+  }
+}

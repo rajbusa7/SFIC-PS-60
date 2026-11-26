@@ -19,10 +19,12 @@ import {
   FileText,
 } from "lucide-react";
 
+import type { SupportedLanguage } from "@/lib/types";
+
 interface StudentProgressModalProps {
   student: any;
   onClose: () => void;
-  language: "en" | "gu";
+  language: SupportedLanguage;
   formatSubject: (code: string) => string;
   formatClass: (cls: string) => string;
 }

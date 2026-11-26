@@ -40,6 +40,8 @@ export async function POST(request: Request) {
       schoolId: user.schoolId,
       avatarUrl: user.avatarUrl,
       provider: user.provider || "local",
+      preferredLanguage: user.preferredLanguage || "en",
+      preferredScript: user.preferredScript || undefined,
       status: user.status || "active",
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,

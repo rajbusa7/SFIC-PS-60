@@ -1342,6 +1342,33 @@ export const db = {
     return this.getParentByUserId(userId) || null;
   },
 
+  async updateParentPreferencesAsync(
+    userId: string,
+    prefs: { preferredLanguage?: ParentProfile["preferredLanguage"]; preferredScript?: ParentProfile["preferredScript"] }
+  ): Promise<boolean> {
+    if (isPostgresConfigured()) {
+      try {
+        await postgresParentDb.updateParentPreferences(userId, prefs);
+      } catch (e) {
+        console.error("Postgres error in updateParentPreferencesAsync:", e);
+      }
+    }
+    const store = loadStore();
+    const parents = store.parents || [];
+    const idx = parents.findIndex((p) => p.userId === userId || p.id === userId);
+    if (idx !== -1) {
+      parents[idx] = {
+        ...parents[idx],
+        ...(prefs.preferredLanguage ? { preferredLanguage: prefs.preferredLanguage } : {}),
+        ...(prefs.preferredScript ? { preferredScript: prefs.preferredScript } : {}),
+      };
+      store.parents = parents;
+      saveStore(store);
+      return true;
+    }
+    return false;
+  },
+
   async getParentByIdAsync(id: string): Promise<ParentProfile | null> {
     if (isPostgresConfigured()) {
       try {
@@ -2003,6 +2030,8 @@ export const db = {
       email: userData.email.trim().toLowerCase(),
       role: userData.role || "teacher",
       schoolId: userData.schoolId || "sch-gn-01",
+      preferredLanguage: userData.preferredLanguage || "en",
+      preferredScript: userData.preferredScript,
       googleId: userData.googleId,
       avatarUrl: userData.avatarUrl,
       provider: userData.provider || "local",

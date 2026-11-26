@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { AudioPlayer } from "../audio/AudioPlayer";
 import type { SchoolNotice, NoticeTranslation, SupportedLanguage } from "@/lib/types";
+import { ALL_LANGUAGES } from "@/lib/i18n/registry";
 
 interface NoticeTranslationPanelProps {
   notice: SchoolNotice;
@@ -25,16 +26,10 @@ interface NoticeTranslationPanelProps {
   className?: string;
 }
 
-const LANGUAGE_LABELS: Record<SupportedLanguage, { label: string; scriptName: string }> = {
-  en: { label: "English", scriptName: "English" },
-  gu: { label: "Gujarati", scriptName: "ગુજરાતી" },
-  hi: { label: "Hindi", scriptName: "हिंदी" },
-  mr: { label: "Marathi", scriptName: "मराठी" },
-  ta: { label: "Tamil", scriptName: "தமிழ்" },
-  te: { label: "Telugu", scriptName: "తెలుగు" },
-  bn: { label: "Bengali", scriptName: "বাংলা" },
-  kn: { label: "Kannada", scriptName: "ಕನ್ನಡ" },
-};
+const LANGUAGE_LABELS: Record<SupportedLanguage, { label: string; scriptName: string }> =
+  Object.fromEntries(
+    ALL_LANGUAGES.map((l) => [l.code, { label: l.name, scriptName: l.nativeName }])
+  ) as Record<SupportedLanguage, { label: string; scriptName: string }>;
 
 export function NoticeTranslationPanel({
   notice,

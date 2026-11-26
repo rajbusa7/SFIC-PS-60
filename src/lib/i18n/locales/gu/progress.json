@@ -1,0 +1,19 @@
+{
+  "progress": {
+    "title": "વર્ગ શિક્ષણ પ્રગતિ અને પ્રાવીણ્ય વલણો",
+    "subtitle": "વિદ્યાર્થીઓ, વિષયો અને સંકલ્પનાઓમાં ચોક્કસ પર્સેન્ટેજ-પોઇન્ટ (+pp) સુધારાનું વિશ્લેષણ.",
+    "pageTitle": "વર્ગ શિક્ષણ પ્રગતિ અને પ્રાવીણ્ય વલણો",
+    "pageSubtitle": "વિદ્યાર્થીઓ, વિષયો અને સંકલ્પનાઓમાં ચોક્કસ પર્સેન્ટેજ-પોઇન્ટ (+pp) સુધારાનું વિશ્લેષણ.",
+    "overallClassAverage": "વર્ગની સમગ્ર સરેરાશ",
+    "remedialSuccessRate": "ઉપચાર યોજના સફળતા દર",
+    "averageDeltaGain": "સરેરાશ પુનઃટેસ્ટ સુધારો",
+    "studentsAtMastery": "નિપુણતા સ્તરે વિદ્યાર્થીઓ (≥૮૦%)",
+    "subjectCompetencyTrends": "વિષયવાર ક્ષમતા વલણો",
+    "conceptMasteryDistribution": "સંકલ્પનાવાર પ્રાવીણ્ય વિતરણ",
+    "studentProgressLeaderboard": "વિદ્યાર્થી સુધારો લીડરબોર્ડ",
+    "initialScoreCol": "શરૂઆતના ગુણ",
+    "retestScoreCol": "પુનઃટેસ્ટ ગુણ",
+    "gainDeltaCol": "પ્રમાણિત સુધારો (+pp)",
+    "statusCol": "અંતિમ સ્થિતિ"
+  }
+}

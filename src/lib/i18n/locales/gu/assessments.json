@@ -1,0 +1,31 @@
+{
+  "assessments": {
+    "title": "નિદાન કસોટીઓ અને પરિણામો",
+    "subtitle": "પાયાની નિદાન કસોટીઓ નોંધો, નિયમિત ક્વિઝ ટ્રેક કરો અને આપોઆપ શિક્ષણ ત્રુટિ ઓળખ શરૂ કરો.",
+    "pageTitle": "નિદાન કસોટીઓ અને પરિણામો",
+    "pageSubtitle": "પાયાની નિદાન કસોટીઓ નોંધો, નિયમિત ક્વિઝ ટ્રેક કરો અને આપોઆપ શિક્ષણ ત્રુટિ ઓળખ શરૂ કરો.",
+    "newAssessmentBtn": "નવું મૂલ્યાંકન",
+    "recordScoresBtn": "ગુણ નોંધો",
+    "filterSubject": "વિષય:",
+    "allSubjects": "બધા વિષયો",
+    "filterClass": "ધોરણ:",
+    "allClasses": "બધા ધોરણ",
+    "recordedAssessments": "નોંધાયેલ મૂલ્યાંકનો ({count})",
+    "assessmentName": "મૂલ્યાંકન શીર્ષક",
+    "subjectCol": "વિષય",
+    "classCol": "ધોરણ",
+    "dateCol": "તારીખ",
+    "studentsCountCol": "કસોટી આપનાર બાળકો",
+    "averageScoreCol": "સરેરાશ ગુણ",
+    "actionsCol": "કાર્યવાહી",
+    "viewResults": "પરિણામો જુઓ",
+    "recordScoresModalTitle": "મૂલ્યાંકન ગુણ નોંધો",
+    "selectAssessment": "મૂલ્યાંકન પસંદ કરો",
+    "scorePercentage": "ગુણ (%)",
+    "enterScorePlaceholder": "૦ - ૧૦૦",
+    "notesPlaceholder": "અવલોકન અથવા ચોક્કસ ભૂલ પેટર્ન...",
+    "saveScoresBtn": "ગુણ સાચવો",
+    "scoresSavedSuccess": "ગુણ સફળતાપૂર્વક નોંધાયા. શિક્ષણ ત્રુટિઓ ફરી ગણતરી થઈ.",
+    "noAssessments": "પસંદ કરેલ ફિલ્ટરમાં કોઈ મૂલ્યાંકન મળ્યા નથી."
+  }
+}

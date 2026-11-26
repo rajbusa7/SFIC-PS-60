@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   Send,
   Paperclip,
@@ -9,7 +9,6 @@ import {
   FileText,
   Check,
   CheckCheck,
-  MoreVertical,
   Reply,
   Globe,
   Flag,
@@ -20,6 +19,8 @@ import {
   Loader2,
   Clock,
   Sparkles,
+  AlertCircle,
+  RotateCcw,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import type { Conversation, ChatMessage, ChatMessageAttachment } from "@/lib/types";
@@ -37,7 +38,216 @@ interface ChatWindowProps {
   onOpenGroupInfo: () => void;
   onBackMobile: () => void;
   onReportMessage?: (messageId: string, reason: string) => void;
+  onRetryMessage?: (msg: ChatMessage) => void;
+  hasMore?: boolean;
+  onLoadOlder?: () => void;
+  loadingOlder?: boolean;
 }
+
+// Memoized single message bubble for performance
+interface MessageBubbleProps {
+  msg: ChatMessage;
+  isOutgoing: boolean;
+  conversationType: string;
+  currentUserId: string;
+  language: string;
+  hasTranslation: boolean;
+  translatedText?: string;
+  isTranslating: boolean;
+  onReply: (msg: ChatMessage) => void;
+  onTranslate: (msg: ChatMessage) => void;
+  onReport?: (msgId: string, reason: string) => void;
+  onRetry?: (msg: ChatMessage) => void;
+}
+
+const MessageBubble = React.memo(function MessageBubble({
+  msg,
+  isOutgoing,
+  conversationType,
+  language,
+  hasTranslation,
+  translatedText,
+  isTranslating,
+  onReply,
+  onTranslate,
+  onReport,
+  onRetry,
+}: MessageBubbleProps) {
+  const formatTime = (isoString: string) => {
+    try {
+      const d = new Date(isoString);
+      return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    } catch {
+      return "";
+    }
+  };
+
+  return (
+    <div className={`flex flex-col ${isOutgoing ? "items-end" : "items-start"} group`}>
+      {/* Bubble Container */}
+      <div
+        className={`max-w-[85%] sm:max-w-[70%] rounded-2xl p-3 shadow-xs relative transition ${
+          isOutgoing
+            ? "bg-[#D9FDD3] dark:bg-[#203623] text-[#111B21] dark:text-[#E9EDEF] rounded-tr-xs"
+            : "bg-white dark:bg-[#202C33] text-[#111B21] dark:text-[#E9EDEF] rounded-tl-xs border border-[#49352F]/10 dark:border-white/5"
+        }`}
+      >
+        {/* Sender Name in Group Chat */}
+        {!isOutgoing && conversationType !== "direct" && (
+          <div className="flex items-center gap-1.5 mb-1">
+            <span className="font-bold text-[11px] text-[#1F513F] dark:text-[#25D366]">
+              {msg.senderName}
+            </span>
+            <span className="text-[9px] px-1 py-0.2 rounded bg-black/5 dark:bg-white/10 uppercase tracking-wider font-semibold">
+              {msg.senderRole}
+            </span>
+          </div>
+        )}
+
+        {/* Quoted Reply Preview */}
+        {msg.replyTo && (
+          <div className="mb-2 p-2 rounded-lg bg-black/5 dark:bg-white/10 border-l-4 border-[#2E7D5E] text-[11px]">
+            <div className="font-bold text-[#2E7D5E]">{msg.replyTo.senderName}</div>
+            <div className="text-gray-600 dark:text-gray-300 truncate">{msg.replyTo.text}</div>
+          </div>
+        )}
+
+        {/* Attachments */}
+        {msg.attachments && msg.attachments.length > 0 && (
+          <div className="mb-2 space-y-1.5">
+            {msg.attachments.map((att) => {
+              const isImage = att.mimeType.startsWith("image/");
+              return (
+                <div key={att.id} className="rounded-lg overflow-hidden border border-black/10">
+                  {isImage ? (
+                    <img
+                      src={att.url}
+                      alt={att.name}
+                      loading="lazy"
+                      className="max-h-56 w-full object-cover cursor-pointer hover:opacity-95"
+                      onClick={() => window.open(att.url, "_blank")}
+                    />
+                  ) : (
+                    <a
+                      href={att.url}
+                      download={att.name}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-2 p-2.5 bg-black/5 dark:bg-white/5 hover:bg-black/10 transition"
+                    >
+                      <FileText className="w-5 h-5 text-[#2E7D5E] flex-shrink-0" />
+                      <div className="flex-1 min-w-0 text-xs">
+                        <div className="font-semibold truncate">{att.name}</div>
+                        <div className="text-[10px] text-gray-500">
+                          {(att.size / 1024).toFixed(1)} KB
+                        </div>
+                      </div>
+                      <Download className="w-4 h-4 text-gray-500" />
+                    </a>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Message Body */}
+        {msg.text && (
+          <p className="text-xs sm:text-[13px] leading-relaxed whitespace-pre-wrap break-words">
+            {msg.text}
+          </p>
+        )}
+
+        {/* Translated Text if toggled */}
+        {hasTranslation && translatedText && (
+          <div className="mt-2 pt-2 border-t border-[#2E7D5E]/20 text-xs text-[#1F513F] dark:text-[#86EFAC] bg-[#2E7D5E]/5 p-2 rounded-lg">
+            <div className="text-[10px] font-bold uppercase tracking-wider mb-0.5 flex items-center gap-1">
+              <Globe className="w-3 h-3" />
+              <span>{language === "gu" ? "ગુજરાતી અનુવાદ:" : "Translation:"}</span>
+            </div>
+            <p className="whitespace-pre-wrap">{translatedText}</p>
+          </div>
+        )}
+
+        {/* Timestamp & Read Receipt */}
+        <div className="flex items-center justify-end gap-1 mt-1 text-[10px] text-[#667781] dark:text-[#8696A0]">
+          <span>{formatTime(msg.createdAt)}</span>
+          {isOutgoing && (
+            <span title={msg.status}>
+              {msg.status === "sending" ? (
+                <Clock className="w-3 h-3 text-gray-400 animate-pulse" />
+              ) : msg.status === "failed" ? (
+                <div className="flex items-center gap-1 text-red-500">
+                  <AlertCircle className="w-3 h-3" />
+                  <button
+                    onClick={() => onRetry?.(msg)}
+                    className="hover:underline flex items-center gap-0.5 font-bold"
+                  >
+                    <RotateCcw className="w-2.5 h-2.5" />
+                    <span>{language === "gu" ? "ફરી પ્રયાસ કરો" : "Retry"}</span>
+                  </button>
+                </div>
+              ) : msg.status === "read" ? (
+                <CheckCheck className="w-3.5 h-3.5 text-[#53BDEB]" />
+              ) : msg.status === "delivered" ? (
+                <CheckCheck className="w-3.5 h-3.5 text-gray-400" />
+              ) : (
+                <Check className="w-3.5 h-3.5 text-gray-400" />
+              )}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Floating Quick Action Buttons on hover */}
+      <div className="flex items-center gap-1.5 mt-0.5 opacity-0 group-hover:opacity-100 transition px-1">
+        <button
+          onClick={() => onReply(msg)}
+          title={language === "gu" ? "જવાબ આપો" : "Reply"}
+          className="p-1 rounded text-gray-500 hover:text-[#2E7D5E] hover:bg-black/5"
+        >
+          <Reply className="w-3.5 h-3.5" />
+        </button>
+
+        {msg.text && (
+          <button
+            onClick={() => onTranslate(msg)}
+            disabled={isTranslating}
+            title={
+              hasTranslation
+                ? language === "gu" ? "મૂળ જુઓ" : "Show Original"
+                : language === "gu" ? "ગુજરાતીમાં અનુવાદ" : "Translate"
+            }
+            className="p-1 rounded text-gray-500 hover:text-[#2E7D5E] hover:bg-black/5"
+          >
+            {isTranslating ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Globe className="w-3.5 h-3.5" />
+            )}
+          </button>
+        )}
+
+        {!isOutgoing && onReport && (
+          <button
+            onClick={() => {
+              const reason = prompt(
+                language === "gu"
+                  ? "સંદેશ રિપોર્ટ કરવાનું કારણ દાખલ કરો:"
+                  : "Reason for reporting message:"
+              );
+              if (reason) onReport(msg.id, reason);
+            }}
+            title={language === "gu" ? "રિપોર્ટ કરો" : "Report"}
+            className="p-1 rounded text-gray-400 hover:text-red-500 hover:bg-black/5"
+          >
+            <Flag className="w-3 h-3" />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+});
 
 export function ChatWindow({
   conversation,
@@ -48,57 +258,82 @@ export function ChatWindow({
   onOpenGroupInfo,
   onBackMobile,
   onReportMessage,
+  onRetryMessage,
+  hasMore = false,
+  onLoadOlder,
+  loadingOlder = false,
 }: ChatWindowProps) {
   const { language } = useLanguage();
   const [inputText, setInputText] = useState("");
-  const [sending, setSending] = useState(false);
   const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
   const [attachments, setAttachments] = useState<ChatMessageAttachment[]>([]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [translatedMessages, setTranslatedMessages] = useState<Record<string, string>>({});
   const [translatingId, setTranslatingId] = useState<string | null>(null);
-  const [isTypingSimulated, setIsTypingSimulated] = useState(false);
 
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isNearBottomRef = useRef(true);
 
-  // Auto scroll to bottom
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  // Scroll detection to avoid jumping when user reads older messages
+  const handleScroll = useCallback(() => {
+    if (!scrollContainerRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
+    isNearBottomRef.current = scrollHeight - scrollTop - clientHeight < 120;
+  }, []);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  // Handle Send
-  const handleSend = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!inputText.trim() && attachments.length === 0) return;
-
-    setSending(true);
-    try {
-      await onSendMessage({
-        text: inputText.trim(),
-        attachments: attachments.length > 0 ? attachments : undefined,
-        replyTo: replyingTo
-          ? {
-              id: replyingTo.id,
-              senderName: replyingTo.senderName,
-              text: replyingTo.text.substring(0, 80),
-            }
-          : undefined,
-      });
-
-      setInputText("");
-      setAttachments([]);
-      setReplyingTo(null);
-      setShowEmojiPicker(false);
-    } catch (err) {
-      console.error("Failed to send message:", err);
-    } finally {
-      setSending(false);
+  const scrollToBottom = useCallback((force = false) => {
+    if (force || isNearBottomRef.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: force ? "auto" : "smooth" });
     }
+  }, []);
+
+  // Jump to bottom when switching conversation
+  useEffect(() => {
+    scrollToBottom(true);
+  }, [conversation.id, scrollToBottom]);
+
+  // Track message count changes to auto-scroll if user is at bottom or just sent
+  const prevMsgCountRef = useRef(messages.length);
+  useEffect(() => {
+    if (messages.length > prevMsgCountRef.current) {
+      const lastMsg = messages[messages.length - 1];
+      const isMine = lastMsg?.senderId === currentUserId;
+      scrollToBottom(isMine);
+    }
+    prevMsgCountRef.current = messages.length;
+  }, [messages.length, currentUserId, scrollToBottom]);
+
+  // Handle Send: Optimistic & Non-blocking
+  const handleSend = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const textToSend = inputText.trim();
+    if (!textToSend && attachments.length === 0) return;
+
+    const currentAttachments = attachments;
+    const currentReply = replyingTo
+      ? {
+          id: replyingTo.id,
+          senderName: replyingTo.senderName,
+          text: replyingTo.text.substring(0, 80),
+        }
+      : undefined;
+
+    // Immediately clear input fields so user can type the next message without lag
+    setInputText("");
+    setAttachments([]);
+    setReplyingTo(null);
+    setShowEmojiPicker(false);
+
+    // Dispatch send in background
+    onSendMessage({
+      text: textToSend,
+      attachments: currentAttachments.length > 0 ? currentAttachments : undefined,
+      replyTo: currentReply,
+    }).catch((err) => {
+      console.error("Failed to send message:", err);
+    });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -138,12 +373,13 @@ export function ChatWindow({
   };
 
   // Handle In-line Translation
-  const handleTranslateMessage = async (msg: ChatMessage) => {
+  const handleTranslateMessage = useCallback(async (msg: ChatMessage) => {
     if (translatedMessages[msg.id]) {
-      // Toggle off
-      const copy = { ...translatedMessages };
-      delete copy[msg.id];
-      setTranslatedMessages(copy);
+      setTranslatedMessages((prev) => {
+        const copy = { ...prev };
+        delete copy[msg.id];
+        return copy;
+      });
       return;
     }
 
@@ -167,14 +403,9 @@ export function ChatWindow({
     } finally {
       setTranslatingId(null);
     }
-  };
+  }, [language, translatedMessages]);
 
   const quickEmojis = ["🙏", "👍", "❤️", "👏", "🎉", "📚", "✅", "👌", "😊", "💐"];
-
-  const formatTime = (isoString: string) => {
-    const d = new Date(isoString);
-    return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  };
 
   const isParentRepliesDisabled =
     conversation.type === "announcement" &&
@@ -252,7 +483,31 @@ export function ChatWindow({
       )}
 
       {/* Messages Scroll Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-[radial-gradient(#49352F_0.75px,transparent_0.75px)] dark:bg-[radial-gradient(#F4F1E1_0.75px,transparent_0.75px)] [background-size:16px_16px] [background-color:#EFEAE2] dark:[background-color:#161210]">
+      <div
+        ref={scrollContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-[radial-gradient(#49352F_0.75px,transparent_0.75px)] dark:bg-[radial-gradient(#F4F1E1_0.75px,transparent_0.75px)] [background-size:16px_16px] [background-color:#EFEAE2] dark:[background-color:#161210]"
+      >
+        {/* Load Older Messages Trigger */}
+        {hasMore && (
+          <div className="flex justify-center py-2">
+            <button
+              onClick={onLoadOlder}
+              disabled={loadingOlder}
+              className="px-3 py-1 bg-white/80 dark:bg-[#201A17]/80 hover:bg-white dark:hover:bg-[#261E1A] text-[11px] font-semibold text-[#49352F] dark:text-[#F4F1E1] rounded-full border border-[#49352F]/15 shadow-2xs transition flex items-center gap-1.5"
+            >
+              {loadingOlder ? (
+                <>
+                  <Loader2 className="w-3 h-3 animate-spin text-[#2E7D5E]" />
+                  <span>{language === "gu" ? "લોડ કરી રહ્યું છે..." : "Loading older messages..."}</span>
+                </>
+              ) : (
+                <span>{language === "gu" ? "અગાઉના સંદેશા જુઓ" : "Load older messages"}</span>
+              )}
+            </button>
+          </div>
+        )}
+
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center p-6 text-[#49352F]/60 dark:text-[#F4F1E1]/60">
             <div className="w-12 h-12 rounded-full bg-[#F4F1E1] dark:bg-[#261E1A] flex items-center justify-center mb-3 text-[#2E7D5E]">
@@ -268,163 +523,23 @@ export function ChatWindow({
             </p>
           </div>
         ) : (
-          messages.map((msg) => {
-            const isOutgoing = msg.senderId === currentUserId;
-            const hasTranslation = Boolean(translatedMessages[msg.id]);
-
-            return (
-              <div
-                key={msg.id}
-                className={`flex flex-col ${isOutgoing ? "items-end" : "items-start"} group`}
-              >
-                {/* Bubble Container */}
-                <div
-                  className={`max-w-[85%] sm:max-w-[70%] rounded-2xl p-3 shadow-xs relative transition ${
-                    isOutgoing
-                      ? "bg-[#D9FDD3] dark:bg-[#203623] text-[#111B21] dark:text-[#E9EDEF] rounded-tr-xs"
-                      : "bg-white dark:bg-[#202C33] text-[#111B21] dark:text-[#E9EDEF] rounded-tl-xs border border-[#49352F]/10 dark:border-white/5"
-                  }`}
-                >
-                  {/* Sender Name in Group Chat */}
-                  {!isOutgoing && conversation.type !== "direct" && (
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <span className="font-bold text-[11px] text-[#1F513F] dark:text-[#25D366]">
-                        {msg.senderName}
-                      </span>
-                      <span className="text-[9px] px-1 py-0.2 rounded bg-black/5 dark:bg-white/10 uppercase tracking-wider font-semibold">
-                        {msg.senderRole}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Quoted Reply Preview */}
-                  {msg.replyTo && (
-                    <div className="mb-2 p-2 rounded-lg bg-black/5 dark:bg-white/10 border-l-4 border-[#2E7D5E] text-[11px]">
-                      <div className="font-bold text-[#2E7D5E]">{msg.replyTo.senderName}</div>
-                      <div className="text-gray-600 dark:text-gray-300 truncate">
-                        {msg.replyTo.text}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Attachments */}
-                  {msg.attachments && msg.attachments.length > 0 && (
-                    <div className="mb-2 space-y-1.5">
-                      {msg.attachments.map((att) => {
-                        const isImage = att.mimeType.startsWith("image/");
-                        return (
-                          <div key={att.id} className="rounded-lg overflow-hidden border border-black/10">
-                            {isImage ? (
-                              <img
-                                src={att.url}
-                                alt={att.name}
-                                className="max-h-56 w-full object-cover cursor-pointer hover:opacity-95"
-                                onClick={() => window.open(att.url, "_blank")}
-                              />
-                            ) : (
-                              <a
-                                href={att.url}
-                                download={att.name}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="flex items-center gap-2 p-2.5 bg-black/5 dark:bg-white/5 hover:bg-black/10 transition"
-                              >
-                                <FileText className="w-5 h-5 text-[#2E7D5E] flex-shrink-0" />
-                                <div className="flex-1 min-w-0 text-xs">
-                                  <div className="font-semibold truncate">{att.name}</div>
-                                  <div className="text-[10px] text-gray-500">
-                                    {(att.size / 1024).toFixed(1)} KB
-                                  </div>
-                                </div>
-                                <Download className="w-4 h-4 text-gray-500" />
-                              </a>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {/* Message Body */}
-                  <p className="text-xs sm:text-[13px] leading-relaxed whitespace-pre-wrap break-words">
-                    {msg.text}
-                  </p>
-
-                  {/* Translated Text if toggled */}
-                  {hasTranslation && (
-                    <div className="mt-2 pt-2 border-t border-[#2E7D5E]/20 text-xs text-[#1F513F] dark:text-[#86EFAC] bg-[#2E7D5E]/5 p-2 rounded-lg">
-                      <div className="text-[10px] font-bold uppercase tracking-wider mb-0.5 flex items-center gap-1">
-                        <Globe className="w-3 h-3" />
-                        <span>{language === "gu" ? "ગુજરાતી અનુવાદ:" : "Translation:"}</span>
-                      </div>
-                      <p className="whitespace-pre-wrap">{translatedMessages[msg.id]}</p>
-                    </div>
-                  )}
-
-                  {/* Timestamp & Read Receipt */}
-                  <div className="flex items-center justify-end gap-1 mt-1 text-[10px] text-[#667781] dark:text-[#8696A0]">
-                    <span>{formatTime(msg.createdAt)}</span>
-                    {isOutgoing && (
-                      <span title={msg.status}>
-                        {msg.status === "read" ? (
-                          <CheckCheck className="w-3.5 h-3.5 text-[#53BDEB]" />
-                        ) : msg.status === "delivered" ? (
-                          <CheckCheck className="w-3.5 h-3.5 text-gray-400" />
-                        ) : (
-                          <Check className="w-3.5 h-3.5 text-gray-400" />
-                        )}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Floating Quick Action Buttons on hover */}
-                <div className="flex items-center gap-1.5 mt-0.5 opacity-0 group-hover:opacity-100 transition px-1">
-                  <button
-                    onClick={() => setReplyingTo(msg)}
-                    title={language === "gu" ? "જવાબ આપો" : "Reply"}
-                    className="p-1 rounded text-gray-500 hover:text-[#2E7D5E] hover:bg-black/5"
-                  >
-                    <Reply className="w-3.5 h-3.5" />
-                  </button>
-
-                  <button
-                    onClick={() => handleTranslateMessage(msg)}
-                    disabled={translatingId === msg.id}
-                    title={
-                      hasTranslation
-                        ? language === "gu" ? "મૂળ જુઓ" : "Show Original"
-                        : language === "gu" ? "ગુજરાતીમાં અનુવાદ" : "Translate"
-                    }
-                    className="p-1 rounded text-gray-500 hover:text-[#2E7D5E] hover:bg-black/5"
-                  >
-                    {translatingId === msg.id ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <Globe className="w-3.5 h-3.5" />
-                    )}
-                  </button>
-
-                  {!isOutgoing && onReportMessage && (
-                    <button
-                      onClick={() => {
-                        const reason = prompt(
-                          language === "gu"
-                            ? "સંદેશ રિપોર્ટ કરવાનું કારણ દાખલ કરો:"
-                            : "Reason for reporting message:"
-                        );
-                        if (reason) onReportMessage(msg.id, reason);
-                      }}
-                      title={language === "gu" ? "રિપોર્ટ કરો" : "Report"}
-                      className="p-1 rounded text-gray-400 hover:text-red-500 hover:bg-black/5"
-                    >
-                      <Flag className="w-3 h-3" />
-                    </button>
-                  )}
-                </div>
-              </div>
-            );
-          })
+          messages.map((msg) => (
+            <MessageBubble
+              key={msg.id}
+              msg={msg}
+              isOutgoing={msg.senderId === currentUserId}
+              conversationType={conversation.type}
+              currentUserId={currentUserId}
+              language={language}
+              hasTranslation={Boolean(translatedMessages[msg.id])}
+              translatedText={translatedMessages[msg.id]}
+              isTranslating={translatingId === msg.id}
+              onReply={setReplyingTo}
+              onTranslate={handleTranslateMessage}
+              onReport={onReportMessage}
+              onRetry={onRetryMessage}
+            />
+          ))
         )}
         <div ref={messagesEndRef} />
       </div>
@@ -539,14 +654,10 @@ export function ChatWindow({
           {/* Send Button */}
           <button
             onClick={() => handleSend()}
-            disabled={sending || (!inputText.trim() && attachments.length === 0)}
+            disabled={!inputText.trim() && attachments.length === 0}
             className="w-10 h-10 rounded-xl bg-[#2E7D5E] hover:bg-[#24634B] text-white flex items-center justify-center shadow-xs transition active:scale-95 disabled:opacity-40 disabled:pointer-events-none flex-shrink-0"
           >
-            {sending ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Send className="w-4 h-4" />
-            )}
+            <Send className="w-4 h-4" />
           </button>
         </div>
       )}

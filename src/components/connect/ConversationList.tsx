@@ -21,14 +21,16 @@ interface ConversationListProps {
   onSelectConv: (conv: Conversation) => void;
   onOpenNewModal: () => void;
   unreadTotal: number;
+  currentUserId?: string;
 }
 
-export function ConversationList({
+export function ConversationListComponent({
   conversations,
   selectedConvId,
   onSelectConv,
   onOpenNewModal,
   unreadTotal,
+  currentUserId,
 }: ConversationListProps) {
   const { language } = useLanguage();
   const [filterType, setFilterType] = useState<"all" | ConversationType>("all");
@@ -220,11 +222,18 @@ export function ConversationList({
                     </p>
 
                     {/* Unread Pill */}
-                    {conv.unreadCounts && Object.values(conv.unreadCounts).some((v) => v > 0) && (
-                      <span className="w-5 h-5 rounded-full bg-[#2E7D5E] text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0 shadow-xs">
-                        {Math.max(...Object.values(conv.unreadCounts))}
-                      </span>
-                    )}
+                    {(() => {
+                      const unread = conv.unreadCounts
+                        ? currentUserId
+                          ? conv.unreadCounts[currentUserId] || 0
+                          : Math.max(0, ...Object.values(conv.unreadCounts))
+                        : 0;
+                      return unread > 0 ? (
+                        <span className="min-w-5 h-5 px-1.5 rounded-full bg-[#2E7D5E] text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0 shadow-xs">
+                          {unread}
+                        </span>
+                      ) : null;
+                    })()}
                   </div>
                 </div>
               </div>
@@ -235,3 +244,5 @@ export function ConversationList({
     </div>
   );
 }
+
+export const ConversationList = React.memo(ConversationListComponent);

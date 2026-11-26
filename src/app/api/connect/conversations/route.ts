@@ -11,6 +11,13 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
+    const badgeOnly = searchParams.get("badgeOnly") === "true" || searchParams.get("badgeOnly") === "1";
+
+    if (badgeOnly) {
+      const unreadTotal = db.getUnreadChatCount(user.id);
+      return NextResponse.json({ success: true, unreadTotal });
+    }
+
     const typeFilter = searchParams.get("type") as ConversationType | null;
     const searchQuery = searchParams.get("search")?.toLowerCase().trim();
 

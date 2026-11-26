@@ -2856,11 +2856,42 @@ export const db = {
     return store.conversations.length < initialLen;
   },
 
-  getMessages(conversationId: string, limit = 100): ChatMessage[] {
+  getMessages(
+    conversationId: string,
+    options?: { limit?: number; since?: string; before?: string } | number
+  ): ChatMessage[] & { messages: ChatMessage[]; hasMore: boolean; totalCount: number } {
     const store = loadStore();
-    const msgs = (store.chatMessages || []).filter((m) => m.conversationId === conversationId);
-    msgs.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-    return msgs.slice(-limit);
+    const allMsgs = (store.chatMessages || []).filter((m) => m.conversationId === conversationId);
+    allMsgs.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+    const totalCount = allMsgs.length;
+    const opts = typeof options === "number" ? { limit: options } : options || {};
+
+    let selectedSlice: ChatMessage[] = [];
+    let hasMore = false;
+
+    // Incremental polling: messages strictly after `since`
+    if (opts.since) {
+      const sinceTime = new Date(opts.since).getTime();
+      selectedSlice = allMsgs.filter((m) => new Date(m.createdAt).getTime() > sinceTime);
+      hasMore = false;
+    } else if (opts.before) {
+      const limit = opts.limit || 40;
+      const beforeTime = new Date(opts.before).getTime();
+      const olderCandidates = allMsgs.filter((m) => new Date(m.createdAt).getTime() < beforeTime);
+      selectedSlice = olderCandidates.slice(-limit);
+      hasMore = olderCandidates.length > selectedSlice.length;
+    } else {
+      const limit = opts.limit || 40;
+      selectedSlice = allMsgs.slice(-limit);
+      hasMore = allMsgs.length > selectedSlice.length;
+    }
+
+    const result = selectedSlice as any;
+    result.messages = selectedSlice;
+    result.hasMore = hasMore;
+    result.totalCount = totalCount;
+    return result;
   },
 
   saveMessage(msg: ChatMessage): ChatMessage {
@@ -2906,14 +2937,17 @@ export const db = {
       }
     }
 
+    let unreadCountChanged = false;
     if (store.conversations) {
       const conv = store.conversations.find((c) => c.id === conversationId);
-      if (conv && conv.unreadCounts) {
+      if (conv && conv.unreadCounts && conv.unreadCounts[userId] && conv.unreadCounts[userId] > 0) {
         conv.unreadCounts[userId] = 0;
+        unreadCountChanged = true;
       }
     }
 
-    if (count > 0 || (store.conversations && store.conversations.some((c) => c.id === conversationId))) {
+    // ONLY write to disk if an actual message was marked or an unread count was reset!
+    if (count > 0 || unreadCountChanged) {
       saveStore(store);
     }
     return count;

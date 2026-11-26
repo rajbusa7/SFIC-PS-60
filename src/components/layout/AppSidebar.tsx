@@ -39,7 +39,7 @@ export function AppSidebar() {
 
   React.useEffect(() => {
     const fetchUnread = () => {
-      fetch("/api/connect/conversations")
+      fetch("/api/connect/conversations?badgeOnly=1")
         .then((r) => r.json())
         .then((d) => {
           if (d.success && typeof d.unreadTotal === "number") {

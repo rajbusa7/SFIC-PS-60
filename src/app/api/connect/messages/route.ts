@@ -23,15 +23,22 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: false, error: "Forbidden: You are not authorized to view messages in this conversation." }, { status: 403 });
     }
 
-    const limit = Math.min(200, Math.max(10, Number(searchParams.get("limit") || "100")));
-    const messages = db.getMessages(conversationId, limit);
+    const limit = Math.min(100, Math.max(10, Number(searchParams.get("limit") || "40")));
+    const since = searchParams.get("since") || undefined;
+    const before = searchParams.get("before") || undefined;
 
-    // Auto mark as read for viewer
-    db.markMessagesAsRead(conversationId, user.id);
+    const result = db.getMessages(conversationId, { limit, since, before });
+
+    // Mark as read only if it's an initial fetch or explicit read (not a pure since poll with no new messages)
+    if (!since || result.messages.length > 0) {
+      db.markMessagesAsRead(conversationId, user.id);
+    }
 
     return NextResponse.json({
       success: true,
-      messages,
+      messages: result.messages,
+      hasMore: result.hasMore,
+      totalCount: result.totalCount,
       conversationTitle: conversation.title,
       type: conversation.type,
     });

@@ -8,7 +8,7 @@ import { GroupInfoDrawer } from "@/components/connect/GroupInfoDrawer";
 import { NewChatModal } from "@/components/connect/NewChatModal";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
-import { MessageSquare, ShieldCheck, Sparkles, Loader2 } from "lucide-react";
+import { MessageSquare, ShieldCheck, Loader2 } from "lucide-react";
 import type { Conversation, ChatMessage, ChatMessageAttachment } from "@/lib/types";
 
 export default function ConnectChatPage() {
@@ -21,25 +21,34 @@ export default function ConnectChatPage() {
   const [unreadTotal, setUnreadTotal] = useState(0);
 
   const [loadingConvs, setLoadingConvs] = useState(true);
-  const [loadingMsgs, setLoadingMsgs] = useState(false);
+  const [loadingOlder, setLoadingOlder] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
   const [isGroupInfoOpen, setIsGroupInfoOpen] = useState(false);
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
 
   const currentUserId = user?.id || (role === "parent" ? "par-001" : role === "admin" ? "usr-admin-01" : "usr-teacher-01");
   const currentUserRole = role || user?.role || "teacher";
 
-  // Fetch conversations
+  // Stable refs to prevent interval recreation and stale closures
+  const selectedConvRef = useRef<Conversation | null>(null);
+  selectedConvRef.current = selectedConv;
+
+  const messagesRef = useRef<ChatMessage[]>([]);
+  messagesRef.current = messages;
+
+  // 1. Fetch conversations with lightweight JSON diff check
   const fetchConversations = useCallback(async () => {
     try {
       const res = await fetch("/api/connect/conversations");
       const data = await res.json();
       if (data.success) {
-        setConversations(data.conversations || []);
+        const freshConvs = data.conversations || [];
+        setConversations(freshConvs);
         setUnreadTotal(data.unreadTotal || 0);
 
-        // Keep selected conversation updated if present
-        if (selectedConv) {
-          const fresh = (data.conversations || []).find((c: Conversation) => c.id === selectedConv.id);
+        // Keep selected conversation metadata updated
+        if (selectedConvRef.current) {
+          const fresh = freshConvs.find((c: Conversation) => c.id === selectedConvRef.current?.id);
           if (fresh) setSelectedConv(fresh);
         }
       }
@@ -48,45 +57,117 @@ export default function ConnectChatPage() {
     } finally {
       setLoadingConvs(false);
     }
-  }, [selectedConv]);
+  }, []);
 
-  // Initial load + interval polling for conversations list
+  // Conversations polling (every 10s when tab is active)
   useEffect(() => {
     fetchConversations();
-    const interval = setInterval(fetchConversations, 8000);
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && document.visibilityState === "visible") {
+        fetchConversations();
+      }
+    }, 10000);
     return () => clearInterval(interval);
   }, [fetchConversations]);
 
-  // Fetch messages for selected conversation
-  const fetchMessages = useCallback(async (convId: string, isSilent = false) => {
-    if (!isSilent) setLoadingMsgs(true);
+  // 2. Initial load for selected conversation messages (limit 40)
+  const loadInitialMessages = useCallback(async (convId: string) => {
     try {
-      const res = await fetch(`/api/connect/messages?conversationId=${convId}`);
+      const res = await fetch(`/api/connect/messages?conversationId=${convId}&limit=40`);
       const data = await res.json();
-      if (data.success) {
+      if (data.success && selectedConvRef.current?.id === convId) {
         setMessages(data.messages || []);
+        setHasMore(Boolean(data.hasMore));
       }
     } catch (e) {
-      console.error("Failed to fetch messages:", e);
-    } finally {
-      if (!isSilent) setLoadingMsgs(false);
+      console.error("Failed to load initial messages:", e);
     }
   }, []);
 
-  // Poll messages every 4 seconds when conversation is active
+  // When selected conversation changes
   useEffect(() => {
     if (!selectedConv) {
       setMessages([]);
+      setHasMore(false);
+      return;
+    }
+    loadInitialMessages(selectedConv.id);
+  }, [selectedConv?.id, loadInitialMessages]);
+
+  // 3. Incremental polling: query only messages strictly after the newest message
+  const pollNewMessages = useCallback(async () => {
+    const convId = selectedConvRef.current?.id;
+    if (!convId) return;
+    if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
+
+    const currentList = messagesRef.current;
+    // Find the latest non-temporary timestamp
+    let latestTimestamp: string | undefined;
+    for (let i = currentList.length - 1; i >= 0; i--) {
+      if (!currentList[i].id.startsWith("temp-")) {
+        latestTimestamp = currentList[i].createdAt;
+        break;
+      }
+    }
+
+    if (!latestTimestamp) {
       return;
     }
 
-    fetchMessages(selectedConv.id, false);
-    const msgInterval = setInterval(() => {
-      fetchMessages(selectedConv.id, true);
-    }, 4000);
+    try {
+      const url = `/api/connect/messages?conversationId=${convId}&since=${encodeURIComponent(latestTimestamp)}`;
+      const res = await fetch(url);
+      const data = await res.json();
 
-    return () => clearInterval(msgInterval);
-  }, [selectedConv, fetchMessages]);
+      if (data.success && Array.isArray(data.messages) && data.messages.length > 0) {
+        if (selectedConvRef.current?.id !== convId) return;
+
+        setMessages((prev) => {
+          const newMsgs: ChatMessage[] = [];
+          for (const incoming of data.messages) {
+            // Deduplicate: check if ID exists or if it matches an optimistic pending message
+            const exists = prev.some((m) => m.id === incoming.id);
+            if (!exists) {
+              newMsgs.push(incoming);
+            }
+          }
+          if (newMsgs.length === 0) return prev;
+          return [...prev, ...newMsgs];
+        });
+      }
+    } catch (e) {
+      console.error("Incremental poll error:", e);
+    }
+  }, []);
+
+  // Poll for new messages every 3.5 seconds
+  useEffect(() => {
+    if (!selectedConv) return;
+    const interval = setInterval(pollNewMessages, 3500);
+    return () => clearInterval(interval);
+  }, [selectedConv?.id, pollNewMessages]);
+
+  // 4. Pagination: Load Older Messages
+  const handleLoadOlder = useCallback(async () => {
+    if (loadingOlder || !selectedConv || messages.length === 0) return;
+    const oldestTimestamp = messages[0]?.createdAt;
+    if (!oldestTimestamp) return;
+
+    setLoadingOlder(true);
+    try {
+      const url = `/api/connect/messages?conversationId=${selectedConv.id}&before=${encodeURIComponent(oldestTimestamp)}&limit=40`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.success && Array.isArray(data.messages)) {
+        setMessages((prev) => [...data.messages, ...prev]);
+        setHasMore(Boolean(data.hasMore));
+      }
+    } catch (e) {
+      console.error("Failed to load older messages:", e);
+    } finally {
+      setLoadingOlder(false);
+    }
+  }, [loadingOlder, selectedConv, messages]);
 
   // Auto-select first conversation on initial desktop load if none selected
   useEffect(() => {
@@ -95,20 +176,56 @@ export default function ConnectChatPage() {
     }
   }, [conversations, selectedConv]);
 
-  // Send Message
-  const handleSendMessage = async (payload: {
+  // 5. Send Message: Optimistic UI with immediate append
+  const handleSendMessage = useCallback(async (payload: {
     text: string;
     attachments?: ChatMessageAttachment[];
     replyTo?: { id: string; senderName: string; text: string };
   }) => {
-    if (!selectedConv) return;
+    if (!selectedConvRef.current) return;
+    const convId = selectedConvRef.current.id;
 
+    const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    const now = new Date().toISOString();
+
+    const optimisticMsg: ChatMessage = {
+      id: tempId,
+      conversationId: convId,
+      senderId: currentUserId,
+      senderName: user?.name || (currentUserRole === "parent" ? "Parent" : "Teacher"),
+      senderRole: currentUserRole,
+      text: payload.text,
+      attachments: payload.attachments,
+      replyTo: payload.replyTo,
+      status: "sending",
+      readBy: [{ userId: currentUserId, readAt: now }],
+      createdAt: now,
+    };
+
+    // Immediate append to messages
+    setMessages((prev) => [...prev, optimisticMsg]);
+
+    // Optimistically update conversation snippet in list
+    setConversations((prev) =>
+      prev.map((c) =>
+        c.id === convId
+          ? {
+              ...c,
+              lastMessageText: payload.text || (payload.attachments?.length ? "[Attachment]" : ""),
+              lastMessageAt: now,
+              lastMessageSenderName: user?.name || "You",
+            }
+          : c
+      )
+    );
+
+    // Send to backend in background
     try {
       const res = await fetch("/api/connect/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          conversationId: selectedConv.id,
+          conversationId: convId,
           text: payload.text,
           attachments: payload.attachments,
           replyTo: payload.replyTo,
@@ -117,18 +234,63 @@ export default function ConnectChatPage() {
 
       const data = await res.json();
       if (data.success && data.message) {
-        // Optimistic append
-        setMessages((prev) => [...prev, data.message]);
-
-        // Refresh conversation list to reflect last message
-        fetchConversations();
-      } else if (data.error) {
-        alert(data.error);
+        // Reconcile: replace temp message with server message
+        setMessages((prev) =>
+          prev.map((m) => (m.id === tempId ? { ...data.message, status: "sent" } : m))
+        );
+      } else {
+        // Mark optimistic message as failed
+        setMessages((prev) =>
+          prev.map((m) => (m.id === tempId ? { ...m, status: "failed" } : m))
+        );
+        if (data.error) alert(data.error);
       }
     } catch (e) {
       console.error("Send message error:", e);
+      setMessages((prev) =>
+        prev.map((m) => (m.id === tempId ? { ...m, status: "failed" } : m))
+      );
     }
-  };
+  }, [currentUserId, currentUserRole, user?.name]);
+
+  // Retry sending a failed message
+  const handleRetryMessage = useCallback(async (failedMsg: ChatMessage) => {
+    if (!selectedConvRef.current) return;
+    const convId = selectedConvRef.current.id;
+
+    // Reset status to sending
+    setMessages((prev) =>
+      prev.map((m) => (m.id === failedMsg.id ? { ...m, status: "sending" } : m))
+    );
+
+    try {
+      const res = await fetch("/api/connect/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          conversationId: convId,
+          text: failedMsg.text,
+          attachments: failedMsg.attachments,
+          replyTo: failedMsg.replyTo,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success && data.message) {
+        setMessages((prev) =>
+          prev.map((m) => (m.id === failedMsg.id ? { ...data.message, status: "sent" } : m))
+        );
+      } else {
+        setMessages((prev) =>
+          prev.map((m) => (m.id === failedMsg.id ? { ...m, status: "failed" } : m))
+        );
+      }
+    } catch {
+      setMessages((prev) =>
+        prev.map((m) => (m.id === failedMsg.id ? { ...m, status: "failed" } : m))
+      );
+    }
+  }, []);
 
   // Direct Contact Select from Modal
   const handleSelectContact = async (contact: any) => {
@@ -245,7 +407,7 @@ export default function ConnectChatPage() {
   return (
     <AppLayout>
       <div className="h-[calc(100vh-8.5rem)] sm:h-[calc(100vh-7.5rem)] min-h-[500px] w-full rounded-2xl border border-[#49352F]/15 dark:border-[#F4F1E1]/15 overflow-hidden shadow-lg bg-white dark:bg-[#1B1614] flex relative">
-        {/* Left Panel: Conversation List (Visible on desktop or when no conversation selected on mobile) */}
+        {/* Left Panel: Conversation List */}
         <div
           className={`w-full md:w-80 lg:w-96 flex-shrink-0 h-full ${
             selectedConv ? "hidden md:flex flex-col" : "flex flex-col"
@@ -263,11 +425,12 @@ export default function ConnectChatPage() {
               onSelectConv={(conv) => setSelectedConv(conv)}
               onOpenNewModal={() => setIsNewModalOpen(true)}
               unreadTotal={unreadTotal}
+              currentUserId={currentUserId}
             />
           )}
         </div>
 
-        {/* Right Panel: Chat Window (Visible on desktop or when conversation selected on mobile) */}
+        {/* Right Panel: Chat Window */}
         <div
           className={`flex-1 h-full min-w-0 ${
             selectedConv ? "flex flex-col" : "hidden md:flex flex-col items-center justify-center bg-[#EFEAE2] dark:bg-[#161210]"
@@ -283,6 +446,10 @@ export default function ConnectChatPage() {
               onOpenGroupInfo={() => setIsGroupInfoOpen(true)}
               onBackMobile={() => setSelectedConv(null)}
               onReportMessage={handleReportMessage}
+              onRetryMessage={handleRetryMessage}
+              hasMore={hasMore}
+              onLoadOlder={handleLoadOlder}
+              loadingOlder={loadingOlder}
             />
           ) : (
             /* Empty state when no chat selected on desktop */

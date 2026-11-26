@@ -32,7 +32,7 @@ export interface ChatMessage {
   textGujarati?: string;
   attachments?: ChatMessageAttachment[];
   replyTo?: ChatMessageReplyContext;
-  status: "sent" | "delivered" | "read";
+  status: "sending" | "sent" | "delivered" | "read" | "failed";
   readBy: ChatMessageReadReceipt[];
   isAnnouncement?: boolean;
   isPinned?: boolean;

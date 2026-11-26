@@ -165,4 +165,40 @@ describe("ShikshaSetu Connect — WhatsApp-Style Parent-Teacher Chat System", ()
     assert.strictEqual(updated?.isReported, true);
     assert.strictEqual(updated?.reportReason, "Contains outdated homework date");
   });
+
+  it("7. Pagination and Incremental Polling work efficiently", () => {
+    const convId = "conv-class-4a";
+    // Test initial page limit
+    const paged = db.getMessages(convId, { limit: 3 });
+    assert.ok(paged.length <= 3, "Limit should constrain message batch size");
+    assert.strictEqual(typeof paged.totalCount, "number");
+
+    // Test incremental polling with `since`
+    const oldest = paged[0];
+    const newer = db.getMessages(convId, { since: oldest.createdAt });
+    assert.ok(Array.isArray(newer));
+    for (const msg of newer) {
+      assert.ok(new Date(msg.createdAt).getTime() > new Date(oldest.createdAt).getTime());
+    }
+
+    // Test pagination with `before`
+    const newest = paged[paged.length - 1];
+    const older = db.getMessages(convId, { before: newest.createdAt, limit: 3 });
+    assert.ok(Array.isArray(older));
+    for (const msg of older) {
+      assert.ok(new Date(msg.createdAt).getTime() < new Date(newest.createdAt).getTime());
+    }
+  });
+
+  it("8. markMessagesAsRead does not write to disk when zero unread messages exist", () => {
+    const convId = "conv-class-4a";
+    const userId = "usr-teacher-01";
+
+    // First ensure all read
+    db.markMessagesAsRead(convId, userId);
+
+    // Second call should mark 0 messages and avoid redundant disk writes
+    const secondCallCount = db.markMessagesAsRead(convId, userId);
+    assert.strictEqual(secondCallCount, 0, "No new messages should be marked on second immediate read");
+  });
 });

@@ -3478,7 +3478,21 @@ export const db = {
     if (options?.date) {
       list = list.filter((m) => m.scheduledDate === options.date);
     }
-    return list.sort((a, b) => a.scheduledDate.localeCompare(b.scheduledDate) || a.startTime.localeCompare(b.startTime));
+    const sanitizedList = list.map((m) => ({
+      ...m,
+      scheduledDate: m.scheduledDate || (m as any).date || new Date().toISOString().split("T")[0],
+      startTime: m.startTime || "10:00",
+      durationMinutes: m.durationMinutes || 30,
+      status: m.status || "scheduled",
+    }));
+
+    return sanitizedList.sort((a, b) => {
+      const dateA = a.scheduledDate || "";
+      const dateB = b.scheduledDate || "";
+      const timeA = a.startTime || "";
+      const timeB = b.startTime || "";
+      return dateA.localeCompare(dateB) || timeA.localeCompare(timeB);
+    });
   },
 
   async getPtmMeetingsAsync(options?: {
@@ -3621,7 +3635,9 @@ export const db = {
   getPtmChatMessages(meetingId: string): PtmChatMessage[] {
     const store = loadStore();
     const list = store.ptmChatMessages || [];
-    return list.filter((m) => m.meetingId === meetingId).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+    return list
+      .filter((m) => m.meetingId === meetingId)
+      .sort((a, b) => (a.createdAt || "").localeCompare(b.createdAt || ""));
   },
 
   async getPtmChatMessagesAsync(meetingId: string): Promise<PtmChatMessage[]> {

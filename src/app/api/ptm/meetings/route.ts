@@ -46,19 +46,19 @@ export async function GET(request: Request) {
     let filtered = allMeetings;
     if (tab === "today") {
       filtered = allMeetings.filter(
-        (m) => m.scheduledDate === todayStr && m.status !== "cancelled" && m.status !== "completed"
+        (m) => (m.scheduledDate || "") === todayStr && m.status !== "cancelled" && m.status !== "completed"
       );
     } else if (tab === "upcoming") {
       filtered = allMeetings.filter(
         (m) =>
-          (m.scheduledDate > todayStr ||
-            (m.scheduledDate === todayStr && (m.status === "scheduled" || m.status === "waiting" || m.status === "in_progress"))) &&
+          ((m.scheduledDate || "") > todayStr ||
+            ((m.scheduledDate || "") === todayStr && (m.status === "scheduled" || m.status === "waiting" || m.status === "in_progress"))) &&
           m.status !== "cancelled" &&
           m.status !== "completed"
       );
     } else if (tab === "past") {
       filtered = allMeetings.filter(
-        (m) => m.status === "completed" || m.status === "cancelled" || m.status === "no_show" || m.scheduledDate < todayStr
+        (m) => m.status === "completed" || m.status === "cancelled" || m.status === "no_show" || (m.scheduledDate || "") < todayStr
       );
     }
 

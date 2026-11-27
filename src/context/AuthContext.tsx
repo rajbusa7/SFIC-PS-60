@@ -3,6 +3,18 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import type { User, UserRole, TeacherAssignment, SubjectCode } from "@/lib/types";
 
+export interface LoginResponse {
+  success: boolean;
+  requiresOtp?: boolean;
+  tempToken?: string;
+  maskedEmail?: string;
+  cooldownSeconds?: number;
+  expiresInSeconds?: number;
+  message?: string;
+  user?: User;
+  assignments?: TeacherAssignment[];
+}
+
 interface AuthContextType {
   user: User | null;
   role: UserRole;
@@ -12,7 +24,9 @@ interface AuthContextType {
   assignmentNotice?: string | null;
   isDemoMode: boolean;
   isLoading: boolean;
-  login: (email: string, password?: string, role?: UserRole) => Promise<{ success: boolean; user: User; assignments: TeacherAssignment[] }>;
+  login: (email: string, password?: string, role?: UserRole) => Promise<LoginResponse>;
+  verifyLoginOtp: (tempToken: string, otp: string) => Promise<{ success: boolean; user: User; assignments: TeacherAssignment[] }>;
+  resendLoginOtp: (tempToken: string) => Promise<{ success: boolean; tempToken: string; maskedEmail: string; cooldownSeconds: number; message: string }>;
   registerTeacher: (name: string, email: string, password?: string, schoolId?: string) => Promise<{ success: boolean; message?: string; error?: string }>;
   loginAsDemoTeacher: () => Promise<void>;
   loginAsDemoAdmin: () => Promise<void>;
@@ -63,6 +77,8 @@ const AuthContext = createContext<AuthContextType>({
   isDemoMode: false,
   isLoading: true,
   login: async () => ({ success: true, user: DEMO_TEACHER, assignments: [] }),
+  verifyLoginOtp: async () => ({ success: true, user: DEMO_TEACHER, assignments: [] }),
+  resendLoginOtp: async () => ({ success: true, tempToken: "", maskedEmail: "", cooldownSeconds: 60, message: "" }),
   registerTeacher: async () => ({ success: true }),
   loginAsDemoTeacher: async () => {},
   loginAsDemoAdmin: async () => {},
@@ -210,7 +226,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     email: string,
     password?: string,
     role: UserRole = "teacher"
-  ): Promise<{ success: boolean; user: User; assignments: TeacherAssignment[] }> => {
+  ): Promise<LoginResponse> => {
     const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -220,6 +236,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const data = await res.json();
     if (!res.ok || !data.success) {
       throw new Error(data.error || "Login failed");
+    }
+
+    if (data.requiresOtp) {
+      return {
+        success: true,
+        requiresOtp: true,
+        tempToken: data.tempToken,
+        maskedEmail: data.maskedEmail,
+        cooldownSeconds: data.cooldownSeconds,
+        expiresInSeconds: data.expiresInSeconds,
+        message: data.message,
+      };
     }
 
     const realUser: User = data.user;
@@ -254,6 +282,68 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     return { success: true, user: resolvedUser, assignments: realAssignments };
+  };
+
+  const verifyLoginOtp = async (
+    tempToken: string,
+    otp: string
+  ): Promise<{ success: boolean; user: User; assignments: TeacherAssignment[] }> => {
+    const res = await fetch("/api/auth/login/verify-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tempToken, otp }),
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || "Verification failed");
+    }
+
+    const realUser: User = data.user;
+    const realAssignments: TeacherAssignment[] = data.assignments || [];
+    setAssignments(realAssignments);
+
+    const cleanEmail = realUser.email ? realUser.email.toLowerCase().trim() : realUser.id;
+    const stored = typeof window !== "undefined" ? localStorage.getItem(`shikshasetu_seen_tutorial_${cleanEmail}`) : null;
+    const resolvedUser = { ...realUser, has_seen_tutorial: stored !== null ? stored === "true" : (realUser.has_seen_tutorial ?? false) };
+    setUser(resolvedUser);
+    setIsDemoMode(false);
+    saveUserStorage(resolvedUser, realAssignments);
+    if (typeof window !== "undefined" && resolvedUser.preferredLanguage) {
+      window.dispatchEvent(
+        new CustomEvent("studysaathi:user-preferences", {
+          detail: {
+            preferredLanguage: resolvedUser.preferredLanguage,
+            preferredScript: resolvedUser.preferredScript,
+            forceSync: true,
+          },
+        })
+      );
+    }
+
+    if (realAssignments.length === 1) {
+      setSelectedSubject(realAssignments[0].subjectCode);
+    } else {
+      const storedSub = typeof window !== "undefined" ? (localStorage.getItem("shikshasetu_selected_subject") as SubjectCode) : null;
+      if (storedSub && realAssignments.some((a) => a.subjectCode === storedSub)) {
+        setSelectedSubjectState(storedSub);
+      }
+    }
+
+    return { success: true, user: resolvedUser, assignments: realAssignments };
+  };
+
+  const resendLoginOtp = async (tempToken: string) => {
+    const res = await fetch("/api/auth/login/resend-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tempToken }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || "Failed to resend code");
+    }
+    return data;
   };
 
   const registerTeacher = async (
@@ -467,6 +557,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isDemoMode,
         isLoading,
         login,
+        verifyLoginOtp,
+        resendLoginOtp,
         registerTeacher,
         loginAsDemoTeacher,
         loginAsDemoAdmin,

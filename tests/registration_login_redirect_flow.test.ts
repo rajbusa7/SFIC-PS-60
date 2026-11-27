@@ -20,11 +20,11 @@ describe("StudySaathi AI - Registration Redirect & Dashboard Protection Flow", (
   const timestamp = Date.now();
   const teacherEmail = `newteacher.${timestamp}@gujarat-schools.edu.in`;
   const teacherPassword = "TeacherPassword2026!";
-  const teacherName = "Jigneshbhai Dave";
+  const teacherName = "Jigneshbhai";
 
   const parentEmail = `newparent.${timestamp}@example.com`;
   const parentPassword = "ParentPassword2026!";
-  const parentName = "Bhavnaben Dave";
+  const parentName = "Bhavnaben";
 
   let createdTeacherId = "";
   let createdParentId = "";
@@ -263,9 +263,9 @@ describe("StudySaathi AI - Registration Redirect & Dashboard Protection Flow", (
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: "Duplicate User",
+          name: "DuplicateUser",
           email: teacherEmail,
-          password: "SomePassword123",
+          password: "SomePassword123!",
         }),
       });
       const dupRes = await registerTeacherHandler(dupReq);

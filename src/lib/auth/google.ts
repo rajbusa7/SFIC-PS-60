@@ -76,10 +76,15 @@ export function getAppOrigin(request?: Request): string {
 
 /**
  * Generates the official Google OAuth 2.0 authorization URL
+ * Ensures minimum required scopes (openid, email, profile) without asking for Drive, Contacts, or Gmail.
+ * Supports genuine Google account-selection and consent prompt.
  */
-export function getGoogleAuthorizationUrl(origin: string, state: string): string {
+export function getGoogleAuthorizationUrl(origin: string, state: string, mode = "login"): string {
   const clientId = process.env.GOOGLE_CLIENT_ID || "";
   const redirectUri = `${origin}/api/auth/callback/google`;
+
+  // For signup/registration, request explicit user consent and account selection
+  const prompt = mode === "register" ? "select_account consent" : "select_account";
 
   const params = new URLSearchParams({
     client_id: clientId,
@@ -88,7 +93,7 @@ export function getGoogleAuthorizationUrl(origin: string, state: string): string
     scope: "openid email profile",
     state,
     access_type: "offline",
-    prompt: "select_account",
+    prompt,
   });
 
   return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;

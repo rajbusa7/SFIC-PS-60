@@ -38,7 +38,7 @@ export async function GET(request: Request) {
   const randomHex = Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join("");
   const state = `${randomHex}:${encodeURIComponent(redirectPath)}:${mode}`;
 
-  const authUrl = getGoogleAuthorizationUrl(origin, state);
+  const authUrl = getGoogleAuthorizationUrl(origin, state, mode);
 
   // If request wants json (e.g. from fetch), return JSON. If direct navigation, redirect.
   const acceptHeader = request.headers.get("accept") || "";

@@ -59,7 +59,7 @@ export function InnerGreenLandingClient() {
         onLoad={tryMountLanding}
       />
       <Script
-        src="/landing-pages/inner-green-assets/landing-3d-runtime.js"
+        src="/landing-pages/inner-green-assets/landing-3d-runtime.js?v=20261127b"
         strategy="afterInteractive"
         onLoad={tryMountLanding}
       />

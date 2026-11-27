@@ -6,30 +6,49 @@ import {
   signSession,
   getSessionCookieOptions,
 } from "@/lib/auth/session";
+import { validateUsername, validateEmail, validatePassword } from "@/lib/auth/validation";
+import { rateLimiter, getClientIp } from "@/lib/auth/rateLimiter";
+import { securityAudit } from "@/lib/auth/auditLog";
 
 export async function POST(request: Request) {
   try {
+    const ip = getClientIp(request);
+    const regLimit = rateLimiter.consume(`signup:ip:${ip}`, 5, 3600);
+    if (!regLimit.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Too many account creation requests from this IP address. Please wait ${regLimit.resetSeconds} seconds before trying again.`,
+        },
+        { status: 429 }
+      );
+    }
+
     const body = await request.json();
     const { name, email, phone, password, confirmPassword, linkingCode, preferredLanguage } = body;
 
     // 1. Input Validation
-    if (!name || typeof name !== "string" || !name.trim()) {
+    const nameValidation = validateUsername(name);
+    if (!nameValidation.isValid) {
       return NextResponse.json(
-        { success: false, error: "Please enter your full name." },
+        { success: false, error: nameValidation.error, field: "name" },
         { status: 400 }
       );
     }
 
-    if (!email || typeof email !== "string" || !email.includes("@")) {
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.isValid) {
       return NextResponse.json(
-        { success: false, error: "Please enter a valid email address." },
+        { success: false, error: emailValidation.error, field: "email" },
         { status: 400 }
       );
     }
+    const normalizedEmail = emailValidation.data!;
 
-    if (!password || typeof password !== "string" || password.length < 6) {
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
       return NextResponse.json(
-        { success: false, error: "Password must be at least 6 characters long." },
+        { success: false, error: passwordValidation.error, field: "password" },
         { status: 400 }
       );
     }
@@ -40,8 +59,6 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-
-    const normalizedEmail = email.trim().toLowerCase();
 
     // 2. Prevent duplicate accounts
     const existing = await db.getUserByEmailAsync(normalizedEmail);

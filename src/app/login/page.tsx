@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -38,7 +38,7 @@ import {
 function LoginCardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login, registerTeacher, loginAsDemoTeacher, loginAsDemoAdmin, loginAsDemoParent, loginWithSessionUser, setSelectedSubject } = useAuth();
+  const { login, verifyLoginOtp, resendLoginOtp, registerTeacher, loginAsDemoTeacher, loginAsDemoAdmin, loginAsDemoParent, loginWithSessionUser, setSelectedSubject } = useAuth();
   const { t, tr, formatSubject, formatClass } = useLanguage();
   const lg = t.login;
 
@@ -48,6 +48,18 @@ function LoginCardContent() {
 
   // Login method: "password" or "otp"
   const [loginMethod, setLoginMethod] = useState<"password" | "otp">("password");
+
+  // Real Email 2FA OTP states
+  const [emailOtpRequired, setEmailOtpRequired] = useState(false);
+  const [emailOtpTempToken, setEmailOtpTempToken] = useState("");
+  const [emailOtpMaskedEmail, setEmailOtpMaskedEmail] = useState("");
+  const [emailOtpDigits, setEmailOtpDigits] = useState<string[]>(["", "", "", "", "", ""]);
+  const [emailOtpVerifying, setEmailOtpVerifying] = useState(false);
+  const [emailOtpResending, setEmailOtpResending] = useState(false);
+  const [emailOtpCooldown, setEmailOtpCooldown] = useState(0);
+  const [emailOtpError, setEmailOtpError] = useState<string | null>(null);
+  const [emailOtpSuccess, setEmailOtpSuccess] = useState<string | null>(null);
+  const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Real SMS OTP states
   const [otpPhone, setOtpPhone] = useState("");
@@ -76,6 +88,8 @@ function LoginCardContent() {
   const [regSchoolId, setRegSchoolId] = useState("sch-gn-01");
   const [regLoading, setRegLoading] = useState(false);
   const [regError, setRegError] = useState<string | null>(null);
+  const [regNameError, setRegNameError] = useState<string | null>(null);
+  const [regEmailError, setRegEmailError] = useState<string | null>(null);
 
 
   // Subject selection modal states for teacher access control
@@ -178,6 +192,15 @@ function LoginCardContent() {
     return () => clearInterval(timer);
   }, [otpCooldown]);
 
+  // Real Email 2FA OTP resend countdown timer
+  useEffect(() => {
+    if (emailOtpCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setEmailOtpCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [emailOtpCooldown]);
+
   const handleSendTeacherOtp = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setOtpError(null);
@@ -256,6 +279,104 @@ function LoginCardContent() {
     }
   };
 
+  // Handle 6-Digit Email OTP Input Navigation
+  const handleDigitChange = (index: number, val: string) => {
+    const clean = val.replace(/[^\d]/g, "").slice(-1);
+    const updated = [...emailOtpDigits];
+    updated[index] = clean;
+    setEmailOtpDigits(updated);
+    setEmailOtpError(null);
+
+    if (clean && index < 5) {
+      otpInputRefs.current[index + 1]?.focus();
+    }
+
+    if (clean && index === 5) {
+      const full = updated.join("");
+      if (full.length === 6) {
+        handleVerifyEmailOtp(full);
+      }
+    }
+  };
+
+  const handleDigitKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace" && !emailOtpDigits[index] && index > 0) {
+      otpInputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handlePasteOtp = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text").replace(/[^\d]/g, "").slice(0, 6);
+    if (pasted.length === 6) {
+      const digits = pasted.split("");
+      setEmailOtpDigits(digits);
+      otpInputRefs.current[5]?.focus();
+      handleVerifyEmailOtp(pasted);
+    }
+  };
+
+  // Handle Email 2FA OTP Verification
+  const handleVerifyEmailOtp = async (codeOverride?: string) => {
+    const code = codeOverride || emailOtpDigits.join("");
+    if (!code || code.length !== 6 || !/^\d{6}$/.test(code)) {
+      setEmailOtpError("Please enter all 6 digits of the verification code.");
+      return;
+    }
+
+    setEmailOtpVerifying(true);
+    setEmailOtpError(null);
+    setEmailOtpSuccess(null);
+
+    try {
+      const result = await verifyLoginOtp(emailOtpTempToken, code);
+      if (result.user.role === "admin") {
+        router.push("/dashboard");
+        return;
+      }
+
+      const asgs = result.assignments || [];
+      if (asgs.length === 0) {
+        router.push("/dashboard");
+        return;
+      }
+
+      if (asgs.length === 1) {
+        setSelectedSubject(asgs[0].subjectCode);
+        router.push(`/dashboard?subject=${asgs[0].subjectCode}`);
+        return;
+      }
+
+      setPendingAssignments(asgs);
+      setSelectedModalSubject(asgs[0].subjectCode);
+      setShowSubjectModal(true);
+    } catch (err: any) {
+      setEmailOtpError(err?.message || "Invalid or expired verification code.");
+    } finally {
+      setEmailOtpVerifying(false);
+    }
+  };
+
+  // Handle Resend Email 2FA OTP
+  const handleResendEmailOtp = async () => {
+    if (emailOtpCooldown > 0 || emailOtpResending) return;
+    setEmailOtpResending(true);
+    setEmailOtpError(null);
+    try {
+      const result = await resendLoginOtp(emailOtpTempToken);
+      if (result.tempToken) {
+        setEmailOtpTempToken(result.tempToken);
+      }
+      setEmailOtpCooldown(result.cooldownSeconds || 60);
+      setEmailOtpDigits(["", "", "", "", "", ""]);
+      setEmailOtpSuccess(result.message || "A new 6-digit verification code has been dispatched.");
+    } catch (err: any) {
+      setEmailOtpError(err?.message || "Failed to resend verification code.");
+    } finally {
+      setEmailOtpResending(false);
+    }
+  };
+
   // Handle Standard Email/Password Login
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -267,7 +388,23 @@ function LoginCardContent() {
     setLoginError(null);
     try {
       const result = await login(email, password, "teacher");
-      if (result.user.role === "admin") {
+
+      // Check if 2FA OTP is required by backend
+      if (result.requiresOtp) {
+        setEmailOtpRequired(true);
+        setEmailOtpTempToken(result.tempToken || "");
+        setEmailOtpMaskedEmail(result.maskedEmail || email);
+        setEmailOtpCooldown(result.cooldownSeconds || 60);
+        setEmailOtpDigits(["", "", "", "", "", ""]);
+        setEmailOtpSuccess(result.message || `Verification code dispatched to ${result.maskedEmail || email}.`);
+        setEmailOtpError(null);
+        setTimeout(() => {
+          otpInputRefs.current[0]?.focus();
+        }, 150);
+        return;
+      }
+
+      if (result.user?.role === "admin") {
         router.push("/dashboard");
         return;
       }
@@ -297,20 +434,48 @@ function LoginCardContent() {
   // Handle Teacher Registration Form Submit
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!regName.trim()) {
-      setRegError(lg.errRegName);
+
+    // 1. Strict Username validation (pure alphabetic, rejecting numbers/spaces/symbols)
+    const trimmedName = regName.trim();
+    if (!trimmedName) {
+      setRegError("Please enter your name using only alphabetic letters.");
       return;
     }
-    if (!regEmail.trim() || !regEmail.includes("@")) {
-      setRegError(lg.errRegEmail);
+    if (/\d/.test(regName) || /\p{N}/u.test(regName)) {
+      setRegError("Numbers are not allowed in usernames. Example: use 'Raj' instead of 'Raj123' or 'Raj007'.");
       return;
     }
-    if (!regPassword || regPassword.length < 6) {
-      setRegError(lg.errRegPassLen);
+    if (/\s/.test(regName)) {
+      setRegError("Spaces are not allowed in usernames. Example: use 'Raj' or 'Aarav' instead of 'Raj Busa'.");
+      return;
+    }
+    if (/[\p{P}\p{S}]/u.test(regName)) {
+      setRegError("Special characters and symbols are not allowed. Example: use 'Priya' instead of 'Priya@123'.");
+      return;
+    }
+    if (!/^[\p{Letter}\p{Mark}]+$/u.test(trimmedName)) {
+      setRegError("Username must contain only alphabetic letters.");
+      return;
+    }
+
+    // 2. Strict Email validation
+    const trimmedEmail = regEmail.trim();
+    if (!trimmedEmail || !trimmedEmail.includes("@") || !trimmedEmail.includes(".")) {
+      setRegError("Please enter a valid, properly formatted email address.");
+      return;
+    }
+
+    // 3. Strict Password validation (min 8 chars, uppercase, lowercase, digit, special char)
+    if (regPassword.length < 8) {
+      setRegError("Password must be at least 8 characters long.");
+      return;
+    }
+    if (!/[A-Z]/.test(regPassword) || !/[a-z]/.test(regPassword) || !/[0-9]/.test(regPassword) || !/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?`~]/.test(regPassword)) {
+      setRegError("Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character.");
       return;
     }
     if (regPassword !== regConfirmPassword) {
-      setRegError(lg.errRegPassMatch);
+      setRegError(lg.errRegPassMatch || "Passwords do not match. Please re-enter.");
       return;
     }
 
@@ -318,7 +483,7 @@ function LoginCardContent() {
     setRegError(null);
 
     const registeredEmail = regEmail.trim();
-    const result = await registerTeacher(regName, registeredEmail, regPassword, regSchoolId);
+    const result = await registerTeacher(trimmedName, registeredEmail, regPassword, regSchoolId);
     if (result.success) {
       setAuthMode("login");
       setEmail(registeredEmail);
@@ -518,42 +683,44 @@ function LoginCardContent() {
         {authMode === "login" && (
           <div className="space-y-4">
             {/* Method Switcher: Email/Password vs Real Mobile SMS OTP */}
-            <div className="grid grid-cols-2 p-1 rounded-2xl bg-[#FAF6E9] dark:bg-[#26201C] border border-[#49352F]/12 dark:border-[#F2CAB3]/20 gap-1 text-center">
-              <button
-                type="button"
-                onClick={() => {
-                  setLoginMethod("password");
-                  setOtpError(null);
-                  setOtpSuccess(null);
-                }}
-                className={`py-1.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                  loginMethod === "password"
-                    ? "bg-[#261B16] text-[#FAF6E9] shadow-xs"
-                    : "text-[#7A6862] dark:text-[#FAF6E9]/70 hover:text-[#49352F] dark:hover:text-[#F4F1E1]"
-                }`}
-              >
-                <Mail className="w-3.5 h-3.5" />
-                <span>{lg.methodPassword}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setLoginMethod("otp");
-                  setLoginError(null);
-                }}
-                className={`py-1.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                  loginMethod === "otp"
-                    ? "bg-[#261B16] text-[#FAF6E9] shadow-xs"
-                    : "text-[#7A6862] dark:text-[#FAF6E9]/70 hover:text-[#49352F] dark:hover:text-[#F4F1E1]"
-                }`}
-              >
-                <Smartphone className="w-3.5 h-3.5 text-[#B26A1B] dark:text-[#F2CAB3]" />
-                <span>{lg.methodOtp}</span>
-              </button>
-            </div>
+            {!emailOtpRequired && (
+              <div className="grid grid-cols-2 p-1 rounded-2xl bg-[#FAF6E9] dark:bg-[#26201C] border border-[#49352F]/12 dark:border-[#F2CAB3]/20 gap-1 text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLoginMethod("password");
+                    setOtpError(null);
+                    setOtpSuccess(null);
+                  }}
+                  className={`py-1.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                    loginMethod === "password"
+                      ? "bg-[#261B16] text-[#FAF6E9] shadow-xs"
+                      : "text-[#7A6862] dark:text-[#FAF6E9]/70 hover:text-[#49352F] dark:hover:text-[#F4F1E1]"
+                  }`}
+                >
+                  <Mail className="w-3.5 h-3.5" />
+                  <span>{lg.methodPassword}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLoginMethod("otp");
+                    setLoginError(null);
+                  }}
+                  className={`py-1.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                    loginMethod === "otp"
+                      ? "bg-[#261B16] text-[#FAF6E9] shadow-xs"
+                      : "text-[#7A6862] dark:text-[#FAF6E9]/70 hover:text-[#49352F] dark:hover:text-[#F4F1E1]"
+                  }`}
+                >
+                  <Smartphone className="w-3.5 h-3.5 text-[#B26A1B] dark:text-[#F2CAB3]" />
+                  <span>{lg.methodOtp}</span>
+                </button>
+              </div>
+            )}
 
-            {/* Sub-flow A: Password Form */}
-            {loginMethod === "password" && (
+            {/* Sub-flow A1: Standard Password Form */}
+            {loginMethod === "password" && !emailOtpRequired && (
               <form onSubmit={handleLoginSubmit} className="space-y-3.5">
                 <div>
                   <label className="block text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] mb-1">
@@ -612,6 +779,107 @@ function LoginCardContent() {
                   <ArrowRight className="w-4 h-4 ml-1.5" />
                 </Button>
               </form>
+            )}
+
+            {/* Sub-flow A2: Two-Factor Email OTP Verification Form */}
+            {loginMethod === "password" && emailOtpRequired && (
+              <div className="space-y-4">
+                <div className="p-3.5 rounded-2xl bg-[#FAF6E9] dark:bg-[#26201C] border border-[#B26A1B]/20 text-xs space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold flex items-center gap-1.5 text-[#49352F] dark:text-[#F4F1E1]">
+                      <ShieldCheck className="w-4 h-4 text-[#B26A1B] dark:text-[#F2CAB3]" />
+                      <span>Two-Factor Authentication</span>
+                    </span>
+                    <Badge variant="mint" size="sm">
+                      Security Verification
+                    </Badge>
+                  </div>
+                  <p className="text-[11px] text-[#7A6862] dark:text-[#FAF6E9]/70 leading-relaxed">
+                    A 6-digit verification code has been dispatched to <strong className="text-[#49352F] dark:text-[#F4F1E1]">{emailOtpMaskedEmail}</strong>. Valid for 5 minutes.
+                  </p>
+                </div>
+
+                {emailOtpSuccess && (
+                  <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                    <span>{emailOtpSuccess}</span>
+                  </div>
+                )}
+
+                {emailOtpError && (
+                  <div className="p-2.5 rounded-xl bg-[#C54738]/10 border border-[#C54738]/20 text-xs text-[#C54738] dark:text-[#FA8C7C] flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>{emailOtpError}</span>
+                  </div>
+                )}
+
+                {/* 6-Digit OTP Input Grid */}
+                <div>
+                  <label className="block text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] mb-2 text-center">
+                    Enter 6-Digit Security Code
+                  </label>
+                  <div className="flex justify-center gap-2 sm:gap-2.5" onPaste={handlePasteOtp}>
+                    {emailOtpDigits.map((digit, idx) => (
+                      <input
+                        key={idx}
+                        ref={(el) => { otpInputRefs.current[idx] = el; }}
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={1}
+                        value={digit}
+                        onChange={(e) => handleDigitChange(idx, e.target.value)}
+                        onKeyDown={(e) => handleDigitKeyDown(idx, e)}
+                        className="w-10 sm:w-11 h-12 text-center text-lg font-bold rounded-xl border border-[#49352F]/20 dark:border-[#F2CAB3]/30 bg-[#FAF6E9] dark:bg-[#26201C] text-[#49352F] dark:text-[#F4F1E1] focus:border-[#B26A1B] focus:bg-white dark:focus:bg-[#201A16] focus:ring-2 focus:ring-[#B26A1B]/20 outline-hidden transition-all"
+                        aria-label={`Digit ${idx + 1}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <Button
+                  type="button"
+                  variant="saffron"
+                  size="md"
+                  onClick={() => handleVerifyEmailOtp()}
+                  disabled={emailOtpVerifying || emailOtpDigits.join("").length !== 6}
+                  className="w-full rounded-full text-xs font-black shadow-xs cursor-pointer"
+                >
+                  <span>{emailOtpVerifying ? "Verifying Code..." : "Verify & Sign In"}</span>
+                  <ArrowRight className="w-4 h-4 ml-1.5" />
+                </Button>
+
+                {/* Resend and Return options */}
+                <div className="flex items-center justify-between pt-1 text-xs">
+                  <button
+                    type="button"
+                    onClick={handleResendEmailOtp}
+                    disabled={emailOtpCooldown > 0 || emailOtpResending}
+                    className="font-semibold text-[#B26A1B] dark:text-[#F2CAB3] hover:underline disabled:opacity-50 disabled:no-underline cursor-pointer flex items-center gap-1"
+                  >
+                    <RotateCcw className={`w-3.5 h-3.5 ${emailOtpResending ? "animate-spin" : ""}`} />
+                    <span>
+                      {emailOtpCooldown > 0
+                        ? `Resend code in ${emailOtpCooldown}s`
+                        : emailOtpResending
+                        ? "Sending..."
+                        : "Resend Code"}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEmailOtpRequired(false);
+                      setEmailOtpDigits(["", "", "", "", "", ""]);
+                      setEmailOtpError(null);
+                      setEmailOtpSuccess(null);
+                    }}
+                    className="text-[#7A6862] hover:text-[#49352F] dark:hover:text-[#F4F1E1] cursor-pointer"
+                  >
+                    Change Account
+                  </button>
+                </div>
+              </div>
             )}
 
             {/* Sub-flow B: Real SMS OTP Form */}
@@ -829,7 +1097,7 @@ function LoginCardContent() {
             <form onSubmit={handleRegisterSubmit} className="space-y-3.5">
               <div>
                 <label className="block text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] mb-1">
-                  {lg.regFullNameLabel}
+                  {lg.regFullNameLabel} (Alphabetic Letters Only)
                 </label>
                 <div className="relative">
                   <UserIcon className="absolute left-3.5 top-3 h-4 w-4 text-[#7A6862]" />
@@ -837,11 +1105,45 @@ function LoginCardContent() {
                     type="text"
                     required
                     value={regName}
-                    onChange={(e) => setRegName(e.target.value)}
-                    placeholder={lg.regFullNamePlaceholder}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setRegName(val);
+                      if (!val.trim()) {
+                        setRegNameError(null);
+                        return;
+                      }
+                      if (/\d/.test(val) || /\p{N}/u.test(val)) {
+                        setRegNameError("Numbers are not allowed in usernames. Example: use 'Raj' instead of 'Raj123'.");
+                        return;
+                      }
+                      if (/\s/.test(val)) {
+                        setRegNameError("Spaces are not allowed in usernames. Example: use 'Raj' or 'Aarav' instead of 'Raj Busa'.");
+                        return;
+                      }
+                      if (/[\p{P}\p{S}]/u.test(val)) {
+                        setRegNameError("Special characters or symbols are not allowed. Example: use 'Priya' instead of 'Priya@123'.");
+                        return;
+                      }
+                      if (!/^[\p{Letter}\p{Mark}]+$/u.test(val.trim())) {
+                        setRegNameError("Username must contain only alphabetic letters.");
+                        return;
+                      }
+                      setRegNameError(null);
+                    }}
+                    placeholder="Enter name (e.g. Raj, Aarav, Priya)"
                     className="w-full rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/25 bg-[#FAF6E9] dark:bg-[#26201C] py-2.5 pl-10 pr-3 text-xs text-[#49352F] dark:text-[#F4F1E1] placeholder-[#7A6862] focus:border-[#F2CAB3] focus:bg-white dark:focus:bg-[#201A16] outline-hidden"
                   />
                 </div>
+                {regNameError ? (
+                  <p className="mt-1 text-[11px] text-[#C54738] dark:text-[#FA8C7C] font-medium flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{regNameError}</span>
+                  </p>
+                ) : (
+                  <p className="mt-1 text-[10px] text-[#7A6862] dark:text-[#FAF6E9]/60">
+                    Accepts only alphabetic letters (A-Z, a-z, and Indian scripts). No numbers, spaces, or symbols.
+                  </p>
+                )}
               </div>
 
               <div>
@@ -854,11 +1156,33 @@ function LoginCardContent() {
                     type="email"
                     required
                     value={regEmail}
-                    onChange={(e) => setRegEmail(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setRegEmail(val);
+                      if (!val.trim()) {
+                        setRegEmailError(null);
+                        return;
+                      }
+                      if (/\s/.test(val)) {
+                        setRegEmailError("Email address cannot contain spaces.");
+                        return;
+                      }
+                      if (val.length > 5 && (!val.includes("@") || !val.includes("."))) {
+                        setRegEmailError("Please enter a valid email address (e.g. teacher@studysaathi.edu.in).");
+                        return;
+                      }
+                      setRegEmailError(null);
+                    }}
                     placeholder="teacher@studysaathi.edu.in"
                     className="w-full rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/25 bg-[#FAF6E9] dark:bg-[#26201C] py-2.5 pl-10 pr-3 text-xs text-[#49352F] dark:text-[#F4F1E1] placeholder-[#7A6862] focus:border-[#F2CAB3] focus:bg-white dark:focus:bg-[#201A16] outline-hidden"
                   />
                 </div>
+                {regEmailError && (
+                  <p className="mt-1 text-[11px] text-[#C54738] dark:text-[#FA8C7C] font-medium flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{regEmailError}</span>
+                  </p>
+                )}
               </div>
 
               <div>
@@ -891,7 +1215,7 @@ function LoginCardContent() {
                       required
                       value={regPassword}
                       onChange={(e) => setRegPassword(e.target.value)}
-                      placeholder={lg.regPassPlaceholder}
+                      placeholder="Min 8 chars (A-Z, a-z, 0-9, #)"
                       className="w-full rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/25 bg-[#FAF6E9] dark:bg-[#26201C] py-2.5 pl-9 pr-3 text-xs text-[#49352F] dark:text-[#F4F1E1] placeholder-[#7A6862] focus:border-[#F2CAB3] focus:bg-white dark:focus:bg-[#201A16] outline-hidden"
                     />
                   </div>
@@ -914,6 +1238,9 @@ function LoginCardContent() {
                   </div>
                 </div>
               </div>
+              <p className="text-[10px] text-[#7A6862] dark:text-[#FAF6E9]/60">
+                Password must be at least 8 characters and contain uppercase, lowercase, numbers, and special symbols.
+              </p>
 
               {regError && (
                 <div className="p-2.5 rounded-xl bg-[#C54738]/10 border border-[#C54738]/20 text-xs text-[#C54738] dark:text-[#FA8C7C]">

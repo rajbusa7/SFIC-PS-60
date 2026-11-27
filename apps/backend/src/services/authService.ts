@@ -22,7 +22,7 @@ export class AuthService {
     }
 
     if (!user) {
-      throw new Error("No account found with this email. Please create a new account first.");
+      throw new Error("Invalid email or password.");
     }
 
     // If role was explicitly specified, verify role compatibility
@@ -42,8 +42,10 @@ export class AuthService {
     if (user.passwordHash && password) {
       const isValid = verifyPassword(password, user.passwordHash);
       if (!isValid) {
-        throw new Error("Invalid password. Please try again.");
+        throw new Error("Invalid email or password.");
       }
+    } else if (user.passwordHash && !password) {
+      throw new Error("Invalid email or password.");
     }
 
     return user;

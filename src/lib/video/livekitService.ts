@@ -228,6 +228,7 @@ export class LiveKitService {
     // If live credentials are provided, use official livekit-server-sdk
     if (apiKey && apiSecret && livekitUrl) {
       try {
+        // @ts-ignore
         const { AccessToken } = await import("livekit-server-sdk");
         const at = new AccessToken(apiKey, apiSecret, {
           identity: participantIdentity,

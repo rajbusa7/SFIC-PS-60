@@ -186,7 +186,7 @@ describe("StudySaathi AI - Google OAuth & Teacher Authentication Suite", () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        name: "Meera Trivedi",
+        name: "Meera",
         email: regEmail,
         password: "SecurePassword2026!",
         schoolId: "sch-gn-01",
@@ -205,7 +205,7 @@ describe("StudySaathi AI - Google OAuth & Teacher Authentication Suite", () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        name: "Meera Trivedi Duplicate",
+        name: "MeeraDuplicate",
         email: regEmail,
         password: "AnotherPassword123!",
       }),

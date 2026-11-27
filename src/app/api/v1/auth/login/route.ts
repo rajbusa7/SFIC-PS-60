@@ -50,11 +50,12 @@ export async function POST(request: Request) {
     return response;
   } catch (error: any) {
     const isClientError =
+      error.message?.includes("Invalid email or password") ||
       error.message?.includes("No account found") ||
       error.message?.includes("Invalid password") ||
       error.message?.includes("disabled") || error.message?.includes("portal") || error.message?.includes("staff") || error.message?.includes("Parent") || error.message?.includes("Teacher");
     return NextResponse.json(
-      { success: false, error: error.message || "Login failed" },
+      { success: false, error: isClientError ? "Invalid email or password." : "Login failed" },
       { status: isClientError ? 401 : 500 }
     );
   }

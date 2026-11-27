@@ -6,34 +6,83 @@ import {
   signSession,
   getSessionCookieOptions,
 } from "@/lib/auth/session";
+import { validateUsername, validateEmail, validatePassword } from "@/lib/auth/validation";
+import { rateLimiter, getClientIp } from "@/lib/auth/rateLimiter";
+import { securityAudit } from "@/lib/auth/auditLog";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { name, email, password, schoolId } = body;
+    const ip = getClientIp(request);
 
-    if (!name || typeof name !== "string" || !name.trim()) {
+    // Rate limit registration by IP: maximum 5 registrations per hour
+    const regLimit = rateLimiter.consume(`signup:ip:${ip}`, 5, 3600);
+    if (!regLimit.allowed) {
+      securityAudit.record({
+        eventType: "SIGNUP_FAILED",
+        identifier: ip,
+        ip,
+        status: "failure",
+        details: { reason: "rate_limit_exceeded" },
+      });
       return NextResponse.json(
-        { success: false, error: "Please enter your full name." },
+        {
+          success: false,
+          error: `Too many account creation requests from this IP address. Please wait ${regLimit.resetSeconds} seconds before trying again.`,
+        },
+        { status: 429 }
+      );
+    }
+
+    const body = await request.json().catch(() => ({}));
+    const { name, email, password, schoolId, role } = body;
+
+    // 1. Strict Username Validation (only alphabetic letters A-Z, a-z, and Unicode alphabetic letters)
+    const nameValidation = validateUsername(name);
+    if (!nameValidation.isValid) {
+      return NextResponse.json(
+        { success: false, error: nameValidation.error, field: "name" },
         { status: 400 }
       );
     }
 
-    if (!email || typeof email !== "string" || !email.includes("@")) {
+    // 2. Strict Email Validation
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.isValid) {
       return NextResponse.json(
-        { success: false, error: "Please enter a valid email address." },
+        { success: false, error: emailValidation.error, field: "email" },
+        { status: 400 }
+      );
+    }
+    const normalizedEmail = emailValidation.data!;
+
+    // 3. Strict Password Validation
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      return NextResponse.json(
+        { success: false, error: passwordValidation.error, field: "password" },
         { status: 400 }
       );
     }
 
-    if (!password || typeof password !== "string" || password.length < 6) {
+    // 4. Role Escalation Prevention: reject unauthorized admin role registration
+    if (role && (role === "admin" || role === "principal")) {
+      securityAudit.record({
+        eventType: "ROLE_ESCALATION_BLOCKED",
+        identifier: normalizedEmail,
+        ip,
+        status: "failure",
+        details: { requestedRole: role },
+      });
       return NextResponse.json(
-        { success: false, error: "Password must be at least 6 characters long." },
-        { status: 400 }
+        {
+          success: false,
+          error: "Unauthorized: Administrator accounts cannot be created through public registration.",
+        },
+        { status: 403 }
       );
     }
 
-    const normalizedEmail = email.trim().toLowerCase();
+    // 5. Existing account check
     const existing = await db.getUserByEmailAsync(normalizedEmail);
     if (existing) {
       return NextResponse.json(
@@ -49,13 +98,21 @@ export async function POST(request: Request) {
     const passwordHash = hashPassword(password);
 
     const newUser = await db.createUserAsync({
-      name: name.trim(),
+      name: nameValidation.data!,
       email: normalizedEmail,
-      role: "teacher",
+      role: role === "parent" ? "parent" : "teacher",
       schoolId: schoolId || "sch-gn-01",
       provider: "local",
       passwordHash,
       status: "active",
+    });
+
+    securityAudit.record({
+      eventType: "SIGNUP_SUCCESS",
+      identifier: normalizedEmail,
+      ip,
+      role: newUser.role,
+      status: "success",
     });
 
     const autoLogin = body.autoLogin === true || body.createSession === true;
@@ -102,7 +159,7 @@ export async function POST(request: Request) {
   } catch (err: any) {
     console.error("[Register Error]:", err);
     return NextResponse.json(
-      { success: false, error: err.message || "Failed to create teacher account." },
+      { success: false, error: err.message || "Failed to create account." },
       { status: 500 }
     );
   }

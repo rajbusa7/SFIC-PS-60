@@ -33,12 +33,6 @@
   --amber: #B26A1B;               /* Developing / In Progress (warm ochre/amber) */
   --amber-light: #FDF4E7;
 
-  /* Emil Kowalski motion tokens (emil-design-eng) */
-  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
-  --duration-fast: 150ms;
-  --duration-base: 220ms;
-
   /* Theme mappings */
   --background: var(--color-cream);
   --foreground: var(--color-text-brown);
@@ -53,18 +47,6 @@
   --font-heading: 'Lexend', sans-serif;
   --font-body: 'Lexend', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-gujarati: 'Noto Sans Gujarati', 'Lexend', sans-serif;
-  --font-devanagari: 'Noto Sans Devanagari', 'Lexend', sans-serif;
-  --font-bengali: 'Noto Sans Bengali', 'Lexend', sans-serif;
-  --font-gurmukhi: 'Noto Sans Gurmukhi', 'Lexend', sans-serif;
-  --font-odia: 'Noto Sans Oriya', 'Lexend', sans-serif;
-  --font-tamil: 'Noto Sans Tamil', 'Lexend', sans-serif;
-  --font-telugu: 'Noto Sans Telugu', 'Lexend', sans-serif;
-  --font-kannada: 'Noto Sans Kannada', 'Lexend', sans-serif;
-  --font-malayalam: 'Noto Sans Malayalam', 'Lexend', sans-serif;
-  --font-arabic-rtl: 'Noto Nastaliq Urdu', 'Noto Naskh Arabic', Tahoma, sans-serif;
-  --font-meetei: 'Noto Sans Meetei Mayek', 'Noto Sans Bengali', 'Lexend', sans-serif;
-  --font-olchiki: 'Noto Sans Ol Chiki', 'Noto Sans Devanagari', 'Lexend', sans-serif;
-  --font-active: var(--font-body);
 
   color-scheme: light;
 }
@@ -99,20 +81,6 @@
   --glass-border: rgba(242, 202, 179, 0.2);
   color-scheme: dark;
 }
-
-html[data-script="Gujr"] body { font-family: var(--font-gujarati); }
-html[data-script="Deva"] body { font-family: var(--font-devanagari); line-height: 1.65; }
-html[data-script="Beng"] body { font-family: var(--font-bengali); line-height: 1.65; }
-html[data-script="Guru"] body { font-family: var(--font-gurmukhi); line-height: 1.65; }
-html[data-script="Orya"] body { font-family: var(--font-odia); line-height: 1.7; }
-html[data-script="Taml"] body { font-family: var(--font-tamil); line-height: 1.65; }
-html[data-script="Telu"] body { font-family: var(--font-telugu); line-height: 1.65; }
-html[data-script="Knda"] body { font-family: var(--font-kannada); line-height: 1.65; }
-html[data-script="Mlym"] body { font-family: var(--font-malayalam); line-height: 1.7; }
-html[data-script="Arab"] body { font-family: var(--font-arabic-rtl); line-height: 1.9; }
-html[data-script="Mtei"] body { font-family: var(--font-meetei); line-height: 1.65; }
-html[data-script="Olck"] body { font-family: var(--font-olchiki); line-height: 1.65; }
-html[dir="rtl"] .rtl-flip { transform: scaleX(-1); }
 
 /* Global automatic theme adaptations for dark mode */
 .dark body,
@@ -271,112 +239,6 @@ html[dir="rtl"] .rtl-flip { transform: scaleX(-1); }
   color: #FA8C7C !important;
 }
 
-/* Universal Dark Mode Icon and Muted Text Visibility */
-.dark .text-\[\#49352F\]\/90,
-.dark .text-\[\#49352F\]\/80,
-.dark .text-\[\#49352F\]\/70,
-.dark .text-\[\#49352F\]\/60,
-.dark .text-\[\#49352F\]\/50,
-.dark .text-\[\#49352F\]\/40,
-[data-theme="dark"] .text-\[\#49352F\]\/90,
-[data-theme="dark"] .text-\[\#49352F\]\/80,
-[data-theme="dark"] .text-\[\#49352F\]\/70,
-[data-theme="dark"] .text-\[\#49352F\]\/60,
-[data-theme="dark"] .text-\[\#49352F\]\/50,
-[data-theme="dark"] .text-\[\#49352F\]\/40 {
-  color: rgba(244, 241, 225, 0.78) !important;
-}
-
-.dark .text-\[\#7A6862\]\/90,
-.dark .text-\[\#7A6862\]\/80,
-.dark .text-\[\#7A6862\]\/70,
-.dark .text-\[\#7A6862\]\/60,
-.dark .text-\[\#7A6862\]\/50,
-.dark .text-\[\#7A6862\]\/40,
-[data-theme="dark"] .text-\[\#7A6862\]\/90,
-[data-theme="dark"] .text-\[\#7A6862\]\/80,
-[data-theme="dark"] .text-\[\#7A6862\]\/70,
-[data-theme="dark"] .text-\[\#7A6862\]\/60,
-[data-theme="dark"] .text-\[\#7A6862\]\/50,
-[data-theme="dark"] .text-\[\#7A6862\]\/40 {
-  color: rgba(194, 179, 172, 0.78) !important;
-}
-
-.dark svg[class*="text-[#49352F]"],
-[data-theme="dark"] svg[class*="text-[#49352F]"] {
-  color: #F4F1E1 !important;
-}
-
-.dark svg[class*="text-[#7A6862]"],
-[data-theme="dark"] svg[class*="text-[#7A6862]"] {
-  color: #C2B3AC !important;
-}
-
-/* Origin-aware fluid growth animations (emil-design-eng) */
-@keyframes origin-grow-top-right {
-  from {
-    opacity: 0;
-    transform: scale(0.92);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes origin-grow-top-left {
-  from {
-    opacity: 0;
-    transform: scale(0.92);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes origin-grow-bottom-right {
-  from {
-    opacity: 0;
-    transform: scale(0.92);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes origin-grow-center {
-  from {
-    opacity: 0;
-    transform: scale(0.94);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.animate-grow-top-right {
-  transform-origin: top right;
-  animation: origin-grow-top-right var(--duration-base) var(--ease-out) forwards;
-}
-
-.animate-grow-top-left {
-  transform-origin: top left;
-  animation: origin-grow-top-left var(--duration-base) var(--ease-out) forwards;
-}
-
-.animate-grow-bottom-right {
-  transform-origin: bottom right;
-  animation: origin-grow-bottom-right var(--duration-base) var(--ease-out) forwards;
-}
-
-.animate-grow-center {
-  transform-origin: center;
-  animation: origin-grow-center var(--duration-base) var(--ease-out) forwards;
-}
-
 
 body {
   background-color: var(--background);
@@ -420,11 +282,8 @@ h1, h2, h3, .font-heading {
   *, ::before, ::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
-  }
-
-  *:not([data-reduced-motion-allow]) {
-    transform: none !important;
   }
 }
 
@@ -441,9 +300,7 @@ h1, h2, h3, .font-heading {
   color: var(--color-text-brown);
   border: 1px solid rgba(73, 53, 47, 0.16);
   box-shadow: 0 4px 14px rgba(73, 53, 47, 0.08);
-  transition: background-color var(--duration-base) var(--ease-out),
-              transform var(--duration-base) var(--ease-out),
-              box-shadow var(--duration-base) var(--ease-out);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .bridge-glow-button:hover {
@@ -493,6 +350,147 @@ h1, h2, h3, .font-heading {
 *:focus-visible {
   outline: 2px solid #F2CAB3;
   outline-offset: 2px;
+}
+
+/* ============================================================================
+   LIVEKIT VIDEO UI THEME OVERRIDES (StudySaathi Warm Cream & Peach Palette)
+   ============================================================================ */
+:root {
+  --lk-va-bg: #F4F1E1;
+  --lk-bg: #FAF6E9;
+  --lk-bg-2: #FFFFFF;
+  --lk-fg: #49352F;
+  --lk-fg-muted: #7A6862;
+  --lk-border-color: rgba(73, 53, 47, 0.12);
+  --lk-accent-bg: #F2CAB3;
+  --lk-accent-fg: #49352F;
+  --lk-control-bar-bg: rgba(255, 255, 255, 0.94);
+  --lk-control-fg: #49352F;
+  --lk-control-bg: #FAF6E9;
+  --lk-control-hover-bg: #F2CAB3;
+  --lk-control-active-bg: #EFBDA4;
+  --lk-control-destructive-bg: #FBECE9;
+  --lk-control-destructive-fg: #A93327;
+  --lk-control-destructive-hover-bg: #C54738;
+  --lk-control-destructive-hover-fg: #FFFFFF;
+  --lk-participant-tile-bg: #FFFFFF;
+  --lk-participant-tile-border: rgba(73, 53, 47, 0.12);
+  --lk-chat-bg: rgba(255, 255, 255, 0.95);
+  --lk-chat-header-bg: #FAF6E9;
+  --lk-chat-bubble-self-bg: #F2CAB3;
+  --lk-chat-bubble-self-fg: #49352F;
+  --lk-chat-bubble-other-bg: #FAF6E9;
+  --lk-chat-bubble-other-fg: #49352F;
+  --lk-border-radius: 20px;
+}
+
+.dark,
+[data-theme="dark"] {
+  --lk-va-bg: #1B1614;
+  --lk-bg: #221C18;
+  --lk-bg-2: #26201C;
+  --lk-fg: #F4F1E1;
+  --lk-fg-muted: #C2B3AC;
+  --lk-border-color: rgba(242, 202, 179, 0.15);
+  --lk-accent-bg: #F2CAB3;
+  --lk-accent-fg: #49352F;
+  --lk-control-bar-bg: rgba(38, 32, 28, 0.94);
+  --lk-control-fg: #F4F1E1;
+  --lk-control-bg: #2E2520;
+  --lk-control-hover-bg: #3D312A;
+  --lk-control-active-bg: #4A3C33;
+  --lk-control-destructive-bg: #3B1F1B;
+  --lk-control-destructive-fg: #FA8C7C;
+  --lk-control-destructive-hover-bg: #C54738;
+  --lk-control-destructive-hover-fg: #FFFFFF;
+  --lk-participant-tile-bg: #26201C;
+  --lk-participant-tile-border: rgba(242, 202, 179, 0.15);
+  --lk-chat-bg: rgba(38, 32, 28, 0.95);
+  --lk-chat-header-bg: #221C18;
+  --lk-chat-bubble-self-bg: #3D312A;
+  --lk-chat-bubble-self-fg: #F4F1E1;
+  --lk-chat-bubble-other-bg: #2E2520;
+  --lk-chat-bubble-other-fg: #F4F1E1;
+}
+
+/* LiveKit Native Component Overrides */
+.lk-video-conference {
+  background-color: var(--lk-va-bg) !important;
+  color: var(--lk-fg) !important;
+}
+
+.lk-control-bar {
+  background-color: var(--lk-control-bar-bg) !important;
+  border: 1px solid var(--lk-border-color) !important;
+  border-radius: 9999px !important;
+  backdrop-filter: blur(12px) !important;
+  box-shadow: 0 8px 30px rgba(73, 53, 47, 0.08) !important;
+  padding: 0.5rem 1rem !important;
+  gap: 0.5rem !important;
+}
+
+.dark .lk-control-bar {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45) !important;
+}
+
+.lk-button {
+  border-radius: 9999px !important;
+  background-color: var(--lk-control-bg) !important;
+  color: var(--lk-control-fg) !important;
+  border: 1px solid var(--lk-border-color) !important;
+  font-family: var(--font-body) !important;
+  font-weight: 600 !important;
+  transition: all 0.18s ease-out !important;
+}
+
+.lk-button:hover {
+  background-color: var(--lk-control-hover-bg) !important;
+  transform: translateY(-1px) !important;
+}
+
+.lk-button-destructive,
+.lk-disconnect-button {
+  background-color: var(--lk-control-destructive-bg) !important;
+  color: var(--lk-control-destructive-fg) !important;
+  border-color: rgba(197, 71, 56, 0.3) !important;
+}
+
+.lk-button-destructive:hover,
+.lk-disconnect-button:hover {
+  background-color: var(--lk-control-destructive-hover-bg) !important;
+  color: var(--lk-control-destructive-hover-fg) !important;
+}
+
+.lk-participant-tile {
+  border-radius: var(--lk-border-radius) !important;
+  background-color: var(--lk-participant-tile-bg) !important;
+  border: 1px solid var(--lk-participant-tile-border) !important;
+  overflow: hidden !important;
+  box-shadow: 0 6px 20px rgba(73, 53, 47, 0.06) !important;
+}
+
+.lk-participant-metadata {
+  background-color: rgba(250, 246, 233, 0.92) !important;
+  color: #49352F !important;
+  border: 1px solid rgba(73, 53, 47, 0.12) !important;
+  border-radius: 9999px !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+.dark .lk-participant-metadata {
+  background-color: rgba(34, 28, 24, 0.92) !important;
+  color: #F4F1E1 !important;
+  border-color: rgba(242, 202, 179, 0.18) !important;
+}
+
+.lk-chat {
+  background-color: var(--lk-chat-bg) !important;
+  border: 1px solid var(--lk-border-color) !important;
+  border-radius: 24px !important;
+  box-shadow: 0 12px 32px rgba(73, 53, 47, 0.1) !important;
+  color: var(--lk-fg) !important;
 }
 
 /* Print Stylesheet for A4 Official Progress Reports */

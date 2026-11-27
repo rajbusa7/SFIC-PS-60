@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/ptm-reminders",
+      "schedule": "*/15 * * * *"
+    }
+  ]
+}

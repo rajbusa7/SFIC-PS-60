@@ -14,6 +14,8 @@ const TEACHER_PROTECTED_PREFIXES = [
   "/remedial-plans",
   "/reports",
   "/notices",
+  "/meetings",
+  "/ptm",
   "/ai",
   "/settings",
   "/activities",
@@ -25,6 +27,7 @@ const PARENT_PROTECTED_PREFIXES = [
   "/parent/children",
   "/parent/progress",
   "/parent/learning-gaps",
+  "/parent/meetings",
   "/parent/settings",
 ];
 
@@ -64,17 +67,6 @@ export async function proxy(request: NextRequest) {
       redirectUrl.pathname = userRole === "parent" ? "/parent/dashboard" : "/dashboard";
       redirectUrl.search = "";
       return NextResponse.redirect(redirectUrl);
-    }
-    return NextResponse.next();
-  }
-
-  // 3b. ShikshaSetu Connect Chat: Accessible to all authenticated users (teachers, admins, parents)
-  if (pathname === "/connect" || pathname.startsWith("/connect/")) {
-    if (!isAuthenticated) {
-      const loginUrl = request.nextUrl.clone();
-      loginUrl.pathname = "/login";
-      loginUrl.searchParams.set("redirect", `${pathname}${search}`);
-      return NextResponse.redirect(loginUrl);
     }
     return NextResponse.next();
   }

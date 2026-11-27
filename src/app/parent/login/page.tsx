@@ -59,6 +59,16 @@ function ParentLoginContent() {
   useEffect(() => {
     const errorParam = searchParams.get("error");
     const demoParam = searchParams.get("demo");
+    const registeredParam = searchParams.get("registered");
+    const regEmailParam = searchParams.get("email");
+
+    if (registeredParam === "true") {
+      setSuccessMsg(pp.accountCreatedLoginPrompt || "Account created successfully. Please log in to continue.");
+      if (regEmailParam) {
+        setEmail(regEmailParam);
+      }
+    }
+
     if (demoParam === "true") {
       setEmail("dinesh.patel@example.com");
       setPassword("DemoParent2026!");

@@ -272,7 +272,7 @@
     "registerErrPasswordMatch": "पासवर्ड मेल नहीं खाते। कृपया अपना पासवर्ड पुनः दर्ज करें।",
     "registerFailFallback": "पंजीकरण विफल रहा। कृपया पुनः प्रयास करें।",
     "registerCreateFailFallback": "खाता बनाने में विफल। कृपया पुनः प्रयास करें।",
-    "registerSuccessMsg": "खाता सफलतापूर्वक बनाया गया! आपका अभिभावक डैशबोर्ड खुल रहा है...",
+    "registerSuccessMsg": "खाता सफलतापूर्वक बन गया है। जारी रखने के लिए कृपया लॉग इन करें।",
     "registerFullNameLabel": "अभिभावक का पूरा नाम *",
     "registerFullNamePlaceholder": "उदा. दिनेशभाई पटेल",
     "emailRequiredLabel": "ईमेल पता *",
@@ -482,7 +482,8 @@
     "verifyAndLinkBtn": "सत्यापित करें और जोड़ें",
     "connectChatBtn": "चैट से जुड़ें",
     "liveBadge": "लाइव",
-    "chatWithTeacherLiveBtn": "शिक्षक से चैट करें (लाइव)"
+    "chatWithTeacherLiveBtn": "शिक्षक से चैट करें (लाइव)",
+    "accountCreatedLoginPrompt": "खाता सफलतापूर्वक बन गया है। जारी रखने के लिए कृपया लॉग इन करें।"
   },
   "connect": {
     "reportSuccess": "प्रशासनिक समीक्षा के लिए संदेश सफलतापूर्वक रिपोर्ट किया गया।",

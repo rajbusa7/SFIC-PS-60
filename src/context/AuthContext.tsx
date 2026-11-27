@@ -13,7 +13,7 @@ interface AuthContextType {
   isDemoMode: boolean;
   isLoading: boolean;
   login: (email: string, password?: string, role?: UserRole) => Promise<{ success: boolean; user: User; assignments: TeacherAssignment[] }>;
-  registerTeacher: (name: string, email: string, password?: string, schoolId?: string) => Promise<{ success: boolean; error?: string }>;
+  registerTeacher: (name: string, email: string, password?: string, schoolId?: string) => Promise<{ success: boolean; message?: string; error?: string }>;
   loginAsDemoTeacher: () => Promise<void>;
   loginAsDemoAdmin: () => Promise<void>;
   loginAsDemoParent: () => Promise<void>;
@@ -261,7 +261,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     email: string,
     password?: string,
     schoolId = "sch-gn-01"
-  ): Promise<{ success: boolean; error?: string }> => {
+  ): Promise<{ success: boolean; message?: string; error?: string }> => {
     try {
       const res = await fetch("/api/auth/register", {
         method: "POST",
@@ -273,10 +273,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { success: false, error: data.error || "Failed to register" };
       }
 
-      setUser(data.user);
-      setIsDemoMode(false);
-      saveUserStorage(data.user);
-      return { success: true };
+      // Do NOT auto-authenticate or establish session on registration.
+      // Clear any prior unauthenticated/demo state to ensure clean manual login flow.
+      setUser(null);
+      setAssignments([]);
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("studysaathi_user");
+        localStorage.removeItem("studysaathi_assignments");
+      }
+      return { success: true, message: data.message };
     } catch (err: any) {
       return { success: false, error: err.message || "Network error" };
     }

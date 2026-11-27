@@ -58,14 +58,7 @@ export async function POST(request: Request) {
       status: "active",
     });
 
-    const sessionToken = await signSession({
-      id: newUser.id,
-      name: newUser.name,
-      email: newUser.email,
-      role: newUser.role,
-      schoolId: newUser.schoolId,
-      provider: "local",
-    });
+    const autoLogin = body.autoLogin === true || body.createSession === true;
 
     const sanitizedUser = {
       id: newUser.id,
@@ -82,15 +75,28 @@ export async function POST(request: Request) {
 
     const response = NextResponse.json({
       success: true,
-      message: "Teacher account created successfully.",
+      message: "Account created successfully. Please log in to continue.",
       user: sanitizedUser,
     });
 
-    response.cookies.set(
-      SESSION_COOKIE_NAME,
-      sessionToken,
-      getSessionCookieOptions()
-    );
+    // Only establish session if explicitly requested (e.g. headless integration tests)
+    // Website registration flow strictly requires manual login on the Login page
+    if (autoLogin) {
+      const sessionToken = await signSession({
+        id: newUser.id,
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
+        schoolId: newUser.schoolId,
+        provider: "local",
+      });
+
+      response.cookies.set(
+        SESSION_COOKIE_NAME,
+        sessionToken,
+        getSessionCookieOptions()
+      );
+    }
 
     return response;
   } catch (err: any) {

@@ -78,14 +78,9 @@ describe("StudySaathi AI - Permanent Account Registration & Persistence Suite", 
 
     createdUserId = data.user.id;
 
-    // Check Set-Cookie header
+    // Verify registration does NOT set a session cookie (requires manual login)
     const setCookie = res.headers.get("set-cookie");
-    assert.ok(setCookie, "Session cookie must be set on registration");
-    assert.ok(setCookie.includes(SESSION_COOKIE_NAME), "Session cookie name must match");
-
-    const match = setCookie.match(new RegExp(`${SESSION_COOKIE_NAME}=([^;]+)`));
-    assert.ok(match, "Token must be extracted from cookie");
-    teacherSessionCookie = `${SESSION_COOKIE_NAME}=${match[1]}`;
+    assert.equal(setCookie, null, "Session cookie must NOT be set on registration without explicit autoLogin flag");
 
     // Verify user directly in persistent database
     const dbRecord = await db.getUserByEmailAsync(testEmail);
@@ -95,6 +90,20 @@ describe("StudySaathi AI - Permanent Account Registration & Persistence Suite", 
     assert.ok(dbRecord.passwordHash, "Database must store hashed password");
     assert.notEqual(dbRecord.passwordHash, testPassword, "Stored password must not be plaintext");
     assert.equal(verifyPassword(testPassword, dbRecord.passwordHash), true, "Stored hash must match password");
+
+    // Establish session through login for subsequent profile retrieval tests
+    const loginReq = new Request("http://localhost:3000/api/v1/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: testEmail, password: testPassword }),
+    });
+    const loginRes = await loginHandler(loginReq);
+    assert.equal(loginRes.status, 200);
+    const loginCookie = loginRes.headers.get("set-cookie");
+    assert.ok(loginCookie, "Login must set session cookie");
+    const match = loginCookie.match(new RegExp(`${SESSION_COOKIE_NAME}=([^;]+)`));
+    assert.ok(match, "Token must be extracted from cookie");
+    teacherSessionCookie = `${SESSION_COOKIE_NAME}=${match[1]}`;
   });
 
   it("3. Authenticated Profile Retrieval (/api/auth/me): retrieves saved record from database", async () => {

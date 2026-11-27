@@ -91,16 +91,20 @@ export default function ParentRegisterPage() {
       if (data.linkingWarning) {
         setSuccessMsg(
           language === "gu"
-            ? `એકાઉન્ટ બની ગયું! પરંતુ બાળક જોડાણ કોડ ચકાસી શકાયો નથી: ${data.linkingWarning}`
-            : `Account created! Note: ${data.linkingWarning}`
+            ? `એકાઉન્ટ સફળતાપૂર્વક બની ગયું છે. લૉગ ઇન કરવા માટે રીડાયરેક્ટ કરી રહ્યાં છીએ... (નોંધ: ${data.linkingWarning})`
+            : `Account created successfully. Please log in to continue. (Note: ${data.linkingWarning})`
         );
       } else {
-        setSuccessMsg(pp.registerSuccessMsg);
+        setSuccessMsg(
+          language === "gu"
+            ? "એકાઉન્ટ સફળતાપૂર્વક બની ગયું છે. લૉગ ઇન કરવા માટે રીડાયરેક્ટ કરી રહ્યાં છીએ..."
+            : "Account created successfully. Please log in to continue."
+        );
       }
 
       setTimeout(() => {
-        router.push("/parent/dashboard");
-      }, data.linkingWarning ? 1800 : 700);
+        router.push(`/parent/login?registered=true&email=${encodeURIComponent(email.trim())}`);
+      }, data.linkingWarning ? 1800 : 900);
     } catch (err: any) {
       setError(err.message || pp.registerCreateFailFallback);
     } finally {

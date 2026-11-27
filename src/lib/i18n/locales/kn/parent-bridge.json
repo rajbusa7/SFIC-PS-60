@@ -272,7 +272,7 @@
     "registerErrPasswordMatch": "ಪಾಸ್‌ವರ್ಡ್‌ಗಳು ಹೊಂದಿಕೆಯಾಗುತ್ತಿಲ್ಲ. ದಯವಿಟ್ಟು ನಿಮ್ಮ ಪಾಸ್‌ವರ್ಡ್ ಅನ್ನು ದೃಢೀಕರಿಸಿ.",
     "registerFailFallback": "ನೋಂದಣಿ ವಿಫಲವಾಗಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
     "registerCreateFailFallback": "ಖಾತೆ ರಚಿಸಲು ವಿಫಲವಾಗಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
-    "registerSuccessMsg": "ಖಾತೆಯನ್ನು ಯಶಸ್ವಿಯಾಗಿ ರಚಿಸಲಾಗಿದೆ! ನಿಮ್ಮ ಪೋಷಕ ಡ್ಯಾಶ್‌ಬೋರ್ಡ್ ತೆರೆಯಲಾಗುತ್ತಿದೆ...",
+    "registerSuccessMsg": "ಖಾತೆಯನ್ನು ಯಶಸ್ವಿಯಾಗಿ ರಚಿಸಲಾಗಿದೆ. ಮುಂದುವರಿಯಲು ದಯವಿಟ್ಟು ಲಾಗ್ ಇನ್ ಮಾಡಿ.",
     "registerFullNameLabel": "ಪೋಷಕರ ಪೂರ್ಣ ಹೆಸರು *",
     "registerFullNamePlaceholder": "ಉದಾ. ದಿನೇಶ್‌ಭಾಯಿ ಪಟೇಲ್",
     "emailRequiredLabel": "ಇಮೇಲ್ ವಿಳಾಸ *",
@@ -482,7 +482,8 @@
     "verifyAndLinkBtn": "ಪರಿಶೀಲಿಸಿ ಮತ್ತು ಜೋಡಿಸಿ",
     "connectChatBtn": "ಚಾಟ್ ಸಂಪರ್ಕಿಸಿ",
     "liveBadge": "ಲೈವ್",
-    "chatWithTeacherLiveBtn": "ಶಿಕ್ಷಕರೊಂದಿಗೆ ಚಾಟ್ ಮಾಡಿ (ಲೈವ್)"
+    "chatWithTeacherLiveBtn": "ಶಿಕ್ಷಕರೊಂದಿಗೆ ಚಾಟ್ ಮಾಡಿ (ಲೈವ್)",
+    "accountCreatedLoginPrompt": "ಖಾತೆಯನ್ನು ಯಶಸ್ವಿಯಾಗಿ ರಚಿಸಲಾಗಿದೆ. ಮುಂದುವರಿಯಲು ದಯವಿಟ್ಟು ಲಾಗ್ ಇನ್ ಮಾಡಿ."
   },
   "connect": {
     "reportSuccess": "ಆಡಳಿತಾತ್ಮಕ ಪರಿಶೀಲನೆಗಾಗಿ ಸಂದೇಶವನ್ನು ಯಶಸ್ವಿಯಾಗಿ ವರದಿ ಮಾಡಲಾಗಿದೆ.",

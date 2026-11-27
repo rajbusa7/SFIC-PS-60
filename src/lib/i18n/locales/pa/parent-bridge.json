@@ -272,7 +272,7 @@
     "registerErrPasswordMatch": "ਪਾਸਵਰਡ ਮੇਲ ਨਹੀਂ ਖਾਂਦੇ। ਕਿਰਪਾ ਕਰਕੇ ਆਪਣੇ ਪਾਸਵਰਡ ਦੀ ਪੁਸ਼ਟੀ ਕਰੋ।",
     "registerFailFallback": "ਰਜਿਸਟ੍ਰੇਸ਼ਨ ਅਸਫਲ ਰਹੀ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
     "registerCreateFailFallback": "ਖਾਤਾ ਬਣਾਉਣ ਵਿੱਚ ਅਸਫਲ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
-    "registerSuccessMsg": "ਖਾਤਾ ਸਫਲਤਾਪੂਰਵਕ ਬਣ ਗਿਆ! ਤੁਹਾਡਾ ਮਾਪੇ ਡੈਸ਼ਬੋਰਡ ਖੋਲ੍ਹਿਆ ਜਾ ਰਿਹਾ ਹੈ...",
+    "registerSuccessMsg": "ਖਾਤਾ ਸਫਲਤਾਪੂਰਵਕ ਬਣਾਇਆ ਗਿਆ ਹੈ। ਜਾਰੀ ਰੱਖਣ ਲਈ ਕਿਰਪਾ ਕਰਕੇ ਲੌਗ ਇਨ ਕਰੋ।",
     "registerFullNameLabel": "ਮਾਪਿਆਂ ਦਾ ਪੂਰਾ ਨਾਮ *",
     "registerFullNamePlaceholder": "ਜਿਵੇਂ, ਦਿਨੇਸ਼ਭਾਈ ਪਟੇਲ",
     "emailRequiredLabel": "ਈਮੇਲ ਪਤਾ *",
@@ -482,7 +482,8 @@
     "verifyAndLinkBtn": "ਤਸਦੀਕ ਕਰੋ ਅਤੇ ਲਿੰਕ ਕਰੋ",
     "connectChatBtn": "ਕਨੈਕਟ ਚੈਟ",
     "liveBadge": "ਲਾਈਵ",
-    "chatWithTeacherLiveBtn": "ਅਧਿਆਪਕ ਨਾਲ ਚੈਟ ਕਰੋ (ਲਾਈਵ)"
+    "chatWithTeacherLiveBtn": "ਅਧਿਆਪਕ ਨਾਲ ਚੈਟ ਕਰੋ (ਲਾਈਵ)",
+    "accountCreatedLoginPrompt": "ਖਾਤਾ ਸਫਲਤਾਪੂਰਵਕ ਬਣਾਇਆ ਗਿਆ ਹੈ। ਜਾਰੀ ਰੱਖਣ ਲਈ ਕਿਰਪਾ ਕਰਕੇ ਲੌਗ ਇਨ ਕਰੋ।"
   },
   "connect": {
     "reportSuccess": "ਸੁਨੇਹਾ ਪ੍ਰਸ਼ਾਸਨਿਕ ਸਮੀਖਿਆ ਲਈ ਸਫਲਤਾਪੂਰਵਕ ਰਿਪੋਰਟ ਕੀਤਾ ਗਿਆ।",

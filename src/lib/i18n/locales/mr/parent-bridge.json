@@ -272,7 +272,7 @@
     "registerErrPasswordMatch": "पासवर्ड जुळत नाहीत. कृपया पासवर्डची खात्री करा.",
     "registerFailFallback": "नोंदणी अयशस्वी झाली. कृपया पुन्हा प्रयत्न करा.",
     "registerCreateFailFallback": "खाते तयार करण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा.",
-    "registerSuccessMsg": "खाते यशस्वीरित्या तयार झाले! तुमचा पालक डॅशबोर्ड उघडत आहे...",
+    "registerSuccessMsg": "खाते यशस्वीरित्या तयार केले आहे. सुरू ठेवण्यासाठी कृपया लॉग इन करा.",
     "registerFullNameLabel": "पालकांचे पूर्ण नाव *",
     "registerFullNamePlaceholder": "उदा. दिनेशभाई पटेल",
     "emailRequiredLabel": "ईमेल पत्ता *",
@@ -482,7 +482,8 @@
     "verifyAndLinkBtn": "पडताळा व जोडा",
     "connectChatBtn": "थेट संवाद जोडा",
     "liveBadge": "थेट",
-    "chatWithTeacherLiveBtn": "शिक्षकांशी थेट संवाद साधा"
+    "chatWithTeacherLiveBtn": "शिक्षकांशी थेट संवाद साधा",
+    "accountCreatedLoginPrompt": "खाते यशस्वीरित्या तयार केले आहे. सुरू ठेवण्यासाठी कृपया लॉग इन करा."
   },
   "connect": {
     "reportSuccess": "प्रशासकीय तपासणीसाठी संदेश यशस्वीरित्या कळवला गेला.",

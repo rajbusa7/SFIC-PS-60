@@ -278,7 +278,8 @@
     "bulletHeatmap": "ਇੰਟਰਐਕਟਿਵ 3D ਜਮਾਤ ਮੁਹਾਰਤ ਹੀਟਮੈਪ ਅਤੇ ਵਿਦਿਆਰਥੀ ਹੁਨਰ ਪ੍ਰਗਤੀ ਰੁੱਖ",
     "bulletOffline": "ਕਿਸੇ ਅਦਾਇਗੀ ਵਾਲੀ API ਦੀ ਲੋੜ ਨਹੀਂ; ਪੇਂਡੂ ਸਕੂਲਾਂ ਵਿੱਚ ਪੂਰੀ ਤਰ੍ਹਾਂ ਆਫ਼ਲਾਈਨ ਕੰਮ ਕਰਦਾ ਹੈ",
     "loadingAuth": "ਪ੍ਰਮਾਣੀਕਰਨ ਲੋਡ ਹੋ ਰਿਹਾ ਹੈ...",
-    "footerCopyright": "© 2026 StudySaathi AI • SFIC ਗੁਜਰਾਤ ਹੈਕਾਥੌਨ PS-60। ਆਫ਼ਲਾਈਨ-ਪਹਿਲ PWA।"
+    "footerCopyright": "© 2026 StudySaathi AI • SFIC ਗੁਜਰਾਤ ਹੈਕਾਥੌਨ PS-60। ਆਫ਼ਲਾਈਨ-ਪਹਿਲ PWA।",
+    "accountCreatedLoginPrompt": "ਖਾਤਾ ਸਫਲਤਾਪੂਰਵਕ ਬਣਾਇਆ ਗਿਆ ਹੈ। ਜਾਰੀ ਰੱਖਣ ਲਈ ਕਿਰਪਾ ਕਰਕੇ ਲੌਗ ਇਨ ਕਰੋ।"
   },
   "landing": {
     "heroHeadline": "ਸਿੱਖਣ ਦਾ ਹਰ ਪਾੜਾ ਇੱਕ ਮੌਕਾ ਹੈ।",

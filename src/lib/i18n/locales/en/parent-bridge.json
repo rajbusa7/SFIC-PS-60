@@ -272,7 +272,7 @@
     "registerErrPasswordMatch": "Passwords do not match. Please confirm your password.",
     "registerFailFallback": "Registration failed. Please try again.",
     "registerCreateFailFallback": "Failed to create account. Please try again.",
-    "registerSuccessMsg": "Account created successfully! Launching your parent dashboard...",
+    "registerSuccessMsg": "Account created successfully. Please log in to continue.",
     "registerFullNameLabel": "Parent's Full Name *",
     "registerFullNamePlaceholder": "e.g. Dineshbhai Patel",
     "emailRequiredLabel": "Email Address *",
@@ -482,7 +482,8 @@
     "verifyAndLinkBtn": "Verify & Link",
     "connectChatBtn": "Connect Chat",
     "liveBadge": "Live",
-    "chatWithTeacherLiveBtn": "Chat with Teacher (Live)"
+    "chatWithTeacherLiveBtn": "Chat with Teacher (Live)",
+    "accountCreatedLoginPrompt": "Account created successfully. Please log in to continue."
   },
   "connect": {
     "reportSuccess": "Message successfully reported for administrative review.",

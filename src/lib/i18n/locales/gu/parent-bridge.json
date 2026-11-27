@@ -272,7 +272,7 @@
     "registerErrPasswordMatch": "પાસવર્ડ મેળ ખાતા નથી. કૃપા કરીને પુષ્ટિ કરો.",
     "registerFailFallback": "નોંધણી નિષ્ફળ ગઈ. કૃપા કરીને ફરી પ્રયાસ કરો.",
     "registerCreateFailFallback": "એકાઉન્ટ બનાવવામાં નિષ્ફળતા. કૃપા કરીને ફરી પ્રયાસ કરો.",
-    "registerSuccessMsg": "એકાઉન્ટ સફળતાપૂર્વક બની ગયું! વાલી ડેશબોર્ડ શરૂ થઈ રહ્યું છે...",
+    "registerSuccessMsg": "એકાઉન્ટ સફળતાપૂર્વક બની ગયું છે. ચાલુ રાખવા માટે કૃપા કરીને લૉગ ઇન કરો.",
     "registerFullNameLabel": "વાલીનું પૂરું નામ *",
     "registerFullNamePlaceholder": "દા.ત. દિનેશભાઈ પટેલ",
     "emailRequiredLabel": "ઇમેઇલ સરનામું *",
@@ -482,7 +482,8 @@
     "verifyAndLinkBtn": "ચકાસો અને જોડો",
     "connectChatBtn": "સેતુ કનેક્ટ ચેટ",
     "liveBadge": "લાઇવ",
-    "chatWithTeacherLiveBtn": "શિક્ષક સાથે સીધી ચેટ કરો"
+    "chatWithTeacherLiveBtn": "શિક્ષક સાથે સીધી ચેટ કરો",
+    "accountCreatedLoginPrompt": "એકાઉન્ટ સફળતાપૂર્વક બની ગયું છે. ચાલુ રાખવા માટે કૃપા કરીને લૉગ ઇન કરો."
   },
   "connect": {
     "reportSuccess": "સંદેશ શાળા વહીવટકર્તાને સફળતાપૂર્વક રિપોર્ટ કરવામાં આવ્યો છે.",

@@ -278,7 +278,8 @@
     "bulletHeatmap": "Classroom competency matrix & structured 5-step remedial progression",
     "bulletOffline": "Zero paid APIs required; operates completely offline in rural schools",
     "loadingAuth": "Loading authentication...",
-    "footerCopyright": "© 2026 StudySaathi AI • Pedagogical Remedial System. Offline-First PWA."
+    "footerCopyright": "© 2026 StudySaathi AI • Pedagogical Remedial System. Offline-First PWA.",
+    "accountCreatedLoginPrompt": "Account created successfully. Please log in to continue."
   },
   "landing": {
     "heroHeadline": "Every Learning Gap Is an Opportunity.",

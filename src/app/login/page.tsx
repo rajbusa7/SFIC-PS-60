@@ -98,15 +98,25 @@ function LoginCardContent() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [googleConfigured, setGoogleConfigured] = useState<boolean | null>(null);
   const [showSetupModal, setShowSetupModal] = useState(false);
-  const [bannerNotice, setBannerNotice] = useState<{ type: "info" | "warning" | "error"; message: string } | null>(null);
+  const [bannerNotice, setBannerNotice] = useState<{ type: "info" | "warning" | "error" | "success"; message: string } | null>(null);
 
-  // Check URL search parameters for OAuth callback messages
+  // Check URL search parameters for OAuth callback messages and registration status
   useEffect(() => {
     const error = searchParams.get("error");
     const unregistered = searchParams.get("unregistered");
     const existing = searchParams.get("existing");
+    const registered = searchParams.get("registered");
 
-    if (unregistered === "true") {
+    if (registered === "true") {
+      setAuthMode("login");
+      const regEmail = searchParams.get("email");
+      if (regEmail) setEmail(regEmail);
+      setPassword("");
+      setBannerNotice({
+        type: "success",
+        message: lg.accountCreatedLoginPrompt || "Account created successfully. Please log in to continue.",
+      });
+    } else if (unregistered === "true") {
       setAuthMode("register");
       const unregEmail = searchParams.get("email");
       const unregName = searchParams.get("name");
@@ -307,9 +317,20 @@ function LoginCardContent() {
     setRegLoading(true);
     setRegError(null);
 
-    const result = await registerTeacher(regName, regEmail, regPassword, regSchoolId);
+    const registeredEmail = regEmail.trim();
+    const result = await registerTeacher(regName, registeredEmail, regPassword, regSchoolId);
     if (result.success) {
-      router.push("/dashboard");
+      setAuthMode("login");
+      setEmail(registeredEmail);
+      setPassword("");
+      setRegPassword("");
+      setRegConfirmPassword("");
+      setBannerNotice({
+        type: "success",
+        message: lg.accountCreatedLoginPrompt || "Account created successfully. Please log in to continue.",
+      });
+      setRegLoading(false);
+      router.replace(`/login?registered=true&email=${encodeURIComponent(registeredEmail)}`);
     } else {
       setRegError(result.error || lg.errRegFailed);
       setRegLoading(false);
@@ -426,23 +447,32 @@ function LoginCardContent() {
           </p>
         </div>
 
-        {/* Global Banner Notice (e.g. Unregistered Google account, Existing account, Errors) */}
+        {/* Global Banner Notice (e.g. Registered account success, Unregistered Google account, Existing account, Errors) */}
         {bannerNotice && (
           <div
             className={`p-3.5 rounded-2xl text-xs flex items-start gap-2.5 ${
-              bannerNotice.type === "warning"
+              bannerNotice.type === "success"
+                ? "bg-emerald-500/10 border border-emerald-500/25 text-emerald-900 dark:text-emerald-200"
+                : bannerNotice.type === "warning"
                 ? "bg-amber-500/10 border border-amber-500/25 text-amber-900 dark:text-amber-200"
                 : bannerNotice.type === "error"
                 ? "bg-rose-500/10 border border-rose-500/25 text-rose-900 dark:text-rose-200"
                 : "bg-blue-500/10 border border-blue-500/25 text-blue-900 dark:text-blue-200"
             }`}
           >
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-            <div className="flex-1 leading-relaxed">{bannerNotice.message}</div>
+            {bannerNotice.type === "success" ? (
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+            ) : bannerNotice.type === "error" ? (
+              <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+            ) : (
+              <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+            )}
+            <div className="flex-1 leading-relaxed font-medium">{bannerNotice.message}</div>
             <button
               type="button"
               onClick={() => setBannerNotice(null)}
-              className="text-[#7A6862] hover:text-[#49352F] dark:hover:text-[#F4F1E1]"
+              className="text-[#7A6862] hover:text-[#49352F] dark:hover:text-[#F4F1E1] p-0.5 rounded-md hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
+              aria-label="Dismiss notice"
             >
               <X className="w-3.5 h-3.5" />
             </button>

@@ -272,7 +272,7 @@
     "registerErrPasswordMatch": "পাসওয়ার্ড দুটি মেলেনি। অনুগ্রহ করে পাসওয়ার্ড নিশ্চিত করুন।",
     "registerFailFallback": "নিবন্ধন ব্যর্থ হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।",
     "registerCreateFailFallback": "অ্যাকাউন্ট তৈরি করা যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।",
-    "registerSuccessMsg": "অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে! আপনার অভিভাবক ড্যাশবোর্ড চালু হচ্ছে...",
+    "registerSuccessMsg": "অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে। চালিয়ে যেতে অনুগ্রহ করে লগ ইন করুন।",
     "registerFullNameLabel": "অভিভাবকের পূর্ণ নাম *",
     "registerFullNamePlaceholder": "যেমন: দিনেশভাই প্যাটেল",
     "emailRequiredLabel": "ইমেইল ঠিকানা *",
@@ -482,7 +482,8 @@
     "verifyAndLinkBtn": "যাচাই ও সংযুক্ত করুন",
     "connectChatBtn": "সংযোগ চ্যাট",
     "liveBadge": "লাইভ",
-    "chatWithTeacherLiveBtn": "শিক্ষকের সাথে চ্যাট করুন (লাইভ)"
+    "chatWithTeacherLiveBtn": "শিক্ষকের সাথে চ্যাট করুন (লাইভ)",
+    "accountCreatedLoginPrompt": "অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে। চালিয়ে যেতে অনুগ্রহ করে লগ ইন করুন।"
   },
   "connect": {
     "reportSuccess": "বার্তাটি প্রশাসনিক পর্যালোচনার জন্য সফলভাবে রিপোর্ট করা হয়েছে।",

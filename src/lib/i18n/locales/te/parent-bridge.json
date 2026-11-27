@@ -272,7 +272,7 @@
     "registerErrPasswordMatch": "పాస్‌వర్డ్‌లు సరిపోలడం లేదు. దయచేసి మీ పాస్‌వర్డ్‌ను నిర్ధారించండి.",
     "registerFailFallback": "నమోదు విఫలమైంది. దయచేసి మళ్ళీ ప్రయత్నించండి.",
     "registerCreateFailFallback": "ఖాతాను సృష్టించడంలో విఫలమైంది. దయచేసి మళ్ళీ ప్రయత్నించండి.",
-    "registerSuccessMsg": "ఖాతా విజయవంతంగా సృష్టించబడింది! మీ తల్లిదండ్రుల డాష్‌బోర్డ్‌ను ప్రారంభిస్తోంది...",
+    "registerSuccessMsg": "ఖాతా విజయవంతంగా సృష్టించబడింది. కొనసాగడానికి దయచేసి లాగిన్ చేయండి.",
     "registerFullNameLabel": "తల్లిదండ్రుల పూర్తి పేరు *",
     "registerFullNamePlaceholder": "ఉదా. దినేష్‌భాయ్ పటేల్",
     "emailRequiredLabel": "ఇమెయిల్ చిరునామా *",
@@ -482,7 +482,8 @@
     "verifyAndLinkBtn": "ధృవీకరించి అనుసంధానించండి",
     "connectChatBtn": "చాట్‌ను అనుసంధానించండి",
     "liveBadge": "లైవ్",
-    "chatWithTeacherLiveBtn": "ఉపాధ్యాయులతో చాట్ చేయండి (లైవ్)"
+    "chatWithTeacherLiveBtn": "ఉపాధ్యాయులతో చాట్ చేయండి (లైవ్)",
+    "accountCreatedLoginPrompt": "ఖాతా విజయవంతంగా సృష్టించబడింది. కొనసాగడానికి దయచేసి లాగిన్ చేయండి."
   },
   "connect": {
     "reportSuccess": "పరిపాలనా సమీక్ష కోసం సందేశం విజయవంతంగా నివేదించబడింది.",

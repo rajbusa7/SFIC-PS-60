@@ -278,7 +278,8 @@
     "bulletHeatmap": "संवादात्मक 3D वर्ग प्राविण्य हीटमॅप आणि विद्यार्थी कौशल्य प्रगती वृक्ष",
     "bulletOffline": "कोणत्याही सशुल्क API ची गरज नाही; ग्रामीण शाळांमध्ये पूर्णपणे ऑफलाइन चालते",
     "loadingAuth": "पडताळणी लोड करत आहे...",
-    "footerCopyright": "© 2026 StudySaathi AI • SFIC गुजरात हॅकाथॉन PS-60. ऑफलाइन-प्रथम PWA."
+    "footerCopyright": "© 2026 StudySaathi AI • SFIC गुजरात हॅकाथॉन PS-60. ऑफलाइन-प्रथम PWA.",
+    "accountCreatedLoginPrompt": "खाते यशस्वीरित्या तयार केले आहे. सुरू ठेवण्यासाठी कृपया लॉग इन करा."
   },
   "landing": {
     "heroHeadline": "प्रत्येक अध्ययन तूट ही एक संधी आहे.",

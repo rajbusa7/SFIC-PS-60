@@ -98,15 +98,7 @@ export async function POST(request: Request) {
       }
     }
 
-    // 7. Establish secure session token & cookie
-    const sessionToken = await signSession({
-      id: newUser.id,
-      name: newUser.name,
-      email: newUser.email,
-      role: "parent",
-      schoolId: newUser.schoolId,
-      provider: "local",
-    });
+    const autoLogin = body.autoLogin === true || body.createSession === true;
 
     const sanitizedUser = {
       id: newUser.id,
@@ -122,18 +114,31 @@ export async function POST(request: Request) {
 
     const response = NextResponse.json({
       success: true,
-      message: "Parent account registered successfully.",
+      message: "Account created successfully. Please log in to continue.",
       user: sanitizedUser,
       parentProfile,
       linkedStudentId,
       linkingWarning,
     });
 
-    response.cookies.set(
-      SESSION_COOKIE_NAME,
-      sessionToken,
-      getSessionCookieOptions()
-    );
+    // Only establish session if explicitly requested (e.g. headless integration tests)
+    // Website registration flow strictly requires manual login on the Login page
+    if (autoLogin) {
+      const sessionToken = await signSession({
+        id: newUser.id,
+        name: newUser.name,
+        email: newUser.email,
+        role: "parent",
+        schoolId: newUser.schoolId,
+        provider: "local",
+      });
+
+      response.cookies.set(
+        SESSION_COOKIE_NAME,
+        sessionToken,
+        getSessionCookieOptions()
+      );
+    }
 
     return response;
   } catch (err: any) {

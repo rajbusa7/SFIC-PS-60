@@ -278,7 +278,8 @@
     "bulletHeatmap": "ઇન્ટરેક્ટિવ ૩D વર્ગ નિપુણતા હીટમેપ અને કૌશલ્ય પ્રગતિ વૃક્ષ",
     "bulletOffline": "કોઈ ચૂકવણી કરેલ API જરૂરી નથી; ગ્રામીણ શાળાઓમાં સંપૂર્ણ ઑફલાઇન ચાલે છે",
     "loadingAuth": "પ્રમાણીકરણ લોડ થઈ રહ્યું છે...",
-    "footerCopyright": "© ૨૦૨૬ StudySaathi AI • SFIC ગુજરાત હેકાથોન PS-60. ઑફલાઇન-ફર્સ્ટ PWA."
+    "footerCopyright": "© ૨૦૨૬ StudySaathi AI • SFIC ગુજરાત હેકાથોન PS-60. ઑફલાઇન-ફર્સ્ટ PWA.",
+    "accountCreatedLoginPrompt": "એકાઉન્ટ સફળતાપૂર્વક બની ગયું છે. ચાલુ રાખવા માટે કૃપા કરીને લૉગ ઇન કરો."
   },
   "landing": {
     "heroHeadline": "દરેક શિક્ષણ ત્રુટિ એક નવી તક છે.",

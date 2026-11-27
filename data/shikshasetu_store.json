@@ -4133,7 +4133,8 @@
       "email": "rajesh.patel@gmail.com",
       "preferredLanguage": "gu",
       "studentIds": [
-        "std-aarav"
+        "std-aarav",
+        "std-001"
       ],
       "relationship": "father"
     },
@@ -4184,6 +4185,19 @@
         "std-dev"
       ],
       "relationship": "father"
+    },
+    {
+      "id": "par-001",
+      "userId": "par-001",
+      "name": "Dineshbhai Patel",
+      "email": "dinesh.patel@example.com",
+      "phone": "+919825012345",
+      "preferredLanguage": "gu",
+      "relationship": "father",
+      "studentIds": [
+        "std-aarav",
+        "std-001"
+      ]
     }
   ],
   "parentLinkingCodes": [

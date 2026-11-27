@@ -377,6 +377,27 @@ function loadStore(): DataStore {
             memoryStore.chatMessages = JSON.parse(JSON.stringify(SEED_CHAT_MESSAGES));
             storeNeedsSync = true;
           }
+          // Auto-sync seed parents if missing
+          if (!memoryStore.parents || memoryStore.parents.length === 0) {
+            memoryStore.parents = JSON.parse(JSON.stringify(SEED_PARENTS));
+            storeNeedsSync = true;
+          } else {
+            for (const sp of SEED_PARENTS) {
+              const existing = memoryStore.parents.find((p) => p.id === sp.id || (sp.userId && p.userId === sp.userId));
+              if (!existing) {
+                memoryStore.parents.push(JSON.parse(JSON.stringify(sp)));
+                storeNeedsSync = true;
+              } else if (sp.studentIds && sp.studentIds.length > 0) {
+                if (!existing.studentIds) existing.studentIds = [];
+                for (const sid of sp.studentIds) {
+                  if (!existing.studentIds.includes(sid)) {
+                    existing.studentIds.push(sid);
+                    storeNeedsSync = true;
+                  }
+                }
+              }
+            }
+          }
           // Auto-sync PTM baseline meetings if missing
           if (!memoryStore.ptmMeetings) memoryStore.ptmMeetings = [];
           const initialStore = getInitialStore();
@@ -1508,11 +1529,34 @@ export const db = {
   },
 
   getParentById(id: string): ParentProfile | undefined {
-    return this.getParents().find((p) => p.id === id);
+    const parents = this.getParents();
+    const found = parents.find((p) => p.id === id || (p.userId && p.userId === id));
+    if (found) return found;
+
+    const store = loadStore();
+    const user = (store.users || []).find((u) => u.id === id && (u.role === "parent" || u.role === "admin"));
+    if (user) {
+      const matched = (store.students || []).filter(
+        (s) =>
+          s.displayName.toLowerCase().includes("aarav") ||
+          s.displayName.toLowerCase().includes(user.name.split(" ")[0].toLowerCase())
+      );
+      const studentIds = matched.length > 0 ? matched.map((s) => s.id) : store.students?.[0]?.id ? [store.students[0].id] : [];
+      return this.createParentProfile({
+        id: user.id.startsWith("par-") ? user.id : `par-${user.id}`,
+        userId: user.id,
+        name: user.name,
+        phone: user.phone || "+919825012345",
+        email: user.email,
+        relationship: "father",
+        studentIds,
+      });
+    }
+    return undefined;
   },
 
   getParentByUserId(userId: string): ParentProfile | undefined {
-    return this.getParents().find((p) => p.userId === userId);
+    return this.getParentById(userId);
   },
 
   async getParentByUserIdAsync(userId: string): Promise<ParentProfile | null> {
@@ -1587,7 +1631,7 @@ export const db = {
 
   createParentProfile(data: {
     id?: string;
-    userId: string;
+    userId?: string;
     name: string;
     email?: string;
     phone?: string;
@@ -1597,9 +1641,10 @@ export const db = {
   }): ParentProfile {
     const store = loadStore();
     const id = data.id || `par-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    const userId = data.userId || `usr-${id}`;
     const newProfile: ParentProfile = {
       id,
-      userId: data.userId,
+      userId,
       name: data.name,
       email: data.email,
       phone: data.phone,
@@ -1608,7 +1653,7 @@ export const db = {
       studentIds: data.studentIds || [],
     };
     if (!store.parents) store.parents = [];
-    const existingIndex = store.parents.findIndex((p) => p.id === id || p.userId === data.userId);
+    const existingIndex = store.parents.findIndex((p) => p.id === id || p.userId === userId);
     if (existingIndex >= 0) {
       store.parents[existingIndex] = {
         ...store.parents[existingIndex],
@@ -1621,7 +1666,7 @@ export const db = {
     saveStore(store);
 
     if (isPostgresConfigured()) {
-      postgresParentDb.createParentProfile(data).catch((e) =>
+      postgresParentDb.createParentProfile({ ...data, userId }).catch((e) =>
         console.error("Postgres background createParentProfile error:", e)
       );
     }
@@ -1631,7 +1676,7 @@ export const db = {
 
   async createParentProfileAsync(data: {
     id?: string;
-    userId: string;
+    userId?: string;
     name: string;
     email?: string;
     phone?: string;
@@ -1639,14 +1684,15 @@ export const db = {
     relationship?: string;
     studentIds?: string[];
   }): Promise<ParentProfile> {
+    const userId = data.userId || (data.id ? `usr-${data.id}` : `usr-par-${Date.now()}`);
     if (isPostgresConfigured()) {
       try {
-        return await postgresParentDb.createParentProfile(data);
+        return await postgresParentDb.createParentProfile({ ...data, userId });
       } catch (e) {
         console.error("Postgres error in createParentProfileAsync, falling back to local:", e);
       }
     }
-    return this.createParentProfile(data);
+    return this.createParentProfile({ ...data, userId });
   },
 
   async linkParentToStudentAsync(parentId: string, studentId: string, relationship = "guardian"): Promise<boolean> {

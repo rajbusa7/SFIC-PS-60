@@ -165,8 +165,42 @@ export async function POST(request: Request) {
       notes: typeof notes === "string" ? notes.trim() : "",
     });
 
+    // Handle Parent Record Association
+    let linkedParent: any = null;
+    if (body.parentId) {
+      await db.linkParentToStudentAsync(body.parentId, newStudent.id, body.parentRelationship || "guardian");
+      linkedParent = await db.getParentByIdAsync(body.parentId);
+    } else if (body.parentName && typeof body.parentName === "string" && body.parentName.trim().length >= 2) {
+      const pName = body.parentName.trim();
+      const pPhone = typeof body.parentPhone === "string" ? body.parentPhone.trim() : "";
+      const pEmail = typeof body.parentEmail === "string" ? body.parentEmail.trim() : "";
+      const pRel = ["father", "mother", "guardian"].includes(body.parentRelationship) ? body.parentRelationship : "guardian";
+
+      let existingParent = pPhone ? db.getParentByPhone(pPhone) : undefined;
+      if (!existingParent) {
+        existingParent = db.getParents().find((p) => p.name.toLowerCase() === pName.toLowerCase());
+      }
+
+      if (existingParent) {
+        await db.linkParentToStudentAsync(existingParent.id, newStudent.id, pRel);
+        linkedParent = existingParent;
+      } else {
+        const genId = `par-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+        linkedParent = await db.createParentProfileAsync({
+          id: genId,
+          userId: `usr-${genId}`,
+          name: pName,
+          phone: pPhone,
+          email: pEmail,
+          relationship: pRel,
+          studentIds: [newStudent.id],
+          preferredLanguage: "gu",
+        });
+      }
+    }
+
     return NextResponse.json(
-      { success: true, student: newStudent },
+      { success: true, student: newStudent, parent: linkedParent },
       { status: 201, headers: noCacheHeaders }
     );
   } catch (error) {

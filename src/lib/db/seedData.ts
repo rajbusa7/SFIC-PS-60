@@ -1308,13 +1308,23 @@ export const SEED_ACTIVITIES: LearningActivity[] = COMPREHENSIVE_ACTIVITIES;
 
 export const SEED_PARENTS: ParentProfile[] = [
   {
+    id: "par-001",
+    userId: "usr-par-01",
+    name: "Dineshbhai Patel",
+    phone: "+919825012345",
+    email: "dinesh.patel@example.com",
+    preferredLanguage: "gu",
+    studentIds: ["std-aarav", "std-001"],
+    relationship: "father",
+  },
+  {
     id: "par-aarav",
     userId: "usr-par-01",
     name: "Rajeshbhai Patel",
     phone: "9876543210",
     email: "rajesh.patel@gmail.com",
     preferredLanguage: "gu",
-    studentIds: ["std-aarav"],
+    studentIds: ["std-aarav", "std-001"],
     relationship: "father",
   },
   {

@@ -66,11 +66,14 @@ export async function GET(
 
       const remedialPlans = db.getRemedialPlans(id);
       const attempts = db.getAttempts(id);
+      const parents = await db.getParentsByStudentIdAsync(id);
+      (student as any).parents = parents;
 
       return NextResponse.json(
         {
           success: true,
           student,
+          parents,
           results,
           gaps,
           remedialPlans,
@@ -84,11 +87,14 @@ export async function GET(
     const gaps = db.getLearningGaps(id);
     const remedialPlans = db.getRemedialPlans(id);
     const attempts = db.getAttempts(id);
+    const parents = await db.getParentsByStudentIdAsync(id);
+    (student as any).parents = parents;
 
     return NextResponse.json(
       {
         success: true,
         student,
+        parents,
         results,
         gaps,
         remedialPlans,
@@ -182,8 +188,57 @@ export async function PUT(
       );
     }
 
+    // Handle parent record linking or updating
+    let linkedParent: any = null;
+    if (updates.parentId) {
+      await db.linkParentToStudentAsync(updates.parentId, id, updates.parentRelationship || "guardian");
+      linkedParent = await db.getParentByIdAsync(updates.parentId);
+    } else if (updates.parentName && typeof updates.parentName === "string" && updates.parentName.trim().length >= 2) {
+      const pName = updates.parentName.trim();
+      const pPhone = typeof updates.parentPhone === "string" ? updates.parentPhone.trim() : "";
+      const pEmail = typeof updates.parentEmail === "string" ? updates.parentEmail.trim() : "";
+      const pRel = ["father", "mother", "guardian"].includes(updates.parentRelationship) ? updates.parentRelationship : "guardian";
+
+      // Check if student already has a linked parent
+      const currentParents = await db.getParentsByStudentIdAsync(id);
+      if (currentParents.length > 0) {
+        const targetParent = currentParents[0];
+        const store = (db as any).loadStore ? (db as any).loadStore() : null;
+        if (store && store.parents) {
+          const idx = store.parents.findIndex((p: any) => p.id === targetParent.id);
+          if (idx >= 0) {
+            store.parents[idx] = {
+              ...store.parents[idx],
+              name: pName,
+              phone: pPhone || store.parents[idx].phone,
+              email: pEmail || store.parents[idx].email,
+              relationship: pRel,
+            };
+            (db as any).saveStore(store);
+            linkedParent = store.parents[idx];
+          }
+        }
+      } else {
+        // Create new linked parent
+        const genId = `par-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+        linkedParent = await db.createParentProfileAsync({
+          id: genId,
+          userId: `usr-${genId}`,
+          name: pName,
+          phone: pPhone,
+          email: pEmail,
+          relationship: pRel,
+          studentIds: [id],
+          preferredLanguage: "gu",
+        });
+      }
+    }
+
+    const parents = await db.getParentsByStudentIdAsync(id);
+    (updated as any).parents = parents;
+
     return NextResponse.json(
-      { success: true, student: updated },
+      { success: true, student: updated, parent: linkedParent, parents },
       { headers: noCacheHeaders }
     );
   } catch (error) {

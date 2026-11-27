@@ -21,6 +21,10 @@ export function ScheduleMeetingModal({
   const [selectedStudentId, setSelectedStudentId] = useState<string>(initialStudentId || "");
   const [parents, setParents] = useState<Array<{ id: string; name: string; email?: string; phone?: string; relationship?: string }>>([]);
   const [selectedParentId, setSelectedParentId] = useState<string>("");
+  const [isAddingNewParent, setIsAddingNewParent] = useState<boolean>(false);
+  const [newParentName, setNewParentName] = useState<string>("");
+  const [newParentPhone, setNewParentPhone] = useState<string>("");
+  const [newParentRel, setNewParentRel] = useState<string>("father");
   const [title, setTitle] = useState<string>("Pedagogical Progress Review");
   const [scheduledDate, setScheduledDate] = useState<string>(
     new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split("T")[0]!
@@ -67,23 +71,30 @@ export function ScheduleMeetingModal({
       .then((data) => {
         // Find parents associated with this student
         const studentData = data.student || data;
-        const studentParents = studentData?.parents || [];
+        const studentParents = studentData?.parents || data.parents || [];
         if (studentParents.length > 0) {
           setParents(studentParents);
-          setSelectedParentId(studentParents[0].id);
+          setSelectedParentId(studentParents[0].id || studentParents[0].userId || "");
+          setIsAddingNewParent(false);
         } else {
-          // Fallback: fetch from contact list or mock parents
-          fetch("/api/connect/contacts")
+          // Fetch from /api/parents
+          fetch("/api/parents")
             .then((r) => r.json())
-            .then((cData) => {
-              const contacts = cData.contacts || [];
-              const matching = contacts.filter((c: any) => c.role === "parent");
-              if (matching.length > 0) {
-                setParents(matching);
-                setSelectedParentId(matching[0].id || matching[0].userId);
+            .then((pData) => {
+              const allParents = pData.parents || [];
+              if (allParents.length > 0) {
+                setParents(allParents);
+                setSelectedParentId(allParents[0].id || allParents[0].userId || "");
+              } else {
+                setParents([]);
+                setSelectedParentId("");
+                setIsAddingNewParent(true);
               }
             })
-            .catch(() => {});
+            .catch(() => {
+              setParents([]);
+              setSelectedParentId("");
+            });
         }
       })
       .catch((err) => console.error("Failed to fetch student details", err));
@@ -95,12 +106,40 @@ export function ScheduleMeetingModal({
     setIsLoading(true);
 
     try {
+      let finalParentId = selectedParentId;
+
+      // If adding parent inline right now, save and link parent first
+      if (isAddingNewParent) {
+        if (!newParentName.trim()) {
+          throw new Error("Parent / Guardian name is required.");
+        }
+        const parentRes = await fetch("/api/parents", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: newParentName.trim(),
+            phone: newParentPhone.trim(),
+            relationship: newParentRel,
+            studentId: selectedStudentId,
+          }),
+        });
+        const parentJson = await parentRes.json();
+        if (!parentRes.ok || !parentJson.success) {
+          throw new Error(parentJson.error || "Failed to add parent record.");
+        }
+        finalParentId = parentJson.parent?.id || parentJson.parent?.userId;
+      }
+
+      if (!finalParentId) {
+        throw new Error("Please select or add a parent record for this student.");
+      }
+
       const res = await fetch("/api/ptm/meetings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           studentId: selectedStudentId,
-          parentId: selectedParentId,
+          parentId: finalParentId,
           title,
           scheduledDate,
           startTime,
@@ -234,25 +273,65 @@ export function ScheduleMeetingModal({
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-[#7A6862] mb-1.5">
-                  Parent / Guardian <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={selectedParentId}
-                  onChange={(e) => setSelectedParentId(e.target.value)}
-                  required
-                  className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-white border border-[#49352F]/20 text-[#49352F] focus:outline-hidden focus:ring-2 focus:ring-[#B26A1B]"
-                >
-                  {parents.length > 0 ? (
-                    parents.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name} {p.relationship ? `(${p.relationship})` : ""} {p.email ? `• ${p.email}` : ""}
-                      </option>
-                    ))
-                  ) : (
-                    <option value="">No linked parent found</option>
-                  )}
-                </select>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[#7A6862]">
+                    Parent / Guardian <span className="text-red-500">*</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setIsAddingNewParent(!isAddingNewParent)}
+                    className="text-[11px] font-semibold text-[#B26A1B] hover:underline"
+                  >
+                    {isAddingNewParent ? "Select Existing Parent" : "+ Add Parent Record"}
+                  </button>
+                </div>
+                {!isAddingNewParent ? (
+                  <select
+                    value={selectedParentId}
+                    onChange={(e) => setSelectedParentId(e.target.value)}
+                    required={!isAddingNewParent}
+                    className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-white border border-[#49352F]/20 text-[#49352F] focus:outline-hidden focus:ring-2 focus:ring-[#B26A1B]"
+                  >
+                    {parents.length > 0 ? (
+                      parents.map((p: any) => (
+                        <option key={p.id || p.userId} value={p.id || p.userId}>
+                          {p.name} {p.relationship ? `(${p.relationship})` : ""} {p.phone ? `• ${p.phone}` : ""}
+                        </option>
+                      ))
+                    ) : (
+                      <option value="">No parent found — Click &quot;+ Add Parent Record&quot;</option>
+                    )}
+                  </select>
+                ) : (
+                  <div className="p-3 bg-[#FAF6E9] border border-[#B26A1B]/30 rounded-xl space-y-2">
+                    <input
+                      type="text"
+                      placeholder="Parent Full Name *"
+                      value={newParentName}
+                      onChange={(e) => setNewParentName(e.target.value)}
+                      required={isAddingNewParent}
+                      className="w-full px-3 py-1.5 text-xs rounded-lg bg-white border border-[#49352F]/20 text-[#49352F] focus:outline-hidden focus:ring-1 focus:ring-[#B26A1B]"
+                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="tel"
+                        placeholder="Mobile Number"
+                        value={newParentPhone}
+                        onChange={(e) => setNewParentPhone(e.target.value)}
+                        className="w-full px-3 py-1.5 text-xs rounded-lg bg-white border border-[#49352F]/20 text-[#49352F] focus:outline-hidden focus:ring-1 focus:ring-[#B26A1B]"
+                      />
+                      <select
+                        value={newParentRel}
+                        onChange={(e) => setNewParentRel(e.target.value)}
+                        className="w-full px-3 py-1.5 text-xs rounded-lg bg-white border border-[#49352F]/20 text-[#49352F] focus:outline-hidden focus:ring-1 focus:ring-[#B26A1B]"
+                      >
+                        <option value="father">Father</option>
+                        <option value="mother">Mother</option>
+                        <option value="guardian">Guardian</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

@@ -80,6 +80,7 @@ export default function StudentDetailPage({
   const sd = t.studentDetail;
 
   const [student, setStudent] = useState<any>(null);
+  const [parents, setParents] = useState<any[]>([]);
   const [results, setResults] = useState<any[]>([]);
   const [gaps, setGaps] = useState<any[]>([]);
   const [remedialPlans, setRemedialPlans] = useState<any[]>([]);
@@ -125,6 +126,7 @@ export default function StudentDetailPage({
 
       if (dataStd.success) {
         setStudent(dataStd.student);
+        setParents(dataStd.parents || dataStd.student?.parents || []);
         setResults(dataStd.results || []);
         setGaps(dataStd.gaps || []);
         setRemedialPlans(dataStd.remedialPlans || []);
@@ -376,6 +378,53 @@ export default function StudentDetailPage({
             </div>
           </div>
         </Card>
+
+        {/* Parent & Guardian Record Card */}
+        <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#49352F]/15 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+          <div className="flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-xl bg-[#FAF6E9] border border-[#49352F]/10 flex items-center justify-center text-[#B26A1B] shrink-0">
+              <Users className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#7A6862]">Parent / Guardian:</span>
+                {parents.length > 0 ? (
+                  <span className="text-sm font-bold text-[#49352F]">{parents[0].name}</span>
+                ) : (
+                  <span className="text-xs font-semibold text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
+                    No Parent Linked
+                  </span>
+                )}
+                {parents.length > 0 && parents[0].relationship && (
+                  <Badge variant="outline" size="sm" className="capitalize text-[11px] font-semibold">
+                    {parents[0].relationship}
+                  </Badge>
+                )}
+              </div>
+              {parents.length > 0 && (parents[0].phone || parents[0].email) ? (
+                <div className="text-xs text-[#7A6862] mt-1 flex flex-wrap items-center gap-3">
+                  {parents[0].phone && <span>📞 {parents[0].phone}</span>}
+                  {parents[0].email && <span>✉️ {parents[0].email}</span>}
+                </div>
+              ) : parents.length === 0 ? (
+                <p className="text-xs text-[#7A6862] mt-1">
+                  Link a parent or guardian record to enable PTM video meetings, report notifications, and chat.
+                </p>
+              ) : null}
+            </div>
+          </div>
+          <div className="flex items-center gap-2 self-start sm:self-center">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowEditModal(true)}
+              className="rounded-full text-xs bg-[#FAF6E9] hover:bg-[#F2CAB3] text-[#49352F] border border-[#49352F]/15 font-semibold"
+            >
+              <Edit className="w-3.5 h-3.5 me-1" />
+              <span>{parents.length > 0 ? "Edit Parent Record" : "+ Add Parent Record"}</span>
+            </Button>
+          </div>
+        </div>
 
         {/* 4 Summary Stat Tiles */}
         <div data-tour="student-scores" className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">

@@ -1,11 +1,28 @@
-import { test, describe } from "node:test";
+import { test, describe, before, after } from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
 import { db } from "../src/lib/db/database";
 import { signPtmToken, verifyPtmToken, generateMeetingCode } from "../src/lib/ptm/ptmAuth";
 import { createPtmMeetingEmailTemplate } from "../src/lib/gmail/emailTemplates";
 import type { PtmMeeting, PtmMeetingNote, PtmChatMessage } from "../src/lib/types";
 
 describe("StudySaathi Live PTM System Verification", () => {
+  const storePath = path.resolve(process.cwd(), "data/shikshasetu_store.json");
+  let storeBackup = "";
+
+  before(() => {
+    if (fs.existsSync(storePath)) {
+      storeBackup = fs.readFileSync(storePath, "utf-8");
+    }
+  });
+
+  after(() => {
+    if (storeBackup && fs.existsSync(storePath)) {
+      fs.writeFileSync(storePath, storeBackup, "utf-8");
+    }
+  });
+
   describe("1. Database Model & Persistence", () => {
     test("loads baseline seeded meetings with valid statuses", () => {
       const meetings = db.getPtmMeetings();

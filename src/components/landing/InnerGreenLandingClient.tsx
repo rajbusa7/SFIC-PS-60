@@ -350,22 +350,6 @@ export function InnerGreenLandingClient() {
                 </div>
               </div>
 
-              <Link href="/login" className="hero-secondary-btn" aria-label={l.hero.teacherLogin}>
-                <svg
-                  viewBox="0 0 20 20"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  style={{ width: "calc(16 * var(--u))", height: "calc(16 * var(--u))" }}
-                  aria-hidden="true"
-                >
-                  <path d="M13 3h3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-3M8 14l4-4-4-4M12 10H3" />
-                </svg>
-                <span>{l.hero.teacherLogin}</span>
-              </Link>
-
               <span className="play-wrap">
                 <span className="play-clip">
                   <span className="play-glass mask-circle" style={{ ["--d" as string]: "110ms" }}>

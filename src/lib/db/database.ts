@@ -3731,3 +3731,6 @@ export const db = {
     saveStore(fresh);
   },
 };
+
+export const database = db;
+

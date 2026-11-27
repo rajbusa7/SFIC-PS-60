@@ -2482,6 +2482,36 @@ export const postgresTeacherAssignmentDb = {
 };
 
 export const postgresPtmDb = {
+  async ensurePtmColumns(pool: any): Promise<void> {
+    try {
+      await pool.query(`
+        ALTER TABLE ptm_meetings 
+          ADD COLUMN IF NOT EXISTS scheduled_date DATE,
+          ADD COLUMN IF NOT EXISTS start_time VARCHAR(8),
+          ADD COLUMN IF NOT EXISTS duration_minutes INTEGER DEFAULT 30,
+          ADD COLUMN IF NOT EXISTS meeting_code VARCHAR(32),
+          ADD COLUMN IF NOT EXISTS title VARCHAR(255),
+          ADD COLUMN IF NOT EXISTS description TEXT,
+          ADD COLUMN IF NOT EXISTS agenda TEXT,
+          ADD COLUMN IF NOT EXISTS teacher_notes TEXT,
+          ADD COLUMN IF NOT EXISTS teacher_id VARCHAR(64),
+          ADD COLUMN IF NOT EXISTS teacher_name VARCHAR(255),
+          ADD COLUMN IF NOT EXISTS student_id VARCHAR(64),
+          ADD COLUMN IF NOT EXISTS student_name VARCHAR(255),
+          ADD COLUMN IF NOT EXISTS parent_id VARCHAR(64),
+          ADD COLUMN IF NOT EXISTS parent_name VARCHAR(255),
+          ADD COLUMN IF NOT EXISTS parent_email VARCHAR(255),
+          ADD COLUMN IF NOT EXISTS parent_phone VARCHAR(32),
+          ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'scheduled',
+          ADD COLUMN IF NOT EXISTS join_token_hash VARCHAR(128),
+          ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+          ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
+      `);
+    } catch {
+      // Non-blocking schema guard
+    }
+  },
+
   async getMeetings(options?: {
     teacherId?: string;
     parentId?: string;
@@ -2492,6 +2522,7 @@ export const postgresPtmDb = {
     const pool = getPostgresPool();
     if (!pool) return [];
     await ensurePostgresSchema();
+    await this.ensurePtmColumns(pool);
 
     let query = `
       SELECT id, meeting_code as "meetingCode", title, description, agenda, teacher_notes as "teacherNotes",
@@ -2562,6 +2593,7 @@ export const postgresPtmDb = {
     const pool = getPostgresPool();
     if (!pool) throw new Error("PostgreSQL not configured");
     await ensurePostgresSchema();
+    await this.ensurePtmColumns(pool);
 
     const { rows } = await pool.query(
       `INSERT INTO ptm_meetings (

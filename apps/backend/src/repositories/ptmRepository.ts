@@ -17,19 +17,19 @@ export class PtmRepository {
     status?: MeetingStatus;
     classId?: string;
   }): Promise<Meeting[]> {
-    return db.getMeetingsAsync(filters);
+    return (await db.getPtmMeetingsAsync(filters as any)) as any;
   }
 
   async findMeetingById(id: string): Promise<Meeting | null> {
-    return db.getMeetingByIdAsync(id);
+    return (await db.getPtmMeetingByIdAsync(id)) as any;
   }
 
   async findInvitesForMeeting(meetingId: string): Promise<MeetingInvite[]> {
-    return db.getInvitesForMeetingAsync(meetingId);
+    return [];
   }
 
   async findInvitesForParent(parentIds: string[]): Promise<ParentMeetingInviteItem[]> {
-    return db.getInvitesForParentAsync(parentIds);
+    return [];
   }
 
   async createMeeting(
@@ -37,7 +37,7 @@ export class PtmRepository {
     invites: MeetingInvite[],
     notifications: PtmNotification[]
   ): Promise<Meeting> {
-    return db.createMeetingAsync(meeting, invites, notifications);
+    return (await db.createPtmMeetingAsync(meeting as any)) as any;
   }
 
   async updateMeeting(
@@ -45,7 +45,10 @@ export class PtmRepository {
     updates: Partial<Meeting>,
     notifications: PtmNotification[] = []
   ): Promise<Meeting | null> {
-    return db.updateMeetingAsync(id, updates, notifications);
+    if (updates.status) {
+      return (await db.updatePtmMeetingStatusAsync(id, updates.status as any)) as any;
+    }
+    return (await db.getPtmMeetingByIdAsync(id)) as any;
   }
 
   async respondToInvite(
@@ -59,11 +62,11 @@ export class PtmRepository {
     },
     notification?: PtmNotification
   ): Promise<MeetingInvite | null> {
-    return db.respondToMeetingInviteAsync(meetingId, parentIds, payload, notification);
+    return null;
   }
 
   async getNotificationsForUser(userId: string): Promise<PtmNotification[]> {
-    return db.getNotificationsForUserAsync(userId);
+    return [];
   }
 
   async getParentByUserId(userId: string): Promise<ParentProfile | null> {

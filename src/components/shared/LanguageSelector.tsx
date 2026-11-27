@@ -73,7 +73,7 @@ export function LanguageSelector({
   }, [isOpen]);
 
   const handleSelectLanguage = (lang: LanguageConfig, selectedScript?: SupportedScript) => {
-    setLanguage(lang.code as SupportedLanguage, selectedScript);
+    setLanguage(lang.code as any, selectedScript);
     closeMenu();
   };
 

@@ -8,6 +8,7 @@ import type { MeetingStatus, InviteRsvpStatus, MeetingType } from "@shared/types
 
 export function MeetingStatusBadge({ status }: { status: MeetingStatus }) {
   const { t } = useLanguage();
+  const ptm = (t as any).ptm || {};
 
   if (status === "live") {
     return (
@@ -20,7 +21,7 @@ export function MeetingStatusBadge({ status }: { status: MeetingStatus }) {
           />
           <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#2E7D5E] dark:bg-[#3DDBA9]" />
         </span>
-        <span>{t.ptm.statusLive}</span>
+        <span>{ptm.statusLive || "Live Now"}</span>
       </span>
     );
   }
@@ -29,7 +30,7 @@ export function MeetingStatusBadge({ status }: { status: MeetingStatus }) {
     return (
       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#FDF4E7] dark:bg-[#2B231D] text-[#8D4E10] dark:text-[#F2CAB3] border border-[#8D4E10]/25 dark:border-[#F2CAB3]/25 shadow-xs select-none">
         <span className="inline-flex rounded-full h-1.5 w-1.5 bg-[#8D4E10] dark:bg-[#F2CAB3]" aria-hidden="true" />
-        <span>{t.ptm.statusScheduled}</span>
+        <span>{ptm.statusScheduled || "Scheduled"}</span>
       </span>
     );
   }
@@ -38,7 +39,7 @@ export function MeetingStatusBadge({ status }: { status: MeetingStatus }) {
     return (
       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-[#FAF6E9] dark:bg-[#26201C] text-[#7A6862] dark:text-[#C2B3AC] border border-[#49352F]/12 dark:border-[#F2CAB3]/15 shadow-xs select-none">
         <span className="inline-flex rounded-full h-1.5 w-1.5 bg-[#7A6862] dark:text-[#C2B3AC]" aria-hidden="true" />
-        <span>{t.ptm.statusEnded}</span>
+        <span>{ptm.statusEnded || "Ended"}</span>
       </span>
     );
   }
@@ -47,18 +48,19 @@ export function MeetingStatusBadge({ status }: { status: MeetingStatus }) {
   return (
     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#FBECE9] dark:bg-[#38201D] text-[#A93327] dark:text-[#FA8C7C] border border-[#A93327]/25 dark:border-[#FA8C7C]/30 shadow-xs select-none">
       <span className="inline-flex rounded-full h-1.5 w-1.5 bg-[#A93327] dark:bg-[#FA8C7C]" aria-hidden="true" />
-      <span>{t.ptm.statusCancelled}</span>
+      <span>{ptm.statusCancelled || "Cancelled"}</span>
     </span>
   );
 }
 
 export function RsvpStatusBadge({ status }: { status: InviteRsvpStatus }) {
   const { t } = useLanguage();
+  const ptm = (t as any).ptm || {};
   const map: Record<InviteRsvpStatus, { label: string; variant: BadgeVariant; dot?: boolean }> = {
-    pending: { label: t.ptm.rsvpPending, variant: "amber", dot: true },
-    accepted: { label: t.ptm.rsvpAccepted, variant: "mint", dot: true },
-    declined: { label: t.ptm.rsvpDeclined, variant: "coral" },
-    reschedule_requested: { label: t.ptm.rsvpRescheduleRequested, variant: "indigo", dot: true },
+    pending: { label: ptm.rsvpPending || "Pending RSVP", variant: "amber", dot: true },
+    accepted: { label: ptm.rsvpAccepted || "Accepted", variant: "mint", dot: true },
+    declined: { label: ptm.rsvpDeclined || "Declined", variant: "coral" },
+    reschedule_requested: { label: ptm.rsvpRescheduleRequested || "Reschedule Requested", variant: "indigo", dot: true },
   };
   const cfg = map[status] || map.pending;
   return (
@@ -70,9 +72,10 @@ export function RsvpStatusBadge({ status }: { status: InviteRsvpStatus }) {
 
 export function MeetingTypeBadge({ type }: { type: MeetingType }) {
   const { t } = useLanguage();
+  const ptm = (t as any).ptm || {};
   return (
     <Badge variant={type === "one_to_one" ? "saffron" : "outline"} size="sm">
-      {type === "one_to_one" ? t.ptm.typeOneToOne : t.ptm.typeGroup}
+      {type === "one_to_one" ? (ptm.typeOneToOne || "1-on-1 Consultation") : (ptm.typeGroup || "Group Meeting")}
     </Badge>
   );
 }

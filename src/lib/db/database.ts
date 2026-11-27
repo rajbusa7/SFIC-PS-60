@@ -3726,8 +3726,54 @@ export const db = {
     return this.updatePtmWaitingStatus(meetingId, participantId, status);
   },
 
+  async getMeetingAttendanceAsync(meetingId: string): Promise<any[]> {
+    return [];
+  },
+  async recordMeetingAttendanceJoinAsync(meetingId: string, parentId: string): Promise<boolean> {
+    return true;
+  },
+  async recordMeetingAttendanceLeaveAsync(meetingId: string, parentId: string): Promise<boolean> {
+    return true;
+  },
+  async getMeetingNotesForParentAsync(meetingId: string, parentId?: string): Promise<any[]> {
+    return this.getPtmMeetingNotesAsync(meetingId);
+  },
+  async getMeetingNotesAsync(meetingId: string, ...rest: any[]): Promise<any[]> {
+    return this.getPtmMeetingNotesAsync(meetingId);
+  },
+  async saveMeetingNoteAsync(data: any): Promise<any> {
+    return this.savePtmMeetingNoteAsync(data);
+  },
+  async getMeetingByIdAsync(id: string): Promise<any> {
+    return this.getPtmMeetingByIdAsync(id);
+  },
+  async getMeetingsAsync(filters?: any): Promise<any[]> {
+    return this.getPtmMeetingsAsync(filters);
+  },
+  async updateMeetingStatusAsync(id: string, status: any): Promise<any> {
+    return this.updatePtmMeetingStatusAsync(id, status);
+  },
+  async getAllParentsAsync(): Promise<any[]> {
+    return this.getParents();
+  },
+  async getInvitesForMeetingAsync(meetingId: string): Promise<any[]> {
+    return [];
+  },
+  async findNotificationAsync(...args: any[]): Promise<any> {
+    return null;
+  },
+  async createNotificationAsync(notif: any): Promise<any> {
+    return notif;
+  },
+  async getPushSubscriptionsForUserAsync(userId: string): Promise<any[]> {
+    return [];
+  },
+
   resetToDemoData(): void {
     const fresh = getInitialStore();
     saveStore(fresh);
   },
 };
+
+export const database = db;
+

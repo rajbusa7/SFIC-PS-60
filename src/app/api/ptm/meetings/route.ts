@@ -228,7 +228,13 @@ export async function POST(request: Request) {
       updatedAt: new Date().toISOString(),
     };
 
-    const saved = await db.createPtmMeetingAsync(meeting);
+    let saved: PtmMeeting;
+    try {
+      saved = await db.createPtmMeetingAsync(meeting);
+    } catch (saveErr: any) {
+      console.warn("[PTM POST Meeting Database Fallback]:", saveErr?.message || saveErr);
+      saved = db.createPtmMeeting(meeting);
+    }
 
     // 3. Generate Parent Secure Join URL
     const appUrl = process.env.APP_URL || "https://shikshasetu-ai-iota.vercel.app";

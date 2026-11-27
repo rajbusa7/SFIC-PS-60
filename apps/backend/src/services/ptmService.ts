@@ -104,7 +104,7 @@ export class PtmService {
             userId: p.userId || p.id,
             name: p.name,
             phone: p.phone,
-            parentCode: p.parentCode,
+            parentCode: (p as any).parentCode,
           })),
       })),
       parents: parents.map((p) => ({
@@ -112,7 +112,7 @@ export class PtmService {
         userId: p.userId || p.id,
         name: p.name,
         phone: p.phone,
-        parentCode: p.parentCode,
+        parentCode: (p as any).parentCode,
         studentIds: p.studentIds,
       })),
     };

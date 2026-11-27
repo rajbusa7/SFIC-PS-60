@@ -31,7 +31,7 @@ export function MeetingNotesModal({
   onSaved,
 }: MeetingNotesModalProps) {
   const { t, language } = useLanguage();
-  const vt = t.video;
+  const vt = (t as any).video || {};
 
   const [selectedStudentId, setSelectedStudentId] = useState<string>("");
   const [notes, setNotes] = useState<string>("");

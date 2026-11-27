@@ -152,3 +152,61 @@ export function validateAiTutorRequest(body: any): ValidationResult<{
       : undefined,
   };
 }
+
+export function validateCreateMeeting(body: any): ValidationResult<{
+  title: string;
+  agenda: string;
+  type: "one_to_one" | "group";
+  startTime: string;
+  durationMin: number;
+  classId?: string;
+  studentIds?: string[];
+  parentId?: string;
+  offeredSlots?: string[];
+  targetMode?: "parent" | "students" | "class";
+}> {
+  const errors: ValidationError[] = [];
+  if (!body || typeof body !== "object") {
+    return { isValid: false, errors: [{ field: "body", message: "Request body is required" }] };
+  }
+  if (!body.title || typeof body.title !== "string" || !body.title.trim()) {
+    errors.push({ field: "title", message: "Meeting title is required" });
+  }
+  return {
+    isValid: errors.length === 0,
+    errors,
+    data: errors.length === 0 ? {
+      title: body.title,
+      agenda: body.agenda || "",
+      type: body.type || "one_to_one",
+      startTime: body.startTime || "",
+      durationMin: Number(body.durationMin) || 30,
+      classId: body.classId,
+      studentIds: body.studentIds,
+      parentId: body.parentId,
+      offeredSlots: body.offeredSlots,
+      targetMode: body.targetMode,
+    } : undefined,
+  };
+}
+
+export function validateMeetingRsvp(body: any): ValidationResult<{
+  rsvpStatus: "pending" | "accepted" | "declined" | "reschedule_requested";
+  slotTime?: string;
+  rescheduleNote?: string;
+  studentId?: string;
+}> {
+  const errors: ValidationError[] = [];
+  if (!body || typeof body !== "object") {
+    return { isValid: false, errors: [{ field: "body", message: "Request body is required" }] };
+  }
+  if (!body.rsvpStatus) {
+    errors.push({ field: "rsvpStatus", message: "RSVP status is required" });
+  }
+  return {
+    isValid: errors.length === 0,
+    errors,
+    data: errors.length === 0 ? body : undefined,
+  };
+}
+

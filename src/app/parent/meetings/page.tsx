@@ -60,7 +60,8 @@ function getMeetingDateParts(isoString: string, lang: string) {
 
 export default function ParentMeetingsPage() {
   const router = useRouter();
-  const { t, language, formatClass } = useLanguage();
+  const { t: baseT, language, formatClass } = useLanguage();
+  const t: any = baseT;
   const { logout } = useAuth();
 
   const [invites, setInvites] = useState<ParentMeetingInviteItem[]>([]);

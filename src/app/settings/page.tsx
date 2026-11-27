@@ -125,7 +125,7 @@ export default function SettingsPage() {
         broadcastDataUpdate("settings", "update");
         broadcastDataUpdate("gaps", "update");
         setSaveSuccess(true);
-        setLanguage(preferredLang);
+        setLanguage(preferredLang as any);
         setTimeout(() => setSaveSuccess(false), 3000);
       } else {
         setError(data.error || st.errUpdateFailed);

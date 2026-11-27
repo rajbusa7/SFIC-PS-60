@@ -28,7 +28,7 @@ export function MeetingAttendanceModal({
   meeting,
 }: MeetingAttendanceModalProps) {
   const { t, language } = useLanguage();
-  const vt = t.video;
+  const vt = (t as any).video || {};
 
   const [attendance, setAttendance] = useState<MeetingAttendance[]>([]);
   const [loading, setLoading] = useState(false);

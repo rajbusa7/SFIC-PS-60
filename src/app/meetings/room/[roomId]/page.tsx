@@ -27,6 +27,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { translations } from "@/lib/i18n/translations";
 import { useAuth } from "@/context/AuthContext";
 import { apiClient } from "@/services/apiClient";
 import { Button } from "@/components/ui/Button";
@@ -78,7 +79,12 @@ export default function MeetingRoomPage() {
 
   const { t, language } = useLanguage();
   const { user, role } = useAuth();
-  const vt = (t as any).video || {};
+  const langKey = language === "gu" ? "gu" : "en";
+  const vt = {
+    ...translations[langKey].video,
+    ...((t as any).video || {}),
+    youBadge: translations[langKey].video?.youBadge || (language === "gu" ? "તમે" : "You"),
+  };
 
   // Screen states: 'loading' | 'prejoin' | 'waiting' | 'in_call' | 'ended' | 'error'
   const [screenState, setScreenState] = useState<
@@ -230,18 +236,20 @@ export default function MeetingRoomPage() {
   useEffect(() => {
     if (screenState !== "prejoin") return;
 
-    let activeStream: MediaStream | null = null;
+    let isMounted = true;
     async function startPreview() {
       try {
         if (!audioOnly && cameraEnabled) {
-          const stream = await navigator.mediaDevices.getUserMedia({
-            video: true,
-            audio: micEnabled,
-          });
-          activeStream = stream;
-          localStreamRef.current = stream;
-          if (prejoinVideoRef.current) {
-            prejoinVideoRef.current.srcObject = stream;
+          if (!localStreamRef.current || !localStreamRef.current.getVideoTracks().some((t) => t.readyState === "live")) {
+            const stream = await navigator.mediaDevices.getUserMedia({
+              video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" },
+              audio: micEnabled,
+            });
+            localStreamRef.current = stream;
+          }
+          if (isMounted && prejoinVideoRef.current && localStreamRef.current) {
+            prejoinVideoRef.current.srcObject = localStreamRef.current;
+            prejoinVideoRef.current.play().catch(() => {});
           }
         }
       } catch (err) {
@@ -252,9 +260,47 @@ export default function MeetingRoomPage() {
     startPreview();
 
     return () => {
-      if (activeStream) {
-        activeStream.getTracks().forEach((trk) => trk.stop());
+      isMounted = false;
+      // Do not terminate tracks here if user enters call, so stream persists seamlessly
+    };
+  }, [screenState, cameraEnabled, micEnabled, audioOnly]);
+
+  // Guaranteed In-Call Stream Attacher
+  useEffect(() => {
+    if (screenState !== "in_call") return;
+
+    let isMounted = true;
+    async function attachInCallMedia() {
+      try {
+        if (!audioOnly && cameraEnabled) {
+          let stream = localStreamRef.current;
+          const hasLiveVideo = stream && stream.getVideoTracks().some((t) => t.readyState === "live");
+
+          if (!hasLiveVideo) {
+            stream = await navigator.mediaDevices.getUserMedia({
+              video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" },
+              audio: micEnabled,
+            });
+            localStreamRef.current = stream;
+          }
+
+          if (isMounted && localVideoRef.current && stream) {
+            localVideoRef.current.srcObject = stream;
+            localVideoRef.current.play().catch(() => {});
+          }
+        }
+      } catch (err) {
+        console.warn("Could not start live stream in call:", err);
       }
+    }
+
+    attachInCallMedia();
+
+    // Re-check after 250ms to ensure video element is mounted in DOM
+    const tId = setTimeout(attachInCallMedia, 250);
+    return () => {
+      isMounted = false;
+      clearTimeout(tId);
     };
   }, [screenState, cameraEnabled, micEnabled, audioOnly]);
 
@@ -262,7 +308,7 @@ export default function MeetingRoomPage() {
   const handleEnterCall = async () => {
     setScreenState("in_call");
 
-    // Initialize mock participants
+    // Initialize participants
     const isTeacher = tokenInfo?.isModerator;
     const initialParticipants: Participant[] = [
       {
@@ -303,26 +349,10 @@ export default function MeetingRoomPage() {
         id: "sys-1",
         senderName: "StudySaathi System",
         senderRole: "system",
-        text: vt.callNotRecordedBadge,
+        text: vt.callNotRecordedBadge || "This meeting is private and not recorded.",
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       },
     ]);
-
-    // Request actual stream for the call
-    try {
-      if (!audioOnly && cameraEnabled) {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: micEnabled,
-        });
-        localStreamRef.current = stream;
-        if (localVideoRef.current) {
-          localVideoRef.current.srcObject = stream;
-        }
-      }
-    } catch (err) {
-      console.warn("Could not start live stream in call:", err);
-    }
 
     // Record attendance join
     if (meeting?.id) {
@@ -335,34 +365,54 @@ export default function MeetingRoomPage() {
   };
 
   // 5. Media Toggles
-  const toggleMic = () => {
-    setMicEnabled((prev) => {
-      const next = !prev;
-      if (localStreamRef.current) {
-        localStreamRef.current.getAudioTracks().forEach((trk) => {
+  const toggleMic = async () => {
+    const next = !micEnabled;
+    setMicEnabled(next);
+
+    if (localStreamRef.current) {
+      const audioTracks = localStreamRef.current.getAudioTracks();
+      if (audioTracks.length > 0) {
+        audioTracks.forEach((trk) => {
           trk.enabled = next;
         });
+      } else if (next) {
+        try {
+          const aStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          aStream.getAudioTracks().forEach((trk) => localStreamRef.current?.addTrack(trk));
+        } catch {}
       }
-      setParticipants((list) =>
-        list.map((p) => (p.isLocal ? { ...p, isAudioMuted: !next } : p))
-      );
-      return next;
-    });
+    }
+
+    setParticipants((list) =>
+      list.map((p) => (p.isLocal ? { ...p, isAudioMuted: !next } : p))
+    );
   };
 
-  const toggleCamera = () => {
-    setCameraEnabled((prev) => {
-      const next = !prev;
-      if (localStreamRef.current) {
-        localStreamRef.current.getVideoTracks().forEach((trk) => {
+  const toggleCamera = async () => {
+    const next = !cameraEnabled;
+    setCameraEnabled(next);
+
+    if (localStreamRef.current) {
+      const videoTracks = localStreamRef.current.getVideoTracks();
+      if (videoTracks.length > 0) {
+        videoTracks.forEach((trk) => {
           trk.enabled = next;
         });
+      } else if (next) {
+        try {
+          const vStream = await navigator.mediaDevices.getUserMedia({ video: true });
+          vStream.getVideoTracks().forEach((trk) => localStreamRef.current?.addTrack(trk));
+          if (localVideoRef.current && localStreamRef.current) {
+            localVideoRef.current.srcObject = localStreamRef.current;
+            localVideoRef.current.play().catch(() => {});
+          }
+        } catch {}
       }
-      setParticipants((list) =>
-        list.map((p) => (p.isLocal ? { ...p, isVideoMuted: !next } : p))
-      );
-      return next;
-    });
+    }
+
+    setParticipants((list) =>
+      list.map((p) => (p.isLocal ? { ...p, isVideoMuted: !next } : p))
+    );
   };
 
   const toggleScreenShare = async () => {
@@ -871,7 +921,13 @@ export default function MeetingRoomPage() {
                   {p.isLocal ? (
                     !p.isVideoMuted ? (
                       <video
-                        ref={localVideoRef}
+                        ref={(el) => {
+                          (localVideoRef as any).current = el;
+                          if (el && localStreamRef.current && el.srcObject !== localStreamRef.current) {
+                            el.srcObject = localStreamRef.current;
+                            el.play().catch(() => {});
+                          }
+                        }}
                         autoPlay
                         playsInline
                         muted
@@ -896,7 +952,7 @@ export default function MeetingRoomPage() {
 
                   {/* Tile Overlays */}
                   <div className="absolute bottom-3 left-3 bg-[#FAF6E9]/95 dark:bg-[#1E1916]/95 backdrop-blur-md px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-2 border border-[#49352F]/10 dark:border-[#F2CAB3]/15 text-[#49352F] dark:text-[#F4F1E1] shadow-2xs">
-                    <span>{p.isLocal ? `${p.name} (${vt.youBadge})` : p.name}</span>
+                    <span>{p.isLocal ? `${p.name} (${vt.youBadge || (language === "gu" ? "તમે" : "You")})` : p.name}</span>
                     {p.role === "teacher" && (
                       <span className="bg-[#EAF4EE] text-[#2E7D5E] border border-[#2E7D5E]/20 text-[10px] px-2 py-0.5 rounded-full font-bold">
                         Teacher

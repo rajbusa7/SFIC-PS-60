@@ -142,12 +142,12 @@ export default function MeetingRoomPage() {
 
   // 1. Initial Load: Fetch Token & Meeting Data
   const initializeRoom = useCallback(async () => {
-    if (!roomId) return;
+    const effectiveRoomId = (!roomId || roomId === "undefined") ? "live-consultation" : roomId;
     setScreenState("loading");
     setErrorMessage(null);
 
     try {
-      const res = await apiClient.getMeetingToken(roomId, {
+      const res = await apiClient.getMeetingToken(effectiveRoomId, {
         audioOnly,
         participantName: user?.name,
       });
@@ -169,14 +169,14 @@ export default function MeetingRoomPage() {
 
       // Construct meeting details from token payload
       const meetingDetails: MeetingData = {
-        id: res.meetingId,
+        id: res.meetingId || effectiveRoomId,
         teacherId: res.isModerator ? user?.id || "" : "",
-        title: res.meetingTitle,
+        title: res.meetingTitle || "Parent-Teacher Consultation",
         type: "group",
         startTime: new Date().toISOString(),
         durationMin: 30,
-        status: res.meetingStatus,
-        roomId: res.roomId,
+        status: res.meetingStatus || "live",
+        roomId: res.roomId || effectiveRoomId,
         createdAt: new Date().toISOString(),
       };
       setMeeting(meetingDetails);

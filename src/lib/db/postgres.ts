@@ -2485,28 +2485,59 @@ export const postgresPtmDb = {
   async ensurePtmColumns(pool: any): Promise<void> {
     try {
       await pool.query(`
-        ALTER TABLE ptm_meetings 
-          ADD COLUMN IF NOT EXISTS scheduled_date DATE,
-          ADD COLUMN IF NOT EXISTS start_time VARCHAR(8),
-          ADD COLUMN IF NOT EXISTS duration_minutes INTEGER DEFAULT 30,
-          ADD COLUMN IF NOT EXISTS meeting_code VARCHAR(32),
-          ADD COLUMN IF NOT EXISTS title VARCHAR(255),
-          ADD COLUMN IF NOT EXISTS description TEXT,
-          ADD COLUMN IF NOT EXISTS agenda TEXT,
-          ADD COLUMN IF NOT EXISTS teacher_notes TEXT,
-          ADD COLUMN IF NOT EXISTS teacher_id VARCHAR(64),
-          ADD COLUMN IF NOT EXISTS teacher_name VARCHAR(255),
-          ADD COLUMN IF NOT EXISTS student_id VARCHAR(64),
-          ADD COLUMN IF NOT EXISTS student_name VARCHAR(255),
-          ADD COLUMN IF NOT EXISTS parent_id VARCHAR(64),
-          ADD COLUMN IF NOT EXISTS parent_name VARCHAR(255),
-          ADD COLUMN IF NOT EXISTS parent_email VARCHAR(255),
-          ADD COLUMN IF NOT EXISTS parent_phone VARCHAR(32),
-          ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'scheduled',
-          ADD COLUMN IF NOT EXISTS join_token_hash VARCHAR(128),
-          ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-          ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
+        CREATE TABLE IF NOT EXISTS ptm_meetings (
+          id VARCHAR(64) PRIMARY KEY,
+          meeting_code VARCHAR(32),
+          title VARCHAR(255),
+          description TEXT,
+          agenda TEXT,
+          teacher_notes TEXT,
+          teacher_id VARCHAR(64),
+          teacher_name VARCHAR(255),
+          student_id VARCHAR(64),
+          student_name VARCHAR(255),
+          parent_id VARCHAR(64),
+          parent_name VARCHAR(255),
+          parent_email VARCHAR(255),
+          parent_phone VARCHAR(32),
+          scheduled_date DATE,
+          start_time VARCHAR(8),
+          duration_minutes INTEGER DEFAULT 30,
+          status VARCHAR(20) DEFAULT 'scheduled',
+          join_token_hash VARCHAR(128),
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
       `);
+
+      const colStatements = [
+        "ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS scheduled_date DATE",
+        "ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS start_time VARCHAR(8)",
+        "ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS duration_minutes INTEGER DEFAULT 30",
+        "ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS meeting_code VARCHAR(32)",
+        "ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS title VARCHAR(255)",
+        "ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS description TEXT",
+        "ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS agenda TEXT",
+        "ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS teacher_notes TEXT",
+        "ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS teacher_id VARCHAR(64)",
+        "ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS teacher_name VARCHAR(255)",
+        "ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS student_id VARCHAR(64)",
+        "ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS student_name VARCHAR(255)",
+        "ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS parent_id VARCHAR(64)",
+        "ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS parent_name VARCHAR(255)",
+        "ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS parent_email VARCHAR(255)",
+        "ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS parent_phone VARCHAR(32)",
+        "ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'scheduled'",
+        "ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS join_token_hash VARCHAR(128)",
+        "ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP",
+        "ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"
+      ];
+
+      for (const stmt of colStatements) {
+        try {
+          await pool.query(stmt);
+        } catch {}
+      }
     } catch {
       // Non-blocking schema guard
     }

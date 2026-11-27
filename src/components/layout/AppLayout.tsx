@@ -5,15 +5,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AppSidebar } from "./AppSidebar";
 import { AppHeader } from "./AppHeader";
-import { GlobalShikshaBot } from "@/components/shared/GlobalShikshaBot";
 import { SpotlightTour } from "@/components/tutorial/SpotlightTour";
 import { useFilter } from "@/context/FilterContext";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   LayoutDashboard,
   Users,
   AlertTriangle,
-  ClipboardList,
-  BookOpen,
+  FileSpreadsheet,
+  MessageSquare,
 } from "lucide-react";
 
 interface AppLayoutProps {
@@ -24,13 +24,14 @@ interface AppLayoutProps {
 export function AppLayout({ children }: AppLayoutProps) {
   const pathname = usePathname();
   const { selectedClass, setSelectedClass, searchTerm, setSearchTerm } = useFilter();
+  const { t } = useLanguage();
 
   const mobileNavItems = [
-    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/students", label: "Students", icon: Users },
-    { href: "/learning-gaps", label: "Gaps", icon: AlertTriangle },
-    { href: "/remedial-plans", label: "Plans", icon: ClipboardList },
-    { href: "/tutorial", label: "Tutorial", icon: BookOpen },
+    { href: "/dashboard", label: t.nav?.dashboard || "Dashboard", icon: LayoutDashboard },
+    { href: "/students", label: t.nav?.students || "Students", icon: Users },
+    { href: "/assessments", label: t.nav?.assessments || "Assessments", icon: FileSpreadsheet },
+    { href: "/learning-gaps", label: t.nav?.learningGaps || "Gaps", icon: AlertTriangle },
+    { href: "/connect", label: t.nav?.connectChat || "Connect", icon: MessageSquare },
   ];
 
   return (
@@ -52,9 +53,6 @@ export function AppLayout({ children }: AppLayoutProps) {
           {children}
         </main>
       </div>
-
-      {/* Global Offline ShikshaBot Assistant */}
-      <GlobalShikshaBot />
 
       {/* Central Interactive Spotlight Tour Engine */}
       <SpotlightTour />

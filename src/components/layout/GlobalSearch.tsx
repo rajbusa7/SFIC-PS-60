@@ -44,7 +44,7 @@ interface GlobalSearchProps {
 
 export function GlobalSearch({ onSearchChange, className = "" }: GlobalSearchProps) {
   const router = useRouter();
-  const { language } = useLanguage();
+  const { t } = useLanguage();
   const { searchTerm: ctxSearch, setSearchTerm: setCtxSearch } = useFilter();
 
   const [query, setQuery] = useState(ctxSearch || "");
@@ -216,23 +216,23 @@ export function GlobalSearch({ onSearchChange, className = "" }: GlobalSearchPro
   // Quick suggestions for empty state
   const quickSuggestions = [
     {
-      label: language === "gu" ? "ધોરણ ૪ - વર્ગ અ" : "Class 4 - Section A",
-      category: language === "gu" ? "વર્ગ" : "classes",
+      label: t.globalSearch.quickClass4A,
+      category: t.globalSearch.categoryClasses,
       href: "/students?class=cls-4a",
     },
     {
-      label: language === "gu" ? "આરવ પટેલ (ધોરણ ૪)" : "Aarav Patel (Class 4)",
-      category: language === "gu" ? "વિદ્યાર્થી" : "students",
+      label: t.globalSearch.quickAarav,
+      category: t.globalSearch.categoryStudents,
       href: "/students/std-aarav",
     },
     {
-      label: language === "gu" ? "ભાગાકાર પાયાની ઉપચાર યોજના" : "Division Basics Remedial",
-      category: language === "gu" ? "ઉપચાર યોજના" : "remedial",
+      label: t.globalSearch.quickDivisionPlan,
+      category: t.globalSearch.categoryRemedial,
       href: "/remedial-plans",
     },
     {
-      label: language === "gu" ? "પૂજા શર્મા (વર્ગ શિક્ષક)" : "Pooja Sharma (Class Teacher)",
-      category: language === "gu" ? "શિક્ષક" : "teachers",
+      label: t.globalSearch.quickPooja,
+      category: t.globalSearch.categoryTeachers,
       href: "/students?class=cls-4a",
     },
   ];
@@ -281,11 +281,7 @@ export function GlobalSearch({ onSearchChange, className = "" }: GlobalSearchPro
           aria-controls="global-search-results"
           aria-autocomplete="list"
           role="combobox"
-          placeholder={
-            language === "gu"
-              ? "વિદ્યાર્થીઓ, વર્ગો, શિક્ષકો શોધો..."
-              : "Search students, classes, teachers..."
-          }
+          placeholder={t.globalSearch.placeholder}
           onChange={handleInputChange}
           onFocus={() => setIsOpen(true)}
           onKeyDown={handleKeyDown}
@@ -415,23 +411,23 @@ export function GlobalSearch({ onSearchChange, className = "" }: GlobalSearchPro
                 <kbd className="px-1 py-0.5 rounded bg-white border border-[#49352F]/15 text-[9px] font-mono font-bold">
                   ↑↓
                 </kbd>
-                <span>{language === "gu" ? "આગળ-પાછળ" : "Navigate"}</span>
+                <span>{t.globalSearch.navigate}</span>
               </span>
               <span className="flex items-center gap-1">
                 <kbd className="px-1 py-0.5 rounded bg-white border border-[#49352F]/15 text-[9px] font-mono font-bold">
                   ↵
                 </kbd>
-                <span>{language === "gu" ? "ખોલો" : "Open"}</span>
+                <span>{t.globalSearch.open}</span>
               </span>
               <span className="flex items-center gap-1">
                 <kbd className="px-1 py-0.5 rounded bg-white border border-[#49352F]/15 text-[9px] font-mono font-bold">
                   Esc
                 </kbd>
-                <span>{language === "gu" ? "બંધ કરો" : "Dismiss"}</span>
+                <span>{t.globalSearch.dismiss}</span>
               </span>
             </div>
             <span className="text-[10px] font-medium text-[#B26A1B]">
-              {language === "gu" ? "StudySaathi ગ્લોબલ સર્ચ" : "StudySaathi Global Search"}
+              {t.globalSearch.brandTitle}
             </span>
           </div>
         </div>

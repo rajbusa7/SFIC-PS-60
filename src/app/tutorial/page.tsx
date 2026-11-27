@@ -49,7 +49,9 @@ import {
 
 export default function TutorialPage() {
   const router = useRouter();
-  const { t, language } = useLanguage();
+  const { t, tr, language } = useLanguage();
+  const tu = t.tutorial;
+  const showGuField = language === "gu";
   const { openTutorial, setTutorialStep } = useTutorial();
 
   const [activeTab, setActiveTab] = useState<
@@ -167,19 +169,16 @@ export default function TutorialPage() {
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F2CAB3]/60 dark:bg-[#F2CAB3]/20 border border-[#49352F]/15 dark:border-[#F2CAB3]/30 text-[#49352F] dark:text-[#F4F1E1] text-xs font-bold">
                 <Sparkles className="w-3.5 h-3.5 text-[#B26A1B] dark:text-[#F2CAB3]" />
                 <span>
-                  {t.tutorial?.badge || (language === "gu" ? "ગુજરાત પ્રાથમિક શિક્ષક માર્ગદર્શિકા" : "Gujarat Primary Teacher Guide")}
+                  {tu.badge}
                 </span>
               </div>
 
               <h1 className="font-heading text-2xl sm:text-4xl font-extrabold tracking-tight text-[#49352F] dark:text-[#F4F1E1] leading-tight">
-                {t.tutorial?.heroTitle || (language === "gu" ? "૫ મિનિટમાં StudySaathi AI શીખો" : "Learn StudySaathi AI in 5 Minutes")}
+                {tu.heroTitle}
               </h1>
 
               <p className="text-xs sm:text-sm text-[#7A6862] dark:text-[#FAF6E9]/80 leading-relaxed font-normal">
-                {t.tutorial?.heroSubtitle ||
-                  (language === "gu"
-                    ? "શિક્ષણ ત્રુટિઓ શોધવા, ૫-પગલાંની ઉપચાર યોજના અમલમાં મૂકવા અને પરિણામ સુધારવા માટેની સરળ, દ્રશ્ય અને દ્વિભાષી માર્ગદર્શિકા."
-                    : "Simple, visual, and short bilingual guide for Gujarat primary teachers to spot foundational gaps early, take 5-step remedial action, and verify student mastery.")}
+                {tu.heroSubtitle}
               </p>
 
               {/* Action Buttons: Replay Tour & Download Print Guide */}
@@ -191,7 +190,7 @@ export default function TutorialPage() {
                   className="rounded-full text-xs font-bold shadow-md cursor-pointer"
                 >
                   <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
-                  <span>{t.tutorial?.replayTour || (language === "gu" ? "માર્ગદર્શિત ટૂર ફરી જુઓ" : "Replay Guided Tour")}</span>
+                  <span>{tu.replayTour}</span>
                 </Button>
 
                 <Button
@@ -201,7 +200,7 @@ export default function TutorialPage() {
                   className="rounded-full text-xs border-[#49352F]/15 dark:border-[#F2CAB3]/25 bg-white dark:bg-[#26201C] text-[#49352F] dark:text-[#F4F1E1] hover:bg-[#FAF6E9] dark:hover:bg-[#352B24] cursor-pointer"
                 >
                   <Printer className="w-3.5 h-3.5 mr-1.5 text-[#B26A1B] dark:text-[#F2CAB3]" />
-                  <span>{t.tutorial?.quickStartPrint || (language === "gu" ? "ઝડપી શરૂઆત માર્ગદર્શિકા પ્રિન્ટ કરો" : "Download / Print Quick-Start Guide")}</span>
+                  <span>{tu.quickStartPrint}</span>
                 </Button>
 
                 <button
@@ -210,7 +209,7 @@ export default function TutorialPage() {
                   data-tour="tutorial-sandbox-btn" className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/80 dark:bg-[#26201C] hover:bg-white dark:hover:bg-[#352B24] text-[#49352F] dark:text-[#F4F1E1] border border-[#49352F]/12 dark:border-[#F2CAB3]/20 transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
                 >
                   <Play className="w-3 h-3 text-[#2E7D5E] dark:text-[#5FE3B2]" />
-                  <span>{t.tutorial?.trySandbox || (language === "gu" ? "ઇન્ટરેક્ટિવ ડેમો અજમાવો" : "Try Interactive Sandbox")}</span>
+                  <span>{tu.trySandbox}</span>
                 </button>
               </div>
             </div>
@@ -219,10 +218,10 @@ export default function TutorialPage() {
             <div className="relative w-full lg:w-72 h-48 sm:h-56 rounded-3xl bg-white dark:bg-[#221C18] border border-[#49352F]/15 dark:border-[#F2CAB3]/25 p-4 flex flex-col justify-between shadow-md shrink-0 text-[#49352F] dark:text-[#F4F1E1]">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-mono uppercase font-bold text-[#7A6862] dark:text-[#FAF6E9]/60">
-                  Pedagogical Bridge Engine
+                  {tu.heroVisualEngine}
                 </span>
                 <span className="px-2 py-0.5 rounded-full bg-[#2E7D5E]/15 text-[#2E7D5E] dark:text-[#5FE3B2] text-[10px] font-extrabold border border-[#2E7D5E]/20 dark:border-[#2E7D5E]/40">
-                  100% Offline PWA
+                  {tu.heroVisualOffline}
                 </span>
               </div>
 
@@ -230,11 +229,11 @@ export default function TutorialPage() {
               <div className="space-y-2 py-1">
                 <div className="flex items-center justify-between text-xs font-bold">
                   <span className="text-[#C54738] dark:text-[#FA8C7C] flex items-center gap-1">
-                    <span>Gap: 35%</span>
+                    <span>{tu.heroVisualGap}</span>
                   </span>
-                  <span className="text-[#B26A1B] dark:text-[#F2CAB3] font-extrabold text-[11px]">+50 pp Gain</span>
+                  <span className="text-[#B26A1B] dark:text-[#F2CAB3] font-extrabold text-[11px]">{tu.heroVisualGain}</span>
                   <span className="text-[#2E7D5E] dark:text-[#5FE3B2] flex items-center gap-1">
-                    <span>Mastery: 85%</span>
+                    <span>{tu.heroVisualMastery}</span>
                   </span>
                 </div>
 
@@ -243,9 +242,9 @@ export default function TutorialPage() {
                 </div>
 
                 <div className="flex items-center justify-between text-[10px] text-[#7A6862] dark:text-[#FAF6E9]/60 font-mono">
-                  <span>Baseline</span>
-                  <span>5-Step Remedial</span>
-                  <span>Verified Re-test</span>
+                  <span>{tu.heroVisualBaseline}</span>
+                  <span>{tu.heroVisualRemedial}</span>
+                  <span>{tu.heroVisualVerified}</span>
                 </div>
               </div>
 
@@ -255,9 +254,7 @@ export default function TutorialPage() {
                   <Bot className="w-3.5 h-3.5 text-[#49352F] dark:text-[#F4F1E1]" aria-hidden="true" />
                 </div>
                 <p className="text-[10px] text-[#49352F] dark:text-[#F4F1E1] leading-tight">
-                  {language === "gu"
-                    ? "સાથીબોટ: કોઈ જટિલ સેટઅપ નથી. ૨ મિનિટમાં પરિણામ જુઓ!"
-                    : "SaathiBot: Zero configuration needed. See student gains in 2 minutes!"}
+                  {tu.heroBotCallout}
                 </p>
               </div>
             </div>
@@ -273,12 +270,7 @@ export default function TutorialPage() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[#B26A1B] pointer-events-none" />
             <input
               type="text"
-              placeholder={
-                t.tutorial?.searchPlaceholder ||
-                (language === "gu"
-                  ? "ટ્યુટોરિયલ, વિષય, નિયમો અને પ્રશ્નો શોધો..."
-                  : "Search tutorials, classroom TLM, benchmarks, and FAQs...")
-              }
+              placeholder={tu.searchPlaceholder}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full h-12 rounded-2xl border-2 border-[#49352F]/15 bg-white py-2.5 pl-12 pr-10 text-sm text-[#49352F] placeholder-[#7A6862]/60 focus:border-[#B26A1B] focus:bg-white focus:ring-4 focus:ring-[#F2CAB3]/40 outline-hidden transition-all shadow-xs"
@@ -288,7 +280,7 @@ export default function TutorialPage() {
                 type="button"
                 onClick={() => setSearchQuery("")}
                 className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 rounded-full text-[#7A6862] hover:text-[#49352F] hover:bg-[#FAF6E9] transition-colors cursor-pointer"
-                title="Clear search"
+                title={tu.clearSearch}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -298,12 +290,12 @@ export default function TutorialPage() {
           {/* Section Tabs */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full">
             {[
-              { id: "workflow", label: t.tutorial?.activeTabWorkflow || (language === "gu" ? "૪ પગલાં" : "How It Works"), icon: Layers },
-              { id: "lessons", label: t.tutorial?.activeTabLessons || (language === "gu" ? "પાઠ માર્ગદર્શિકા" : "Lessons"), icon: BookOpen },
-              { id: "sandbox", label: t.tutorial?.activeTabSandbox || (language === "gu" ? "ડેમો સેન્ડબોક્સ" : "Interactive Demo"), icon: Play },
-              { id: "faq", label: t.tutorial?.activeTabFaq || (language === "gu" ? "પ્રશ્નોત્તરી (FAQ)" : "FAQs"), icon: HelpCircle },
-              { id: "glossary", label: t.tutorial?.activeTabGlossary || (language === "gu" ? "શબ્દકોશ" : "Glossary"), icon: BrainCircuit },
-              { id: "tips", label: t.tutorial?.activeTabTips || (language === "gu" ? "ગ્રામીણ ટિપ્સ" : "Rural Tips"), icon: Lightbulb },
+              { id: "workflow", label: tu.activeTabWorkflow, icon: Layers },
+              { id: "lessons", label: tu.activeTabLessons, icon: BookOpen },
+              { id: "sandbox", label: tu.activeTabSandbox, icon: Play },
+              { id: "faq", label: tu.activeTabFaq, icon: HelpCircle },
+              { id: "glossary", label: tu.activeTabGlossary, icon: BrainCircuit },
+              { id: "tips", label: tu.activeTabTips, icon: Lightbulb },
             ].map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -336,15 +328,11 @@ export default function TutorialPage() {
                 <h3 className="font-heading text-lg font-bold text-[#49352F] flex items-center gap-2">
                   <Layers className="w-5 h-5 text-[#B26A1B]" />
                   <span>
-                    {language === "gu"
-                      ? "૪ તબક્કામાં શિક્ષણ ત્રુટિ નિવારણ પદ્ધતિ (આરવ પટેલ કેસ સ્ટડી)"
-                      : "The 4-Phase Remedial Cycle (Aarav Patel Case Study)"}
+                    {tu.workflowTitle}
                   </span>
                 </h3>
                 <p className="text-xs text-[#7A6862] mt-1">
-                  {language === "gu"
-                    ? "મૂલ્યાંકનથી શરૂ કરીને પુનઃમૂલ્યાંકન સુધીનું પારદર્શક શૈક્ષણિક પરિભ્રમણ."
-                    : "From baseline diagnostic test to verified mastery in 4 structured pedagogical steps."}
+                  {tu.workflowSubtitle}
                 </p>
               </div>
 
@@ -356,15 +344,13 @@ export default function TutorialPage() {
                     01
                   </div>
                   <h4 className="font-heading text-sm font-bold text-[#49352F]">
-                    {language === "gu" ? "૧. સંકલ્પના મૂલ્યાંકન" : "1. Diagnostic Assess"}
+                    {tu.phase1Title}
                   </h4>
                   <p className="text-xs text-[#7A6862] leading-relaxed">
-                    {language === "gu"
-                      ? "આરવ પટેલ ભાગાકાર પ્રશ્નોમાં ૩૫% ગુણ મેળવે છે. સામાન્ય વર્ગમાં તે અટકી જતો હતો."
-                      : "Aarav scores 35% on foundational division questions, revealing a core conceptual bottleneck."}
+                    {tu.phase1Desc}
                   </p>
                   <span className="text-[10px] font-mono font-bold text-[#C54738] block pt-1">
-                    Baseline: 35%
+                    {tu.phase1Tag}
                   </span>
                 </div>
 
@@ -374,15 +360,13 @@ export default function TutorialPage() {
                     02
                   </div>
                   <h4 className="font-heading text-sm font-bold text-[#49352F]">
-                    {language === "gu" ? "૨. ત્રુટિ ઓળખ (<૬૦%)" : "2. Gap Detection (<60%)"}
+                    {tu.phase2Title}
                   </h4>
                   <p className="text-xs text-[#7A6862] leading-relaxed">
-                    {language === "gu"
-                      ? "૬૦% થી ઓછા ગુણ થતાં સિસ્ટમ આપોઆપ ત્રુટિ ફ્લેગ કરે છે અને કારણ દર્શાવે છે."
-                      : "Scores below 60% trigger an automatic Learning Gap with explainable cognitive reasoning."}
+                    {tu.phase2Desc}
                   </p>
                   <span className="text-[10px] font-mono font-bold text-[#B26A1B] block pt-1">
-                    Flag: Needs Support (&lt;60%)
+                    {tu.phase2Tag}
                   </span>
                 </div>
 
@@ -392,15 +376,13 @@ export default function TutorialPage() {
                     03
                   </div>
                   <h4 className="font-heading text-sm font-bold text-[#49352F]">
-                    {language === "gu" ? "૩. ૫-પગલાંની ઉપચાર યોજના" : "3. Remedial Plan"}
+                    {tu.phase3Title}
                   </h4>
                   <p className="text-xs text-[#7A6862] leading-relaxed">
-                    {language === "gu"
-                      ? "કાઉન્ટર મણકા અને નંબર-લાઇન દ્વારા ૫ પગલાંની મૂર્ત પ્રવૃત્તિઓ શિક્ષક કરાવે છે."
-                      : "5 concrete steps deployed using physical manipulatives (beads in bowls) before abstract symbols."}
+                    {tu.phase3Desc}
                   </p>
                   <span className="text-[10px] font-mono font-bold text-[#2E7D5E] block pt-1">
-                    5-Step Manipulatives
+                    {tu.phase3Tag}
                   </span>
                 </div>
 
@@ -410,15 +392,13 @@ export default function TutorialPage() {
                     04
                   </div>
                   <h4 className="font-heading text-sm font-bold text-[#49352F]">
-                    {language === "gu" ? "૪. પુનઃમૂલ્યાંકન & વૃદ્ધિ" : "4. Reassess & Delta"}
+                    {tu.phase4Title}
                   </h4>
                   <p className="text-xs text-[#7A6862] leading-relaxed">
-                    {language === "gu"
-                      ? "પ્રવૃત્તિ પછી ૫ પ્રશ્નોનો પુનઃટેસ્ટ લેતાં આરવ ૮૫% મેળવે છે (+૫૦ પોઇન્ટ વૃદ્ધિ!)."
-                      : "Post-intervention check yields 85% mastery (+50 pp gain). The bridge turns fully green!"}
+                    {tu.phase4Desc}
                   </p>
                   <span className="text-[10px] font-mono font-bold text-[#2E7D5E] block pt-1">
-                    Mastered: 85% (+50 pp)
+                    {tu.phase4Tag}
                   </span>
                 </div>
               </div>
@@ -428,15 +408,15 @@ export default function TutorialPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <h4 className="text-xs font-bold text-[#49352F]">
-                      {language === "gu" ? "આરવ પટેલ: વાસ્તવિક પ્રગતિ સેતુ" : "Aarav Patel: Real-World Bridge Delta"}
+                      {tu.bridgeCaseTitle}
                     </h4>
-                    <p className="text-[11px] text-[#7A6862]">Class 4-A • Roll: STD-401 • Subject: Mathematics (Division Basics)</p>
+                    <p className="text-[11px] text-[#7A6862]">{tu.bridgeCaseMeta}</p>
                   </div>
                   <Link
                     href="/students/std-aarav"
                     className="text-xs font-bold text-[#49352F] hover:text-[#B26A1B] flex items-center gap-1"
                   >
-                    <span>{language === "gu" ? "આરવની પ્રોફાઇલ જુઓ" : "Open Student Profile"}</span>
+                    <span>{tu.openProfileBtn}</span>
                     <ArrowRight className="w-3 h-3" />
                   </Link>
                 </div>
@@ -445,24 +425,24 @@ export default function TutorialPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                   <div className="p-3 rounded-xl bg-white border border-rose-200 space-y-1">
                     <div className="flex items-center justify-between text-xs font-semibold">
-                      <span className="text-[#C54738]">Baseline Diagnostic</span>
+                      <span className="text-[#C54738]">{tu.baselineDiagnostic}</span>
                       <span className="font-black text-[#C54738] font-mono">35%</span>
                     </div>
                     <div className="h-2 w-full bg-rose-50 rounded-full overflow-hidden">
                       <div className="h-full bg-[#C54738] rounded-full w-[35%]" />
                     </div>
-                    <span className="text-[10px] text-[#7A6862]">Status: Needs Support (&lt;60%)</span>
+                    <span className="text-[10px] text-[#7A6862]">{tu.statusNeedsSupportRule}</span>
                   </div>
 
                   <div className="p-3 rounded-xl bg-white border border-emerald-200 space-y-1">
                     <div className="flex items-center justify-between text-xs font-semibold">
-                      <span className="text-[#2E7D5E]">Post-Intervention Reassessment</span>
-                      <span className="font-black text-[#2E7D5E] font-mono">85% (+50 pp)</span>
+                      <span className="text-[#2E7D5E]">{tu.postReassessment}</span>
+                      <span className="font-black text-[#2E7D5E] font-mono">{tu.reassessGainLabel}</span>
                     </div>
                     <div className="h-2 w-full bg-emerald-50 rounded-full overflow-hidden">
                       <div className="h-full bg-[#2E7D5E] rounded-full w-[85%]" />
                     </div>
-                    <span className="text-[10px] text-[#7A6862]">Status: Certified Mastery (&ge;80%)</span>
+                    <span className="text-[10px] text-[#7A6862]">{tu.statusCertifiedMastery}</span>
                   </div>
                 </div>
               </div>
@@ -486,15 +466,15 @@ export default function TutorialPage() {
                       <Badge variant="indigo" size="sm">
                         {lesson.tag}
                       </Badge>
-                      <span className="text-[10px] text-[#7A6862] font-mono">Quick Step</span>
+                      <span className="text-[10px] text-[#7A6862] font-mono">{tu.quickStep}</span>
                     </div>
 
                     <h4 className="font-heading text-base font-bold text-[#49352F]">
-                      {language === "gu" ? lesson.titleGu : lesson.titleEn}
+                      {showGuField ? lesson.titleGu : lesson.titleEn}
                     </h4>
 
                     <p className="text-xs text-[#7A6862] leading-relaxed">
-                      {language === "gu" ? lesson.descGu : lesson.descEn}
+                      {showGuField ? lesson.descGu : lesson.descEn}
                     </p>
 
                     {/* Miniature Animated CSS/SVG UI Mockup */}
@@ -502,9 +482,9 @@ export default function TutorialPage() {
                       <div className="flex items-center justify-between text-[10px] text-[#7A6862] border-b border-[#49352F]/10 pb-1.5">
                         <span className="flex items-center gap-1">
                           <span className="w-1.5 h-1.5 rounded-full bg-[#B26A1B] animate-ping" />
-                          <span>Simulated Flow</span>
+                          <span>{tu.simulatedFlow}</span>
                         </span>
-                        <span>Gujarat School PC</span>
+                        <span>{tu.schoolPcLabel}</span>
                       </div>
 
                       <div className="space-y-1.5 pt-1">
@@ -517,7 +497,7 @@ export default function TutorialPage() {
                               {sIdx + 1}
                             </span>
                             <span className="leading-tight">
-                              {language === "gu" ? st.gu : st.en}
+                              {showGuField ? st.gu : st.en}
                             </span>
                           </div>
                         ))}
@@ -528,7 +508,7 @@ export default function TutorialPage() {
                   <div className="pt-2 border-t border-[#49352F]/10 flex items-center justify-between">
                     <span className="text-[11px] text-[#2E7D5E] flex items-center gap-1 font-semibold">
                       <Check className="w-3.5 h-3.5" />
-                      <span>{language === "gu" ? "૩૦ સેકન્ડમાં તૈયાર" : "30-sec task"}</span>
+                      <span>{tu.taskDuration30s}</span>
                     </span>
 
                     <button
@@ -538,7 +518,7 @@ export default function TutorialPage() {
                       }}
                       className="text-xs font-bold text-[#49352F] hover:text-[#B26A1B] flex items-center gap-1 cursor-pointer"
                     >
-                      <span>{language === "gu" ? "અજમાવો" : "Try Demo"}</span>
+                      <span>{tu.tryDemoBtn}</span>
                       <ArrowRight className="w-3 h-3" />
                     </button>
                   </div>
@@ -558,18 +538,14 @@ export default function TutorialPage() {
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="font-heading text-lg font-bold text-[#49352F]">
-                      {language === "gu"
-                        ? "ઇન્ટરેક્ટિવ સેન્ડબોક્સ: આરવ પટેલની ૫-પગલાંની સફર"
-                        : "Interactive Sandbox: Aarav's Remedial Journey"}
+                      {tu.sandboxTitle}
                     </h3>
                     <Badge variant="mint" size="sm">
-                      Zero Risk
+                      {tu.zeroRiskBadge}
                     </Badge>
                   </div>
                   <p className="text-xs text-[#7A6862] mt-1">
-                    {language === "gu"
-                      ? "કોઈ વાસ્તવિક ડેટા બદલાતો નથી. સાથીબોટના માર્ગદર્શન સાથે દરેક પગલું જાતે અનુભવો."
-                      : "Click through each step below with SaathiBot hints. Safe demo mode with no real database modifications."}
+                    {tu.sandboxSubtitle}
                   </p>
                 </div>
 
@@ -580,17 +556,17 @@ export default function TutorialPage() {
                   className="rounded-full text-xs self-start sm:self-center"
                 >
                   <RotateCcw className="w-3.5 h-3.5 mr-1" />
-                  <span>{language === "gu" ? "ડેમો ફરી શરૂ કરો" : "Reset Demo"}</span>
+                  <span>{tu.resetDemoBtn}</span>
                 </Button>
               </div>
 
               {/* Progress Stepper for Sandbox */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                 {[
-                  { num: 1, label: language === "gu" ? "પ્રારંભિક ગુણ" : "1. Baseline Test" },
-                  { num: 2, label: language === "gu" ? "ત્રુટિ કારણ" : "2. Gap Reason" },
-                  { num: 3, label: language === "gu" ? "૫-પગલાં યોજના" : "3. 5-Step Plan" },
-                  { num: 4, label: language === "gu" ? "પુનઃટેસ્ટ & નિપુણતા" : "4. Reassess & Master" },
+                  { num: 1, label: tu.sandboxStep1 },
+                  { num: 2, label: tu.sandboxStep2 },
+                  { num: 3, label: tu.sandboxStep3 },
+                  { num: 4, label: tu.sandboxStep4 },
                 ].map((s) => (
                   <div
                     key={s.num}
@@ -616,8 +592,8 @@ export default function TutorialPage() {
                       આ
                     </div>
                     <div>
-                      <h4 className="text-sm font-bold text-[#49352F]">Aarav Patel (Class 4-A)</h4>
-                      <p className="text-[11px] text-[#7A6862]">Concept: Division Basics (3-Digit ÷ 1-Digit)</p>
+                      <h4 className="text-sm font-bold text-[#49352F]">{tu.sandboxStudentName}</h4>
+                      <p className="text-[11px] text-[#7A6862]">{tu.sandboxConcept}</p>
                     </div>
                   </div>
 
@@ -625,7 +601,7 @@ export default function TutorialPage() {
                     variant={sandboxScore >= 80 ? "mastered" : "needsSupport"}
                     size="sm"
                   >
-                    {sandboxScore >= 80 ? "Mastered" : "Needs Support"}
+                    {sandboxScore >= 80 ? tu.sandboxBadgeMastered : tu.sandboxBadgeSupport}
                   </Badge>
                 </div>
 
@@ -635,9 +611,9 @@ export default function TutorialPage() {
                     <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 flex items-start gap-3">
                       <AlertTriangle className="w-5 h-5 text-[#C54738] shrink-0 mt-0.5" />
                       <div>
-                        <h5 className="text-xs font-bold text-[#C54738]">Diagnostic Score Recorded: 35%</h5>
+                        <h5 className="text-xs font-bold text-[#C54738]">{tu.sandboxS1Title}</h5>
                         <p className="text-xs text-[#7A6862] mt-1">
-                          Aarav answered only 2 out of 6 sharing word problems correctly. Because 35% is strictly below the 60% developing threshold, the rule engine flags this concept.
+                          {tu.sandboxS1Body}
                         </p>
                       </div>
                     </div>
@@ -645,7 +621,7 @@ export default function TutorialPage() {
                     <div className="flex items-center justify-between">
                       <div className="text-xs text-[#49352F] font-medium flex items-center gap-1.5">
                         <Bot className="w-4 h-4 text-[#B26A1B]" />
-                        <span>SaathiBot: Click next to see why Aarav made this mistake.</span>
+                        <span>{tu.sandboxS1Bot}</span>
                       </div>
                       <Button
                         variant="saffron"
@@ -653,7 +629,7 @@ export default function TutorialPage() {
                         onClick={() => handleSandboxAction(2)}
                         className="rounded-full text-xs font-bold"
                       >
-                        <span>Inspect Gap Reason &rarr;</span>
+                        <span>{tu.sandboxS1Btn} &rarr;</span>
                       </Button>
                     </div>
                   </div>
@@ -665,17 +641,17 @@ export default function TutorialPage() {
                     <div className="p-4 rounded-2xl bg-white border border-[#49352F]/15 space-y-2">
                       <div className="flex items-center gap-2 text-xs font-bold text-[#49352F]">
                         <BrainCircuit className="w-4 h-4 text-[#B26A1B]" />
-                        <span>Transparent Pedagogical Diagnostic:</span>
+                        <span>{tu.sandboxS2Title}</span>
                       </div>
                       <p className="text-xs text-[#49352F] leading-relaxed">
-                        &quot;Aarav interprets division as repeated subtraction rather than equal grouping. When dealing with multi-digit numbers, he attempts direct subtraction from the tens column without carrying remainders.&quot;
+                        {tu.sandboxS2Quote}
                       </p>
                     </div>
 
                     <div className="flex items-center justify-between">
                       <div className="text-xs text-[#49352F] font-medium flex items-center gap-1.5">
                         <Bot className="w-4 h-4 text-[#B26A1B]" />
-                        <span>SaathiBot: Now generate the 5-step concrete manipulative plan!</span>
+                        <span>{tu.sandboxS2Bot}</span>
                       </div>
                       <Button
                         variant="saffron"
@@ -684,7 +660,7 @@ export default function TutorialPage() {
                         className="rounded-full text-xs font-bold"
                       >
                         <Layers className="w-3.5 h-3.5 mr-1" />
-                        <span>Generate 5-Step Plan &rarr;</span>
+                        <span>{tu.sandboxS2Btn} &rarr;</span>
                       </Button>
                     </div>
                   </div>
@@ -695,20 +671,20 @@ export default function TutorialPage() {
                   <div className="space-y-4 animate-in fade-in duration-200">
                     <div className="space-y-2">
                       <span className="text-xs font-bold text-[#2E7D5E]">
-                        5-Step Remedial Curricula Ready:
+                        {tu.sandboxS3Title}
                       </span>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-[#49352F]">
                         <div className="p-2.5 rounded-xl bg-white border border-[#49352F]/12 shadow-2xs">
-                          <strong>Step 1:</strong> Baseline check (10 mins)
+                          <strong>{tu.sandboxS3Step1Label}</strong> {tu.sandboxS3Step1Desc}
                         </div>
                         <div className="p-2.5 rounded-xl bg-white border border-[#49352F]/12 shadow-2xs">
-                          <strong>Step 2:</strong> 15 counting beads in bowls (20 mins)
+                          <strong>{tu.sandboxS3Step2Label}</strong> {tu.sandboxS3Step2Desc}
                         </div>
                         <div className="p-2.5 rounded-xl bg-white border border-[#49352F]/12 shadow-2xs">
-                          <strong>Step 3:</strong> Visual number line jumping (15 mins)
+                          <strong>{tu.sandboxS3Step3Label}</strong> {tu.sandboxS3Step3Desc}
                         </div>
                         <div className="p-2.5 rounded-xl bg-white border border-[#49352F]/12 shadow-2xs">
-                          <strong>Step 4:</strong> Interactive tablet quiz (15 mins)
+                          <strong>{tu.sandboxS3Step4Label}</strong> {tu.sandboxS3Step4Desc}
                         </div>
                       </div>
                     </div>
@@ -716,7 +692,7 @@ export default function TutorialPage() {
                     <div className="flex items-center justify-between">
                       <div className="text-xs text-[#49352F] font-medium flex items-center gap-1.5">
                         <Bot className="w-4 h-4 text-[#B26A1B]" />
-                        <span>SaathiBot: Teacher finishes classroom activities and inputs the re-test!</span>
+                        <span>{tu.sandboxS3Bot}</span>
                       </div>
                       <Button
                         variant="mint"
@@ -725,7 +701,7 @@ export default function TutorialPage() {
                         className="rounded-full text-xs font-black shadow-md shadow-emerald-500/10"
                       >
                         <RotateCcw className="w-3.5 h-3.5 mr-1" />
-                        <span>Record 85% Re-test &rarr;</span>
+                        <span>{tu.sandboxS3Btn} &rarr;</span>
                       </Button>
                     </div>
                   </div>
@@ -736,16 +712,16 @@ export default function TutorialPage() {
                   <div className="space-y-4 animate-in fade-in duration-200 text-center py-3">
                     <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-100 border border-emerald-300 text-[#2E7D5E] text-xs font-black">
                       <Sparkles className="w-4 h-4 text-[#2E7D5E]" />
-                      <span>Verified Mastery Achieved! (+50 pp gain)</span>
+                      <span>{tu.sandboxS4Badge}</span>
                     </div>
 
                     <h4 className="font-heading text-xl font-black text-[#49352F] flex items-center justify-center gap-2">
-                      <span>Aarav Advanced from 35% to 85%!</span>
+                      <span>{tu.sandboxS4Title}</span>
                       <Sparkles className="w-5 h-5 text-[#2E7D5E]" aria-hidden="true" />
                     </h4>
 
                     <p className="text-xs text-[#7A6862] max-w-lg mx-auto">
-                      By deploying tactile beads and number lines, Aarav bridged the conceptual gap. The student is now marked as &quot;Mastered&quot; with zero stigma.
+                      {tu.sandboxS4Body}
                     </p>
 
                     <div className="pt-2 flex justify-center gap-3">
@@ -756,14 +732,12 @@ export default function TutorialPage() {
                         className="rounded-full text-xs font-bold"
                       >
                         <RotateCcw className="w-3.5 h-3.5 mr-1" />
-                        <span>Try Another Simulation</span>
+                        <span>{tu.sandboxS4ResetBtn}</span>
                       </Button>
 
-                      <Link href="/students/std-aarav">
-                        <Button variant="outline" size="sm" className="rounded-full text-xs text-[#49352F] border-[#49352F]/20 hover:bg-[#FAF6E9]">
-                          <span>View Real Aarav Profile</span>
-                        </Button>
-                      </Link>
+                      <Button href="/students/std-aarav" variant="outline" size="sm" className="rounded-full text-xs text-[#49352F] border-[#49352F]/20 hover:bg-[#FAF6E9]">
+                        <span>{tu.sandboxS4ProfileBtn}</span>
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -782,29 +756,27 @@ export default function TutorialPage() {
                 <div>
                   <h3 className="font-heading text-lg font-bold text-[#49352F] flex items-center gap-2">
                     <HelpCircle className="w-5 h-5 text-[#B26A1B]" />
-                    <span>{language === "gu" ? "વારંવાર પૂછાતા પ્રશ્નો (FAQ)" : "Frequently Asked Questions (Offline)"}</span>
+                    <span>{tu.faqHeading}</span>
                   </h3>
                   <p className="text-xs text-[#7A6862] mt-1">
-                    {language === "gu"
-                      ? "પ્રાથમિક શાળાના શિક્ષકો માટે સામાન્ય પ્રશ્નો અને તેના સરળ ઉત્તરો."
-                      : "Answers tailored for Gujarat primary school teachers. Works 100% offline."}
+                    {tu.faqSubheading}
                   </p>
                 </div>
                 <span className="text-xs text-[#7A6862]">
-                  {filteredFaqs.length} questions
+                  {tr("tutorial.faqCount", { count: filteredFaqs.length })}
                 </span>
               </div>
 
               {filteredFaqs.length === 0 ? (
                 <p className="text-center py-8 text-xs text-[#7A6862]">
-                  No questions matched your search query. Try searching for &quot;60%&quot;, &quot;offline&quot;, or &quot;print&quot;.
+                  {tu.faqEmpty}
                 </p>
               ) : (
                 <div className="space-y-3">
                   {filteredFaqs.map((faq) => {
                     const isExpanded = expandedFaqId === faq.id;
-                    const question = language === "gu" ? faq.questionGu : faq.questionEn;
-                    const answer = language === "gu" ? faq.answerGu : faq.answerEn;
+                    const question = showGuField ? faq.questionGu : faq.questionEn;
+                    const answer = showGuField ? faq.answerGu : faq.answerEn;
 
                     return (
                       <div
@@ -860,14 +832,14 @@ export default function TutorialPage() {
                 <div>
                   <h3 className="font-heading text-lg font-bold text-[#49352F] flex items-center gap-2">
                     <BrainCircuit className="w-5 h-5 text-[#B26A1B]" />
-                    <span>{language === "gu" ? "દ્વિભાષી શૈક્ષણિક શબ્દકોશ" : "Bilingual Educational Glossary"}</span>
+                    <span>{tu.glossaryHeading}</span>
                   </h3>
                   <p className="text-xs text-[#7A6862] mt-1">
-                    Plain-language explanations in English and ગુજરાતી for primary educators.
+                    {tu.glossarySubheading}
                   </p>
                 </div>
                 <span className="text-xs text-[#7A6862]">
-                  {filteredGlossary.length} terms
+                  {tr("tutorial.glossaryCount", { count: filteredGlossary.length })}
                 </span>
               </div>
 
@@ -887,12 +859,12 @@ export default function TutorialPage() {
                     </div>
 
                     <p className="text-xs text-[#49352F] leading-relaxed">
-                      {language === "gu" ? term.defGu : term.defEn}
+                      {showGuField ? term.defGu : term.defEn}
                     </p>
 
                     <div className="p-2 rounded-xl bg-white border border-[#49352F]/10 text-[11px] text-[#7A6862]">
-                      <strong className="text-[#49352F]">Example:</strong>{" "}
-                      {language === "gu" ? term.exampleGu : term.exampleEn}
+                      <strong className="text-[#49352F]">{tu.glossaryExampleLabel}</strong>{" "}
+                      {showGuField ? term.exampleGu : term.exampleEn}
                     </div>
                   </div>
                 ))}
@@ -911,13 +883,11 @@ export default function TutorialPage() {
                 <h3 className="font-heading text-lg font-bold text-[#49352F] flex items-center gap-2">
                   <Lightbulb className="w-5 h-5 text-[#B26A1B]" />
                   <span>
-                    {language === "gu"
-                      ? "ગુજરાતના ગ્રામીણ વર્ગખંડો માટે ઉપયોગી ટિપ્સ"
-                      : "Actionable Tips for Rural Gujarat Classrooms"}
+                    {tu.tipsHeading}
                   </span>
                 </h3>
                 <p className="text-xs text-[#7A6862] mt-1">
-                  Engineered specifically for low-connectivity schools, multi-grade teaching, and paper-based tracking.
+                  {tu.tipsSubheading}
                 </p>
               </div>
 
@@ -935,12 +905,12 @@ export default function TutorialPage() {
                         {tip.icon === "Users" && <Users className="w-4 h-4" />}
                       </div>
                       <h4 className="font-heading text-sm font-bold text-[#49352F]">
-                        {language === "gu" ? tip.titleGu : tip.titleEn}
+                        {showGuField ? tip.titleGu : tip.titleEn}
                       </h4>
                     </div>
 
                     <p className="text-xs text-[#7A6862] leading-relaxed pl-10">
-                      {language === "gu" ? tip.descGu : tip.descEn}
+                      {showGuField ? tip.descGu : tip.descEn}
                     </p>
                   </div>
                 ))}
@@ -960,9 +930,7 @@ export default function TutorialPage() {
             <div className="flex items-center justify-between pb-4 border-b border-[#49352F]/15 print:hidden">
               <div className="flex items-center gap-2">
                 <Printer className="w-5 h-5 text-[#49352F]" />
-                <h3 className="font-heading text-base font-bold text-[#49352F]">
-                  Printable Quick-Start Reference Guide (A4 Format)
-                </h3>
+                <h3 className="font-heading text-base font-bold text-[#49352F]">{tu.printModalTitle}</h3>
               </div>
               <div className="flex items-center gap-2">
                 <Link
@@ -971,19 +939,17 @@ export default function TutorialPage() {
                   className="px-3 py-1.5 rounded-xl border border-[#49352F]/20 text-xs font-bold text-[#49352F] hover:bg-white flex items-center gap-1"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
-                  <span>Open Standalone Tab</span>
+                  <span>{tu.openStandaloneBtn}</span>
                 </Link>
                 <Button variant="saffron" size="sm" onClick={handlePrintGuide} className="rounded-xl text-xs font-bold">
                   <Printer className="w-3.5 h-3.5 mr-1" />
-                  <span>Print A4 Page</span>
+                  <span>{tu.printA4Btn}</span>
                 </Button>
                 <button
                   type="button"
                   onClick={() => setShowPrintModal(false)}
                   className="px-3 py-1.5 rounded-xl text-xs font-semibold text-[#7A6862] hover:bg-white"
-                >
-                  Close
-                </button>
+                >{tu.closeBtn}</button>
               </div>
             </div>
 
@@ -996,31 +962,29 @@ export default function TutorialPage() {
                     StudySaathi AI
                   </h2>
                   <p className="text-xs font-bold text-[#7A6862]">
-                    Teacher Quick-Start Guide (Gujarat Primary Schools • PS-60)
+                    {tu.printModalOrgLine}
                   </p>
                 </div>
                 <div className="text-right text-[11px] font-mono text-[#7A6862]">
-                  <div>100% Offline PWA</div>
-                  <div>No Paid APIs Needed</div>
+                  <div>{tu.heroVisualOffline}</div>
+                  <div>{tu.printModalNoApis}</div>
                 </div>
               </div>
 
               {/* 4 Core Steps Flow */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-3 rounded-xl border border-[#49352F]/15 bg-white space-y-1">
-                  <h4 className="font-bold text-[#49352F]">Step 1: Record Assessment</h4>
-                  <p className="text-[11px] text-[#7A6862]">
-                    Enter diagnostic scores per concept in under 30 seconds.
-                  </p>
+                  <h4 className="font-bold text-[#49352F]">{tu.printModalStep1Title}</h4>
+                  <p className="text-[11px] text-[#7A6862]">{tu.printModalStep1Desc}</p>
                   <p className="text-[10px] text-[#7A6862] font-serif">
                     પગલું ૧: મૂલ્યાંકન ગુણ ૩૦ સેકન્ડમાં દાખલ કરો.
                   </p>
                 </div>
 
                 <div className="p-3 rounded-xl border border-[#49352F]/15 bg-white space-y-1">
-                  <h4 className="font-bold text-[#49352F]">Step 2: Inspect Learning Gap</h4>
+                  <h4 className="font-bold text-[#49352F]">{tu.printModalStep2Title}</h4>
                   <p className="text-[11px] text-[#7A6862]">
-                    Scores &lt; 60% trigger an automatic flag with pedagogical root cause.
+                    {tu.printModalStep2Desc}
                   </p>
                   <p className="text-[10px] text-[#7A6862] font-serif">
                     પગલું ૨: ૬૦% થી ઓછા પરિણામ પર આપોઆપ ત્રુટિ કારણ દેખાશે.
@@ -1028,9 +992,9 @@ export default function TutorialPage() {
                 </div>
 
                 <div className="p-3 rounded-xl border border-[#49352F]/15 bg-white space-y-1">
-                  <h4 className="font-bold text-[#49352F]">Step 3: Deploy 5-Step Plan</h4>
+                  <h4 className="font-bold text-[#49352F]">{tu.printModalStep3Title}</h4>
                   <p className="text-[11px] text-[#7A6862]">
-                    Use concrete beads &amp; number lines before moving to quizzes.
+                    {tu.printModalStep3Desc}
                   </p>
                   <p className="text-[10px] text-[#7A6862] font-serif">
                     પગલું ૩: મૂર્ત સાધનો (મણકા, દીવાસળી) સાથે ૫ પગલાં કરાવો.
@@ -1038,9 +1002,9 @@ export default function TutorialPage() {
                 </div>
 
                 <div className="p-3 rounded-xl border border-[#49352F]/15 bg-white space-y-1">
-                  <h4 className="font-bold text-[#49352F]">Step 4: Reassess Mastery</h4>
+                  <h4 className="font-bold text-[#49352F]">{tu.printModalStep4Title}</h4>
                   <p className="text-[11px] text-[#7A6862]">
-                    Record re-test score (&ge; 80%) and celebrate +pp improvement!
+                    {tu.printModalStep4Desc}
                   </p>
                   <p className="text-[10px] text-[#7A6862] font-serif">
                     પગલું ૪: પુનઃટેસ્ટ નોંધી +પોઇન્ટ્સ સુધારાની ઉજવણી કરો!
@@ -1051,25 +1015,25 @@ export default function TutorialPage() {
               {/* Benchmarks Rule Reference Box */}
               <div className="p-4 rounded-xl bg-white border border-[#49352F]/15 space-y-2">
                 <h4 className="font-bold text-[#49352F] uppercase text-[11px]">
-                  Official Benchmark Cutoffs:
+                  {tu.officialBenchmarksHeading}
                 </h4>
                 <div className="grid grid-cols-3 gap-2 text-center text-[11px]">
                   <div className="p-2 rounded-lg bg-rose-50 border border-rose-200 text-[#C54738] font-bold">
-                    &lt; 60%: Needs Support
+                    {tu.cutoffNeedsSupport}
                   </div>
                   <div className="p-2 rounded-lg bg-amber-50 border border-amber-200 text-[#B26A1B] font-bold">
-                    60% - 79%: Developing
+                    {tu.cutoffDeveloping}
                   </div>
                   <div className="p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-[#2E7D5E] font-bold">
-                    &ge; 80%: Mastered
+                    {tu.cutoffMastered}
                   </div>
                 </div>
               </div>
 
               {/* Keyboard Shortcuts & Support */}
               <div className="border-t border-[#49352F]/15 pt-3 flex items-center justify-between text-[11px] text-[#7A6862]">
-                <span>Esc = Close Tour • Lang Toggle = Gujarati / English</span>
-                <span>Keep this sheet at the school teacher desk.</span>
+                <span>{tu.printModalFooterShortcuts}</span>
+                <span>{tu.printModalFooterKeep}</span>
               </div>
             </div>
           </div>

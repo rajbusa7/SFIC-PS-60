@@ -27,6 +27,9 @@ import {
   ChevronDown,
   ChevronUp,
   Printer,
+  Info,
+  Wrench,
+  MessageSquare,
 } from "lucide-react";
 import {
   getRoleAwareGapInterpretation,
@@ -71,7 +74,8 @@ export function RoleAwareGapCard({
   isMapExpanded = false,
   isGeneratingPlan = false,
 }: RoleAwareGapCardProps) {
-  const { language } = useLanguage();
+  const { t, tr, language } = useLanguage();
+  const rc = t.roleCard;
   const langKey = language === "gu" ? "gu" : "en";
   const interpretation = getRoleAwareGapInterpretation(gap, activeRole, langKey);
 
@@ -96,7 +100,7 @@ export function RoleAwareGapCard({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="space-y-1">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xl">🌟</span>
+              <Sparkles className="w-5 h-5 text-[#B26A1B] shrink-0" />
               <h3 className="font-heading text-lg font-bold text-[#49352F]">
                 {gap.conceptName}
               </h3>
@@ -116,18 +120,16 @@ export function RoleAwareGapCard({
                 size="sm"
                 onClick={() => (onOpenPlan ? onOpenPlan(gap) : onGeneratePlan!(gap.id))}
                 className="rounded-full text-xs font-bold bg-white hover:bg-[#FAF6E9] text-[#49352F] border border-[#49352F]/15"
-                title="View and print personalized step-by-step learning roadmap and worksheet"
+                title={rc.printLearningSheet}
               >
                 <Printer className="w-3.5 h-3.5 mr-1 text-[#B26A1B]" />
-                <span>Print My Learning Sheet</span>
+                <span>{rc.printLearningSheet}</span>
               </Button>
             )}
-            <Link href="/activities">
-              <Button variant="saffron" size="sm" className="rounded-full text-xs font-bold">
-                <Sparkles className="w-3.5 h-3.5 mr-1" />
-                <span>{interpretation.nextActivityPrompt || "Play Fun Practice Activity"}</span>
-              </Button>
-            </Link>
+            <Button href="/activities" variant="saffron" size="sm" className="rounded-full text-xs font-bold">
+              <Sparkles className="w-3.5 h-3.5 mr-1" />
+              <span>{interpretation.nextActivityPrompt || rc.playActivityFallback}</span>
+            </Button>
           </div>
         </div>
 
@@ -137,7 +139,7 @@ export function RoleAwareGapCard({
           previousScore={previousScore}
           thresholdDeveloping={60}
           thresholdMastery={80}
-          studentName={gap.studentName || "You"}
+          studentName={gap.studentName || rc.studentDefaultName}
           height="md"
         />
 
@@ -147,13 +149,13 @@ export function RoleAwareGapCard({
           <div className="p-4 rounded-2xl bg-[#EAF4EE]/70 border border-[#2E7D5E]/20 space-y-2">
             <span className="font-heading font-extrabold text-xs text-[#2E7D5E] flex items-center gap-1.5">
               <Smile className="w-4 h-4 text-[#2E7D5E]" />
-              <span>Your Learning Progress</span>
+              <span>{rc.yourLearningProgress}</span>
             </span>
             <p className="text-xs text-[#49352F] leading-relaxed font-medium">
               {interpretation.studentEncouragement}
             </p>
             <p className="text-[11px] text-[#215A43] font-semibold pt-1 border-t border-[#2E7D5E]/15">
-              🎉 {interpretation.progressNarrative}
+              {interpretation.progressNarrative}
             </p>
           </div>
 
@@ -161,7 +163,7 @@ export function RoleAwareGapCard({
           <div className="p-4 rounded-2xl bg-[#FAF6E9] border border-[#49352F]/10 space-y-2">
             <span className="font-heading font-extrabold text-xs text-[#B26A1B] flex items-center gap-1.5">
               <Sparkles className="w-4 h-4 text-[#B26A1B]" />
-              <span>Skills You Are Building</span>
+              <span>{rc.skillsBuilding}</span>
             </span>
             <ul className="space-y-1 text-xs text-[#49352F]">
               {interpretation.skillsMastered?.map((sk, idx) => (
@@ -204,7 +206,7 @@ export function RoleAwareGapCard({
               </Badge>
             </div>
             <p className="text-xs text-[#7A6862] mt-0.5 font-medium">
-              Child: <strong className="text-[#49352F]">{gap.studentName}</strong> • {interpretation.headline}
+              {rc.childPrefix} <strong className="text-[#49352F]">{gap.studentName}</strong> • {interpretation.headline}
             </p>
           </div>
 
@@ -215,10 +217,10 @@ export function RoleAwareGapCard({
                 size="sm"
                 onClick={() => (onOpenPlan ? onOpenPlan(gap) : onGeneratePlan!(gap.id))}
                 className="rounded-full text-xs font-bold bg-white hover:bg-[#FAF6E9] text-[#49352F] border border-[#49352F]/15"
-                title="View and print 5-step remedial plan for home support"
+                title={rc.viewPrintPlanBtn}
               >
                 <Printer className="w-3.5 h-3.5 mr-1 text-[#B26A1B]" />
-                <span>View & Print 5-Step Plan</span>
+                <span>{rc.viewPrintPlanBtn}</span>
               </Button>
             )}
             {onSendHomePractice && (
@@ -229,7 +231,7 @@ export function RoleAwareGapCard({
                 className="rounded-full text-xs font-bold"
               >
                 <Send className="w-3.5 h-3.5 mr-1" />
-                <span>Send Home Practice</span>
+                <span>{rc.sendHomePracticeBtn}</span>
               </Button>
             )}
           </div>
@@ -241,7 +243,7 @@ export function RoleAwareGapCard({
           previousScore={previousScore}
           thresholdDeveloping={60}
           thresholdMastery={80}
-          studentName={gap.studentName || "Your Child"}
+          studentName={gap.studentName || rc.yourChildDefaultName}
           height="md"
         />
 
@@ -251,16 +253,16 @@ export function RoleAwareGapCard({
           <div className="p-4 rounded-2xl bg-[#FAF6E9] border border-[#49352F]/10 space-y-2">
             <span className="font-heading font-extrabold text-xs text-[#2E7D5E] flex items-center gap-1.5">
               <CheckCircle2 className="w-4 h-4 text-[#2E7D5E]" />
-              <span>What {gap.studentName || "your child"} is doing well</span>
+              <span>{tr("roleCard.doingWellTitle", { name: gap.studentName || rc.yourChildLower })}</span>
             </span>
             <p className="text-xs text-[#49352F] leading-relaxed">
               {interpretation.strengthsSummary}
             </p>
             <div className="pt-2 border-t border-[#49352F]/10 text-[11px] text-[#7A6862]">
-              <strong>Classroom Progress:</strong> {interpretation.progressNarrative}
+              <strong>{rc.classroomProgressLabel}</strong> {interpretation.progressNarrative}
             </div>
             <div className="text-[11px] text-[#B26A1B] font-semibold">
-              ℹ️ {interpretation.teacherRecommendation}
+              <Info className="w-3.5 h-3.5 inline mr-1 shrink-0" />{interpretation.teacherRecommendation}
             </div>
           </div>
 
@@ -270,11 +272,11 @@ export function RoleAwareGapCard({
               <div className="flex items-center justify-between border-b border-[#49352F]/10 pb-1.5">
                 <span className="font-heading font-extrabold text-xs text-[#B26A1B] flex items-center gap-1.5">
                   <Home className="w-4 h-4 text-[#B26A1B]" />
-                  <span>One 5-Minute Home Activity</span>
+                  <span>{rc.homeActivityTitle}</span>
                 </span>
                 <Badge variant="mint" size="sm">
                   <Clock className="w-3 h-3 mr-1" />
-                  {act.durationMinutes} mins
+                  {tr("roleCard.minsCount", { mins: act.durationMinutes })}
                 </Badge>
               </div>
 
@@ -286,7 +288,7 @@ export function RoleAwareGapCard({
                       key={mIdx}
                       className="px-1.5 py-0.5 rounded bg-[#FAF6E9] border border-[#49352F]/10 text-[10px] text-[#7A6862]"
                     >
-                      🛠️ {m}
+                      <Wrench className="w-3 h-3 inline mr-1 text-[#7A6862]" />{m}
                     </span>
                   ))}
                 </div>
@@ -294,10 +296,10 @@ export function RoleAwareGapCard({
 
               <div className="space-y-1 text-xs">
                 <p className="text-[#49352F] leading-snug">
-                  <strong>What to do:</strong> {act.whatParentDoes}
+                  <strong>{rc.whatToDoLabel}</strong> {act.whatParentDoes}
                 </p>
                 <p className="italic text-[#8D4E10] text-[11px] pt-1">
-                  🗣️ {act.conversationalPrompt}
+                  <MessageSquare className="w-3 h-3 inline mr-1 text-[#8D4E10]" />{act.conversationalPrompt}
                 </p>
               </div>
             </div>

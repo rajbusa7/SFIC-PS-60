@@ -32,7 +32,9 @@ export function ConversationListComponent({
   unreadTotal,
   currentUserId,
 }: ConversationListProps) {
-  const { language } = useLanguage();
+  const { t, language, formatTime, formatDate } = useLanguage();
+  const cn = t.connect;
+  const showGuTitle = language === "gu";
   const [filterType, setFilterType] = useState<"all" | ConversationType>("all");
   const [search, setSearch] = useState("");
 
@@ -57,9 +59,9 @@ export function ConversationListComponent({
       date.getFullYear() === now.getFullYear();
 
     if (isToday) {
-      return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      return formatTime(date, { hour: "2-digit", minute: "2-digit" });
     }
-    return date.toLocaleDateString([], { month: "short", day: "numeric" });
+    return formatDate(date, { month: "short", day: "numeric" });
   };
 
   const getConvIcon = (type: ConversationType) => {
@@ -83,21 +85,21 @@ export function ConversationListComponent({
           </div>
           <div>
             <h2 className="text-base font-bold text-[#49352F] dark:text-[#F4F1E1] leading-tight">
-              {language === "gu" ? "સેતુ કનેક્ટ" : "ClassConnect"}
+              {cn.brandName}
             </h2>
             <p className="text-[11px] text-[#49352F]/60 dark:text-[#F4F1E1]/60">
-              {language === "gu" ? "વાલી-શિક્ષક સંવાદ" : "Parent-Teacher Chat"}
+              {cn.brandSubtitle}
             </p>
           </div>
         </div>
 
         <button
           onClick={onOpenNewModal}
-          title={language === "gu" ? "નવો વાર્તાલાપ" : "New Chat"}
+          title={cn.newChatTitle}
           className="p-2 rounded-xl bg-[#2E7D5E] hover:bg-[#24634B] text-white shadow-sm transition active:scale-95 flex items-center gap-1.5 text-xs font-bold"
         >
           <Plus className="w-4 h-4" />
-          <span className="hidden sm:inline">{language === "gu" ? "નવું" : "New"}</span>
+          <span className="hidden sm:inline">{cn.newChatBtn}</span>
         </button>
       </div>
 
@@ -107,7 +109,7 @@ export function ConversationListComponent({
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#49352F]/40 dark:text-[#F4F1E1]/40" />
           <input
             type="text"
-            placeholder={language === "gu" ? "ચેટ શોધો..." : "Search chats or messages..."}
+            placeholder={cn.searchPlaceholder}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-[#49352F]/15 dark:border-[#F4F1E1]/15 bg-white dark:bg-[#261E1A] text-[#49352F] dark:text-[#F4F1E1] focus:outline-none focus:ring-2 focus:ring-[#2E7D5E]/30"
@@ -125,7 +127,7 @@ export function ConversationListComponent({
               : "text-[#49352F]/70 dark:text-[#F4F1E1]/70 hover:bg-[#49352F]/10"
           }`}
         >
-          {language === "gu" ? "બધા" : "All"}
+          {cn.filterAll}
         </button>
         <button
           onClick={() => setFilterType("direct")}
@@ -135,7 +137,7 @@ export function ConversationListComponent({
               : "text-[#49352F]/70 dark:text-[#F4F1E1]/70 hover:bg-[#49352F]/10"
           }`}
         >
-          {language === "gu" ? "૧-થી-૧ ચેટ" : "Direct"}
+          {cn.filterDirect}
         </button>
         <button
           onClick={() => setFilterType("class_group")}
@@ -145,7 +147,7 @@ export function ConversationListComponent({
               : "text-[#49352F]/70 dark:text-[#F4F1E1]/70 hover:bg-[#49352F]/10"
           }`}
         >
-          {language === "gu" ? "વર્ગ જૂથો" : "Class Groups"}
+          {cn.filterGroups}
         </button>
         <button
           onClick={() => setFilterType("announcement")}
@@ -155,7 +157,7 @@ export function ConversationListComponent({
               : "text-[#49352F]/70 dark:text-[#F4F1E1]/70 hover:bg-[#49352F]/10"
           }`}
         >
-          {language === "gu" ? "સૂચનાઓ" : "Notices"}
+          {cn.filterNotices}
         </button>
       </div>
 
@@ -163,13 +165,13 @@ export function ConversationListComponent({
       <div className="flex-1 overflow-y-auto divide-y divide-[#49352F]/5 dark:divide-[#F4F1E1]/5">
         {filtered.length === 0 ? (
           <div className="text-center py-12 px-4 text-[#49352F]/50 dark:text-[#F4F1E1]/50 text-xs">
-            {language === "gu" ? "કોઈ વાર્તાલાપ મળ્યો નથી." : "No conversations found."}
+            {cn.noConversations}
           </div>
         ) : (
           filtered.map((conv) => {
             const isSelected = selectedConvId === conv.id;
             const title =
-              language === "gu" && conv.titleGujarati ? conv.titleGujarati : conv.title;
+              showGuTitle && conv.titleGujarati ? conv.titleGujarati : conv.title;
 
             return (
               <div
@@ -218,7 +220,7 @@ export function ConversationListComponent({
                           {conv.lastMessageSenderName}:{" "}
                         </span>
                       )}
-                      {conv.lastMessageText || (language === "gu" ? "વાર્તાલાપ શરૂ કરો" : "Tap to chat")}
+                      {conv.lastMessageText || cn.tapToChat}
                     </p>
 
                     {/* Unread Pill */}

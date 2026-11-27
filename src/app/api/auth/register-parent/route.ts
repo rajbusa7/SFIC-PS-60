@@ -83,15 +83,18 @@ export async function POST(request: Request) {
 
     // 6. Optional: If a child linking code was provided during registration, redeem it
     let linkedStudentId: string | undefined;
+    let linkingWarning: string | undefined;
     if (linkingCode && typeof linkingCode === "string" && linkingCode.trim()) {
       const redeemRes = await db.redeemLinkingCodeAsync(
-        linkingCode.trim(),
+        linkingCode.trim().toUpperCase().replace(/\s+/g, ""),
         newUser.id,
         parentProfile.id
       );
       if (redeemRes.success && redeemRes.studentId) {
         linkedStudentId = redeemRes.studentId;
         parentProfile.studentIds = [redeemRes.studentId];
+      } else {
+        linkingWarning = redeemRes.error || "Could not verify linking code. You can link your child from the Parent Dashboard.";
       }
     }
 
@@ -123,6 +126,7 @@ export async function POST(request: Request) {
       user: sanitizedUser,
       parentProfile,
       linkedStudentId,
+      linkingWarning,
     });
 
     response.cookies.set(

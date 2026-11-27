@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import os from "os";
+import crypto from "crypto";
 import {
   SEED_SCHOOL,
   SEED_SETTINGS,
@@ -36,6 +37,7 @@ import {
   postgresUserDb,
   postgresParentDb,
   postgresTeacherAssignmentDb,
+  postgresPtmDb,
 } from "./postgres";
 import type {
   School,
@@ -68,6 +70,12 @@ import type {
   ChatMessage,
   ChatNotification,
   ConversationParticipant,
+  PtmMeeting,
+  PtmMeetingNote,
+  PtmChatMessage,
+  PtmWaitingParticipant,
+  PtmMeetingStats,
+  PtmMeetingStatus,
 } from "../types";
 import { SEED_CONVERSATIONS, SEED_CHAT_MESSAGES } from "../connect/seedConnect";
 
@@ -105,6 +113,10 @@ interface DataStore {
   conversations?: Conversation[];
   chatMessages?: ChatMessage[];
   chatNotifications?: ChatNotification[];
+  ptmMeetings?: PtmMeeting[];
+  ptmMeetingNotes?: PtmMeetingNote[];
+  ptmChatMessages?: PtmChatMessage[];
+  ptmWaitingParticipants?: PtmWaitingParticipant[];
 }
 
 const DEFAULT_DATA_DIR = path.join(process.cwd(), "data");
@@ -132,16 +144,18 @@ function getInitialStore(): DataStore {
         id: "plc-demo-aarav",
         studentId: "std-aarav",
         code: "PAR-4892",
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
         status: "active",
+        createdByUserId: "usr-teacher-01",
         createdAt: new Date().toISOString(),
       },
       {
         id: "plc-demo-diya",
         studentId: "std-diya",
         code: "PAR-5219",
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
         status: "active",
+        createdByUserId: "usr-teacher-01",
         createdAt: new Date().toISOString(),
       },
     ],
@@ -160,6 +174,102 @@ function getInitialStore(): DataStore {
     conversations: JSON.parse(JSON.stringify(SEED_CONVERSATIONS)),
     chatMessages: JSON.parse(JSON.stringify(SEED_CHAT_MESSAGES)),
     chatNotifications: [],
+    ptmMeetings: [
+      {
+        id: "ptm-today-aarav",
+        meetingCode: "ptm-704-291",
+        title: "Class 4 Mathematics Remedial Progress Review",
+        agenda: "Review 5-step concrete division manipulative activities, verify 85% accuracy milestone, plan home practice.",
+        teacherId: "usr-teacher-01",
+        teacherName: "Pooja Sharma",
+        studentId: "std-aarav",
+        studentName: "Aarav Patel",
+        parentId: "par-001",
+        parentName: "Dineshbhai Patel",
+        parentEmail: "parent.aarav@example.com",
+        scheduledDate: new Date().toISOString().split("T")[0],
+        startTime: "14:30",
+        durationMinutes: 30,
+        status: "scheduled",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: "ptm-upcoming-diya",
+        meetingCode: "ptm-819-332",
+        title: "Gujarati Reading & Phonemic Progress Discussion",
+        agenda: "Discuss Matra recognition development and bilingual reading exercises.",
+        teacherId: "usr-teacher-01",
+        teacherName: "Pooja Sharma",
+        studentId: "std-diya",
+        studentName: "Diya Joshi",
+        parentId: "par-002",
+        parentName: "Bhavikbhai Joshi",
+        parentEmail: "bhavik.joshi@example.com",
+        scheduledDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+        startTime: "16:00",
+        durationMinutes: 45,
+        status: "scheduled",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: "ptm-past-ishaan",
+        meetingCode: "ptm-412-588",
+        title: "Foundational Number Sense Benchmark",
+        agenda: "Assess 2-digit addition and place value comprehension.",
+        teacherId: "usr-teacher-01",
+        teacherName: "Pooja Sharma",
+        studentId: "std-ishaan",
+        studentName: "Ishaan Solanki",
+        parentId: "par-003",
+        parentName: "Rameshbhai Solanki",
+        parentEmail: "ramesh.solanki@example.com",
+        scheduledDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+        startTime: "11:00",
+        durationMinutes: 30,
+        status: "completed",
+        createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: "ptm-cancelled-anaya",
+        meetingCode: "ptm-301-419",
+        title: "Science Environmental Studies Check-in",
+        agenda: "Quarterly curriculum review on plant life cycles.",
+        teacherId: "usr-teacher-01",
+        teacherName: "Pooja Sharma",
+        studentId: "std-anaya",
+        studentName: "Anaya Patel",
+        parentId: "par-001",
+        parentName: "Dineshbhai Patel",
+        parentEmail: "parent.aarav@example.com",
+        scheduledDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+        startTime: "15:00",
+        durationMinutes: 15,
+        status: "cancelled",
+        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+    ],
+    ptmMeetingNotes: [
+      {
+        id: "note-past-ishaan",
+        meetingId: "ptm-past-ishaan",
+        studentId: "std-ishaan",
+        teacherId: "usr-teacher-01",
+        discussionSummary: "Reviewed foundational number line concepts and 2-digit regrouping. Ishaan demonstrated improved confidence in single-digit operations.",
+        learningConcerns: "Carrying over in double-digit column addition still causes occasional hesitation.",
+        studentStrengths: "Highly engaged in visual dot-pattern exercises and oral calculations.",
+        agreedActions: "Parent agreed to practice 10 minutes of base-ten block manipulative cards daily before dinner.",
+        followUpDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+        sharedWithParent: true,
+        createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+    ],
+    ptmChatMessages: [],
+    ptmWaitingParticipants: [],
   };
 }
 
@@ -267,6 +377,25 @@ function loadStore(): DataStore {
             memoryStore.chatMessages = JSON.parse(JSON.stringify(SEED_CHAT_MESSAGES));
             storeNeedsSync = true;
           }
+          // Auto-sync PTM baseline meetings if missing
+          if (!memoryStore.ptmMeetings) memoryStore.ptmMeetings = [];
+          const initialStore = getInitialStore();
+          for (const m of initialStore.ptmMeetings || []) {
+            if (!memoryStore.ptmMeetings.some((existing) => existing.id === m.id)) {
+              memoryStore.ptmMeetings.push(JSON.parse(JSON.stringify(m)));
+              storeNeedsSync = true;
+            }
+          }
+          if (!memoryStore.ptmMeetingNotes) memoryStore.ptmMeetingNotes = [];
+          for (const n of initialStore.ptmMeetingNotes || []) {
+            if (!memoryStore.ptmMeetingNotes.some((existing) => existing.id === n.id)) {
+              memoryStore.ptmMeetingNotes.push(JSON.parse(JSON.stringify(n)));
+              storeNeedsSync = true;
+            }
+          }
+          if (!memoryStore.ptmChatMessages) memoryStore.ptmChatMessages = [];
+          if (!memoryStore.ptmWaitingParticipants) memoryStore.ptmWaitingParticipants = [];
+
           if (storeNeedsSync) {
             try {
               saveStore(memoryStore);
@@ -606,6 +735,18 @@ export const db = {
     return res;
   },
 
+  async getResultsAsync(studentId?: string, conceptId?: string): Promise<AssessmentResult[]> {
+    if (isPostgresConfigured()) {
+      try {
+        const pgResults = await postgresAssessmentDb.getResults(studentId, conceptId);
+        if (pgResults.length > 0) return pgResults;
+      } catch (e) {
+        console.warn("[PostgreSQL] getResultsAsync failed, falling back to local store:", (e as any)?.message);
+      }
+    }
+    return this.getResults(studentId, conceptId);
+  },
+
   recordResults(resultsData: Omit<AssessmentResult, "id">[]): AssessmentResult[] {
     const store = loadStore();
     const created: AssessmentResult[] = [];
@@ -765,6 +906,18 @@ export const db = {
     });
   },
 
+  async getLearningGapsAsync(studentId?: string): Promise<LearningGap[]> {
+    if (isPostgresConfigured()) {
+      try {
+        const pgGaps = await postgresLearningGapDb.getLearningGaps(studentId);
+        if (pgGaps.length > 0) return pgGaps;
+      } catch (e) {
+        console.warn("[PostgreSQL] getLearningGapsAsync failed, falling back to local store:", (e as any)?.message);
+      }
+    }
+    return this.getLearningGaps(studentId);
+  },
+
   getLearningGapById(id: string): LearningGap | null {
     const store = loadStore();
     return store.learningGaps.find((g) => g.id === id) || null;
@@ -883,6 +1036,18 @@ export const db = {
     const store = loadStore();
     if (!studentId) return store.remedialPlans;
     return store.remedialPlans.filter((p) => p.studentId === studentId);
+  },
+
+  async getRemedialPlansAsync(studentId?: string): Promise<RemedialPlan[]> {
+    if (isPostgresConfigured()) {
+      try {
+        const pgPlans = await postgresRemedialPlanDb.getRemedialPlans(studentId);
+        if (pgPlans.length > 0) return pgPlans;
+      } catch (e) {
+        console.warn("[PostgreSQL] getRemedialPlansAsync failed, falling back to local store:", (e as any)?.message);
+      }
+    }
+    return this.getRemedialPlans(studentId);
   },
 
   getRemedialPlanById(id: string): RemedialPlan | undefined {
@@ -1353,8 +1518,7 @@ export const db = {
   async getParentByUserIdAsync(userId: string): Promise<ParentProfile | null> {
     if (isPostgresConfigured()) {
       try {
-        const profile = await postgresParentDb.getParentByUserId(userId);
-        if (profile) return profile;
+        return await postgresParentDb.getParentByUserId(userId);
       } catch (e) {
         console.error("Postgres error in getParentByUserIdAsync:", e);
       }
@@ -1362,11 +1526,37 @@ export const db = {
     return this.getParentByUserId(userId) || null;
   },
 
+  async updateParentPreferencesAsync(
+    userId: string,
+    prefs: { preferredLanguage?: ParentProfile["preferredLanguage"]; preferredScript?: ParentProfile["preferredScript"] }
+  ): Promise<boolean> {
+    if (isPostgresConfigured()) {
+      try {
+        await postgresParentDb.updateParentPreferences(userId, prefs);
+      } catch (e) {
+        console.error("Postgres error in updateParentPreferencesAsync:", e);
+      }
+    }
+    const store = loadStore();
+    const parents = store.parents || [];
+    const idx = parents.findIndex((p) => p.userId === userId || p.id === userId);
+    if (idx !== -1) {
+      parents[idx] = {
+        ...parents[idx],
+        ...(prefs.preferredLanguage ? { preferredLanguage: prefs.preferredLanguage } : {}),
+        ...(prefs.preferredScript ? { preferredScript: prefs.preferredScript } : {}),
+      };
+      store.parents = parents;
+      saveStore(store);
+      return true;
+    }
+    return false;
+  },
+
   async getParentByIdAsync(id: string): Promise<ParentProfile | null> {
     if (isPostgresConfigured()) {
       try {
-        const profile = await postgresParentDb.getParentById(id);
-        if (profile) return profile;
+        return await postgresParentDb.getParentById(id);
       } catch (e) {
         console.error("Postgres error in getParentByIdAsync:", e);
       }
@@ -1483,8 +1673,7 @@ export const db = {
   async getLinkedStudentsForParentAsync(parentId: string): Promise<Student[]> {
     if (isPostgresConfigured()) {
       try {
-        const students = await postgresParentDb.getLinkedStudentsForParent(parentId);
-        if (students && students.length > 0) return students;
+        return await postgresParentDb.getLinkedStudentsForParent(parentId);
       } catch (e) {
         console.error("Postgres error in getLinkedStudentsForParentAsync:", e);
       }
@@ -1503,11 +1692,30 @@ export const db = {
       }
     }
     const store = loadStore();
+    const student = store.students.find((s) => s.id === studentId);
+    if (!student) {
+      throw new Error("Student not found.");
+    }
     if (!store.parentLinkingCodes) store.parentLinkingCodes = [];
-    const id = `plc-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
-    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-    const code = `PAR-${randomSuffix}`;
-    const expiresAt = new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000).toISOString();
+    const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let code = "";
+    for (let attempt = 0; attempt < 5; attempt++) {
+      let suffix = "";
+      for (let i = 0; i < 6; i++) {
+        suffix += alphabet[crypto.randomInt(0, alphabet.length)];
+      }
+      const candidate = `PAR-${suffix}`;
+      if (!store.parentLinkingCodes.some((c) => c.code.toUpperCase() === candidate)) {
+        code = candidate;
+        break;
+      }
+    }
+    if (!code) {
+      code = `PAR-${crypto.randomInt(100000, 999999)}`;
+    }
+    const id = `plc-${Date.now()}-${crypto.randomBytes(3).toString("hex")}`;
+    const safeDays = Math.min(30, Math.max(1, Number(expiresInDays) || 7));
+    const expiresAt = new Date(Date.now() + safeDays * 24 * 60 * 60 * 1000).toISOString();
 
     const linkingCode: ParentLinkingCode = {
       id,
@@ -1526,14 +1734,13 @@ export const db = {
   async getLinkingCodeAsync(code: string): Promise<ParentLinkingCode | null> {
     if (isPostgresConfigured()) {
       try {
-        const found = await postgresParentDb.getLinkingCode(code);
-        if (found) return found;
+        return await postgresParentDb.getLinkingCode(code);
       } catch (e) {
         console.error("Postgres error in getLinkingCodeAsync:", e);
       }
     }
     const store = loadStore();
-    const normalized = code.trim().toUpperCase();
+    const normalized = code.trim().toUpperCase().replace(/\s+/g, "");
     return (store.parentLinkingCodes || []).find((c) => c.code.toUpperCase() === normalized) || null;
   },
 
@@ -1541,58 +1748,126 @@ export const db = {
     code: string,
     parentUserId: string,
     parentProfileId: string
-  ): Promise<{ success: boolean; studentId?: string; error?: string }> {
+  ): Promise<{ success: boolean; alreadyLinked?: boolean; studentId?: string; error?: string; errorCode?: string }> {
+    const normalized = String(code || "").trim().toUpperCase().replace(/\s+/g, "");
+    if (!normalized) {
+      return { success: false, errorCode: "INVALID_CODE", error: "Please enter a valid verification code." };
+    }
+
     if (isPostgresConfigured()) {
       try {
-        return await postgresParentDb.redeemLinkingCode(code, parentUserId, parentProfileId);
+        return await postgresParentDb.redeemLinkingCode(normalized, parentUserId, parentProfileId);
       } catch (e) {
         console.error("Postgres error in redeemLinkingCodeAsync, falling back to local:", e);
       }
     }
 
     const store = loadStore();
-    const normalized = code.trim().toUpperCase();
     const linkingCode = (store.parentLinkingCodes || []).find((c) => c.code.toUpperCase() === normalized);
     if (!linkingCode) {
-      return { success: false, error: "Invalid verification code. Please check the code provided by your school." };
+      return { success: false, errorCode: "INVALID_CODE", error: "Invalid verification code. Please check the code provided by your school." };
     }
+
+    const parent = (store.parents || []).find((p) => p.id === parentProfileId || p.userId === parentUserId);
+    if (parent && parent.studentIds && parent.studentIds.includes(linkingCode.studentId)) {
+      return {
+        success: true,
+        alreadyLinked: true,
+        errorCode: "ALREADY_LINKED",
+        studentId: linkingCode.studentId,
+      };
+    }
+
     if (linkingCode.status === "used") {
-      return { success: false, error: "This linking code has already been redeemed." };
+      return {
+        success: false,
+        errorCode: "USED_CODE",
+        error: "This verification code has already been redeemed. Please ask your child's teacher for a new code.",
+      };
     }
-    if (new Date(linkingCode.expiresAt).getTime() < Date.now()) {
+    if (linkingCode.status === "revoked") {
+      return {
+        success: false,
+        errorCode: "REVOKED_CODE",
+        error: "This verification code is no longer active. Please request a new code from your child's teacher.",
+      };
+    }
+    if (linkingCode.status === "expired" || new Date(linkingCode.expiresAt).getTime() <= Date.now()) {
       linkingCode.status = "expired";
       saveStore(store);
-      return { success: false, error: "This linking code has expired. Please request a new code from the school teacher." };
+      return {
+        success: false,
+        errorCode: "EXPIRED_CODE",
+        error: "This verification code has expired. Please request a new code from your child's teacher.",
+      };
+    }
+
+    const student = store.students.find((s) => s.id === linkingCode.studentId);
+    if (!student || student.enrollmentStatus === "transferred") {
+      return {
+        success: false,
+        errorCode: "INVALID_CODE",
+        error: "Invalid verification code. Please check the code provided by your school.",
+      };
+    }
+
+    if (!parent) {
+      return {
+        success: false,
+        errorCode: "PROFILE_NOT_FOUND",
+        error: "Parent profile not found. Please sign in again.",
+      };
     }
 
     linkingCode.status = "used";
     linkingCode.usedByUserId = parentUserId;
     linkingCode.usedAt = new Date().toISOString();
 
-    // Link parent profile
-    const parent = (store.parents || []).find((p) => p.id === parentProfileId || p.userId === parentUserId);
-    if (parent) {
-      if (!parent.studentIds) parent.studentIds = [];
-      if (!parent.studentIds.includes(linkingCode.studentId)) {
-        parent.studentIds.push(linkingCode.studentId);
-      }
-    }
+    if (!parent.studentIds) parent.studentIds = [];
+    parent.studentIds.push(linkingCode.studentId);
 
     saveStore(store);
-    return { success: true, studentId: linkingCode.studentId };
+    return { success: true, alreadyLinked: false, studentId: linkingCode.studentId };
+  },
+
+  async revokeLinkingCodeAsync(codeId: string, studentId: string): Promise<boolean> {
+    if (isPostgresConfigured()) {
+      try {
+        return await postgresParentDb.revokeLinkingCode(codeId, studentId);
+      } catch (e) {
+        console.error("Postgres error in revokeLinkingCodeAsync:", e);
+      }
+    }
+    const store = loadStore();
+    const target = (store.parentLinkingCodes || []).find(
+      (c) => c.id === codeId && c.studentId === studentId && c.status === "active"
+    );
+    if (!target) return false;
+    target.status = "revoked";
+    saveStore(store);
+    return true;
   },
 
   async getLinkingCodesForStudentAsync(studentId: string): Promise<ParentLinkingCode[]> {
     if (isPostgresConfigured()) {
       try {
-        const codes = await postgresParentDb.getLinkingCodesForStudent(studentId);
-        if (codes && codes.length > 0) return codes;
+        return await postgresParentDb.getLinkingCodesForStudent(studentId);
       } catch (e) {
         console.error("Postgres error in getLinkingCodesForStudentAsync:", e);
       }
     }
     const store = loadStore();
-    return (store.parentLinkingCodes || []).filter((c) => c.studentId === studentId);
+    let changed = false;
+    const now = Date.now();
+    const codes = (store.parentLinkingCodes || []).filter((c) => c.studentId === studentId);
+    for (const c of codes) {
+      if (c.status === "active" && new Date(c.expiresAt).getTime() <= now) {
+        c.status = "expired";
+        changed = true;
+      }
+    }
+    if (changed) saveStore(store);
+    return [...codes].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   },
 
   async createParentMessageAsync(
@@ -1710,6 +1985,17 @@ export const db = {
 
   getParentsByStudentId(studentId: string): ParentProfile[] {
     return this.getParents().filter((p) => p.studentIds.includes(studentId));
+  },
+
+  async getParentsByStudentIdAsync(studentId: string): Promise<ParentProfile[]> {
+    if (isPostgresConfigured()) {
+      try {
+        return await postgresParentDb.getParentsByStudentId(studentId);
+      } catch (e) {
+        console.error("Postgres error in getParentsByStudentIdAsync:", e);
+      }
+    }
+    return this.getParentsByStudentId(studentId);
   },
 
   getNotices(filter?: { category?: string; status?: string; grade?: number }): SchoolNotice[] {
@@ -2023,6 +2309,8 @@ export const db = {
       email: userData.email.trim().toLowerCase(),
       role: userData.role || "teacher",
       schoolId: userData.schoolId || "sch-gn-01",
+      preferredLanguage: userData.preferredLanguage || "en",
+      preferredScript: userData.preferredScript,
       googleId: userData.googleId,
       avatarUrl: userData.avatarUrl,
       provider: userData.provider || "local",
@@ -3116,6 +3404,258 @@ export const db = {
       })),
     ];
   },
+  // --------------------------------------------------------------------------
+  // Parent-Teacher Meetings (PTM) System
+  // --------------------------------------------------------------------------
+
+  getPtmMeetings(options?: {
+    teacherId?: string;
+    parentId?: string;
+    studentId?: string;
+    status?: PtmMeetingStatus;
+    date?: string;
+  }): PtmMeeting[] {
+    const store = loadStore();
+    let list = store.ptmMeetings || [];
+    if (options?.teacherId) {
+      list = list.filter((m) => m.teacherId === options.teacherId);
+    }
+    if (options?.parentId) {
+      list = list.filter((m) => m.parentId === options.parentId);
+    }
+    if (options?.studentId) {
+      list = list.filter((m) => m.studentId === options.studentId);
+    }
+    if (options?.status) {
+      list = list.filter((m) => m.status === options.status);
+    }
+    if (options?.date) {
+      list = list.filter((m) => m.scheduledDate === options.date);
+    }
+    return list.sort((a, b) => a.scheduledDate.localeCompare(b.scheduledDate) || a.startTime.localeCompare(b.startTime));
+  },
+
+  async getPtmMeetingsAsync(options?: {
+    teacherId?: string;
+    parentId?: string;
+    studentId?: string;
+    status?: PtmMeetingStatus;
+    date?: string;
+  }): Promise<PtmMeeting[]> {
+    if (isPostgresConfigured()) {
+      return postgresPtmDb.getMeetings(options);
+    }
+    return this.getPtmMeetings(options);
+  },
+
+  getPtmMeetingById(idOrCode: string): PtmMeeting | null {
+    const store = loadStore();
+    const list = store.ptmMeetings || [];
+    return list.find((m) => m.id === idOrCode || m.meetingCode === idOrCode) || null;
+  },
+
+  async getPtmMeetingByIdAsync(idOrCode: string): Promise<PtmMeeting | null> {
+    if (isPostgresConfigured()) {
+      return postgresPtmDb.getMeetingById(idOrCode);
+    }
+    return this.getPtmMeetingById(idOrCode);
+  },
+
+  createPtmMeeting(meeting: PtmMeeting): PtmMeeting {
+    const store = loadStore();
+    if (!store.ptmMeetings) store.ptmMeetings = [];
+    store.ptmMeetings.push(meeting);
+    saveStore(store);
+    return meeting;
+  },
+
+  async createPtmMeetingAsync(meeting: PtmMeeting): Promise<PtmMeeting> {
+    if (isPostgresConfigured()) {
+      return postgresPtmDb.createMeeting(meeting);
+    }
+    return this.createPtmMeeting(meeting);
+  },
+
+  updatePtmMeetingStatus(id: string, status: PtmMeetingStatus): PtmMeeting | null {
+    const store = loadStore();
+    if (!store.ptmMeetings) return null;
+    const item = store.ptmMeetings.find((m) => m.id === id || m.meetingCode === id);
+    if (!item) return null;
+    item.status = status;
+    item.updatedAt = new Date().toISOString();
+    saveStore(store);
+    return item;
+  },
+
+  async updatePtmMeetingStatusAsync(id: string, status: PtmMeetingStatus): Promise<PtmMeeting | null> {
+    if (isPostgresConfigured()) {
+      return postgresPtmDb.updateMeetingStatus(id, status);
+    }
+    return this.updatePtmMeetingStatus(id, status);
+  },
+
+  getPtmMeetingStats(teacherId?: string, parentId?: string): PtmMeetingStats {
+    const store = loadStore();
+    let list = store.ptmMeetings || [];
+    if (teacherId) list = list.filter((m) => m.teacherId === teacherId);
+    if (parentId) list = list.filter((m) => m.parentId === parentId);
+
+    return {
+      total: list.length,
+      upcoming: list.filter((m) => m.status === "scheduled" || m.status === "waiting" || m.status === "in_progress").length,
+      completed: list.filter((m) => m.status === "completed").length,
+      cancelled: list.filter((m) => m.status === "cancelled" || m.status === "no_show").length,
+    };
+  },
+
+  async getPtmMeetingStatsAsync(teacherId?: string, parentId?: string): Promise<PtmMeetingStats> {
+    if (isPostgresConfigured()) {
+      return postgresPtmDb.getStats(teacherId, parentId);
+    }
+    return this.getPtmMeetingStats(teacherId, parentId);
+  },
+
+  getPtmMeetingNotes(meetingId: string): PtmMeetingNote[] {
+    const store = loadStore();
+    const list = store.ptmMeetingNotes || [];
+    return list.filter((n) => n.meetingId === meetingId);
+  },
+
+  async getPtmMeetingNotesAsync(meetingId: string): Promise<PtmMeetingNote[]> {
+    if (isPostgresConfigured()) {
+      return postgresPtmDb.getNotes(meetingId);
+    }
+    return this.getPtmMeetingNotes(meetingId);
+  },
+
+  savePtmMeetingNote(note: PtmMeetingNote): PtmMeetingNote {
+    const store = loadStore();
+    if (!store.ptmMeetingNotes) store.ptmMeetingNotes = [];
+    const idx = store.ptmMeetingNotes.findIndex((n) => n.id === note.id);
+    if (idx >= 0) {
+      store.ptmMeetingNotes[idx] = note;
+    } else {
+      store.ptmMeetingNotes.push(note);
+    }
+    saveStore(store);
+    return note;
+  },
+
+  async savePtmMeetingNoteAsync(note: PtmMeetingNote): Promise<PtmMeetingNote> {
+    if (isPostgresConfigured()) {
+      return postgresPtmDb.saveNote(note);
+    }
+    return this.savePtmMeetingNote(note);
+  },
+
+  getPtmChatMessages(meetingId: string): PtmChatMessage[] {
+    const store = loadStore();
+    const list = store.ptmChatMessages || [];
+    return list.filter((m) => m.meetingId === meetingId).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  },
+
+  async getPtmChatMessagesAsync(meetingId: string): Promise<PtmChatMessage[]> {
+    if (isPostgresConfigured()) {
+      return postgresPtmDb.getChatMessages(meetingId);
+    }
+    return this.getPtmChatMessages(meetingId);
+  },
+
+  savePtmChatMessage(message: PtmChatMessage): PtmChatMessage {
+    const store = loadStore();
+    if (!store.ptmChatMessages) store.ptmChatMessages = [];
+    store.ptmChatMessages.push(message);
+    saveStore(store);
+    return message;
+  },
+
+  async savePtmChatMessageAsync(message: PtmChatMessage): Promise<PtmChatMessage> {
+    if (isPostgresConfigured()) {
+      return postgresPtmDb.saveChatMessage(message);
+    }
+    return this.savePtmChatMessage(message);
+  },
+
+  getPtmWaitingParticipants(meetingId: string): PtmWaitingParticipant[] {
+    const store = loadStore();
+    const list = store.ptmWaitingParticipants || [];
+    return list.filter((p) => p.meetingId === meetingId && p.status === "waiting");
+  },
+
+  async getPtmWaitingParticipantsAsync(meetingId: string): Promise<PtmWaitingParticipant[]> {
+    if (isPostgresConfigured()) {
+      return postgresPtmDb.getWaitingParticipants(meetingId);
+    }
+    return this.getPtmWaitingParticipants(meetingId);
+  },
+
+  addPtmWaitingParticipant(
+    meetingId: string,
+    participant: { participantId: string; participantName: string; participantRole: any }
+  ): PtmWaitingParticipant {
+    const store = loadStore();
+    if (!store.ptmWaitingParticipants) store.ptmWaitingParticipants = [];
+    const existing = store.ptmWaitingParticipants.find(
+      (p) => p.meetingId === meetingId && p.participantId === participant.participantId
+    );
+    if (existing) {
+      existing.status = "waiting";
+      existing.joinedAt = new Date().toISOString();
+      saveStore(store);
+      return existing;
+    }
+    const item: PtmWaitingParticipant = {
+      id: `wait-${meetingId}-${participant.participantId}`,
+      meetingId,
+      participantId: participant.participantId,
+      participantName: participant.participantName,
+      participantRole: participant.participantRole,
+      status: "waiting",
+      joinedAt: new Date().toISOString(),
+    };
+    store.ptmWaitingParticipants.push(item);
+    saveStore(store);
+    return item;
+  },
+
+  async addPtmWaitingParticipantAsync(
+    meetingId: string,
+    participant: { participantId: string; participantName: string; participantRole: any }
+  ): Promise<PtmWaitingParticipant> {
+    if (isPostgresConfigured()) {
+      return postgresPtmDb.addWaitingParticipant(meetingId, participant);
+    }
+    return this.addPtmWaitingParticipant(meetingId, participant);
+  },
+
+  updatePtmWaitingStatus(
+    meetingId: string,
+    participantId: string,
+    status: "admitted" | "rejected"
+  ): boolean {
+    const store = loadStore();
+    if (!store.ptmWaitingParticipants) return false;
+    const item = store.ptmWaitingParticipants.find(
+      (p) => p.meetingId === meetingId && p.participantId === participantId
+    );
+    if (!item) return false;
+    item.status = status;
+    item.reviewedAt = new Date().toISOString();
+    saveStore(store);
+    return true;
+  },
+
+  async updatePtmWaitingStatusAsync(
+    meetingId: string,
+    participantId: string,
+    status: "admitted" | "rejected"
+  ): Promise<boolean> {
+    if (isPostgresConfigured()) {
+      return postgresPtmDb.updateWaitingStatus(meetingId, participantId, status);
+    }
+    return this.updatePtmWaitingStatus(meetingId, participantId, status);
+  },
+
   resetToDemoData(): void {
     const fresh = getInitialStore();
     saveStore(fresh);

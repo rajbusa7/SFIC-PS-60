@@ -1,5 +1,49 @@
 export type ReadingLevel = "very_simple" | "simple" | "standard";
-export type SupportedLanguage = "en" | "gu" | "hi" | "mr" | "ta" | "te" | "bn" | "kn";
+export type SupportedScript =
+  | "Latn"
+  | "Deva"
+  | "Gujr"
+  | "Beng"
+  | "Guru"
+  | "Orya"
+  | "Taml"
+  | "Telu"
+  | "Knda"
+  | "Mlym"
+  | "Arab"
+  | "Mtei"
+  | "Olck";
+
+export type SupportedLanguage =
+  | "en"
+  | "as"
+  | "bn"
+  | "brx"
+  | "doi"
+  | "gu"
+  | "hi"
+  | "kn"
+  | "ks"
+  | "kok"
+  | "mai"
+  | "ml"
+  | "mni"
+  | "mr"
+  | "ne"
+  | "or"
+  | "pa"
+  | "sa"
+  | "sat"
+  | "sd"
+  | "ta"
+  | "te"
+  | "ur";
+
+export type TranslationQualityStatus =
+  | "Approved"
+  | "Reviewed"
+  | "Machine Draft"
+  | "Needs Revision";
 
 export interface ParentProfile {
   id: string;
@@ -8,6 +52,7 @@ export interface ParentProfile {
   phone?: string;
   email?: string;
   preferredLanguage: SupportedLanguage;
+  preferredScript?: SupportedScript;
   studentIds: string[];
   relationship?: "mother" | "father" | "guardian";
 }
@@ -17,7 +62,7 @@ export interface ParentLinkingCode {
   studentId: string;
   code: string;
   expiresAt: string;
-  status: "active" | "used" | "expired";
+  status: "active" | "used" | "expired" | "revoked";
   createdByUserId?: string;
   usedByUserId?: string;
   usedAt?: string;

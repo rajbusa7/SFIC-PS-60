@@ -16,6 +16,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { AudioRecorder } from "../audio/AudioRecorder";
+import { useLanguage } from "@/context/LanguageContext";
 import type { ReadingLevel, SupportedLanguage, NoticeCategory, NoticeUrgency } from "@/lib/types";
 
 interface NoticeComposerProps {
@@ -24,6 +25,8 @@ interface NoticeComposerProps {
 }
 
 export function NoticeComposer({ onNoticeCreated, className = "" }: NoticeComposerProps) {
+  const { t, tr, formatClass } = useLanguage();
+  const no = t.notices;
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<NoticeCategory>("announcement");
   const [urgency, setUrgency] = useState<NoticeUrgency>("normal");
@@ -55,7 +58,7 @@ export function NoticeComposer({ onNoticeCreated, className = "" }: NoticeCompos
 
   const handleSimplify = async () => {
     if (!originalText.trim()) {
-      setError("Please write or speak an announcement first.");
+      setError(no.ncErrWriteFirst);
       return;
     }
 
@@ -76,7 +79,7 @@ export function NoticeComposer({ onNoticeCreated, className = "" }: NoticeCompos
 
       const data = await res.json();
       if (!res.ok || !data.success) {
-        throw new Error(data.error || "Failed to simplify message.");
+        throw new Error(data.error || no.ncErrSimplifyFailed);
       }
 
       setSimplifiedText(data.simplifiedText);
@@ -88,7 +91,7 @@ export function NoticeComposer({ onNoticeCreated, className = "" }: NoticeCompos
       });
     } catch (err: any) {
       console.error("Simplification error:", err);
-      setError(err.message || "Simplification failed. Please try again.");
+      setError(err.message || no.ncErrSimplifyRetry);
     } finally {
       setIsSimplifying(false);
     }
@@ -96,11 +99,11 @@ export function NoticeComposer({ onNoticeCreated, className = "" }: NoticeCompos
 
   const handleSaveAndCreate = async (autoTranslate: boolean = true) => {
     if (!title.trim()) {
-      setError("Please provide a title for the announcement.");
+      setError(no.ncErrProvideTitle);
       return;
     }
     if (!originalText.trim()) {
-      setError("Original announcement text cannot be empty.");
+      setError(no.ncErrEmptyOriginal);
       return;
     }
 
@@ -130,12 +133,12 @@ export function NoticeComposer({ onNoticeCreated, className = "" }: NoticeCompos
 
       const data = await res.json();
       if (!res.ok || !data.success) {
-        throw new Error(data.error || "Failed to save notice.");
+        throw new Error(data.error || no.ncErrSaveFailed);
       }
 
       setSuccessMessage(
-        `Notice "${title}" saved successfully! ${
-          autoTranslate ? "AI translations generated for Gujarati and Hindi." : ""
+        `${tr("notices.ncSuccessSaved", { title })}${
+          autoTranslate ? ` ${no.ncSuccessAutoTranslated}` : ""
         }`
       );
 
@@ -149,7 +152,7 @@ export function NoticeComposer({ onNoticeCreated, className = "" }: NoticeCompos
       setSimplificationMeta(null);
     } catch (err: any) {
       console.error("Save notice error:", err);
-      setError(err.message || "Failed to save notice.");
+      setError(err.message || no.ncErrSaveFailed);
     } finally {
       setIsSaving(false);
     }
@@ -161,13 +164,13 @@ export function NoticeComposer({ onNoticeCreated, className = "" }: NoticeCompos
         <div>
           <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-[#F2CAB3]/40 border border-[#49352F]/10 text-xs font-semibold text-[#49352F] mb-1">
             <Sparkles className="w-3.5 h-3.5 text-[#2E7D5E]" />
-            AI Notice Simplification Engine
+            {no.ncBadgeEngine}
           </div>
           <h2 className="text-xl font-bold text-[#49352F] tracking-tight">
-            Compose & Simplify School Notice
+            {no.ncHeading}
           </h2>
           <p className="text-xs text-[#49352F]/70">
-            Transforms complex bureaucratic notices into clear, simple language while preserving all dates, deadlines, and rules.
+            {no.ncSubtitle}
           </p>
         </div>
 
@@ -175,7 +178,7 @@ export function NoticeComposer({ onNoticeCreated, className = "" }: NoticeCompos
           <AudioRecorder
             language={originalLanguage}
             onTranscript={handleVoiceInput}
-            buttonLabel="Record Voice Notice"
+            buttonLabel={no.ncRecordVoiceBtn}
           />
         </div>
       </div>
@@ -184,51 +187,51 @@ export function NoticeComposer({ onNoticeCreated, className = "" }: NoticeCompos
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-5">
         <div className="md:col-span-2">
           <label className="block text-xs font-bold text-[#49352F] mb-1">
-            Notice Title *
+            {no.ncTitleLabel}
           </label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g. Science Fair Submission & Evaluation Notice"
+            placeholder={no.ncTitlePlaceholder}
             className="w-full px-3 py-2 text-sm rounded-xl bg-white border border-[#49352F]/20 text-[#49352F] focus:outline-none focus:ring-2 focus:ring-[#F2CAB3]"
           />
         </div>
 
         <div>
           <label className="block text-xs font-bold text-[#49352F] mb-1">
-            Category
+            {no.ncCategoryLabel}
           </label>
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value as NoticeCategory)}
             className="w-full px-3 py-2 text-sm rounded-xl bg-white border border-[#49352F]/20 text-[#49352F] focus:outline-none focus:ring-2 focus:ring-[#F2CAB3]"
           >
-            <option value="announcement">Announcement</option>
-            <option value="event">School Event</option>
-            <option value="homework">Homework / Project</option>
-            <option value="exam">Examinations</option>
-            <option value="fee">Fee & Administration</option>
-            <option value="urgent_alert">Urgent Alert</option>
+            <option value="announcement">{no.ncCatAnnouncement}</option>
+            <option value="event">{no.ncCatEvent}</option>
+            <option value="homework">{no.ncCatHomework}</option>
+            <option value="exam">{no.ncCatExam}</option>
+            <option value="fee">{no.ncCatFee}</option>
+            <option value="urgent_alert">{no.ncCatUrgent}</option>
           </select>
         </div>
 
         <div>
           <label className="block text-xs font-bold text-[#49352F] mb-1">
-            Target Audience
+            {no.ncTargetAudienceLabel}
           </label>
           <select
             value={targetGrade}
             onChange={(e) => setTargetGrade(e.target.value)}
             className="w-full px-3 py-2 text-sm rounded-xl bg-white border border-[#49352F]/20 text-[#49352F] focus:outline-none focus:ring-2 focus:ring-[#F2CAB3]"
           >
-            <option value="all">All School Grades</option>
-            <option value="3">Grade 3</option>
-            <option value="4">Grade 4</option>
-            <option value="5">Grade 5</option>
-            <option value="6">Grade 6</option>
-            <option value="7">Grade 7</option>
-            <option value="8">Grade 8</option>
+            <option value="all">{no.ncAllGradesOpt}</option>
+            <option value="3">{formatClass(3)}</option>
+            <option value="4">{formatClass(4)}</option>
+            <option value="5">{formatClass(5)}</option>
+            <option value="6">{formatClass(6)}</option>
+            <option value="7">{formatClass(7)}</option>
+            <option value="8">{formatClass(8)}</option>
           </select>
         </div>
       </div>
@@ -237,7 +240,7 @@ export function NoticeComposer({ onNoticeCreated, className = "" }: NoticeCompos
       <div className="flex flex-wrap items-center gap-3 mt-4 p-3 bg-white/70 rounded-xl border border-[#49352F]/10">
         <div className="flex items-center gap-1.5 text-xs font-bold text-[#49352F]">
           <Sliders className="w-3.5 h-3.5 text-[#2E7D5E]" />
-          <span>Reading Level:</span>
+          <span>{no.ncReadingLevelLabel}</span>
         </div>
 
         <div className="inline-flex rounded-lg border border-[#49352F]/15 p-0.5 bg-[#FAF6E9]">
@@ -250,7 +253,7 @@ export function NoticeComposer({ onNoticeCreated, className = "" }: NoticeCompos
                 : "text-[#49352F]/80 hover:text-[#49352F]"
             }`}
           >
-            Very Simple (Beginner / Grade 1-3)
+            {no.ncRlVerySimple}
           </button>
           <button
             type="button"
@@ -261,7 +264,7 @@ export function NoticeComposer({ onNoticeCreated, className = "" }: NoticeCompos
                 : "text-[#49352F]/80 hover:text-[#49352F]"
             }`}
           >
-            Simple (Recommended / Grade 4-6)
+            {no.ncRlSimple}
           </button>
           <button
             type="button"
@@ -272,12 +275,12 @@ export function NoticeComposer({ onNoticeCreated, className = "" }: NoticeCompos
                 : "text-[#49352F]/80 hover:text-[#49352F]"
             }`}
           >
-            Standard (Clear Parent Polish)
+            {no.ncRlStandard}
           </button>
         </div>
 
         <div className="ml-auto flex items-center gap-2">
-          <label className="text-xs font-semibold text-[#49352F]">Source Language:</label>
+          <label className="text-xs font-semibold text-[#49352F]">{no.ncSourceLangLabel}</label>
           <select
             value={originalLanguage}
             onChange={(e) => setOriginalLanguage(e.target.value as SupportedLanguage)}
@@ -297,10 +300,10 @@ export function NoticeComposer({ onNoticeCreated, className = "" }: NoticeCompos
           <div className="flex items-center justify-between mb-1.5">
             <label className="text-xs font-bold text-[#49352F] flex items-center gap-1.5">
               <FileText className="w-3.5 h-3.5 text-[#49352F]" />
-              Original Notice (Teacher Input)
+              {no.ncOriginalNoticeLabel}
             </label>
             <span className="text-[11px] text-[#49352F]/60">
-              {originalText.length} characters
+              {tr("notices.ncCharactersCount", { count: originalText.length })}
             </span>
           </div>
 
@@ -308,7 +311,7 @@ export function NoticeComposer({ onNoticeCreated, className = "" }: NoticeCompos
             rows={6}
             value={originalText}
             onChange={(e) => setOriginalText(e.target.value)}
-            placeholder="Paste or dictate school notice here..."
+            placeholder={no.ncOriginalPlaceholder}
             className="w-full p-3.5 text-sm rounded-xl bg-white border border-[#49352F]/20 text-[#49352F] focus:outline-none focus:ring-2 focus:ring-[#F2CAB3] resize-none leading-relaxed"
           />
 
@@ -322,19 +325,19 @@ export function NoticeComposer({ onNoticeCreated, className = "" }: NoticeCompos
               {isSimplifying ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin text-[#49352F]" />
-                  <span>Simplifying with Real AI...</span>
+                  <span>{no.ncSimplifyingAi}</span>
                 </>
               ) : (
                 <>
                   <Sparkles className="w-4 h-4 text-[#2E7D5E]" />
-                  <span>Simplify with AI</span>
+                  <span>{no.ncSimplifyAi}</span>
                 </>
               )}
             </button>
 
             {simplificationMeta && (
               <span className="text-[11px] text-[#2E7D5E] font-medium bg-[#2E7D5E]/10 px-2 py-1 rounded-md border border-[#2E7D5E]/20">
-                Generated via {simplificationMeta.provider} ({simplificationMeta.latencyMs}ms)
+                {tr("notices.ncGeneratedViaMeta", { provider: simplificationMeta.provider || "", ms: simplificationMeta.latencyMs || 0 })}
               </span>
             )}
           </div>
@@ -345,12 +348,12 @@ export function NoticeComposer({ onNoticeCreated, className = "" }: NoticeCompos
           <div className="flex items-center justify-between mb-1.5">
             <label className="text-xs font-bold text-[#49352F] flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-[#2E7D5E]" />
-              AI Simplified Version (Reviewed & Approved by Teacher)
+              {no.ncSimplifiedVersionLabel}
             </label>
             {simplifiedText && (
               <span className="text-[11px] text-[#2E7D5E] font-semibold flex items-center gap-1">
                 <ShieldCheck className="w-3.5 h-3.5" />
-                Preserves Dates & Rules
+                {no.ncPreservesDatesRules}
               </span>
             )}
           </div>
@@ -359,14 +362,14 @@ export function NoticeComposer({ onNoticeCreated, className = "" }: NoticeCompos
             rows={6}
             value={simplifiedText}
             onChange={(e) => setSimplifiedText(e.target.value)}
-            placeholder="AI simplified version will appear here for your review and editing..."
+            placeholder={no.ncSimplifiedPlaceholder}
             className="w-full p-3.5 text-sm rounded-xl bg-white border border-[#2E7D5E]/30 text-[#49352F] focus:outline-none focus:ring-2 focus:ring-[#2E7D5E]/30 resize-none leading-relaxed"
           />
 
           {simplificationMeta?.keyPoints && (
             <div className="mt-2.5 p-2 bg-[#FAF6E9] rounded-lg border border-[#49352F]/10">
               <span className="text-[11px] font-bold text-[#49352F] block mb-1">
-                Preserved Key Facts:
+                {no.ncPreservedKeyFacts}
               </span>
               <div className="flex flex-wrap gap-1.5">
                 {simplificationMeta.keyPoints.map((kp, idx) => (
@@ -402,7 +405,7 @@ export function NoticeComposer({ onNoticeCreated, className = "" }: NoticeCompos
       <div className="mt-6 pt-4 border-t border-[#49352F]/10 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="text-xs text-[#49352F]/70 flex items-center gap-1.5">
           <ShieldCheck className="w-4 h-4 text-[#2E7D5E]" />
-          <span>Teachers must review and approve notice before distribution to parents.</span>
+          <span>{no.ncReviewNoticeHint}</span>
         </div>
 
         <div className="flex items-center gap-3">
@@ -412,7 +415,7 @@ export function NoticeComposer({ onNoticeCreated, className = "" }: NoticeCompos
             disabled={isSaving || !title.trim() || !originalText.trim()}
             className="px-4 py-2 rounded-xl text-xs font-semibold bg-white text-[#49352F] border border-[#49352F]/20 hover:bg-[#FAF6E9] transition-all cursor-pointer disabled:opacity-50"
           >
-            Save Draft
+            {no.ncSaveDraftBtn}
           </button>
 
           <button
@@ -424,11 +427,11 @@ export function NoticeComposer({ onNoticeCreated, className = "" }: NoticeCompos
             {isSaving ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin text-white" />
-                <span>Processing Translations...</span>
+                <span>{no.ncProcessingTranslationsBtn}</span>
               </>
             ) : (
               <>
-                <span>Approve & Generate Multilingual Bridge</span>
+                <span>{no.ncApproveBridgeBtn}</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}

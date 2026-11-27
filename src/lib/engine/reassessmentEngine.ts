@@ -22,6 +22,8 @@ export type ReassessmentOutcomeCode =
   | "DECLINED"
   | "INITIAL_OBSERVATION";
 
+import type { SupportedLanguage } from "../types";
+
 export interface ReassessmentEvaluationInput {
   previousScore?: number | null;
   currentScore: number;
@@ -31,7 +33,7 @@ export interface ReassessmentEvaluationInput {
   previousStudentId?: string;
   conceptId?: string;
   previousConceptId?: string;
-  language?: "en" | "gu";
+  language?: SupportedLanguage;
 }
 
 export interface ReassessmentEvaluationResult {

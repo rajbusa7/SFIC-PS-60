@@ -43,18 +43,11 @@ export interface ManagedTeacher {
   updatedAt?: string;
 }
 
-const AVAILABLE_SUBJECTS: { code: SubjectCode; nameEn: string; nameGu: string; color: string }[] = [
-  { code: "MATH", nameEn: "Mathematics", nameGu: "ગણિત", color: "text-amber-800 bg-amber-500/15 border-amber-500/30" },
-  { code: "ENG", nameEn: "English", nameGu: "અંગ્રેજી", color: "text-blue-800 bg-blue-500/15 border-blue-500/30" },
-  { code: "GUJ", nameEn: "Gujarati", nameGu: "ગુજરાતી", color: "text-emerald-800 bg-emerald-500/15 border-emerald-500/30" },
-  { code: "EVS", nameEn: "Environmental Studies", nameGu: "પર્યાવરણ", color: "text-teal-800 bg-teal-500/15 border-teal-500/30" },
-  { code: "SCI", nameEn: "Science", nameGu: "વિજ્ઞાન", color: "text-purple-800 bg-purple-500/15 border-purple-500/30" },
-  { code: "SST", nameEn: "Social Science", nameGu: "સામાજિક વિજ્ઞાન", color: "text-orange-800 bg-orange-500/15 border-orange-500/30" },
-  { code: "HIN", nameEn: "Hindi", nameGu: "હિન્દી", color: "text-rose-800 bg-rose-500/15 border-rose-500/30" },
-];
+const SUBJECT_CODES: SubjectCode[] = ["MATH", "ENG", "GUJ", "EVS", "SCI", "SST", "HIN"];
 
 export function TeacherManagementSection() {
-  const { language } = useLanguage();
+  const { t, tr, formatSubject, formatClass } = useLanguage();
+  const at = t.adminTeachers;
   const { user, role } = useAuth();
   const isAdmin = user?.role === "admin" || role === "admin";
 
@@ -75,6 +68,7 @@ export function TeacherManagementSection() {
   const [assignSaving, setAssignSaving] = useState(false);
   const [assignError, setAssignError] = useState<string | null>(null);
   const [assignSuccess, setAssignSuccess] = useState<string | null>(null);
+  const [assignmentToDelete, setAssignmentToDelete] = useState<string | null>(null);
 
   // Add / Edit Teacher Modal
   const [showTeacherModal, setShowTeacherModal] = useState(false);
@@ -115,7 +109,7 @@ export function TeacherManagementSection() {
       }
     } catch (e: any) {
       console.error("Failed to load teacher management data", e);
-      setGlobalError("Failed to synchronize teacher records with database.");
+      setGlobalError(at.errSyncDb);
     } finally {
       setIsLoading(false);
     }
@@ -203,11 +197,11 @@ export function TeacherManagementSection() {
   const handleSaveTeacher = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formName.trim()) {
-      setFormError(language === "gu" ? "કૃપા કરીને પૂરું નામ દાખલ કરો." : "Please enter the teacher's full name.");
+      setFormError(at.errFullName);
       return;
     }
     if (!formEmail.trim() || !formEmail.includes("@")) {
-      setFormError(language === "gu" ? "કૃપા કરીને માન્ય ઇમેઇલ દાખલ કરો." : "Please enter a valid email address.");
+      setFormError(at.errEmail);
       return;
     }
 
@@ -232,13 +226,9 @@ export function TeacherManagementSection() {
         });
         const data = await res.json();
         if (!res.ok || !data.success) {
-          throw new Error(data.error || "Failed to update teacher account.");
+          throw new Error(data.error || at.errUpdateAccount);
         }
-        setGlobalSuccess(
-          language === "gu"
-            ? `શિક્ષક '${formName}' ની વિગતો સફળતાપૂર્વક અપડેટ થઈ.`
-            : `Teacher '${formName}' updated successfully.`
-        );
+        setGlobalSuccess(tr("adminTeachers.msgUpdated", { name: formName }));
       } else {
         // Create new teacher
         const res = await fetch("/api/admin/teachers", {
@@ -256,13 +246,9 @@ export function TeacherManagementSection() {
         });
         const data = await res.json();
         if (!res.ok || !data.success) {
-          throw new Error(data.error || "Failed to create teacher account.");
+          throw new Error(data.error || at.errCreateAccount);
         }
-        setGlobalSuccess(
-          language === "gu"
-            ? `નવા શિક્ષક '${formName}' સફળતાપૂર્વક ઉમેરાયા અને ડ્રોપડાઉનમાં ઉપલબ્ધ છે.`
-            : `Teacher '${formName}' registered successfully and available in assignments.`
-        );
+        setGlobalSuccess(tr("adminTeachers.msgRegistered", { name: formName }));
         if (data.teacher?.id) {
           setSelectedTeacherId(data.teacher.id);
         }
@@ -272,7 +258,7 @@ export function TeacherManagementSection() {
       await loadData();
       setTimeout(() => setGlobalSuccess(null), 4000);
     } catch (err: any) {
-      setFormError(err.message || "Failed to save teacher.");
+      setFormError(err.message || at.errSaveTeacher);
     } finally {
       setFormSaving(false);
     }
@@ -289,17 +275,17 @@ export function TeacherManagementSection() {
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
-        throw new Error(data.error || "Failed to change account status.");
+        throw new Error(data.error || at.errChangeStatus);
       }
       setGlobalSuccess(
         newStatus === "active"
-          ? (language === "gu" ? `શિક્ષક '${t.name}' નું ખાતું સક્રિય કરાયું.` : `Teacher account '${t.name}' activated.`)
-          : (language === "gu" ? `શિક્ષક '${t.name}' નું ખાતું નિષ્ક્રિય કરાયું.` : `Teacher account '${t.name}' deactivated.`)
+          ? tr("adminTeachers.msgActivated", { name: t.name })
+          : tr("adminTeachers.msgDeactivated", { name: t.name })
       );
       await loadData();
       setTimeout(() => setGlobalSuccess(null), 3500);
     } catch (err: any) {
-      setGlobalError(err.message || "Failed to toggle status.");
+      setGlobalError(err.message || at.errToggleStatus);
       setTimeout(() => setGlobalError(null), 4000);
     }
   };
@@ -314,18 +300,14 @@ export function TeacherManagementSection() {
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
-        throw new Error(data.error || "Failed to delete teacher.");
+        throw new Error(data.error || at.errDeleteTeacher);
       }
-      setGlobalSuccess(
-        language === "gu"
-          ? `શિક્ષક '${deletingTeacher.name}' અને સોંપણીઓ સફળતાપૂર્વક કાઢી નાખવામાં આવ્યા.`
-          : `Teacher '${deletingTeacher.name}' and all assignments safely deleted.`
-      );
+      setGlobalSuccess(tr("adminTeachers.msgDeleted", { name: deletingTeacher.name }));
       setDeletingTeacher(null);
       await loadData();
       setTimeout(() => setGlobalSuccess(null), 4000);
     } catch (err: any) {
-      setGlobalError(err.message || "Failed to delete teacher.");
+      setGlobalError(err.message || at.errDeleteTeacher);
       setTimeout(() => setGlobalError(null), 4000);
     } finally {
       setIsDeletingTeacher(false);
@@ -381,11 +363,11 @@ export function TeacherManagementSection() {
   const handleSaveAssignment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedTeacherId) {
-      setAssignError(language === "gu" ? "કૃપા કરીને શિક્ષક પસંદ કરો." : "Please select a teacher.");
+      setAssignError(at.errSelectTeacher);
       return;
     }
     if (assignGrades.length === 0) {
-      setAssignError(language === "gu" ? "ઓછામાં ઓછો એક વર્ગ પસંદ કરો." : "Please select at least one class.");
+      setAssignError(at.errSelectClass);
       return;
     }
 
@@ -411,7 +393,7 @@ export function TeacherManagementSection() {
 
       const data = await res.json();
       if (!res.ok || !data.success) {
-        throw new Error(data.error || "Failed to save teacher assignment.");
+        throw new Error(data.error || at.errSaveAssignment);
       }
 
       // Optimistically update local assignments list immediately
@@ -429,39 +411,39 @@ export function TeacherManagementSection() {
         });
       }
 
-      setAssignSuccess(
-        language === "gu"
-          ? "શિક્ષક વિષય અને વર્ગ સોંપણી ડેટાબેઝમાં સાચવવામાં આવી."
-          : "Teacher subject and class assignment saved successfully."
-      );
+      setAssignSuccess(at.msgAssignmentSaved);
       await loadData();
       setTimeout(() => setAssignSuccess(null), 3500);
     } catch (err: any) {
-      setAssignError(err.message || "Failed to save assignment.");
+      setAssignError(err.message || at.errSaveAssignment);
     } finally {
       setAssignSaving(false);
     }
   };
 
   // Delete Individual Assignment
-  const handleDeleteAssignment = async (asgId: string) => {
-    if (typeof window !== "undefined" && !window.confirm(language === "gu" ? "શું તમે આ વિષય સોંપણી રદ કરવા માંગો છો? શિક્ષક ખાતું સુરક્ષિત રહેશે." : "Are you sure you want to remove this subject assignment? The teacher account will remain intact.")) return;
+  const handleDeleteAssignment = (asgId: string) => {
+    setAssignmentToDelete(asgId);
+  };
+
+  const confirmDeleteAssignment = async () => {
+    if (!assignmentToDelete) return;
+    const asgId = assignmentToDelete;
+    setAssignmentToDelete(null);
     try {
       const res = await fetch(`/api/admin/teachers/assignments/${asgId}`, {
         method: "DELETE",
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
-        throw new Error(data.error || "Failed to remove assignment.");
+        throw new Error(data.error || at.errRemoveAssignment);
       }
       setAssignments((prev) => prev.filter((a) => a.id !== asgId));
-      setGlobalSuccess(
-        language === "gu" ? "વિષય સોંપણી રદ કરવામાં આવી." : "Subject assignment removed successfully."
-      );
+      setGlobalSuccess(at.msgAssignmentRemoved);
       await loadData();
       setTimeout(() => setGlobalSuccess(null), 3000);
     } catch (err: any) {
-      setGlobalError(err.message || "Failed to remove assignment.");
+      setGlobalError(err.message || at.errRemoveAssignment);
       setTimeout(() => setGlobalError(null), 3500);
     }
   };
@@ -497,16 +479,14 @@ export function TeacherManagementSection() {
             <div className="flex items-center gap-2">
               <Users className="w-5 h-5 text-[#B26A1B]" />
               <h3 className="font-heading text-base sm:text-lg font-bold text-[#49352F]">
-                {language === "gu" ? "શિક્ષક સંચાલન અને ખાતા યાદી" : "Teacher Management & Directory"}
+                {at.directoryTitle}
               </h3>
               <Badge variant="saffron" size="sm">
-                {teachers.length} {language === "gu" ? "શિક્ષકો" : "Teachers"}
+                {teachers.length} {at.teachersCountSuffix}
               </Badge>
             </div>
             <p className="text-xs text-[#7A6862] mt-0.5">
-              {language === "gu"
-                ? "શિક્ષકોના ખાતાઓ ઉમેરો, સંપાદિત કરો, સક્રિય/નિષ્ક્રિય કરો અથવા સુરક્ષિત રીતે કાઢી નાખો."
-                : "Register, modify, activate/deactivate, or safely manage school teacher accounts."}
+              {at.directoryDesc}
             </p>
           </div>
 
@@ -518,7 +498,7 @@ export function TeacherManagementSection() {
             className="rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-sm cursor-pointer self-start sm:self-auto"
           >
             <UserPlus className="w-4 h-4" />
-            <span>{language === "gu" ? "નવા શિક્ષક ઉમેરો" : "Add Teacher"}</span>
+            <span>{at.addTeacherBtn}</span>
           </Button>
         </div>
 
@@ -529,11 +509,7 @@ export function TeacherManagementSection() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={
-              language === "gu"
-                ? "નામ, ઇમેઇલ કે વિષય દ્વારા શિક્ષક શોધો..."
-                : "Search teachers by name, email, or subject..."
-            }
+            placeholder={at.searchPlaceholder}
             className="w-full bg-transparent text-xs text-[#49352F] dark:text-[#F4F1E1] focus:outline-hidden"
           />
           {searchQuery && (
@@ -548,11 +524,11 @@ export function TeacherManagementSection() {
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="border-b border-[#49352F]/10 bg-[#FAF6E9]/60 dark:bg-[#1E1916]/60 text-[#7A6862] font-semibold">
-                <th className="py-2.5 px-3.5">{language === "gu" ? "શિક્ષક" : "Teacher Name & Info"}</th>
-                <th className="py-2.5 px-3">{language === "gu" ? "પ્રકાર" : "Type"}</th>
-                <th className="py-2.5 px-3">{language === "gu" ? "સોંપેલ વિષયો અને વર્ગો" : "Assigned Subjects & Classes"}</th>
-                <th className="py-2.5 px-3">{language === "gu" ? "સ્થિતિ" : "Status"}</th>
-                <th className="py-2.5 px-3 text-right">{language === "gu" ? "ક્રિયાઓ" : "Actions"}</th>
+                <th className="py-2.5 px-3.5">{at.thTeacherInfo}</th>
+                <th className="py-2.5 px-3">{at.thType}</th>
+                <th className="py-2.5 px-3">{at.thAssignedSubjects}</th>
+                <th className="py-2.5 px-3">{at.thStatus}</th>
+                <th className="py-2.5 px-3 text-right">{at.thActions}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#49352F]/8">
@@ -560,15 +536,13 @@ export function TeacherManagementSection() {
                 <tr>
                   <td colSpan={5} className="py-6 text-center text-[#7A6862]">
                     <div className="inline-block animate-spin rounded-full h-4 w-4 border-2 border-[#B26A1B] border-t-transparent mr-2" />
-                    Loading teacher directory...
+                    {at.loadingDirectory}
                   </td>
                 </tr>
               ) : filteredTeachers.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="py-6 text-center text-[#7A6862]">
-                    {searchQuery
-                      ? "No teachers found matching your search query."
-                      : "No teachers registered yet. Click 'Add Teacher' to create one."}
+                    {searchQuery ? at.noSearchMatch : at.noTeachersRegistered}
                   </td>
                 </tr>
               ) : (
@@ -584,7 +558,7 @@ export function TeacherManagementSection() {
                           <div className="min-w-0">
                             <span className="font-bold text-[#49352F] block truncate">{t.name}</span>
                             <span className="text-[10px] text-[#7A6862] font-mono block truncate">{t.email}</span>
-                            <span className="text-[9px] text-[#7A6862]/70 font-mono block">ID: {t.id}</span>
+                            <span className="text-[9px] text-[#7A6862]/70 font-mono block">{at.idPrefix} {t.id}</span>
                           </div>
                         </div>
                       </td>
@@ -596,13 +570,13 @@ export function TeacherManagementSection() {
                               : "bg-blue-500/15 text-blue-800 border-blue-500/30"
                           }`}
                         >
-                          {t.teacherType === "class" ? "Class Teacher" : "Subject Teacher"}
+                          {t.teacherType === "class" ? at.classTeacherType : at.subjectTeacherType}
                         </span>
                       </td>
                       <td className="py-3 px-3">
                         {t.assignments.length === 0 ? (
                           <span className="text-[11px] text-[#7A6862] italic">
-                            {language === "gu" ? "કોઈ વિષય સોંપાયેલ નથી" : "No assignments yet"}
+                            {at.noAssignmentsYet}
                           </span>
                         ) : (
                           <div className="flex flex-wrap gap-1 max-w-xs">
@@ -611,7 +585,7 @@ export function TeacherManagementSection() {
                                 key={a.id}
                                 className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-[#FAF6E9] border border-[#49352F]/15 text-[#49352F]"
                               >
-                                {a.subjectCode} ({a.grades?.map((g) => `C${g}`).join(",")})
+                                {formatSubject(a.subjectCode)} ({a.grades?.map((g) => formatClass(g)).join(", ")})
                               </span>
                             ))}
                           </div>
@@ -625,7 +599,7 @@ export function TeacherManagementSection() {
                               : "bg-slate-500/15 text-slate-700 border-slate-500/30"
                           }`}
                         >
-                          {isActive ? "Active" : "Deactivated"}
+                          {isActive ? at.activeStatus : at.deactivatedStatus}
                         </span>
                       </td>
                       <td className="py-3 px-3 text-right">
@@ -633,7 +607,7 @@ export function TeacherManagementSection() {
                           <button
                             type="button"
                             onClick={() => handleSelectTeacherForAssignment(t.id)}
-                            title={language === "gu" ? "વિષય સોંપો" : "Assign Subjects & Classes"}
+                            title={at.assignSubjectsTitle}
                             className="p-1.5 text-xs text-[#B26A1B] hover:bg-[#B26A1B]/10 rounded-lg border border-[#B26A1B]/30 font-semibold transition-all cursor-pointer"
                           >
                             <BookOpen className="w-3.5 h-3.5" />
@@ -641,7 +615,7 @@ export function TeacherManagementSection() {
                           <button
                             type="button"
                             onClick={() => handleToggleStatus(t)}
-                            title={isActive ? "Deactivate account" : "Activate account"}
+                            title={isActive ? at.deactivateTitle : at.activateTitle}
                             className={`p-1.5 text-xs rounded-lg border font-semibold transition-all cursor-pointer ${
                               isActive
                                 ? "text-slate-700 hover:bg-slate-100 border-slate-300"
@@ -653,7 +627,7 @@ export function TeacherManagementSection() {
                           <button
                             type="button"
                             onClick={() => handleOpenEditTeacher(t)}
-                            title={language === "gu" ? "સંપાદિત કરો" : "Edit Teacher"}
+                            title={at.editTeacherTitle}
                             className="p-1.5 text-xs text-blue-700 hover:bg-blue-50 rounded-lg border border-blue-200 font-semibold transition-all cursor-pointer"
                           >
                             <Edit className="w-3.5 h-3.5" />
@@ -661,7 +635,7 @@ export function TeacherManagementSection() {
                           <button
                             type="button"
                             onClick={() => setDeletingTeacher(t)}
-                            title={language === "gu" ? "કાઢી નાખો" : "Delete Teacher"}
+                            title={at.deleteTeacherTitle}
                             className="p-1.5 text-xs text-rose-700 hover:bg-rose-50 rounded-lg border border-rose-200 font-semibold transition-all cursor-pointer"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -685,18 +659,14 @@ export function TeacherManagementSection() {
           <div>
             <div className="flex items-center gap-2">
               <h3 className="font-heading text-base font-bold text-[#49352F]">
-                {language === "gu"
-                  ? "શિક્ષક વિષય અને વર્ગ સોંપણી સંચાલન (Admin RBAC)"
-                  : "Teacher Subject & Class Assignment Management (Admin RBAC)"}
+                {at.assignmentSectionTitle}
               </h3>
               <Badge variant="saffron" size="sm">
-                {language === "gu" ? "સંચાલક નિયંત્રણ" : "Administrator Control"}
+                {at.adminControlBadge}
               </Badge>
             </div>
             <p className="text-xs text-[#7A6862] mt-0.5">
-              {language === "gu"
-                ? "શિક્ષકો માટે વિષયો અને વર્ગો સોંપો, સંપાદિત કરો અથવા રદ કરો. તમામ ફેરફારો ડેટાબેઝમાં સાચવવામાં આવે છે."
-                : "Assign, update, or remove subjects and classes for teachers. All assignments are enforced server-side."}
+              {at.assignmentSectionDesc}
             </p>
           </div>
         </div>
@@ -704,7 +674,7 @@ export function TeacherManagementSection() {
         {/* Assignment Creation Form */}
         <div className="p-4 rounded-2xl bg-[#FAF6E9] border border-[#49352F]/12 space-y-4">
           <h4 className="font-bold text-xs uppercase tracking-wider text-[#B26A1B]">
-            {language === "gu" ? "નવી વિષય-વર્ગ સોંપણી ઉમેરો" : "ASSIGN SUBJECT & CLASSES TO TEACHER"}
+            {at.assignSubheading}
           </h4>
 
           {assignError && (
@@ -721,7 +691,7 @@ export function TeacherManagementSection() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
               <label className="block text-[11px] font-semibold text-[#7A6862] mb-1">
-                {language === "gu" ? "શિક્ષક પસંદ કરો:" : "Select Teacher:"}
+                {at.selectTeacherLabel}
               </label>
               <select
                 value={selectedTeacherId}
@@ -729,7 +699,7 @@ export function TeacherManagementSection() {
                 className="w-full px-3 py-1.5 rounded-xl border border-[#49352F]/20 bg-white text-xs font-semibold text-[#49352F] cursor-pointer"
               >
                 {teachers.length === 0 ? (
-                  <option value="">No teachers available - Add one first</option>
+                  <option value="">{at.noTeachersOption}</option>
                 ) : (
                   teachers.map((t) => (
                     <option key={t.id} value={t.id}>
@@ -742,26 +712,24 @@ export function TeacherManagementSection() {
 
             <div>
               <label className="block text-[11px] font-semibold text-[#7A6862] mb-1">
-                {language === "gu" ? "વિષય:" : "Subject:"}
+                {at.subjectLabel}
               </label>
               <select
                 value={assignSubject}
                 onChange={(e) => setAssignSubject(e.target.value as SubjectCode)}
                 className="w-full px-3 py-1.5 rounded-xl border border-[#49352F]/20 bg-white text-xs font-semibold text-[#49352F] cursor-pointer"
               >
-                <option value="MATH">Mathematics (ગણિત)</option>
-                <option value="ENG">English (અંગ્રેજી)</option>
-                <option value="GUJ">Gujarati (ગુજરાતી)</option>
-                <option value="EVS">Environmental Studies (પર્યાવરણ)</option>
-                <option value="SCI">Science (વિજ્ઞાન)</option>
-                <option value="SST">Social Science (સામાજિક વિજ્ઞાન)</option>
-                <option value="HIN">Hindi (હિન્દી)</option>
+                {SUBJECT_CODES.map((code) => (
+                  <option key={code} value={code}>
+                    {formatSubject(code)} ({code})
+                  </option>
+                ))}
               </select>
             </div>
 
             <div>
               <label className="block text-[11px] font-semibold text-[#7A6862] mb-1">
-                {language === "gu" ? "સોંપેલ વર્ગો પસંદ કરો:" : "Assigned Classes (1-5):"}
+                {at.assignedClassesRangeLabel}
               </label>
               <div className="flex items-center gap-1.5 pt-1">
                 {[1, 2, 3, 4, 5].map((g) => {
@@ -777,7 +745,7 @@ export function TeacherManagementSection() {
                           : "bg-white text-[#7A6862] border-[#49352F]/15 hover:border-[#B26A1B]"
                       }`}
                     >
-                      C{g}
+                      {formatClass(g)}
                     </button>
                   );
                 })}
@@ -794,11 +762,7 @@ export function TeacherManagementSection() {
               onClick={handleSaveAssignment}
               className="rounded-xl text-xs font-bold px-4 py-2 cursor-pointer"
             >
-              {assignSaving
-                ? "Saving..."
-                : language === "gu"
-                ? "સોંપણી સાચવો"
-                : "Save Assignment"}
+              {assignSaving ? at.savingBtn : at.saveAssignmentBtn}
             </Button>
           </div>
         </div>
@@ -806,23 +770,23 @@ export function TeacherManagementSection() {
         {/* Current Assignments Table */}
         <div className="space-y-2">
           <h4 className="font-bold text-xs uppercase tracking-wider text-[#7A6862]">
-            {language === "gu" ? "હાલની સક્રિય સોંપણીઓ" : "CURRENT TEACHER ASSIGNMENTS"}
+            {at.currentAssignmentsHeading}
           </h4>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-[#49352F]/10 text-[#7A6862] font-semibold">
-                  <th className="py-2 px-3">{language === "gu" ? "શિક્ષક" : "Teacher"}</th>
-                  <th className="py-2 px-3">{language === "gu" ? "સોંપેલ વિષય" : "Subject"}</th>
-                  <th className="py-2 px-3">{language === "gu" ? "સોંપેલ વર્ગો" : "Assigned Classes"}</th>
-                  <th className="py-2 px-3 text-right">{language === "gu" ? "ક્રિયા" : "Action"}</th>
+                  <th className="py-2 px-3">{at.thTeacher}</th>
+                  <th className="py-2 px-3">{at.thSubject}</th>
+                  <th className="py-2 px-3">{at.thAssignedClasses}</th>
+                  <th className="py-2 px-3 text-right">{at.thAction}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#49352F]/8">
                 {assignments.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="py-4 text-center text-[#7A6862]">
-                      No assignments found.
+                      {at.noAssignmentsFound}
                     </td>
                   </tr>
                 ) : (
@@ -839,14 +803,14 @@ export function TeacherManagementSection() {
                           </span>
                         </td>
                         <td className="py-2.5 px-3 font-semibold text-[#B26A1B]">
-                          {asg.subjectCode}
+                          {formatSubject(asg.subjectCode)}
                         </td>
                         <td className="py-2.5 px-3 text-[#49352F]">
                           {asg.grades && asg.grades.length > 0
-                            ? asg.grades.slice().sort((a, b) => a - b).map((g) => `Class ${g}`).join(", ")
+                            ? asg.grades.slice().sort((a, b) => a - b).map((g) => formatClass(g)).join(", ")
                             : asg.classes && asg.classes.length > 0
                             ? asg.classes.join(", ")
-                            : "None"}
+                            : at.noneLabel}
                         </td>
                         <td className="py-2.5 px-3 text-right">
                           <div className="flex items-center justify-end gap-1.5">
@@ -855,14 +819,14 @@ export function TeacherManagementSection() {
                               onClick={() => handleEditAssignment(asg)}
                               className="px-2 py-1 text-xs text-blue-700 hover:bg-blue-50 rounded-lg border border-blue-200 font-bold transition-all cursor-pointer"
                             >
-                              Edit
+                              {at.editBtn}
                             </button>
                             <button
                               type="button"
                               onClick={() => handleDeleteAssignment(asg.id)}
                               className="px-2.5 py-1 text-xs text-rose-700 hover:bg-rose-50 rounded-lg border border-rose-200 font-bold transition-all cursor-pointer"
                             >
-                              {language === "gu" ? "રદ કરો" : "Delete"}
+                              {at.deleteBtn}
                             </button>
                           </div>
                         </td>
@@ -886,13 +850,7 @@ export function TeacherManagementSection() {
               <div className="flex items-center gap-2">
                 <UserPlus className="w-5 h-5 text-[#B26A1B]" />
                 <h3 className="font-heading text-base font-bold text-[#49352F] dark:text-[#F4F1E1]">
-                  {editingTeacher
-                    ? language === "gu"
-                      ? "શિક્ષકની વિગતો સુધારો"
-                      : "Edit Teacher Account"
-                    : language === "gu"
-                    ? "નવા શિક્ષક ઉમેરો"
-                    : "Register New Teacher"}
+                  {editingTeacher ? at.editModalTitle : at.registerModalTitle}
                 </h3>
               </div>
               <button
@@ -914,14 +872,14 @@ export function TeacherManagementSection() {
               {/* Full Name */}
               <div>
                 <label className="block text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] mb-1">
-                  {language === "gu" ? "શિક્ષકનું પૂરું નામ:" : "Full Name:"} <span className="text-rose-500">*</span>
+                  {at.fullNameLabel} <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
                   required
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
-                  placeholder="e.g. Raj Busa"
+                  placeholder={at.namePlaceholder}
                   className="w-full px-3 py-2 rounded-xl border border-[#49352F]/20 bg-[#FAF6E9]/40 text-xs text-[#49352F] font-semibold focus:outline-hidden focus:ring-1 focus:ring-[#B26A1B]"
                 />
               </div>
@@ -929,14 +887,14 @@ export function TeacherManagementSection() {
               {/* Email Address */}
               <div>
                 <label className="block text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] mb-1">
-                  {language === "gu" ? "ઇમેઇલ સરનામું:" : "Email Address:"} <span className="text-rose-500">*</span>
+                  {at.emailLabel} <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="email"
                   required
                   value={formEmail}
                   onChange={(e) => setFormEmail(e.target.value)}
-                  placeholder="e.g. raj.busa@shikshasetu.edu.in"
+                  placeholder={at.emailPlaceholder}
                   className="w-full px-3 py-2 rounded-xl border border-[#49352F]/20 bg-[#FAF6E9]/40 text-xs text-[#49352F] font-semibold focus:outline-hidden focus:ring-1 focus:ring-[#B26A1B]"
                 />
               </div>
@@ -944,15 +902,13 @@ export function TeacherManagementSection() {
               {/* Password */}
               <div>
                 <label className="block text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] mb-1">
-                  {editingTeacher
-                    ? (language === "gu" ? "નવો પાસવર્ડ (વૈકલ્પિક):" : "New Password (Leave blank to keep current):")
-                    : (language === "gu" ? "પાસવર્ડ:" : "Password:")}
+                  {editingTeacher ? at.newPasswordLabel : at.passwordLabel}
                 </label>
                 <input
                   type="password"
                   value={formPassword}
                   onChange={(e) => setFormPassword(e.target.value)}
-                  placeholder={editingTeacher ? "••••••••" : "Default: Teacher@123"}
+                  placeholder={editingTeacher ? "••••••••" : at.defaultPasswordPlaceholder}
                   className="w-full px-3 py-2 rounded-xl border border-[#49352F]/20 bg-[#FAF6E9]/40 text-xs text-[#49352F] font-semibold focus:outline-hidden focus:ring-1 focus:ring-[#B26A1B]"
                 />
               </div>
@@ -961,29 +917,29 @@ export function TeacherManagementSection() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] mb-1">
-                    {language === "gu" ? "શિક્ષકનો પ્રકાર:" : "Teacher Type:"}
+                    {at.teacherTypeLabel}
                   </label>
                   <select
                     value={formTeacherType}
                     onChange={(e) => setFormTeacherType(e.target.value as "subject" | "class")}
                     className="w-full px-3 py-2 rounded-xl border border-[#49352F]/20 bg-white text-xs font-semibold text-[#49352F]"
                   >
-                    <option value="subject">Subject Teacher (વિષય શિક્ષક)</option>
-                    <option value="class">Class Teacher (વર્ગ શિક્ષક)</option>
+                    <option value="subject">{at.subjectTeacherType}</option>
+                    <option value="class">{at.classTeacherType}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] mb-1">
-                    {language === "gu" ? "ખાતાની સ્થિતિ:" : "Account Status:"}
+                    {at.accountStatusLabel}
                   </label>
                   <select
                     value={formStatus}
                     onChange={(e) => setFormStatus(e.target.value as "active" | "disabled")}
                     className="w-full px-3 py-2 rounded-xl border border-[#49352F]/20 bg-white text-xs font-semibold text-[#49352F]"
                   >
-                    <option value="active">Active (સક્રિય)</option>
-                    <option value="disabled">Deactivated (નિષ્ક્રિય)</option>
+                    <option value="active">{at.activeStatus}</option>
+                    <option value="disabled">{at.deactivatedStatus}</option>
                   </select>
                 </div>
               </div>
@@ -991,23 +947,23 @@ export function TeacherManagementSection() {
               {/* Initial Assigned Subjects */}
               <div>
                 <label className="block text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] mb-1">
-                  {language === "gu" ? "સોંપવા માટેના વિષયો:" : "Assigned Subjects:"}
+                  {at.assignedSubjectsModalLabel}
                 </label>
                 <div className="flex flex-wrap gap-1.5 pt-1">
-                  {AVAILABLE_SUBJECTS.map((sub) => {
-                    const isSelected = formSubjects.includes(sub.code);
+                  {SUBJECT_CODES.map((code) => {
+                    const isSelected = formSubjects.includes(code);
                     return (
                       <button
-                        key={sub.code}
+                        key={code}
                         type="button"
-                        onClick={() => handleToggleModalSubject(sub.code)}
+                        onClick={() => handleToggleModalSubject(code)}
                         className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
                           isSelected
                             ? "bg-[#B26A1B] text-white border-[#B26A1B]"
                             : "bg-white text-[#49352F] border-[#49352F]/15 hover:border-[#B26A1B]"
                         }`}
                       >
-                        {sub.nameEn}
+                        {formatSubject(code)}
                       </button>
                     );
                   })}
@@ -1017,7 +973,7 @@ export function TeacherManagementSection() {
               {/* Initial Assigned Classes */}
               <div>
                 <label className="block text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] mb-1">
-                  {language === "gu" ? "સોંપવા માટેના વર્ગો (ધોરણ ૧ થી ૫):" : "Assigned Classes (Classes 1-5):"}
+                  {at.assignedClassesModalLabel}
                 </label>
                 <div className="flex items-center gap-1.5 pt-1">
                   {[1, 2, 3, 4, 5].map((g) => {
@@ -1033,7 +989,7 @@ export function TeacherManagementSection() {
                             : "bg-white text-[#7A6862] border-[#49352F]/15 hover:border-[#B26A1B]"
                         }`}
                       >
-                        Class {g}
+                        {formatClass(g)}
                       </button>
                     );
                   })}
@@ -1049,7 +1005,7 @@ export function TeacherManagementSection() {
                   onClick={() => setShowTeacherModal(false)}
                   className="rounded-xl"
                 >
-                  {language === "gu" ? "રદ કરો" : "Cancel"}
+                  {at.cancelBtn}
                 </Button>
                 <Button
                   type="submit"
@@ -1058,11 +1014,7 @@ export function TeacherManagementSection() {
                   disabled={formSaving}
                   className="rounded-xl font-bold shadow-sm"
                 >
-                  {formSaving
-                    ? "Saving..."
-                    : editingTeacher
-                    ? (language === "gu" ? "અપડેટ કરો" : "Update Teacher")
-                    : (language === "gu" ? "શિક્ષક સાચવો" : "Save Teacher")}
+                  {formSaving ? at.savingBtn : editingTeacher ? at.updateTeacherBtn : at.saveTeacherBtn}
                 </Button>
               </div>
             </form>
@@ -1079,22 +1031,13 @@ export function TeacherManagementSection() {
             <div className="flex items-center gap-2.5 text-rose-600">
               <Trash2 className="w-6 h-6 shrink-0" />
               <h3 className="font-heading text-base font-bold text-[#49352F] dark:text-[#F4F1E1]">
-                {language === "gu" ? "શિક્ષકનું ખાતું કાઢી નાખો?" : "Delete Teacher Account?"}
+                {at.deleteModalTitle}
               </h3>
             </div>
 
             <p className="text-xs text-[#7A6862] leading-relaxed">
-              {language === "gu" ? (
-                <>
-                  શું તમે ખરેખર શિક્ષક <strong>{deletingTeacher.name}</strong> ({deletingTeacher.email}) નું ખાતું કાઢી નાખવા માંગો છો?
-                  આ ક્રિયાથી તેમના બધા વિષય અને વર્ગ સોંપણીઓ સુરક્ષિત રીતે દૂર થઈ જશે. ઐતિહાસિક વિદ્યાર્થી ગુણ અકબંધ રહેશે.
-                </>
-              ) : (
-                <>
-                  Are you sure you want to delete teacher <strong>{deletingTeacher.name}</strong> ({deletingTeacher.email})?
-                  This action will safely remove all their subject and class assignments. Existing student evaluation records and historical grades will remain preserved.
-                </>
-              )}
+              {at.deleteModalBodyBefore} <strong>{deletingTeacher.name}</strong> ({deletingTeacher.email})?{" "}
+              {at.deleteModalBodyAfter}
             </p>
 
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#49352F]/10">
@@ -1105,7 +1048,7 @@ export function TeacherManagementSection() {
                 onClick={() => setDeletingTeacher(null)}
                 className="rounded-xl"
               >
-                {language === "gu" ? "ના, રાખો" : "Cancel"}
+                {at.cancelBtn}
               </Button>
               <button
                 type="button"
@@ -1113,11 +1056,37 @@ export function TeacherManagementSection() {
                 onClick={handleConfirmDeleteTeacher}
                 className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 transition-colors shadow-sm cursor-pointer"
               >
-                {isDeletingTeacher
-                  ? "Deleting..."
-                  : language === "gu"
-                  ? "હા, કાઢી નાખો"
-                  : "Delete Teacher"}
+                {isDeletingTeacher ? at.deletingBtn : at.confirmDeleteBtn}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Confirm Delete Assignment Modal */}
+      {assignmentToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-2xl border border-[#49352F]/15 space-y-3 text-[#49352F]">
+            <h3 className="font-heading text-sm font-bold text-[#49352F]">
+              {(at as any)?.confirmRemoveAssignmentTitle || "Remove Assignment?"}
+            </h3>
+            <p className="text-xs text-[#7A6862] leading-relaxed">
+              {at.confirmRemoveAssignment}
+            </p>
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setAssignmentToDelete(null)}
+                className="rounded-xl text-xs"
+              >
+                {t.actions?.cancel || "Cancel"}
+              </Button>
+              <button
+                type="button"
+                onClick={confirmDeleteAssignment}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 transition-colors shadow-sm cursor-pointer"
+              >
+                {t.actions?.confirm || "Confirm"}
               </button>
             </div>
           </div>

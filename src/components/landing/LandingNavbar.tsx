@@ -29,7 +29,8 @@ import {
 } from "lucide-react";
 
 export function LandingNavbar() {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
+  const nb = t.landing.navbar;
   const pathname = usePathname();
   const router = useRouter();
 
@@ -123,12 +124,12 @@ export function LandingNavbar() {
 
   // Navigation Links definition
   const navLinks = [
-    { label: language === "gu" ? "મુખ્ય સેતુ" : "The Bridge", href: "#hero", icon: Sparkles },
-    { label: language === "gu" ? "પડકાર" : "Challenge", href: "#challenge", icon: AlertTriangle },
-    { label: language === "gu" ? "૪ તબક્કા" : "4 Phases", href: "#solution", icon: Layers },
-    { label: language === "gu" ? "સુવિધાઓ" : "Features", href: "#features", icon: Cpu },
-    { label: language === "gu" ? "લાઈવ પ્રિવ્યૂ" : "Preview", href: "#preview", icon: Activity },
-    { label: language === "gu" ? "પરિણામો" : "Impact", href: "#impact", icon: TrendingUp },
+    { label: nb.linkBridge, href: "#hero", icon: Sparkles },
+    { label: nb.linkChallenge, href: "#challenge", icon: AlertTriangle },
+    { label: nb.linkPhases, href: "#solution", icon: Layers },
+    { label: nb.linkFeatures, href: "#features", icon: Cpu },
+    { label: nb.linkPreview, href: "#preview", icon: Activity },
+    { label: nb.linkImpact, href: "#impact", icon: TrendingUp },
   ];
 
   // Robust smooth navigation handler
@@ -209,7 +210,7 @@ export function LandingNavbar() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
               </span>
-              <span>SFIC PS-60 Live</span>
+              <span>{nb.liveBadge}</span>
             </div>
           </div>
 
@@ -257,7 +258,7 @@ export function LandingNavbar() {
                     : "text-slate-300 hover:text-white hover:bg-white/5"
                 }`}
               >
-                <span>{language === "gu" ? "અન્વેષણ" : "Explore"}</span>
+                <span>{nb.exploreBtn}</span>
                 <ChevronDown
                   className={`w-3 h-3 transition-transform duration-200 ${
                     isExploreOpen ? "rotate-180 text-amber-400" : "text-slate-400"
@@ -277,10 +278,10 @@ export function LandingNavbar() {
                   >
                     <div className="px-3 py-2 border-b border-white/10 mb-1">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-amber-400">
-                        {language === "gu" ? "વિશેષ સુવિધાઓ" : "Interactive Experience"}
+                        {nb.exploreEyebrow}
                       </p>
                       <p className="text-[11px] text-slate-300 mt-0.5">
-                        {language === "gu" ? "શિક્ષકો અને નિરીક્ષકો માટે સંસાધનો" : "Tools for Gujarat Teachers & Evaluators"}
+                        {nb.exploreSub}
                       </p>
                     </div>
 
@@ -297,14 +298,14 @@ export function LandingNavbar() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
                             <span className="text-xs font-bold text-white group-hover:text-amber-300 transition-colors">
-                              {language === "gu" ? "શિક્ષક માર્ગદર્શિકા" : "Teacher Tutorial & Guide"}
+                              {nb.menuTutorialTitle}
                             </span>
                             <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                              5 Min
+                              {nb.menuTutorialBadge}
                             </span>
                           </div>
                           <p className="text-[11px] text-slate-300 line-clamp-1 mt-0.5">
-                            {language === "gu" ? "વેબસાઇટ કેવી રીતે વાપરવી તે 3 મિનિટમાં જાણો" : "Interactive walkthrough for primary school teachers"}
+                            {nb.menuTutorialDesc}
                           </p>
                         </div>
                       </Link>
@@ -321,14 +322,14 @@ export function LandingNavbar() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
                             <span className="text-xs font-bold text-white group-hover:text-emerald-300 transition-colors">
-                              {language === "gu" ? "૩D લિવિંગ વર્લ્ડ" : "3D Living World Canvas"}
+                              {nb.menu3dTitle}
                             </span>
                             <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                              WebGL
+                              {nb.menu3dBadge}
                             </span>
                           </div>
                           <p className="text-[11px] text-slate-300 line-clamp-1 mt-0.5">
-                            {language === "gu" ? "વિદ્યાર્થી પ્રગતિનું 3D પરિમાણીય પ્રદર્શન" : "Explore holographic 3D student skill biosphere"}
+                            {nb.menu3dDesc}
                           </p>
                         </div>
                       </Link>
@@ -345,14 +346,14 @@ export function LandingNavbar() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
                             <span className="text-xs font-bold text-white group-hover:text-indigo-300 transition-colors">
-                              {language === "gu" ? "AI વર્કસ્પેસ હબ" : "AI Hub & Remedial Suite"}
+                              {nb.menuAiTitle}
                             </span>
                             <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                              5-in-1
+                              {nb.menuAiBadge}
                             </span>
                           </div>
                           <p className="text-[11px] text-slate-300 line-clamp-1 mt-0.5">
-                            {language === "gu" ? "ક્વિઝ, સૂચના અનુવાદ અને ઑડિયો ટ્યુટર" : "Instant remedial generator & parent notices"}
+                            {nb.menuAiDesc}
                           </p>
                         </div>
                       </Link>
@@ -383,7 +384,7 @@ export function LandingNavbar() {
                 }`}
               >
                 <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-                <span>{language === "gu" ? "ડેમો રોલ્સ" : "Demo Roles"}</span>
+                <span>{nb.demoRolesBtn}</span>
                 <ChevronDown className={`w-3 h-3 transition-transform ${isDemoMenuOpen ? "rotate-180 text-amber-400" : "text-slate-400"}`} />
               </button>
 
@@ -397,10 +398,10 @@ export function LandingNavbar() {
                   >
                     <div className="px-3 py-2 border-b border-white/10 mb-1">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-amber-400">
-                        {language === "gu" ? "પ્રવેશ ભૂમિકાઓ (RBAC)" : "Select Demo Role (RBAC)"}
+                        {nb.demoRolesEyebrow}
                       </p>
                       <p className="text-[11px] text-slate-300 mt-0.5">
-                        {language === "gu" ? "વિષય-મુજબ ઍક્સેસ નિયંત્રણ" : "Subject & Class Access Controls"}
+                        {nb.demoRolesSub}
                       </p>
                     </div>
 
@@ -416,7 +417,7 @@ export function LandingNavbar() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-bold text-white group-hover:text-amber-300">Pooja Sharma</span>
-                            <span className="text-[9px] px-1 py-0.2 rounded-md bg-amber-500/20 text-amber-300 font-mono">Multi-Sub</span>
+                            <span className="text-[9px] px-1 py-0.2 rounded-md bg-amber-500/20 text-amber-300 font-mono">{nb.multiSubBadge}</span>
                           </div>
                           <p className="text-[10px] text-slate-400 line-clamp-1">Math (Cl. 1-4) & Guj (Cl. 3-4)</p>
                         </div>
@@ -433,7 +434,7 @@ export function LandingNavbar() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-bold text-white group-hover:text-emerald-300">Priya Patel</span>
-                            <span className="text-[9px] px-1 py-0.2 rounded-md bg-emerald-500/20 text-emerald-300 font-mono">Single-Sub</span>
+                            <span className="text-[9px] px-1 py-0.2 rounded-md bg-emerald-500/20 text-emerald-300 font-mono">{nb.singleSubBadge}</span>
                           </div>
                           <p className="text-[10px] text-slate-400 line-clamp-1">English (Class 1 Only)</p>
                         </div>
@@ -450,7 +451,7 @@ export function LandingNavbar() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-bold text-white group-hover:text-sky-300">Principal Trivedi</span>
-                            <span className="text-[9px] px-1 py-0.2 rounded-md bg-sky-500/20 text-sky-300 font-mono">Admin</span>
+                            <span className="text-[9px] px-1 py-0.2 rounded-md bg-sky-500/20 text-sky-300 font-mono">{nb.adminBadge}</span>
                           </div>
                           <p className="text-[10px] text-slate-400 line-clamp-1">All Classes 1-5 & Assignments</p>
                         </div>
@@ -467,7 +468,7 @@ export function LandingNavbar() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-bold text-white group-hover:text-rose-300">Dineshbhai Patel</span>
-                            <span className="text-[9px] px-1 py-0.2 rounded-md bg-rose-500/20 text-rose-300 font-mono">Parent</span>
+                            <span className="text-[9px] px-1 py-0.2 rounded-md bg-rose-500/20 text-rose-300 font-mono">{nb.parentBadge}</span>
                           </div>
                           <p className="text-[10px] text-slate-400 line-clamp-1">Parent Bridge (Aarav Patel)</p>
                         </div>
@@ -493,7 +494,7 @@ export function LandingNavbar() {
               className="px-3.5 py-1.5 rounded-full text-xs font-bold text-[#F2CAB3] hover:text-white border border-[#F2CAB3]/30 hover:border-[#F2CAB3]/60 bg-[#F2CAB3]/10 hover:bg-[#F2CAB3]/25 transition-all flex items-center gap-1.5 shadow-inner"
             >
               <Users className="w-3.5 h-3.5 text-[#F2CAB3]" />
-              <span>{language === "gu" ? "વાલી પ્રવેશ" : "Parent Login"}</span>
+              <span>{nb.parentLoginBtn}</span>
             </Link>
 
             {/* Primary Action Button: Explore Dashboard */}
@@ -501,7 +502,7 @@ export function LandingNavbar() {
               href="/dashboard"
               className="relative group px-4 py-2 rounded-full text-xs font-black text-slate-950 bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 hover:from-amber-300 hover:to-orange-400 shadow-[0_0_20px_rgba(255,138,61,0.4)] hover:shadow-[0_0_28px_rgba(255,138,61,0.65)] transition-all flex items-center gap-1.5 active:scale-95 overflow-hidden"
             >
-              <span>{language === "gu" ? "ડેશબોર્ડ ખોલો" : "Explore Dashboard"}</span>
+              <span>{nb.exploreDashboardBtn}</span>
               <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-1" />
             </Link>
           </div>
@@ -514,7 +515,7 @@ export function LandingNavbar() {
             <button
               type="button"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+              aria-label={isMobileMenuOpen ? nb.closeMenuAria : nb.openMenuAria}
               aria-expanded={isMobileMenuOpen}
               className="relative p-2.5 rounded-xl text-slate-300 hover:text-white border border-white/10 bg-slate-900/80 backdrop-blur-md transition-all active:scale-95 cursor-pointer shadow-md"
             >
@@ -560,10 +561,10 @@ export function LandingNavbar() {
                 <div>
                   <p className="text-xs font-bold text-white flex items-center gap-1.5">
                     <BookOpen className="w-3.5 h-3.5 text-amber-400" />
-                    <span>{language === "gu" ? "નવા શિક્ષક માર્ગદર્શિકા" : "Teacher Quick Start Guide"}</span>
+                    <span>{nb.mobileGuideTitle}</span>
                   </p>
                   <p className="text-[10px] text-slate-300 mt-0.5">
-                    {language === "gu" ? "વેબસાઇટ કેવી રીતે વાપરવી તે 3 મિનિટમાં જાણો" : "Learn how to use StudySaathi in 3 mins"}
+                    {nb.mobileGuideSub}
                   </p>
                 </div>
                 <Link
@@ -571,7 +572,7 @@ export function LandingNavbar() {
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black shrink-0 ml-2 shadow-[0_0_12px_rgba(255,138,61,0.4)]"
                 >
-                  {language === "gu" ? "જુઓ" : "Open"}
+                  {nb.mobileOpenBtn}
                 </Link>
               </div>
 
@@ -614,7 +615,7 @@ export function LandingNavbar() {
                     <Sparkles className="w-4 h-4 text-emerald-400" />
                     <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 font-extrabold">3D</span>
                   </div>
-                  <span>{language === "gu" ? "૩D લિવિંગ વર્લ્ડ" : "3D Living World"}</span>
+                  <span>{nb.mobile3dShort}</span>
                 </Link>
 
                 <Link
@@ -626,7 +627,7 @@ export function LandingNavbar() {
                     <Cpu className="w-4 h-4 text-indigo-400" />
                     <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-indigo-500/20 text-indigo-300 font-extrabold">AI</span>
                   </div>
-                  <span>{language === "gu" ? "AI વર્કસ્પેસ" : "AI Suite"}</span>
+                  <span>{nb.mobileAiShort}</span>
                 </Link>
               </div>
 
@@ -634,7 +635,7 @@ export function LandingNavbar() {
               <div className="p-3 rounded-2xl bg-white/5 border border-white/10 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-amber-400">
-                    {language === "gu" ? "૧-ક્લિક ડેમો પ્રવેશ" : "1-Click Demo Logins"}
+                    {nb.mobileDemoLogins}
                   </span>
                   <span className="text-[9px] px-1.5 py-0.2 rounded-md bg-amber-500/20 text-amber-300 font-mono">RBAC</span>
                 </div>
@@ -677,7 +678,7 @@ export function LandingNavbar() {
               {/* Preferences: Theme Toggle */}
               <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
                 <span className="text-xs font-semibold text-slate-300">
-                  {language === "gu" ? "થીમ મોડ" : "Theme Mode"}
+                  {nb.mobileThemeMode}
                 </span>
                 <ThemeToggle variant="glass" showLabel />
               </div>
@@ -690,7 +691,7 @@ export function LandingNavbar() {
                   className="w-full flex items-center justify-center gap-2 py-2.5 rounded-full text-xs font-bold border border-white/15 bg-white/5 hover:bg-white/10 text-slate-200 transition-colors"
                 >
                   <LogIn className="w-4 h-4 text-amber-400" />
-                  <span>{t.nav?.login || "Sign In (Teacher Portal)"}</span>
+                  <span>{t.nav?.login || "Sign In"}</span>
                 </Link>
 
                 <Link
@@ -699,7 +700,7 @@ export function LandingNavbar() {
                   className="w-full flex items-center justify-center gap-2 py-2.5 rounded-full text-xs font-bold border border-[#F2CAB3]/30 bg-[#F2CAB3]/10 hover:bg-[#F2CAB3]/20 text-[#F2CAB3] transition-colors"
                 >
                   <Users className="w-4 h-4 text-[#F2CAB3]" />
-                  <span>{language === "gu" ? "વાલી પ્રવેશ (Parent Portal)" : "Parent Portal (Parent Login)"}</span>
+                  <span>{nb.mobileParentPortalBtn}</span>
                 </Link>
 
                 <Link
@@ -707,14 +708,14 @@ export function LandingNavbar() {
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="w-full flex items-center justify-center gap-2 py-3 rounded-full text-xs font-black bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 text-slate-950 shadow-[0_0_20px_rgba(255,138,61,0.4)] transition-all active:scale-95"
                 >
-                  <span>{language === "gu" ? "ડેશબોર્ડ ખોલો" : "Explore Dashboard"}</span>
+                  <span>{nb.exploreDashboardBtn}</span>
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
 
               <div className="text-center pt-2">
                 <p className="text-[10px] text-slate-400">
-                  Gujarat Primary Education Remedial Action System • SFIC PS-60
+                  {nb.mobileFooterTag}
                 </p>
               </div>
             </motion.div>

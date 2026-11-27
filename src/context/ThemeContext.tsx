@@ -26,31 +26,8 @@ const ThemeContext = createContext<ThemeContextType>({
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<ThemeMode>(() => {
-    if (typeof window === "undefined") return "system";
-    try {
-      const saved = (localStorage.getItem("studysaathi_theme") || localStorage.getItem("shikshasetu_theme")) as ThemeMode | null;
-      if (saved === "light" || saved === "dark" || saved === "system") {
-        return saved;
-      }
-    } catch {
-      // storage unavailable
-    }
-    return "system";
-  });
-
-  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>(() => {
-    if (typeof window === "undefined") return "light";
-    try {
-      const saved = (localStorage.getItem("studysaathi_theme") || localStorage.getItem("shikshasetu_theme")) as ThemeMode | null;
-      if (saved === "dark") return "dark";
-      if (saved === "light") return "light";
-      if (window.matchMedia("(prefers-color-scheme: dark)").matches) return "dark";
-    } catch {
-      // storage unavailable
-    }
-    return "light";
-  });
+  const [theme, setThemeState] = useState<ThemeMode>("system");
+  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("light");
 
   const applyTheme = useCallback((mode: ThemeMode) => {
     if (typeof window === "undefined") return;
@@ -95,6 +72,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       }
     } catch {}
 
+    setThemeState(savedMode);
     applyTheme(savedMode);
 
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");

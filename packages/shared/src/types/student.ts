@@ -1,4 +1,5 @@
 import type { SubjectCode } from "./assessment";
+import type { SupportedLanguage, SupportedScript } from "./notice";
 
 export type UserRole = "teacher" | "admin" | "parent";
 export type UserStatus = "active" | "pending" | "disabled";
@@ -11,6 +12,8 @@ export interface User {
   phoneVerified?: boolean;
   role: UserRole;
   schoolId: string;
+  preferredLanguage?: SupportedLanguage;
+  preferredScript?: SupportedScript;
   has_seen_tutorial?: boolean;
   googleId?: string;
   avatarUrl?: string;
@@ -27,7 +30,7 @@ export interface School {
   id: string;
   name: string;
   code: string;
-  preferredLanguage: "en" | "gu";
+  preferredLanguage: SupportedLanguage;
 }
 
 export interface Classroom {
@@ -55,7 +58,7 @@ export interface SchoolSettings {
   schoolId: string;
   masteryThreshold: number; // default: 80%
   developingThreshold: number; // default: 60%
-  preferredLanguage: "en" | "gu";
+  preferredLanguage: SupportedLanguage;
   enableAiAssist: boolean;
 }
 

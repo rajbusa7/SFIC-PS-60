@@ -1097,6 +1097,17 @@
       "percentage": 85,
       "recordedAt": "2026-10-30T10:00:00Z",
       "notes": "Recent reassessment: confirmed independent mastery."
+    },
+    {
+      "assessmentId": "asm-01",
+      "studentId": "std-aarav",
+      "conceptId": "c-math-count-1",
+      "marksObtained": 15,
+      "maximumMarks": 20,
+      "percentage": 75,
+      "notes": "",
+      "recordedAt": "2026-11-26T12:36:40.245Z",
+      "id": "res-1795696600247-72y71"
     }
   ],
   "learningGaps": [
@@ -1110,18 +1121,21 @@
       "grade": 4,
       "priority": "High",
       "masteryStatus": "Needs Support",
-      "reason": "Needs Support: Assessment performance (35%) is below the configured support threshold (60%), and the previous result (40%) also showed persistent difficulty. Structured guided practice on core fundamentals is recommended.",
-      "suggestedAction": "Assign focused small-group remedial practice on Division Basics fundamentals using concrete manipulatives.",
-      "diagnosisType": "Developing / Not Yet Mastered",
+      "reason": "Assessment performance (35%) is below the configured support threshold (60%) (40% → 35%), showing persistent difficulty requiring structured remediation. (Evidence recorded 63 days ago; a brief progress check is recommended).",
+      "suggestedAction": "Assign focused small-group remedial practice on Division Basics & Equal Sharing fundamentals, using visual manipulatives or physical objects.",
+      "diagnosisType": "Conceptual Gap",
       "status": "Active",
       "attemptsCount": 2,
       "latestPercentage": 35,
       "previousPercentage": 40,
       "deltaPercentagePoints": -5,
       "trend": "Declining",
-      "trendLabel": "Declining",
-      "updatedAt": "2026-09-24T12:00:00Z",
-      "remedialPlanId": "plan-aarav-div-01"
+      "trendLabel": "↓ -5% Declining",
+      "updatedAt": "2026-11-26T12:36:40.271Z",
+      "remedialPlanId": "plan-aarav-div-01",
+      "diagnosis": "Conceptual Gap in Division Basics & Equal Sharing",
+      "gapType": "Conceptual Gap",
+      "trendText": "↓ -5% Declining"
     },
     {
       "id": "gap-dev-verb",
@@ -1281,6 +1295,75 @@
       "trend": "Improving",
       "trendLabel": "Improving",
       "updatedAt": "2026-10-30T12:00:00Z"
+    },
+    {
+      "id": "gap-std-aarav-c-mult-01",
+      "studentId": "std-aarav",
+      "studentName": "Aarav Patel",
+      "conceptId": "c-mult-01",
+      "conceptName": "Multiplication Tables (2 to 9)",
+      "subjectCode": "MATH",
+      "grade": 4,
+      "priority": "Medium",
+      "masteryStatus": "Developing",
+      "reason": "Student has grasped core basics (65%), but has not yet met the mastery threshold of 80%. (Evidence recorded 77 days ago; a brief progress check is recommended).",
+      "suggestedAction": "Conduct a short 3-5 item diagnostic exit ticket with concrete physical manipulatives to verify whether this represents a persistent misunderstanding.",
+      "diagnosis": "Insufficient Evidence — Run Diagnostic Check",
+      "gapType": "Insufficient Evidence",
+      "diagnosisType": "Insufficient Evidence",
+      "status": "Active",
+      "attemptsCount": 1,
+      "latestPercentage": 65,
+      "trend": "Insufficient Data",
+      "trendLabel": "⋯ Insufficient Data",
+      "trendText": "⋯ Insufficient Data",
+      "updatedAt": "2026-11-26T12:36:40.271Z"
+    },
+    {
+      "id": "gap-std-aarav-c-eng-comp-01",
+      "studentId": "std-aarav",
+      "studentName": "Aarav Patel",
+      "conceptId": "c-eng-comp-01",
+      "conceptName": "Short Passage Reading Comprehension",
+      "subjectCode": "ENG",
+      "grade": 4,
+      "priority": "Low",
+      "masteryStatus": "Developing",
+      "reason": "Student has grasped core basics (75%), but has not yet met the mastery threshold of 80%. (Evidence recorded 55 days ago; a brief progress check is recommended).",
+      "suggestedAction": "Conduct a short 3-5 item diagnostic exit ticket with concrete physical manipulatives to verify whether this represents a persistent misunderstanding.",
+      "diagnosis": "Insufficient Evidence — Run Diagnostic Check",
+      "gapType": "Insufficient Evidence",
+      "diagnosisType": "Insufficient Evidence",
+      "status": "Active",
+      "attemptsCount": 1,
+      "latestPercentage": 75,
+      "trend": "Insufficient Data",
+      "trendLabel": "⋯ Insufficient Data",
+      "trendText": "⋯ Insufficient Data",
+      "updatedAt": "2026-11-26T12:36:40.271Z"
+    },
+    {
+      "id": "gap-std-aarav-c-math-count-1",
+      "studentId": "std-aarav",
+      "studentName": "Aarav Patel",
+      "conceptId": "c-math-count-1",
+      "conceptName": "Number Recognition & Counting (1–100)",
+      "subjectCode": "MATH",
+      "grade": 4,
+      "priority": "Medium",
+      "masteryStatus": "Developing",
+      "reason": "Student has grasped core basics (75%), but has not yet met the mastery threshold of 80%.",
+      "suggestedAction": "Conduct a short 3-5 item diagnostic exit ticket with concrete physical manipulatives to verify whether this represents a persistent misunderstanding.",
+      "diagnosis": "Insufficient Evidence — Run Diagnostic Check",
+      "gapType": "Insufficient Evidence",
+      "diagnosisType": "Insufficient Evidence",
+      "status": "Active",
+      "attemptsCount": 1,
+      "latestPercentage": 75,
+      "trend": "Insufficient Data",
+      "trendLabel": "⋯ Insufficient Data",
+      "trendText": "⋯ Insufficient Data",
+      "updatedAt": "2026-11-26T12:36:40.273Z"
     }
   ],
   "remedialPlans": [
@@ -4461,6 +4544,19 @@
       "status": "active",
       "createdAt": "2026-01-01T00:00:00Z",
       "updatedAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "usr-1793276409027-bvlf",
+      "name": "Educator",
+      "email": "rajbusa5435@gmail.com",
+      "role": "teacher",
+      "schoolId": "sch-gn-01",
+      "googleId": "111098743213006294298",
+      "avatarUrl": "https://lh3.googleusercontent.com/a/ACg8ocInzo8GWbivjHdjrH0jePKXqvdZAJC07iAFjHHXwb-IzYwUDdLq=s96-c",
+      "provider": "google",
+      "status": "active",
+      "createdAt": "2026-11-26T12:04:24.109Z",
+      "updatedAt": "2026-11-26T12:04:24.109Z"
     }
   ],
   "feedback": [],
@@ -4553,7 +4649,21 @@
       "updatedAt": "2026-11-03T12:42:21.969Z"
     }
   ],
-  "auditLogs": [],
+  "auditLogs": [
+    {
+      "teacherId": "usr-teacher-01",
+      "teacherName": "Pooja Sharma",
+      "studentId": "std-aarav",
+      "studentName": "Aarav Patel",
+      "subjectCode": "MATH",
+      "assessmentId": "asm-01",
+      "previousMarks": 0,
+      "updatedMarks": 15,
+      "action": "ENTER_MARKS",
+      "id": "audit-1795696600282-zw3zfc",
+      "timestamp": "2026-11-26T12:36:40.282Z"
+    }
+  ],
   "interventionRecords": [
     {
       "id": "int-b10-1",
@@ -5883,7 +5993,7 @@
       "lastMessageSenderName": "Dineshbhai Patel",
       "unreadCounts": {
         "usr-teacher-01": 4,
-        "par-001": 4,
+        "par-001": 0,
         "usr-par-01": 8,
         "par-aarav": 8
       },
@@ -5906,6 +6016,14 @@
         {
           "userId": "usr-teacher-01",
           "readAt": "2026-01-11T09:00:00Z"
+        },
+        {
+          "userId": "usr-1793276409027-bvlf",
+          "readAt": "2026-11-26T12:04:53.860Z"
+        },
+        {
+          "userId": "par-001",
+          "readAt": "2026-11-26T12:39:03.385Z"
         }
       ],
       "isAnnouncement": true,
@@ -5934,6 +6052,14 @@
         {
           "userId": "usr-teacher-01",
           "readAt": "2026-03-24T10:35:00Z"
+        },
+        {
+          "userId": "usr-1793276409027-bvlf",
+          "readAt": "2026-11-26T12:04:53.860Z"
+        },
+        {
+          "userId": "par-001",
+          "readAt": "2026-11-26T12:39:03.385Z"
         }
       ],
       "isAnnouncement": true,
@@ -6053,11 +6179,15 @@
       "senderName": "Pooja Sharma",
       "senderRole": "teacher",
       "text": "Aarav completed the remedial worksheet on division with 85% accuracy!",
-      "status": "sent",
+      "status": "read",
       "readBy": [
         {
           "userId": "usr-teacher-01",
           "readAt": "2026-11-26T04:31:48.389Z"
+        },
+        {
+          "userId": "par-001",
+          "readAt": "2026-11-26T12:39:08.651Z"
         }
       ],
       "createdAt": "2026-11-26T04:31:48.404Z"
@@ -6139,11 +6269,15 @@
       "senderName": "Pooja Sharma",
       "senderRole": "teacher",
       "text": "Aarav completed the remedial worksheet on division with 85% accuracy!",
-      "status": "sent",
+      "status": "read",
       "readBy": [
         {
           "userId": "usr-teacher-01",
           "readAt": "2026-11-26T05:15:13.361Z"
+        },
+        {
+          "userId": "par-001",
+          "readAt": "2026-11-26T12:39:08.651Z"
         }
       ],
       "createdAt": "2026-11-26T05:15:13.362Z"
@@ -6225,11 +6359,15 @@
       "senderName": "Pooja Sharma",
       "senderRole": "teacher",
       "text": "Aarav completed the remedial worksheet on division with 85% accuracy!",
-      "status": "sent",
+      "status": "read",
       "readBy": [
         {
           "userId": "usr-teacher-01",
           "readAt": "2026-11-26T05:26:13.163Z"
+        },
+        {
+          "userId": "par-001",
+          "readAt": "2026-11-26T12:39:08.651Z"
         }
       ],
       "createdAt": "2026-11-26T05:26:13.166Z"
@@ -6311,11 +6449,15 @@
       "senderName": "Pooja Sharma",
       "senderRole": "teacher",
       "text": "Aarav completed the remedial worksheet on division with 85% accuracy!",
-      "status": "sent",
+      "status": "read",
       "readBy": [
         {
           "userId": "usr-teacher-01",
           "readAt": "2026-11-26T05:40:47.382Z"
+        },
+        {
+          "userId": "par-001",
+          "readAt": "2026-11-26T12:39:08.651Z"
         }
       ],
       "createdAt": "2026-11-26T05:40:47.384Z"
@@ -6389,6 +6531,274 @@
         }
       ],
       "createdAt": "2026-11-26T05:40:47.415Z"
+    }
+  ],
+  "ptmMeetings": [
+    {
+      "id": "ptm-past-ishaan",
+      "meetingCode": "ptm-412-588",
+      "title": "Foundational Number Sense Benchmark",
+      "agenda": "Assess 2-digit addition and place value comprehension.",
+      "teacherId": "usr-teacher-01",
+      "teacherName": "Pooja Sharma",
+      "studentId": "std-ishaan",
+      "studentName": "Ishaan Solanki",
+      "parentId": "par-003",
+      "parentName": "Rameshbhai Solanki",
+      "parentEmail": "ramesh.solanki@example.com",
+      "scheduledDate": "2026-11-20",
+      "startTime": "11:00",
+      "durationMinutes": 30,
+      "status": "completed",
+      "createdAt": "2026-11-20T02:15:59.542Z",
+      "updatedAt": "2026-11-20T02:15:59.542Z"
+    },
+    {
+      "id": "ptm-cancelled-anaya",
+      "meetingCode": "ptm-301-419",
+      "title": "Science Environmental Studies Check-in",
+      "agenda": "Quarterly curriculum review on plant life cycles.",
+      "teacherId": "usr-teacher-01",
+      "teacherName": "Pooja Sharma",
+      "studentId": "std-anaya",
+      "studentName": "Anaya Patel",
+      "parentId": "par-001",
+      "parentName": "Dineshbhai Patel",
+      "parentEmail": "parent.aarav@example.com",
+      "scheduledDate": "2026-11-22",
+      "startTime": "15:00",
+      "durationMinutes": 15,
+      "status": "cancelled",
+      "createdAt": "2026-11-22T02:15:59.542Z",
+      "updatedAt": "2026-11-22T02:15:59.542Z"
+    },
+    {
+      "id": "ptm-today-aarav",
+      "meetingCode": "ptm-704-291",
+      "title": "Class 4 Mathematics Remedial Progress Review",
+      "agenda": "Review 5-step concrete division manipulative activities, verify 85% accuracy milestone, plan home practice.",
+      "teacherId": "usr-teacher-01",
+      "teacherName": "Pooja Sharma",
+      "studentId": "std-aarav",
+      "studentName": "Aarav Patel",
+      "parentId": "par-001",
+      "parentName": "Dineshbhai Patel",
+      "parentEmail": "parent.aarav@example.com",
+      "scheduledDate": "2026-11-27",
+      "startTime": "14:30",
+      "durationMinutes": 30,
+      "status": "scheduled",
+      "createdAt": "2026-11-27T02:15:59.542Z",
+      "updatedAt": "2026-11-27T02:15:59.542Z"
+    },
+    {
+      "id": "ptm-upcoming-diya",
+      "meetingCode": "ptm-819-332",
+      "title": "Gujarati Reading & Phonemic Progress Discussion",
+      "agenda": "Discuss Matra recognition development and bilingual reading exercises.",
+      "teacherId": "usr-teacher-01",
+      "teacherName": "Pooja Sharma",
+      "studentId": "std-diya",
+      "studentName": "Diya Joshi",
+      "parentId": "par-002",
+      "parentName": "Bhavikbhai Joshi",
+      "parentEmail": "bhavik.joshi@example.com",
+      "scheduledDate": "2026-11-29",
+      "startTime": "16:00",
+      "durationMinutes": 45,
+      "status": "scheduled",
+      "createdAt": "2026-11-27T02:15:59.542Z",
+      "updatedAt": "2026-11-27T02:15:59.542Z"
+    },
+    {
+      "id": "test-ptm-1795745639533",
+      "meetingCode": "ptm-166-366",
+      "title": "Test Unit Remedial Consultation",
+      "teacherId": "usr-teacher-01",
+      "teacherName": "Pooja Sharma",
+      "studentId": "std-aarav",
+      "studentName": "Aarav Patel",
+      "parentId": "par-001",
+      "parentName": "Dineshbhai Patel",
+      "scheduledDate": "2026-12-01",
+      "startTime": "10:00",
+      "durationMinutes": 30,
+      "status": "completed",
+      "createdAt": "2026-11-27T02:13:59.533Z",
+      "updatedAt": "2026-11-27T02:13:59.541Z"
+    },
+    {
+      "id": "test-ptm-1795745703695",
+      "meetingCode": "ptm-234-683",
+      "title": "Test Unit Remedial Consultation",
+      "teacherId": "usr-teacher-01",
+      "teacherName": "Pooja Sharma",
+      "studentId": "std-aarav",
+      "studentName": "Aarav Patel",
+      "parentId": "par-001",
+      "parentName": "Dineshbhai Patel",
+      "scheduledDate": "2026-12-01",
+      "startTime": "10:00",
+      "durationMinutes": 30,
+      "status": "completed",
+      "createdAt": "2026-11-27T02:15:03.696Z",
+      "updatedAt": "2026-11-27T02:15:03.704Z"
+    },
+    {
+      "id": "test-ptm-1795745759557",
+      "meetingCode": "ptm-761-612",
+      "title": "Test Unit Remedial Consultation",
+      "teacherId": "usr-teacher-01",
+      "teacherName": "Pooja Sharma",
+      "studentId": "std-aarav",
+      "studentName": "Aarav Patel",
+      "parentId": "par-001",
+      "parentName": "Dineshbhai Patel",
+      "scheduledDate": "2026-12-01",
+      "startTime": "10:00",
+      "durationMinutes": 30,
+      "status": "completed",
+      "createdAt": "2026-11-27T02:15:59.557Z",
+      "updatedAt": "2026-11-27T02:15:59.565Z"
+    },
+    {
+      "id": "test-ptm-1795745882524",
+      "meetingCode": "ptm-533-889",
+      "title": "Test Unit Remedial Consultation",
+      "teacherId": "usr-teacher-01",
+      "teacherName": "Pooja Sharma",
+      "studentId": "std-aarav",
+      "studentName": "Aarav Patel",
+      "parentId": "par-001",
+      "parentName": "Dineshbhai Patel",
+      "scheduledDate": "2026-12-01",
+      "startTime": "10:00",
+      "durationMinutes": 30,
+      "status": "completed",
+      "createdAt": "2026-11-27T02:18:02.524Z",
+      "updatedAt": "2026-11-27T02:18:02.531Z"
+    }
+  ],
+  "ptmMeetingNotes": [
+    {
+      "id": "test-note-1795745639544",
+      "meetingId": "ptm-today-aarav",
+      "studentId": "std-aarav",
+      "teacherId": "usr-teacher-01",
+      "discussionSummary": "Aarav demonstrated mastery in single-digit multiplication.",
+      "learningConcerns": "Division with remainders needs concrete visual steps.",
+      "studentStrengths": "Eager to solve puzzle cards.",
+      "agreedActions": "Daily 10-minute manipulative cards.",
+      "followUpDate": "2026-12-05",
+      "sharedWithParent": true,
+      "createdAt": "2026-11-27T02:13:59.544Z",
+      "updatedAt": "2026-11-27T02:13:59.544Z"
+    },
+    {
+      "id": "test-note-1795745703708",
+      "meetingId": "ptm-today-aarav",
+      "studentId": "std-aarav",
+      "teacherId": "usr-teacher-01",
+      "discussionSummary": "Aarav demonstrated mastery in single-digit multiplication.",
+      "learningConcerns": "Division with remainders needs concrete visual steps.",
+      "studentStrengths": "Eager to solve puzzle cards.",
+      "agreedActions": "Daily 10-minute manipulative cards.",
+      "followUpDate": "2026-12-05",
+      "sharedWithParent": true,
+      "createdAt": "2026-11-27T02:15:03.708Z",
+      "updatedAt": "2026-11-27T02:15:03.708Z"
+    },
+    {
+      "id": "note-past-ishaan",
+      "meetingId": "ptm-past-ishaan",
+      "studentId": "std-ishaan",
+      "teacherId": "usr-teacher-01",
+      "discussionSummary": "Reviewed foundational number line concepts and 2-digit regrouping. Ishaan demonstrated improved confidence in single-digit operations.",
+      "learningConcerns": "Carrying over in double-digit column addition still causes occasional hesitation.",
+      "studentStrengths": "Highly engaged in visual dot-pattern exercises and oral calculations.",
+      "agreedActions": "Parent agreed to practice 10 minutes of base-ten block manipulative cards daily before dinner.",
+      "followUpDate": "2026-12-11",
+      "sharedWithParent": true,
+      "createdAt": "2026-11-20T02:15:59.542Z",
+      "updatedAt": "2026-11-20T02:15:59.542Z"
+    },
+    {
+      "id": "test-note-1795745759568",
+      "meetingId": "ptm-today-aarav",
+      "studentId": "std-aarav",
+      "teacherId": "usr-teacher-01",
+      "discussionSummary": "Aarav demonstrated mastery in single-digit multiplication.",
+      "learningConcerns": "Division with remainders needs concrete visual steps.",
+      "studentStrengths": "Eager to solve puzzle cards.",
+      "agreedActions": "Daily 10-minute manipulative cards.",
+      "followUpDate": "2026-12-05",
+      "sharedWithParent": true,
+      "createdAt": "2026-11-27T02:15:59.568Z",
+      "updatedAt": "2026-11-27T02:15:59.568Z"
+    },
+    {
+      "id": "test-note-1795745882534",
+      "meetingId": "ptm-today-aarav",
+      "studentId": "std-aarav",
+      "teacherId": "usr-teacher-01",
+      "discussionSummary": "Aarav demonstrated mastery in single-digit multiplication.",
+      "learningConcerns": "Division with remainders needs concrete visual steps.",
+      "studentStrengths": "Eager to solve puzzle cards.",
+      "agreedActions": "Daily 10-minute manipulative cards.",
+      "followUpDate": "2026-12-05",
+      "sharedWithParent": true,
+      "createdAt": "2026-11-27T02:18:02.534Z",
+      "updatedAt": "2026-11-27T02:18:02.534Z"
+    }
+  ],
+  "ptmChatMessages": [
+    {
+      "id": "test-msg-1795745639548",
+      "meetingId": "ptm-today-aarav",
+      "senderId": "usr-teacher-01",
+      "senderName": "Pooja Sharma",
+      "senderRole": "teacher",
+      "message": "Hello Dineshbhai, let us begin the session.",
+      "createdAt": "2026-11-27T02:13:59.548Z"
+    },
+    {
+      "id": "test-msg-1795745703712",
+      "meetingId": "ptm-today-aarav",
+      "senderId": "usr-teacher-01",
+      "senderName": "Pooja Sharma",
+      "senderRole": "teacher",
+      "message": "Hello Dineshbhai, let us begin the session.",
+      "createdAt": "2026-11-27T02:15:03.712Z"
+    },
+    {
+      "id": "test-msg-1795745759571",
+      "meetingId": "ptm-today-aarav",
+      "senderId": "usr-teacher-01",
+      "senderName": "Pooja Sharma",
+      "senderRole": "teacher",
+      "message": "Hello Dineshbhai, let us begin the session.",
+      "createdAt": "2026-11-27T02:15:59.571Z"
+    },
+    {
+      "id": "test-msg-1795745882537",
+      "meetingId": "ptm-today-aarav",
+      "senderId": "usr-teacher-01",
+      "senderName": "Pooja Sharma",
+      "senderRole": "teacher",
+      "message": "Hello Dineshbhai, let us begin the session.",
+      "createdAt": "2026-11-27T02:18:02.537Z"
+    }
+  ],
+  "ptmWaitingParticipants": [
+    {
+      "id": "wait-ptm-today-aarav-par-test-01",
+      "meetingId": "ptm-today-aarav",
+      "participantId": "par-test-01",
+      "participantName": "Dineshbhai Patel",
+      "participantRole": "parent",
+      "status": "admitted",
+      "joinedAt": "2026-11-27T02:18:02.540Z",
+      "reviewedAt": "2026-11-27T02:18:02.542Z"
     }
   ]
 }

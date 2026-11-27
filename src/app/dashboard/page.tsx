@@ -9,17 +9,15 @@ import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/Ca
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { StatTile } from "@/components/ui/StatTile";
-import { BridgeProgress } from "@/components/ui/BridgeProgress";
 import type { StudentMasteryPoint } from "@/components/3d/ClassMasteryHeatmap3D";
-import { fireCelebrationConfetti } from "@/lib/confetti";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
 import type { SubjectCode } from "@/lib/types";
 import { useFilter, parseGradeNumber } from "@/context/FilterContext";
 import { useTutorial } from "@/context/TutorialContext";
-import { ChecklistWidget } from "@/components/tutorial/ChecklistWidget";
 import { ContextualHelp } from "@/components/shared/ContextualHelp";
 import { subscribeToDataUpdates } from "@/lib/events";
+import { fetchWithCache, getCachedDataSync } from "@/lib/cache/localCache";
 import {
   Users,
   AlertTriangle,
@@ -35,11 +33,9 @@ import {
   Calendar,
   Layers,
   Bot,
-  PartyPopper,
   Flame,
   RotateCcw,
 } from "lucide-react";
-import type { AiTab } from "@/components/ai/AiWorkspaceView";
 import {
   ResponsiveContainer,
   BarChart,
@@ -57,20 +53,7 @@ const ClassMasteryHeatmap3D = dynamic(
     loading: () => (
       <div className="w-full h-[320px] rounded-2xl bg-[#FAF6E9] border border-[#49352F]/15 flex items-center justify-center text-[#7A6862] text-xs">
         <Sparkles className="w-4 h-4 animate-spin text-[#B26A1B] mr-2" />
-        <span>Loading 3D Mastery Heatmap...</span>
-      </div>
-    ),
-  }
-);
-
-const AiWorkspaceView = dynamic(
-  () => import("@/components/ai/AiWorkspaceView").then((m) => m.AiWorkspaceView),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="p-12 text-center text-slate-400 text-sm">
-        <Sparkles className="w-5 h-5 animate-spin text-amber-400 mx-auto mb-2" />
-        <span>Loading AI Assistant Studio...</span>
+        <span>Loading Mastery Heatmap...</span>
       </div>
     ),
   }
@@ -81,22 +64,11 @@ const StudentFormModal = dynamic(
   { ssr: false }
 );
 
-const TeacherManagementSection = dynamic(
-  () => import("@/components/admin/TeacherManagementSection").then((m) => m.TeacherManagementSection),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="p-8 text-center text-xs text-[#7A6862] bg-[#FAF6E9] rounded-2xl border border-[#49352F]/15">
-        Loading Teacher Management...
-      </div>
-    ),
-  }
-);
-
 function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { t, language, formatSubject, formatClass, formatPriority } = useLanguage();
+  const { t, tr, formatSubject, formatClass, formatPriority, formatStatus } = useLanguage();
+  const db = t.dashboard;
   const { user, role, assignments, selectedSubject: authSelectedSubject, setSelectedSubject: setAuthSelectedSubject, assignmentNotice } = useAuth();
   const isTeacher = user?.role === "teacher" || role === "teacher";
   const isAdmin = user?.role === "admin" || role === "admin";
@@ -133,7 +105,6 @@ function DashboardContent() {
   const tourParam = searchParams.get("tour");
   const hasTriggeredFullTour = useRef(false);
 
-  const [loading, setLoading] = useState(true);
   const [students, setStudents] = useState<any[]>([]);
   const [gaps, setGaps] = useState<any[]>([]);
   const [plans, setPlans] = useState<any[]>([]);
@@ -141,25 +112,12 @@ function DashboardContent() {
   const [concepts, setConcepts] = useState<any[]>([]);
   const [results, setResults] = useState<any[]>([]);
   const [progressData, setProgressData] = useState<any>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
   // Filters
   const { selectedClass, setSelectedClass } = useFilter();
   const [selectedSubject, setSelectedSubject] = useState("all");
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
-  const [dashboardView, setDashboardView] = useState<"overview" | "ai" | "teachers">("overview");
-
-  const viewParam = searchParams.get("view") || searchParams.get("tab");
-  useEffect(() => {
-    if (viewParam === "teachers") {
-      setDashboardView("teachers");
-    } else if (viewParam === "ai") {
-      setDashboardView("ai");
-    } else if (viewParam === "overview") {
-      setDashboardView("overview");
-    }
-  }, [viewParam]);
-  const [aiTab, setAiTab] = useState<AiTab>("tutor");
-  const [hasCelebrated, setHasCelebrated] = useState(false);
 
   useEffect(() => {
     const isFullTourIntent = tourParam === "full" || tourParam === "FULL_SITE_TOUR";
@@ -188,35 +146,29 @@ function DashboardContent() {
 
 
   const fetchDashboardData = async () => {
-    setLoading(true);
+    // Only show full loading if we have zero cached student data
+    if (students.length === 0) {
+      setLoading(true);
+    }
     try {
-      const [stdRes, gapsRes, plansRes, asmRes, progRes, resultsRes] = await Promise.all([
-        fetch("/api/students", { cache: "no-store" }),
-        fetch("/api/learning-gaps", { cache: "no-store" }),
-        fetch("/api/remedial-plans", { cache: "no-store" }),
-        fetch("/api/assessments", { cache: "no-store" }),
-        fetch("/api/progress", { cache: "no-store" }),
-        fetch("/api/assessments/results", { cache: "no-store" }),
-      ]);
-
       const [stdData, gapsData, plansData, asmData, progData, resultsData] = await Promise.all([
-        stdRes.json(),
-        gapsRes.json(),
-        plansRes.json(),
-        asmRes.json(),
-        progRes.json(),
-        resultsRes.json(),
+        fetchWithCache<any>("/api/students", { ttlMs: 25000 }).then((r) => r.data),
+        fetchWithCache<any>("/api/learning-gaps", { ttlMs: 25000 }).then((r) => r.data),
+        fetchWithCache<any>("/api/remedial-plans", { ttlMs: 25000 }).then((r) => r.data),
+        fetchWithCache<any>("/api/assessments", { ttlMs: 25000 }).then((r) => r.data),
+        fetchWithCache<any>("/api/progress", { ttlMs: 25000 }).then((r) => r.data),
+        fetchWithCache<any>("/api/assessments/results", { ttlMs: 25000 }).then((r) => r.data),
       ]);
 
-      if (stdData.success) setStudents(stdData.students || []);
-      if (gapsData.success) setGaps(gapsData.gaps || []);
-      if (plansData.success) setPlans(plansData.plans || []);
-      if (asmData.success) {
+      if (stdData?.success) setStudents(stdData.students || []);
+      if (gapsData?.success) setGaps(gapsData.gaps || []);
+      if (plansData?.success) setPlans(plansData.plans || []);
+      if (asmData?.success) {
         setAssessments(asmData.assessments || []);
         if (asmData.concepts) setConcepts(asmData.concepts || []);
       }
-      if (progData.success) setProgressData(progData);
-      if (resultsData.success) setResults(resultsData.results || []);
+      if (progData?.success) setProgressData(progData);
+      if (resultsData?.success) setResults(resultsData.results || []);
     } catch (e) {
       console.error("Dashboard fetch error", e);
     } finally {
@@ -225,6 +177,27 @@ function DashboardContent() {
   };
 
   useEffect(() => {
+    // Immediately hydrate from local cache on mount if available
+    const cachedStd = getCachedDataSync<any>("/api/students", 30000);
+    const cachedGaps = getCachedDataSync<any>("/api/learning-gaps", 30000);
+    const cachedPlans = getCachedDataSync<any>("/api/remedial-plans", 30000);
+    const cachedAsm = getCachedDataSync<any>("/api/assessments", 30000);
+    const cachedResults = getCachedDataSync<any>("/api/assessments/results", 30000);
+    const cachedProg = getCachedDataSync<any>("/api/progress", 30000);
+
+    if (cachedStd?.students && cachedStd.students.length > 0) {
+      setStudents(cachedStd.students);
+      if (cachedGaps?.gaps) setGaps(cachedGaps.gaps);
+      if (cachedPlans?.plans) setPlans(cachedPlans.plans);
+      if (cachedAsm?.assessments) {
+        setAssessments(cachedAsm.assessments);
+        if (cachedAsm.concepts) setConcepts(cachedAsm.concepts);
+      }
+      if (cachedResults?.results) setResults(cachedResults.results);
+      if (cachedProg) setProgressData(cachedProg);
+      setLoading(false);
+    }
+
     fetchDashboardData();
 
     const unsubscribe = subscribeToDataUpdates(() => {
@@ -235,13 +208,6 @@ function DashboardContent() {
       unsubscribe();
     };
   }, []);
-
-  const handleCelebrate = () => {
-    fireCelebrationConfetti();
-    setHasCelebrated(true);
-    setTimeout(() => setHasCelebrated(false), 5000);
-  };
-
 
   // Subject Marks Management States (Phase 5)
   const [editingScores, setEditingScores] = useState<Record<string, { marks: number; maxMarks: number; notes: string; saving?: boolean; saved?: boolean; error?: string }>>({});
@@ -410,6 +376,9 @@ function DashboardContent() {
     (p) => p.status === "In Progress" || p.status === "Active" || p.status === "Approved"
   ).length;
   const completedPlansCount = filteredPlans.filter((p) => p.status === "Completed").length;
+  const resolvedGapsCount = filteredGaps.filter(
+    (g) => g.status === "Resolved" || g.status === "Mastered"
+  ).length;
 
   const immediateAttentionGaps = [...activeGaps].sort((a, b) => {
     if (a.priority === "High" && b.priority !== "High") return -1;
@@ -417,7 +386,7 @@ function DashboardContent() {
     return (a.latestPercentage ?? 0) - (b.latestPercentage ?? 0);
   });
 
-  // Real Dynamic 3D Heatmap Dataset calculated from enrolled students and assessment results
+  // Real Dynamic Heatmap Dataset calculated from enrolled students and assessment results
   const targetHeatmapStudents = filteredStudents.slice(0, 8);
   const targetHeatmapConcepts = concepts.slice(0, 6);
 
@@ -463,52 +432,21 @@ function DashboardContent() {
         {/* Header & Filter Controls */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="font-heading text-2xl sm:text-3xl font-extrabold text-[#49352F] tracking-tight">
-                {t.dashboard.title || "Teacher Overview & Action Center"}
-              </h1>
-              <Badge variant="saffron" size="sm" pulse>
-                PS-60 Live
-              </Badge>
-            </div>
+            <h1 className="font-heading text-2xl sm:text-3xl font-extrabold text-[#49352F] tracking-tight">
+              {t.dashboard.title || "Teacher Overview & Action Center"}
+            </h1>
             <p className="text-xs sm:text-sm text-[#7A6862] mt-1">
               {t.dashboard.subtitle || "Track real-time student competencies, flag learning gaps, and trigger targeted remediation."}
             </p>
           </div>
 
-          {/* View Switcher & Actions */}
+          {/* Actions & Filters */}
           <div className="flex flex-wrap items-center gap-2.5">
-            <div className="flex items-center rounded-2xl bg-white p-1 border border-[#49352F]/15 shadow-xs">
-              <button
-                type="button"
-                onClick={() => setDashboardView("overview")}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  dashboardView === "overview"
-                    ? "bg-[#F2CAB3] text-[#49352F] shadow-xs font-black border border-[#49352F]/15"
-                    : "text-[#7A6862] hover:text-[#49352F]"
-                }`}
-              >
-                {t.dashboard.overviewTab || "Overview"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setDashboardView("ai")}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  dashboardView === "ai"
-                    ? "bg-[#F2CAB3] text-[#49352F] shadow-xs font-black border border-[#49352F]/15"
-                    : "text-[#7A6862] hover:text-[#49352F]"
-                }`}
-              >
-                <Sparkles className="w-3.5 h-3.5 text-[#B26A1B]" />
-                <span>{t.dashboard.aiWorkspaceTab || "AI Workspace"}</span>
-              </button>
-            </div>
-
             {/* Active Subject Pill & Switch Subject Control */}
             {isTeacher && activeSubject !== "all" && (
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-[#49352F]/15 shadow-xs text-xs">
                 <span className="text-[#7A6862] font-medium">
-                  {language === "gu" ? "વિષય:" : "Subject:"}
+                  {db.subjectLabel}
                 </span>
                 <span className="font-bold text-[#B26A1B]">
                   {formatSubject(activeSubject)}
@@ -519,7 +457,7 @@ function DashboardContent() {
                     onClick={() => setShowSwitchSubjectModal(true)}
                     className="ml-1 text-[11px] font-bold text-[#B26A1B] hover:text-[#8F5213] underline cursor-pointer"
                   >
-                    {language === "gu" ? "બદલો" : "Switch Subject"}
+                    {db.switchSubjectBtn}
                   </button>
                 )}
               </div>
@@ -532,17 +470,13 @@ function DashboardContent() {
               className="rounded-xl border border-[#49352F]/15 bg-white px-3 py-1.5 text-xs font-semibold text-[#49352F] shadow-xs outline-hidden cursor-pointer"
             >
               <option value="all">
-                {language === "gu"
-                  ? isTeacher
-                    ? `સોંપેલ વર્ગો (${permittedGrades.join(", ")})`
-                    : "બધા વર્ગો (૧-૫)"
-                  : isTeacher
-                  ? `All Assigned Classes (${permittedGrades.join(", ")})`
-                  : "All Classes (1-5)"}
+                {isTeacher
+                  ? tr("dashboard.assignedClassesAll", { classes: permittedGrades.join(", ") })
+                  : db.allClasses1to5}
               </option>
               {permittedGrades.map((g) => (
                 <option key={g} value={String(g)}>
-                  {language === "gu" ? `ધોરણ ${g}` : `Class ${g}`}
+                  {formatClass(g)}
                 </option>
               ))}
             </select>
@@ -559,77 +493,41 @@ function DashboardContent() {
           </div>
         </div>
 
-        {dashboardView === "teachers" ? (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => setDashboardView("overview")}
-                className="text-xs font-bold text-[#49352F] hover:underline flex items-center gap-1 cursor-pointer"
-              >
-                &larr; {language === "gu" ? "ડેશબોર્ડ પર પાછા જાઓ" : "Back to Classroom Overview"}
-              </button>
-              <Link href="/settings" className="text-xs text-[#7A6862] hover:text-[#49352F] font-medium">
-                {language === "gu" ? "સેટિંગ્સ પેજ ખોલો" : "Open Settings"} &rarr;
-              </Link>
-            </div>
-            <TeacherManagementSection />
-          </div>
-        ) : dashboardView === "ai" ? (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => setDashboardView("overview")}
-                className="text-xs font-bold text-[#49352F] hover:underline flex items-center gap-1 cursor-pointer"
-              >
-                &larr; Back to Classroom Overview
-              </button>
-              <Link href="/ai" className="text-xs text-[#7A6862] hover:text-[#49352F] font-medium">
-                Open in Fullscreen Mode &rarr;
-              </Link>
-            </div>
-            <AiWorkspaceView defaultTab={aiTab} embedded />
-          </div>
-        ) : (
-          <>
-            {isAdmin && (
-              <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-[#FAF6E9] via-[#F2CAB3]/40 to-[#FAF6E9] border border-[#B26A1B]/20 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4 text-[#49352F]">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-[#B26A1B]/10 border border-[#B26A1B]/20 text-[#B26A1B] flex items-center justify-center font-bold shrink-0">
-                    <Users className="w-5 h-5 text-[#B26A1B]" aria-hidden="true" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-heading text-sm font-bold text-[#49352F]">
-                        {language === "gu" ? "શાળા સંચાલક નિયંત્રણ કેન્દ્ર" : "School Administrator Control Center"}
-                      </h3>
-                      <Badge variant="saffron" size="sm">
-                        {language === "gu" ? "શિક્ષક વ્યવસ્થાપન" : "Teacher Management"}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-[#7A6862] mt-0.5">
-                      {language === "gu"
-                        ? "શિક્ષકો ઉમેરો, વિષયો અને વર્ગો ૧-૫ સોંપો, અને પરવાનગીઓ સંચાલિત કરો."
-                        : "Manage faculty members, assign subjects and classes 1-5, and update academic permissions."}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 w-full md:w-auto">
-                  <Button
-                    variant="saffron"
-                    size="sm"
-                    onClick={() => setDashboardView("teachers")}
-                    className="rounded-xl text-xs w-full md:w-auto cursor-pointer"
-                  >
-                    <Users className="w-3.5 h-3.5 mr-1.5" />
-                    <span>{language === "gu" ? "શિક્ષક વ્યવસ્થાપન ખોલો" : "Open Teacher Management"}</span>
-                  </Button>
-                </div>
+        {isAdmin && (
+          <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-[#FAF6E9] via-[#F2CAB3]/40 to-[#FAF6E9] border border-[#B26A1B]/20 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4 text-[#49352F]">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-[#B26A1B]/10 border border-[#B26A1B]/20 text-[#B26A1B] flex items-center justify-center font-bold shrink-0">
+                <Users className="w-5 h-5 text-[#B26A1B]" aria-hidden="true" />
               </div>
-            )}
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-heading text-sm font-bold text-[#49352F]">
+                    {db.adminControlCenter}
+                  </h3>
+                  <Badge variant="saffron" size="sm">
+                    {db.teacherManagementBadge}
+                  </Badge>
+                </div>
+                <p className="text-xs text-[#7A6862] mt-0.5">
+                  {db.adminControlDesc}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 w-full md:w-auto">
+              <Button
+                href="/settings"
+                variant="saffron"
+                size="sm"
+                className="rounded-xl text-xs w-full md:w-auto cursor-pointer"
+              >
+                <Users className="w-3.5 h-3.5 me-1.5" />
+                <span>{db.openTeacherMgmt}</span>
+              </Button>
+            </div>
+          </div>
+        )}
 
-            {assignmentNotice && (
+        {assignmentNotice && (
               <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 text-xs font-semibold flex items-center gap-2.5">
                 <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
                 <span>{assignmentNotice}</span>
@@ -645,18 +543,14 @@ function DashboardContent() {
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <h2 className="font-heading text-sm sm:text-base font-bold text-[#49352F]">
-                      {language === "gu"
-                        ? "નવા શિક્ષક છો? StudySaathi AI કેવી રીતે વાપરવું તે જાણો"
-                        : "New Teacher? Learn How to Handle StudySaathi AI"}
+                      {db.newTeacherTitle}
                     </h2>
                     <Badge variant="saffron" size="sm">
-                      {language === "gu" ? "માર્ગદર્શિત ટૂર" : "Interactive Tour"}
+                      {db.interactiveTourBadge}
                     </Badge>
                   </div>
                   <p className="text-xs text-[#7A6862] max-w-2xl leading-relaxed">
-                    {language === "gu"
-                      ? "પ્રાથમિક શાળાના શિક્ષકો માટે તૈયાર કરેલી ૧ મિનિટની ઇન્ટરેક્ટિવ ટૂર જુઓ અથવા સંપૂર્ણ માર્ગદર્શિકા કેન્દ્ર અને પ્રિન્ટેબલ ડેસ્ક શીટ ખોલો."
-                      : "Designed for Gujarat primary teachers: spot gaps early (<60%), deploy 5-step concrete manipulatives, and verify student mastery."}
+                    {db.newTeacherSubtitle}
                   </p>
                 </div>
               </div>
@@ -671,31 +565,30 @@ function DashboardContent() {
                   className="rounded-xl text-xs font-bold shadow-xs flex-1 md:flex-initial cursor-pointer"
                 >
                   <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
-                  <span>{language === "gu" ? "ટૂર શરૂ કરો (૧ મિનિટ)" : "Start Interactive Tour"}</span>
+                  <span>{db.startInteractiveTour}</span>
                 </Button>
 
-                <Link href="/tutorial" className="flex-1 md:flex-initial">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="rounded-xl text-xs bg-white hover:bg-[#F2CAB3] text-[#49352F] border border-[#49352F]/15 w-full cursor-pointer"
-                  >
-                    <BookOpen className="w-3.5 h-3.5 mr-1.5 text-[#B26A1B]" />
-                    <span>{language === "gu" ? "ટ્યુટોરિયલ કેન્દ્ર" : "Tutorial Center"}</span>
-                  </Button>
-                </Link>
+                <Button
+                  href="/tutorial"
+                  variant="outline"
+                  size="sm"
+                  className="rounded-xl text-xs bg-white hover:bg-[#F2CAB3] text-[#49352F] border border-[#49352F]/15 flex-1 md:flex-initial cursor-pointer"
+                >
+                  <BookOpen className="w-3.5 h-3.5 mr-1.5 text-[#B26A1B]" />
+                  <span>{db.tutorialCenterBtn}</span>
+                </Button>
 
-                <Link href="/tutorial/print" target="_blank" className="hidden sm:inline-block">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="rounded-xl text-xs bg-white hover:bg-[#F2CAB3] text-[#49352F] border border-[#49352F]/15 cursor-pointer"
-                    title="Print Desk Reference Sheet"
-                  >
-                    <FileSpreadsheet className="w-3.5 h-3.5 mr-1 text-[#2E7D5E]" />
-                    <span>{language === "gu" ? "પ્રિન્ટ ગાઈડ" : "Print Guide"}</span>
-                  </Button>
-                </Link>
+                <Button
+                  href="/tutorial/print"
+                  target="_blank"
+                  variant="outline"
+                  size="sm"
+                  className="rounded-xl text-xs bg-white hover:bg-[#F2CAB3] text-[#49352F] border border-[#49352F]/15 hidden sm:inline-flex cursor-pointer"
+                  title="Print Desk Reference Sheet"
+                >
+                  <FileSpreadsheet className="w-3.5 h-3.5 mr-1 text-[#2E7D5E]" />
+                  <span>{db.printGuideBtn}</span>
+                </Button>
               </div>
             </div>
 
@@ -708,12 +601,8 @@ function DashboardContent() {
                 variant="indigo"
                 description={
                   selectedGrade !== null
-                    ? language === "gu"
-                      ? `ધોરણ ${selectedGrade}`
-                      : `Class ${selectedGrade}`
-                    : language === "gu"
-                    ? "ધોરણ ૧ થી ૫"
-                    : "Classes 1 to 5"
+                    ? formatClass(selectedGrade)
+                    : db.classesRange1to5
                 }
                 sparklineData={[12, 13, 14, 15, 15]}
               />
@@ -723,12 +612,12 @@ function DashboardContent() {
                 value={studentsWithGaps}
                 icon={AlertTriangle}
                 variant="coral"
-                description={language === "gu" ? "સ્કોર < ૬૦% મર્યાદા" : "Score < 60% threshold"}
+                description={db.studentsRequiringSupportDesc}
                 sparklineData={[6, 5, 5, 4, 4]}
                 change={{
                   value: "-20%",
                   trend: "down",
-                  label: language === "gu" ? "ખામીઓ ઘટી રહી છે" : "gaps closing",
+                  label: db.gapsClosing,
                 }}
               />
 
@@ -737,112 +626,42 @@ function DashboardContent() {
                 value={activePlansCount}
                 icon={Layers}
                 variant="saffron"
-                description={language === "gu" ? "૫-પગલાં પ્રવૃત્તિ આધારિત" : "5-step manipulatives"}
+                description={db.activeLearningGapsDesc}
                 sparklineData={[1, 2, 3, 3, 3]}
               />
 
               <StatTile
-                label={t.dashboard.reassessedGain || "Reassessed Gain"}
-                value="+50 pp"
+                label={t.dashboard.reassessedGain || "Remediation Resolved"}
+                value={resolvedGapsCount > 0 ? `${resolvedGapsCount} Gaps` : `${completedPlansCount} Plans`}
                 icon={TrendingUp}
                 variant="mint"
-                description={language === "gu" ? "આરવ: ૩૫% -> ૮૫%" : "Aarav: 35% -> 85%"}
-                sparklineData={[35, 45, 60, 75, 85]}
-                change={{
-                  value: "+50 pp",
-                  trend: "up",
-                  label: language === "gu" ? "સિદ્ધિમાં વધારો" : "mastery breakthrough",
-                }}
+                description={db.reassessedGainDesc}
+                sparklineData={[1, 2, 2, 3, Math.max(3, resolvedGapsCount)]}
+                change={
+                  completedPlansCount > 0
+                    ? {
+                        value: `${completedPlansCount} completed`,
+                        trend: "up",
+                        label: db.masteryBreakthrough,
+                      }
+                    : undefined
+                }
               />
             </div>
 
-            {/* 2. Recent Reassessment Wins Banner with Confetti */}
-            <Card
-              variant="glass"
-              className="p-5 sm:p-6 border-[#49352F]/15 bg-gradient-to-r from-[#F2DCB5]/40 via-white to-[#F2CAB3]/30 relative overflow-hidden text-[#49352F]"
-            >
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <span className="p-1.5 rounded-xl bg-[#F2DCB5]/80 border border-[#49352F]/15 text-[#49352F] text-xs font-bold flex items-center gap-1 shadow-xs">
-                      <Sparkles className="w-3.5 h-3.5 text-[#B26A1B]" />
-                      {language === "gu" ? "શિક્ષણ સિદ્ધિ" : "Pedagogical Win"}
-                    </span>
-                    <Badge variant="mint" size="sm">
-                      {language === "gu" ? "પ્રભુત્વ પ્રમાણિત" : "Mastery Verified"}
-                    </Badge>
-                  </div>
-                  <h3 className="font-heading text-lg font-bold text-[#49352F]">
-                    {language === "gu"
-                      ? "આરવ પટેલ (ધોરણ ૪-અ) સેતુ પાર કર્યો: ૩૫% → ૮૫% (+૫૦ ગુણ)"
-                      : "Aarav Patel (Class 4A) Crosses The Bridge: 35% → 85% (+50 pp)"}
-                  </h3>
-                  <p className="text-xs text-[#7A6862] max-w-2xl leading-relaxed">
-                    {language === "gu"
-                      ? "મૂર્ત સાધનો અને સંખ્યા રેખા કાર્યપત્રિકા સાથે ૫-પગલાંના ઉપચારાત્મક કાર્ય બાદ, આરવે રચનાત્મક પુનઃમૂલ્યાંકનમાં શેષ સાથે સમાન વહેંચણીમાં સિદ્ધિ મેળવી."
-                      : "Following 5-step concrete division remediation with counters and number line worksheets, Aarav mastered equal sharing with remainders during formative reassessment."}
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-3 shrink-0">
-                  <Button
-                    variant="saffron"
-                    size="sm"
-                    onClick={handleCelebrate}
-                    className="rounded-full shadow-xs text-xs px-4"
-                  >
-                    <PartyPopper className="w-4 h-4 mr-1.5" aria-hidden="true" />
-                    <span>
-                      {hasCelebrated
-                        ? language === "gu"
-                          ? "ઉજવણી કરી!"
-                          : "Celebrated!"
-                        : language === "gu"
-                        ? "ઉજવણી કરો"
-                        : "Celebrate Win"}
-                    </span>
-                  </Button>
-
-                  <Link href="/students/std-aarav">
-                    <Button variant="outline" size="sm" className="rounded-full text-xs">
-                      {language === "gu" ? "આરવનું વિશ્લેષણ →" : "Inspect Aarav →"}
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-
-              {/* Aarav's Glowing Bridge Progress */}
-              <div className="mt-4 pt-4 border-t border-[#49352F]/10">
-                <BridgeProgress
-                  score={85}
-                  previousScore={35}
-                  studentName={language === "gu" ? "આરવ પટેલ" : "Aarav Patel"}
-                  height="md"
-                />
-              </div>
-            </Card>
-
-            {/* 3. Main Grid: 3D Class Mastery Heatmap & Curriculum Proficiency */}
+            {/* Main Grid: Class Mastery Heatmap & Curriculum Proficiency */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-w-0">
-              {/* 3D Class Mastery Heatmap (2 cols on lg) */}
-              <div className="lg:col-span-2 space-y-3 min-w-0">
+              {/* Class Mastery Heatmap (2 cols on lg) */}
+              <div data-tour="heatmap-matrix" className="lg:col-span-2 space-y-3 min-w-0">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <h3 className="font-heading text-base font-bold text-[#49352F]">
-                      {language === "gu"
-                        ? "વર્ગ પ્રભુત્વ હીટમેપ (વિદ્યાર્થીઓ × સંકલ્પનાઓ)"
-                        : "Class Mastery Heatmap (Students × Concepts)"}
+                      {db.heatmapTitle}
                     </h3>
-                    <Badge variant="saffron" size="sm">
-                      {language === "gu" ? "ઇન્ટરેક્ટિવ 3D" : "Interactive 3D"}
-                    </Badge>
                   </div>
-                  <span className="text-[11px] text-[#7A6862]">
-                    {language === "gu" ? "3D વ્યુ ફેરવવા ડ્રેગ કરો" : "Drag to rotate 3D view"}
-                  </span>
                 </div>
 
-                {/* 3D Heatmap Canvas Component */}
+                {/* Heatmap Matrix Component */}
                 <ClassMasteryHeatmap3D
                   data={heatmapData}
                   students={heatmapStudents}
@@ -858,9 +677,7 @@ function DashboardContent() {
                       {t.dashboard.subjectProficiency || "Subject Proficiency"}
                     </h3>
                     <p className="text-xs text-[#7A6862] mt-0.5">
-                      {language === "gu"
-                        ? "હાલની સરેરાશ વિરુદ્ધ મૂળ આધાર"
-                        : "Current cohort average vs baseline"}
+                      {db.subjectProficiencySubtitle}
                     </p>
 
                     <div className="h-[220px] w-full mt-4">
@@ -883,13 +700,13 @@ function DashboardContent() {
                             dataKey="score"
                             fill="#2E7D5E"
                             radius={[6, 6, 0, 0]}
-                            name={language === "gu" ? "વર્તમાન સ્કોર" : "Current Score"}
+                            name={db.currentScore}
                           />
                           <Bar
                             dataKey="baseline"
                             fill="#F2CAB3"
                             radius={[6, 6, 0, 0]}
-                            name={language === "gu" ? "મૂળ સ્કોર" : "Baseline"}
+                            name={db.baselineScore}
                           />
                         </BarChart>
                       </ResponsiveContainer>
@@ -899,14 +716,14 @@ function DashboardContent() {
                   <div className="pt-3 border-t border-[#49352F]/10 flex items-center justify-between text-[11px] text-[#7A6862]">
                     <div className="flex items-center gap-1.5">
                       <span className="w-2.5 h-2.5 rounded-xs bg-[#2E7D5E]" />
-                      <span>{language === "gu" ? "વર્તમાન %" : "Current %"}</span>
+                      <span>{db.currentPercent}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <span className="w-2.5 h-2.5 rounded-xs bg-[#F2CAB3] border border-[#49352F]/15" />
-                      <span>{language === "gu" ? "મૂળ આધાર %" : "Baseline %"}</span>
+                      <span>{db.baselinePercent}</span>
                     </div>
                     <Link href="/reports" className="text-[#8D4E10] hover:underline font-bold">
-                      {language === "gu" ? "સંપૂર્ણ અહેવાલ →" : "Full Reports →"}
+                      {db.fullReports}
                     </Link>
                   </div>
                 </Card>
@@ -920,22 +737,20 @@ function DashboardContent() {
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="font-heading text-base font-bold text-[#49352F]">
-                      {language === "gu"
-                        ? `વિષયવાર ગુણ અને મૂલ્યાંકન સંચાલન — ${formatSubject(activeSubject !== "all" ? activeSubject : "MATH")}`
-                        : `Subject-Wise Marks & Competency Management — ${formatSubject(activeSubject !== "all" ? activeSubject : "MATH")}`}
+                      {tr("dashboard.marksMgmtTitle", {
+                        subject: formatSubject(activeSubject !== "all" ? activeSubject : "MATH"),
+                      })}
                     </h3>
                     <Badge variant="saffron" size="sm">
                       {activeSubject !== "all" ? activeSubject : "MATH"}
                     </Badge>
                   </div>
                   <p className="text-xs text-[#7A6862] mt-0.5">
-                    {language === "gu"
-                      ? "સોંપેલ વર્ગોના વિદ્યાર્થીઓના ગુણ દાખલ કરો, સંપાદિત કરો અને વાસ્તવિક સમયમાં ખામી શોધો."
-                      : "Directly enter or update assessment scores and remarks for authorized students in your assigned classes."}
+                    {db.marksMgmtDesc}
                   </p>
                 </div>
                 <div className="text-xs text-[#7A6862] font-medium">
-                  {filteredStudents.length} {language === "gu" ? "વિદ્યાર્થીઓ ઉપલબ્ધ" : "Students in view"}
+                  {tr("dashboard.studentsInView", { count: filteredStudents.length })}
                 </div>
               </div>
 
@@ -943,13 +758,13 @@ function DashboardContent() {
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
                     <tr className="border-b border-[#49352F]/10 text-[#7A6862] font-semibold">
-                      <th className="py-2.5 px-3">{language === "gu" ? "વિદ્યાર્થી" : "Student"}</th>
-                      <th className="py-2.5 px-3">{language === "gu" ? "વર્ગ" : "Class"}</th>
-                      <th className="py-2.5 px-3">{language === "gu" ? "મૂલ્યાંકન સંકલ્પના" : "Assessment Concept"}</th>
-                      <th className="py-2.5 px-3 text-center">{language === "gu" ? "મેળવેલ ગુણ / કુલ ગુણ" : "Marks / Max"}</th>
-                      <th className="py-2.5 px-3 text-center">{language === "gu" ? "પ્રભુત્વ સ્થિતિ" : "Status"}</th>
-                      <th className="py-2.5 px-3">{language === "gu" ? "શિક્ષક નોંધ" : "Teacher Remarks"}</th>
-                      <th className="py-2.5 px-3 text-right">{language === "gu" ? "ક્રિયા" : "Action"}</th>
+                      <th className="py-2.5 px-3">{db.colStudent}</th>
+                      <th className="py-2.5 px-3">{db.colClass}</th>
+                      <th className="py-2.5 px-3">{db.colConcept}</th>
+                      <th className="py-2.5 px-3 text-center">{db.colMarksMax}</th>
+                      <th className="py-2.5 px-3 text-center">{db.colStatus}</th>
+                      <th className="py-2.5 px-3">{db.colRemarks}</th>
+                      <th className="py-2.5 px-3 text-right">{db.colAction}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#49352F]/8">
@@ -1004,13 +819,13 @@ function DashboardContent() {
                               variant={pct >= 80 ? "mint" : pct >= 60 ? "saffron" : "coral"}
                               size="sm"
                             >
-                              {pct}% {pct >= 80 ? "Mastered" : pct >= 60 ? "Developing" : "Needs Support"}
+                              {pct}% {formatStatus(pct >= 80 ? "Mastered" : pct >= 60 ? "Developing" : "Needs Support")}
                             </Badge>
                           </td>
                           <td className="py-3 px-3">
                             <input
                               type="text"
-                              placeholder={language === "gu" ? "નોંધ લખો..." : "Add remark..."}
+                              placeholder={db.remarkPlaceholder}
                               value={editingScores[st.id]?.notes ?? (studentResult?.notes || "")}
                               onChange={(e) => handleNotesChange(st.id, e.target.value)}
                               className="w-full min-w-[130px] px-2.5 py-1 text-xs rounded-lg border border-[#49352F]/15 bg-white text-[#49352F] focus:border-[#B26A1B] outline-hidden placeholder:text-[#7A6862]/60"
@@ -1025,11 +840,11 @@ function DashboardContent() {
                               className="rounded-xl text-xs px-3 h-7 font-bold shadow-xs cursor-pointer"
                             >
                               {isSaving ? (
-                                <span>Saving...</span>
+                                <span>{db.savingBtn}</span>
                               ) : isSaved ? (
-                                <span className="text-emerald-700 font-bold">Saved!</span>
+                                <span className="text-emerald-700 font-bold">{db.savedBtn}</span>
                               ) : (
-                                <span>Save</span>
+                                <span>{db.saveBtn}</span>
                               )}
                             </Button>
                           </td>
@@ -1042,34 +857,28 @@ function DashboardContent() {
             </Card>
 
             {/* 4. Immediate Attention Student List */}
-            <div data-tour="immediate-attention" className="space-y-3">
-              <div className="flex items-center justify-between">
+            <div className="space-y-3">
+              <div data-tour="immediate-attention" className="flex items-center justify-between p-3.5 rounded-2xl bg-white/80 dark:bg-[#26201C] border border-[#49352F]/12 dark:border-[#F2CAB3]/20 shadow-xs">
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="font-heading text-base font-bold text-[#49352F]">
+                    <h3 className="font-heading text-base font-bold text-[#49352F] dark:text-[#F4F1E1]">
                       {t.dashboard.immediateAttention || "Immediate Attention Required"}
                     </h3>
                     <ContextualHelp termKey="masteryThreshold" />
                   </div>
-                  <p className="text-xs text-[#7A6862]">
-                    {language === "gu"
-                      ? "૬૦% મર્યાદાથી નીચે ચિહ્નિત થયેલા વિદ્યાર્થીઓ કે જેમને સક્રિય સહાયની જરૂર છે"
-                      : "Students flagged below the 60% developing threshold needing active intervention"}
+                  <p className="text-xs text-[#7A6862] dark:text-[#FAF6E9]/75">
+                    {db.attentionListSubtitle}
                   </p>
                 </div>
-                <Link href="/learning-gaps">
-                  <Button variant="outline" size="sm" className="rounded-full text-xs">
-                    {language === "gu" ? "બધી ખામીઓ જુઓ →" : "View All Gaps →"}
-                  </Button>
-                </Link>
+                <Button href="/learning-gaps" variant="outline" size="sm" className="rounded-full text-xs">
+                  {db.viewAllGaps}
+                </Button>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 min-w-0">
                 {immediateAttentionGaps.length === 0 ? (
                   <div className="col-span-full py-8 text-center bg-[#FAF6E9] rounded-2xl border border-[#49352F]/10 text-xs text-[#7A6862]">
-                    {language === "gu"
-                      ? "આ વર્ગ માટે કોઈ તાકીદની સહાયની જરૂર નથી. બધા વિદ્યાર્થીઓ પ્રગતિ પર છે."
-                      : "No immediate intervention required for this class. All students are on track."}
+                    {db.noImmediateAttention}
                   </div>
                 ) : (
                   immediateAttentionGaps.slice(0, 6).map((item) => {
@@ -1114,7 +923,7 @@ function DashboardContent() {
 
                         <p className="text-xs text-[#49352F] leading-relaxed bg-[#FAF6E9] p-2.5 rounded-xl border border-[#49352F]/10">
                           <span className="text-[#7A6862] font-semibold block text-[10px] uppercase">
-                            {language === "gu" ? "શા માટે ચિહ્નિત:" : "Why Flagged:"}
+                            {db.whyFlagged}
                           </span>
                           {item.reason}
                         </p>
@@ -1123,15 +932,14 @@ function DashboardContent() {
                           <span className="text-[11px] text-[#7A6862] truncate max-w-[220px]">
                             {item.suggestedAction}
                           </span>
-                          <Link href={`/remedial-plans?studentId=${item.studentId}&gapId=${item.id}`}>
-                            <Button
-                              variant="saffron"
-                              size="sm"
-                              className="rounded-full text-xs h-7 px-3 cursor-pointer"
-                            >
-                              {language === "gu" ? "યોજના બનાવો →" : "Generate Plan →"}
-                            </Button>
-                          </Link>
+                          <Button
+                            href={`/remedial-plans?studentId=${item.studentId}&gapId=${item.id}`}
+                            variant="saffron"
+                            size="sm"
+                            className="rounded-full text-xs h-7 px-3 cursor-pointer"
+                          >
+                            {db.generatePlanBtn}
+                          </Button>
                         </div>
                       </Card>
                     );
@@ -1139,9 +947,7 @@ function DashboardContent() {
                 )}
               </div>
             </div>
-          </>
-        )}
-      </div>
+          </div>
 
 
       {/* Switch Subject Modal */}
@@ -1151,12 +957,10 @@ function DashboardContent() {
             <div className="flex items-center justify-between pb-2 border-b border-[#49352F]/10">
               <div>
                 <h3 className="font-heading text-lg font-bold text-[#49352F]">
-                  {language === "gu" ? "વિષય બદલો (Switch Subject)" : "Switch Assigned Subject"}
+                  {db.switchSubjectTitle}
                 </h3>
                 <p className="text-xs text-[#7A6862]">
-                  {language === "gu"
-                    ? "તમારા સોંપેલ વિષયોમાંથી એક પસંદ કરો:"
-                    : "Select from your assigned teaching subjects:"}
+                  {db.switchSubjectDesc}
                 </p>
               </div>
               <button
@@ -1172,7 +976,7 @@ function DashboardContent() {
               {assignments.map((asg) => {
                 const isSelected = activeSubject === asg.subjectCode;
                 const classesText = asg.grades && asg.grades.length > 0
-                  ? (language === "gu" ? `વર્ગો: ${asg.grades.slice().sort().join(", ")}` : `Classes: ${asg.grades.slice().sort().join(", ")}`)
+                  ? tr("dashboard.classesPrefix", { classes: asg.grades.slice().sort().join(", ") })
                   : "";
 
                 return (
@@ -1202,7 +1006,7 @@ function DashboardContent() {
                       )}
                     </div>
                     {isSelected && (
-                      <span className="text-xs font-bold text-[#B26A1B]">Active</span>
+                      <span className="text-xs font-bold text-[#B26A1B]">{db.activeTag}</span>
                     )}
                   </button>
                 );
@@ -1223,9 +1027,6 @@ function DashboardContent() {
           }}
         />
       )}
-
-      {/* Onboarding Checklist Widget */}
-      <ChecklistWidget />
     </AppLayout>
   );
 }

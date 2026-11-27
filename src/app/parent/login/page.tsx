@@ -31,7 +31,8 @@ import { useAuth } from "@/context/AuthContext";
 function ParentLoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { language } = useLanguage();
+  const { t, tr } = useLanguage();
+  const pp = t.parentPortal;
   const { loginWithSessionUser } = useAuth();
 
   const [email, setEmail] = useState("");
@@ -63,17 +64,9 @@ function ParentLoginContent() {
       setPassword("DemoParent2026!");
     }
     if (errorParam === "session_expired") {
-      setError(
-        language === "gu"
-          ? "તમારું સત્ર સમાપ્ત થઈ ગયું છે. કૃપા કરીને ફરીથી લૉગિન કરો."
-          : "Your session has expired. Please sign in again."
-      );
+      setError(pp.loginSessionExpired);
     } else if (errorParam === "parent_required") {
-      setError(
-        language === "gu"
-          ? "આ પેજ ફક્ત વાલીઓ માટે છે. કૃપા કરીને વાલી એકાઉન્ટથી લૉગિન કરો."
-          : "This portal is reserved for parents. Please sign in with your parent account."
-      );
+      setError(pp.loginParentRequired);
     }
 
     // Check server SMS OTP provider configuration
@@ -88,7 +81,7 @@ function ParentLoginContent() {
         }
       })
       .catch(() => {});
-  }, [searchParams, language]);
+  }, [searchParams, pp]);
 
   // Real SMS OTP resend countdown timer
   useEffect(() => {
@@ -106,11 +99,7 @@ function ParentLoginContent() {
 
     const cleanPhone = otpPhone.trim();
     if (!cleanPhone || cleanPhone.replace(/\D/g, "").length < 10) {
-      setError(
-        language === "gu"
-          ? "કૃપા કરીને માન્ય 10-અંકનો ભારતીય મોબાઇલ નંબર દાખલ કરો."
-          : "Please enter a valid 10-digit Indian mobile phone number."
-      );
+      setError(pp.loginInvalidPhone);
       return;
     }
 
@@ -127,9 +116,7 @@ function ParentLoginContent() {
         if (res.status === 429) {
           throw new Error(
             data.error ||
-              (language === "gu"
-                ? "ખૂબ વધુ વિનંતીઓ. કૃપા કરીને થોડીવાર પછી ફરીથી પ્રયાસ કરો."
-                : "Rate limit reached. Please wait before requesting another OTP.")
+              pp.loginRateLimit
           );
         }
         throw new Error(data.error || "Failed to send SMS OTP.");
@@ -137,13 +124,9 @@ function ParentLoginContent() {
 
       setOtpStep("code");
       setOtpCooldown(60);
-      setSuccessMsg(
-        language === "gu"
-          ? `6-અંકનો ચકાસણી કોડ ${data.maskedPhone || cleanPhone} પર SMS દ્વારા મોકલવામાં આવ્યો છે.`
-          : `A 6-digit OTP code has been sent via SMS to ${data.maskedPhone || cleanPhone}.`
-      );
+      setSuccessMsg(tr("parentPortal.loginOtpSentSuccess", { phone: data.maskedPhone || cleanPhone }));
     } catch (err: any) {
-      setError(err.message || "Failed to send SMS OTP.");
+      setError(err.message || pp.loginOtpSendFailed);
     } finally {
       setOtpSending(false);
     }
@@ -156,11 +139,7 @@ function ParentLoginContent() {
 
     const cleanCode = otpCode.trim();
     if (!cleanCode || cleanCode.length !== 6) {
-      setError(
-        language === "gu"
-          ? "કૃપા કરીને 6-અંકનો ચકાસણી કોડ દાખલ કરો."
-          : "Please enter the 6-digit verification code."
-      );
+      setError(pp.loginOtpInvalidLen);
       return;
     }
 
@@ -178,25 +157,21 @@ function ParentLoginContent() {
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        throw new Error(data.error || "Invalid OTP code. Please try again.");
+        throw new Error(data.error || pp.loginOtpInvalidFallback);
       }
 
       if (data.user) {
         loginWithSessionUser(data.user);
       }
 
-      setSuccessMsg(
-        language === "gu"
-          ? "સફળતાપૂર્વક પ્રવેશ કર્યો! વાલી ડેશબોર્ડ પર લઈ જઈ રહ્યા છીએ..."
-          : "Signed in successfully! Redirecting to Parent Dashboard..."
-      );
+      setSuccessMsg(pp.loginOtpSignInSuccess);
 
       const redirectPath = searchParams.get("redirect") || "/parent/dashboard";
       setTimeout(() => {
         router.push(redirectPath);
       }, 700);
     } catch (err: any) {
-      setError(err.message || "OTP verification failed.");
+      setError(err.message || pp.loginOtpVerifyFailed);
     } finally {
       setOtpVerifying(false);
     }
@@ -208,20 +183,12 @@ function ParentLoginContent() {
     setSuccessMsg(null);
 
     if (!email.trim() || !email.includes("@")) {
-      setError(
-        language === "gu"
-          ? "કૃપા કરીને માન્ય ઇમેઇલ દાખલ કરો."
-          : "Please enter a valid email address."
-      );
+      setError(pp.registerErrEmail);
       return;
     }
 
     if (!password) {
-      setError(
-        language === "gu"
-          ? "કૃપા કરીને તમારો પાસવર્ડ દાખલ કરો."
-          : "Please enter your password."
-      );
+      setError(pp.loginMissingPassword);
       return;
     }
 
@@ -241,21 +208,17 @@ function ParentLoginContent() {
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        throw new Error(data.error || "Login failed. Please check your credentials.");
+        throw new Error(data.error || pp.loginCheckCredsFallback);
       }
 
-      setSuccessMsg(
-        language === "gu"
-          ? "સફળતાપૂર્વક પ્રવેશ કર્યો! ડેશબોર્ડ પર લઈ જઈ રહ્યા છીએ..."
-          : "Signed in successfully! Redirecting to Parent Dashboard..."
-      );
+      setSuccessMsg(pp.loginSignInSuccess);
 
       const redirectPath = searchParams.get("redirect") || "/parent/dashboard";
       setTimeout(() => {
         router.push(redirectPath);
       }, 700);
     } catch (err: any) {
-      setError(err.message || "Failed to sign in. Please verify your credentials.");
+      setError(err.message || pp.loginSignInFailFallback);
     } finally {
       setLoading(false);
     }
@@ -286,7 +249,7 @@ function ParentLoginContent() {
             className="px-3.5 py-1.5 rounded-full text-xs font-semibold text-[#7A6862] hover:text-[#49352F] hover:bg-white/80 transition-all flex items-center gap-1 border border-[#49352F]/15 bg-white/50"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>{language === "gu" ? "મુખ્ય પૃષ્ઠ" : "Home"}</span>
+            <span>{pp.homeBtn}</span>
           </Link>
         </div>
       </header>
@@ -302,23 +265,21 @@ function ParentLoginContent() {
                   type="button"
                   className="px-5 py-1.5 rounded-xl text-xs font-bold bg-[#261B16] text-[#FAF6E9] shadow-xs cursor-pointer"
                 >
-                  {language === "gu" ? "વાલી પ્રવેશ (Parent Login)" : "Parent Login"}
+                  {pp.parentLoginTab}
                 </button>
                 <Link
                   href="/parent/register"
                   className="px-5 py-1.5 rounded-xl text-xs font-bold text-[#7A6862] hover:text-[#49352F] transition-all cursor-pointer"
                 >
-                  {language === "gu" ? "નવું એકાઉન્ટ (Register)" : "Create Account"}
+                  {pp.createAccountTab}
                 </Link>
               </div>
 
               <h2 className="font-heading text-2xl font-black text-[#49352F] tracking-tight">
-                {language === "gu" ? "વાલી પોર્ટલમાં પ્રવેશ કરો" : "Sign In to Parent Portal"}
+                {pp.loginTitle}
               </h2>
               <p className="text-xs text-[#7A6862]">
-                {language === "gu"
-                  ? "તમારા બાળકના શિક્ષણ અને ઉપચારાત્મક પ્રગતિ સાથે જોડાવો"
-                  : "Track your child's learning journey, gaps & remedial progress"}
+                {pp.loginSubtitle}
               </p>
             </div>
 
@@ -342,16 +303,14 @@ function ParentLoginContent() {
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-bold text-[#49352F] flex items-center gap-1.5">
                   <Sparkles className="w-3.5 h-3.5 text-[#B26A1B]" />
-                  <span>{language === "gu" ? "ડેમો વાલી એક્સેસ" : "1-Click Demo Parent Access"}</span>
+                  <span>{pp.demoAccessBadgeTitle}</span>
                 </span>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#2E7D5E]/15 text-[#2E7D5E] border border-[#2E7D5E]/30">
-                  {language === "gu" ? "સીધો પ્રવેશ" : "No Sign Up"}
+                  {pp.demoNoSignUp}
                 </span>
               </div>
               <p className="text-[11px] text-[#7A6862] leading-relaxed">
-                {language === "gu"
-                  ? "આરવ પટેલ (ધોરણ ૪-A) ના વાલી દિનેશભાઈ પટેલ તરીકે લોગિન કરો:"
-                  : "Explore as Dineshbhai Patel (Father of Aarav Patel, Class 4-A):"}
+                {pp.demoAccessDesc}
               </p>
               <button
                 type="button"
@@ -359,7 +318,7 @@ function ParentLoginContent() {
                 className="w-full py-2 px-3 rounded-xl bg-white border border-[#49352F]/20 text-xs font-bold text-[#49352F] hover:bg-[#FAF6E9] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
               >
                 <Users className="w-3.5 h-3.5 text-[#B26A1B]" />
-                <span>dinesh.patel@example.com (Dineshbhai Patel)</span>
+                <span>{pp.demoParentAccountLabel}</span>
               </button>
             </div>
 
@@ -379,7 +338,7 @@ function ParentLoginContent() {
                 }`}
               >
                 <Mail className="w-3.5 h-3.5" />
-                <span>{language === "gu" ? "ઈમેલ અને પાસવર્ડ" : "Email & Password"}</span>
+                <span>{pp.methodEmailPassword}</span>
               </button>
               <button
                 type="button"
@@ -395,7 +354,7 @@ function ParentLoginContent() {
                 }`}
               >
                 <Smartphone className="w-3.5 h-3.5 text-[#B26A1B]" />
-                <span>{language === "gu" ? "મોબાઈલ SMS OTP" : "Mobile SMS OTP"}</span>
+                <span>{pp.methodMobileOtp}</span>
               </button>
             </div>
 
@@ -404,7 +363,7 @@ function ParentLoginContent() {
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-[#49352F] block">
-                    {language === "gu" ? "ઇમેઇલ સરનામું" : "Email Address"}
+                    {pp.emailLabel}
                   </label>
                   <div className="relative">
                     <Mail className="w-4 h-4 text-[#7A6862] absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -413,7 +372,7 @@ function ParentLoginContent() {
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="parent@example.com"
+                      placeholder={pp.emailPlaceholder}
                       className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#49352F]/20 bg-[#FAF6E9]/60 text-xs font-medium text-[#49352F] placeholder:text-[#7A6862]/60 focus:outline-none focus:border-[#B26A1B] focus:ring-2 focus:ring-[#B26A1B]/20 transition-all"
                     />
                   </div>
@@ -422,13 +381,13 @@ function ParentLoginContent() {
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-bold text-[#49352F] block">
-                      {language === "gu" ? "પાસવર્ડ" : "Password"}
+                      {pp.passwordLabel}
                     </label>
                     <Link
                       href="/parent/forgot-password"
                       className="text-[11px] font-semibold text-[#B26A1B] hover:underline"
                     >
-                      {language === "gu" ? "પાસવર્ડ ભૂલી ગયા?" : "Forgot Password?"}
+                      {pp.forgotPasswordLink}
                     </Link>
                   </div>
                   <div className="relative">
@@ -459,7 +418,7 @@ function ParentLoginContent() {
                       onChange={(e) => setRememberMe(e.target.checked)}
                       className="rounded border-[#49352F]/20 text-[#B26A1B] focus:ring-[#B26A1B]/30"
                     />
-                    <span>{language === "gu" ? "મને યાદ રાખો" : "Remember Me"}</span>
+                    <span>{pp.rememberMeLabel}</span>
                   </label>
                 </div>
 
@@ -471,11 +430,11 @@ function ParentLoginContent() {
                   {loading ? (
                     <span className="flex items-center gap-2">
                       <Sparkles className="w-4 h-4 animate-spin text-[#B26A1B]" />
-                      <span>{language === "gu" ? "ચકાસણી ચાલુ છે..." : "Signing In..."}</span>
+                      <span>{pp.signingInBtn}</span>
                     </span>
                   ) : (
                     <>
-                      <span>{language === "gu" ? "વાલી ડેશબોર્ડમાં પ્રવેશ કરો" : "Sign In to Parent Dashboard"}</span>
+                      <span>{pp.signInDashboardBtn}</span>
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}
@@ -490,16 +449,14 @@ function ParentLoginContent() {
                   <div className="flex items-center justify-between">
                     <span className="font-bold flex items-center gap-1.5 text-[#49352F]">
                       <Phone className="w-3.5 h-3.5 text-[#B26A1B]" />
-                      <span>{language === "gu" ? "વાસ્તવિક SMS OTP પ્રવેશ" : "Verified Carrier SMS Authentication"}</span>
+                      <span>{pp.smsAuthTitle}</span>
                     </span>
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#2E7D5E]/15 text-[#2E7D5E] border border-[#2E7D5E]/30">
-                      {smsProviderConfigured ? (smsProviderName || "Twilio / MSG91") : "Carrier Gateway"}
+                      {smsProviderConfigured ? (smsProviderName || "Twilio / MSG91") : pp.smsCarrierGatewayFallback}
                     </span>
                   </div>
                   <p className="text-[11px] text-[#7A6862] leading-relaxed">
-                    {language === "gu"
-                      ? "તમારા નોંધાયેલ મોબાઇલ નંબર પર વાસ્તવિક SMS OTP મોકલવામાં આવશે. કોઈ પાસવર્ડની જરૂર નથી."
-                      : "A real carrier SMS verification code will be delivered to your registered mobile phone."}
+                    {pp.smsAuthDesc}
                   </p>
                 </div>
 
@@ -507,7 +464,7 @@ function ParentLoginContent() {
                   <form onSubmit={handleSendParentOtp} className="space-y-3">
                     <div>
                       <label className="block text-xs font-semibold text-[#49352F] mb-1">
-                        {language === "gu" ? "મોબાઇલ નંબર" : "Mobile Phone Number"}
+                        {pp.mobilePhoneLabel}
                       </label>
                       <div className="relative flex rounded-xl border border-[#49352F]/20 bg-[#FAF6E9]/60 overflow-hidden focus-within:border-[#B26A1B] focus-within:bg-white transition-all">
                         <span className="inline-flex items-center px-3 text-xs font-bold text-[#7A6862] bg-[#49352F]/5 border-r border-[#49352F]/15">
@@ -518,7 +475,7 @@ function ParentLoginContent() {
                           inputMode="numeric"
                           value={otpPhone}
                           onChange={(e) => setOtpPhone(e.target.value.replace(/[^\d]/g, "").slice(0, 10))}
-                          placeholder="98250 12345"
+                          placeholder={pp.mobilePhonePlaceholder}
                           className="w-full py-2.5 px-3 text-xs text-[#49352F] placeholder-[#7A6862] outline-hidden bg-transparent"
                         />
                       </div>
@@ -535,7 +492,7 @@ function ParentLoginContent() {
                     >
                       <span className="flex items-center gap-1.5 font-medium">
                         <Users className="w-3.5 h-3.5 text-[#B26A1B]" />
-                        <span>Dineshbhai Patel (Father of Aarav)</span>
+                        <span>{pp.demoSmsAccountLabel}</span>
                       </span>
                       <span className="font-mono text-[10px] text-[#B26A1B] font-bold">+91 98250 12345</span>
                     </button>
@@ -548,11 +505,11 @@ function ParentLoginContent() {
                       {otpSending ? (
                         <span className="flex items-center gap-2">
                           <Sparkles className="w-4 h-4 animate-spin text-[#B26A1B]" />
-                          <span>{language === "gu" ? "SMS મોકલી રહ્યા છીએ..." : "Sending SMS OTP..."}</span>
+                          <span>{pp.sendingOtpBtn}</span>
                         </span>
                       ) : (
                         <>
-                          <span>{language === "gu" ? "SMS OTP મોકલો" : "Send SMS OTP"}</span>
+                          <span>{pp.sendOtpBtn}</span>
                           <ArrowRight className="w-4 h-4" />
                         </>
                       )}
@@ -563,7 +520,7 @@ function ParentLoginContent() {
                     <div>
                       <div className="flex items-center justify-between mb-1">
                         <label className="text-xs font-semibold text-[#49352F]">
-                          {language === "gu" ? "૬-અંકનો SMS ચકાસણી કોડ" : "6-Digit SMS Verification Code"}
+                          {pp.smsOtpCodeLabel}
                         </label>
                         <button
                           type="button"
@@ -574,7 +531,7 @@ function ParentLoginContent() {
                           }}
                           className="text-[11px] text-[#B26A1B] hover:underline cursor-pointer"
                         >
-                          {language === "gu" ? "નંબર બદલો" : "Change Number"}
+                          {pp.changeNumberBtn}
                         </button>
                       </div>
                       <div className="relative">
@@ -585,7 +542,7 @@ function ParentLoginContent() {
                           maxLength={6}
                           value={otpCode}
                           onChange={(e) => setOtpCode(e.target.value.replace(/[^\d]/g, "").slice(0, 6))}
-                          placeholder="6 8 2 9 1 4"
+                          placeholder={pp.otpPlaceholder}
                           className="w-full pl-10 pr-3 py-2.5 rounded-xl border border-[#49352F]/20 bg-[#FAF6E9]/60 text-xs tracking-widest font-mono font-bold text-[#49352F] placeholder-[#7A6862] focus:outline-none focus:border-[#B26A1B] focus:ring-2 focus:ring-[#B26A1B]/20"
                         />
                       </div>
@@ -594,11 +551,9 @@ function ParentLoginContent() {
                     <div className="flex items-center justify-between text-[11px]">
                       <span className="text-[#7A6862]">
                         {otpCooldown > 0 ? (
-                          language === "gu"
-                            ? `ફરીથી OTP મોકલવા માટે: ${otpCooldown} સેકન્ડ`
-                            : `Resend available in ${otpCooldown}s`
+                          tr("parentPortal.resendCooldownText", { seconds: otpCooldown })
                         ) : (
-                          language === "gu" ? "OTP મળ્યો નથી?" : "Didn't receive SMS?"
+                          pp.didNotReceiveSms
                         )}
                       </span>
                       {otpCooldown === 0 && (
@@ -609,7 +564,7 @@ function ParentLoginContent() {
                           className="text-[#B26A1B] font-bold hover:underline flex items-center gap-1 cursor-pointer disabled:opacity-50"
                         >
                           <RotateCcw className="w-3 h-3" />
-                          <span>{language === "gu" ? "ફરીથી મોકલો" : "Resend SMS"}</span>
+                          <span>{pp.resendSmsBtn}</span>
                         </button>
                       )}
                     </div>
@@ -622,11 +577,11 @@ function ParentLoginContent() {
                       {otpVerifying ? (
                         <span className="flex items-center gap-2">
                           <Sparkles className="w-4 h-4 animate-spin text-[#B26A1B]" />
-                          <span>{language === "gu" ? "ચકાસણી ચાલુ છે..." : "Verifying OTP..."}</span>
+                          <span>{pp.verifyingOtpBtn}</span>
                         </span>
                       ) : (
                         <>
-                          <span>{language === "gu" ? "ચકાસો અને પ્રવેશ કરો" : "Verify & Sign In"}</span>
+                          <span>{pp.verifyAndSignInBtn}</span>
                           <ArrowRight className="w-4 h-4" />
                         </>
                       )}
@@ -642,7 +597,7 @@ function ParentLoginContent() {
                 <div className="w-full border-t border-[#49352F]/15" />
               </div>
               <span className="relative bg-white px-3 text-[10px] uppercase font-bold tracking-wider text-[#7A6862]">
-                {language === "gu" ? "અથવા આના દ્વારા પ્રવેશ કરો" : "OR CONTINUE WITH"}
+                {pp.orContinueWith}
               </span>
             </div>
 
@@ -670,20 +625,20 @@ function ParentLoginContent() {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
                 />
               </svg>
-              <span>{language === "gu" ? "ગૂગલ સાથે ચાલુ રાખો" : "Continue with Google"}</span>
+              <span>{pp.continueWithGoogle}</span>
             </button>
 
             {/* Switch to Teacher Login */}
             <div className="pt-2 border-t border-[#49352F]/10 text-center space-y-2">
               <p className="text-xs text-[#7A6862]">
-                {language === "gu" ? "શિક્ષક કે વહીવટી સ્ટાફ છો?" : "Are you a Teacher or School Staff?"}
+                {pp.teacherStaffPrompt}
               </p>
               <Link
                 href="/login"
                 className="inline-flex items-center gap-1.5 text-xs font-bold text-[#B26A1B] hover:text-[#49352F] transition-colors"
               >
                 <GraduationCap className="w-4 h-4" />
-                <span>{language === "gu" ? "શિક્ષક પોર્ટલ પર જાઓ →" : "Go to Teacher Portal →"}</span>
+                <span>{pp.goToTeacherPortal}</span>
               </Link>
             </div>
           </div>
@@ -693,8 +648,7 @@ function ParentLoginContent() {
       {/* Footer */}
       <footer className="relative z-10 py-4 text-center text-xs text-[#7A6862]">
         <p>
-          StudySaathi AI &bull; {language === "gu" ? "પ્રાથમિક શાળા શિક્ષણ સેતુ" : "Primary School Learning Gap Bridge"}{" "}
-          &bull; Gandhinagar, Gujarat
+          StudySaathi AI &bull; {pp.footerTitle} &bull; {pp.footerLocation}
         </p>
       </footer>
     </div>
@@ -702,18 +656,21 @@ function ParentLoginContent() {
 }
 
 
+function ParentLoginFallback() {
+  const { t } = useLanguage();
+  return (
+    <div className="min-h-screen bg-[#FAF6E9] flex items-center justify-center">
+      <div className="p-6 rounded-2xl bg-white shadow-md text-center space-y-3">
+        <div className="w-8 h-8 border-4 border-[#B26A1B] border-t-transparent rounded-full animate-spin mx-auto" />
+        <p className="text-xs font-bold text-[#49352F]">{t.parentPortal.loadingParentLogin}</p>
+      </div>
+    </div>
+  );
+}
+
 export default function ParentLoginPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen bg-[#FAF6E9] flex items-center justify-center">
-          <div className="p-6 rounded-2xl bg-white shadow-md text-center space-y-3">
-            <div className="w-8 h-8 border-4 border-[#B26A1B] border-t-transparent rounded-full animate-spin mx-auto" />
-            <p className="text-xs font-bold text-[#49352F]">Loading Parent Login...</p>
-          </div>
-        </div>
-      }
-    >
+    <Suspense fallback={<ParentLoginFallback />}>
       <ParentLoginContent />
     </Suspense>
   );

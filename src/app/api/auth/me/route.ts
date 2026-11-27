@@ -47,6 +47,8 @@ export async function GET(request: Request) {
       googleId: effectiveUser.googleId,
       avatarUrl: effectiveUser.avatarUrl,
       provider: effectiveUser.provider,
+      preferredLanguage: (effectiveUser as any).preferredLanguage || "en",
+      preferredScript: (effectiveUser as any).preferredScript || undefined,
       status: (effectiveUser as any).status || "active",
       createdAt: (effectiveUser as any).createdAt,
       updatedAt: (effectiveUser as any).updatedAt,

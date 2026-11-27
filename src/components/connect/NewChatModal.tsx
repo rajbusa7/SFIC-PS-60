@@ -40,7 +40,8 @@ export function NewChatModal({
   onSelectContact,
   onCreateGroup,
 }: NewChatModalProps) {
-  const { language } = useLanguage();
+  const { t, formatClass } = useLanguage();
+  const cn = t.connect;
   const [tab, setTab] = useState<"direct" | "group">("direct");
   const [search, setSearch] = useState("");
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -117,7 +118,7 @@ export function NewChatModal({
               <MessageSquare className="w-4 h-4" />
             </div>
             <h3 className="font-bold text-lg text-[#49352F] dark:text-[#F4F1E1]">
-              {language === "gu" ? "નવો વાર્તાલાપ શરૂ કરો" : "Start New Conversation"}
+              {cn.modalTitle}
             </h3>
           </div>
           <button
@@ -138,7 +139,7 @@ export function NewChatModal({
                 : "border-transparent text-[#49352F]/60 dark:text-[#F4F1E1]/60 hover:text-[#49352F]"
             }`}
           >
-            {language === "gu" ? "૧-થી-૧ ખાનગી ચેટ" : "1-on-1 Direct Chat"}
+            {cn.tabDirect}
           </button>
           {currentUserRole !== "parent" && (
             <button
@@ -149,7 +150,7 @@ export function NewChatModal({
                   : "border-transparent text-[#49352F]/60 dark:text-[#F4F1E1]/60 hover:text-[#49352F]"
               }`}
             >
-              {language === "gu" ? "નવું વર્ગ જૂથ બનાવો" : "Create Class Group"}
+              {cn.tabGroup}
             </button>
           )}
         </div>
@@ -163,7 +164,7 @@ export function NewChatModal({
                 <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#49352F]/40 dark:text-[#F4F1E1]/40" />
                 <input
                   type="text"
-                  placeholder={language === "gu" ? "શિક્ષક અથવા વાલી શોધો..." : "Search teacher or parent..."}
+                  placeholder={cn.searchContactsPlaceholder}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="w-full pl-9 pr-3 py-2 text-sm rounded-xl border border-[#49352F]/15 dark:border-[#F4F1E1]/15 bg-white dark:bg-[#261E1A] text-[#49352F] dark:text-[#F4F1E1] focus:outline-none focus:ring-2 focus:ring-[#2E7D5E]/30"
@@ -173,11 +174,11 @@ export function NewChatModal({
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-12 text-[#49352F]/60">
                   <Loader2 className="w-6 h-6 animate-spin text-[#2E7D5E] mb-2" />
-                  <span className="text-xs">{language === "gu" ? "સંપર્કો લોડ થઈ રહ્યા છે..." : "Loading contacts..."}</span>
+                  <span className="text-xs">{cn.loadingContacts}</span>
                 </div>
               ) : filteredContacts.length === 0 ? (
                 <div className="text-center py-10 text-[#49352F]/50 text-sm">
-                  {language === "gu" ? "કોઈ સંપર્ક મળ્યો નથી." : "No authorized contacts found."}
+                  {cn.noContactsFound}
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -216,12 +217,12 @@ export function NewChatModal({
             <form onSubmit={handleGroupSubmit} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-[#49352F] dark:text-[#F4F1E1] mb-1">
-                  {language === "gu" ? "જૂથનું નામ *" : "Group Name *"}
+                  {cn.groupNameLabel}
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Class 4A — Parents & Teacher"
+                  placeholder={cn.groupNamePlaceholder}
                   value={groupTitle}
                   onChange={(e) => setGroupTitle(e.target.value)}
                   className="w-full px-3 py-2 text-sm rounded-xl border border-[#49352F]/20 dark:border-[#F4F1E1]/20 bg-white dark:bg-[#261E1A] text-[#49352F] dark:text-[#F4F1E1] focus:ring-2 focus:ring-[#2E7D5E]/30"
@@ -230,28 +231,26 @@ export function NewChatModal({
 
               <div>
                 <label className="block text-xs font-bold text-[#49352F] dark:text-[#F4F1E1] mb-1">
-                  {language === "gu" ? "સંબંધિત વર્ગ *" : "Associated Class *"}
+                  {cn.associatedClassLabel}
                 </label>
                 <select
                   value={selectedClass}
                   onChange={(e) => setSelectedClass(e.target.value)}
                   className="w-full px-3 py-2 text-sm rounded-xl border border-[#49352F]/20 dark:border-[#F4F1E1]/20 bg-white dark:bg-[#261E1A] text-[#49352F] dark:text-[#F4F1E1]"
                 >
-                  <option value="cls-1a">Class 1A (Grade 1)</option>
-                  <option value="cls-2a">Class 2A (Grade 2)</option>
-                  <option value="cls-3a">Class 3A (Grade 3)</option>
-                  <option value="cls-4a">Class 4A (Grade 4)</option>
-                  <option value="cls-5a">Class 5A (Grade 5)</option>
+                  {[1, 2, 3, 4, 5].map((g) => (
+                    <option key={g} value={`cls-${g}a`}>{formatClass(g, "A")}</option>
+                  ))}
                 </select>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-[#49352F] dark:text-[#F4F1E1] mb-1">
-                  {language === "gu" ? "વિગત / હેતુ" : "Description / Goal"}
+                  {cn.groupDescLabel}
                 </label>
                 <textarea
                   rows={2}
-                  placeholder="e.g. Daily homework updates, worksheet distribution, and classroom reminders."
+                  placeholder={cn.groupDescPlaceholder}
                   value={groupDesc}
                   onChange={(e) => setGroupDesc(e.target.value)}
                   className="w-full px-3 py-2 text-sm rounded-xl border border-[#49352F]/20 dark:border-[#F4F1E1]/20 bg-white dark:bg-[#261E1A] text-[#49352F] dark:text-[#F4F1E1]"
@@ -260,7 +259,7 @@ export function NewChatModal({
 
               <div>
                 <label className="block text-xs font-bold text-[#49352F] dark:text-[#F4F1E1] mb-2">
-                  {language === "gu" ? "વાલી સભ્યો પસંદ કરો" : "Select Authorized Parents"}
+                  {cn.selectParentsLabel}
                 </label>
                 <div className="max-h-36 overflow-y-auto space-y-1.5 border border-[#49352F]/10 dark:border-[#F4F1E1]/10 p-2 rounded-xl bg-white dark:bg-[#261E1A]">
                   {contacts
@@ -303,9 +302,7 @@ export function NewChatModal({
                   className="rounded text-[#2E7D5E] focus:ring-[#2E7D5E]"
                 />
                 <label htmlFor="allowReplies" className="text-xs text-[#49352F] dark:text-[#F4F1E1]">
-                  {language === "gu"
-                    ? "વાલીઓને મેસેજનો જવાબ આપવાની પરવાનગી આપો"
-                    : "Allow parents to post replies in this group"}
+                  {cn.allowRepliesLabel}
                 </label>
               </div>
 
@@ -320,7 +317,7 @@ export function NewChatModal({
                   ) : (
                     <Users className="w-4 h-4" />
                   )}
-                  {language === "gu" ? "વર્ગ જૂથ બનાવો" : "Create Class Group"}
+                  {cn.createGroupBtn}
                 </button>
               </div>
             </form>

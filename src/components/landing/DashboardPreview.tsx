@@ -74,16 +74,15 @@ export function DashboardPreview() {
             <Badge variant="saffron" size="sm" pulse>
               Live Primary Demo Cohort
             </Badge>
-            <Link href="/dashboard">
-              <Button
-                variant="saffron"
-                size="sm"
-                className="rounded-full text-xs py-1.5 px-3 h-auto"
-              >
-                <span>Open Full App</span>
-                <ArrowRight className="w-3 h-3 ml-1" />
-              </Button>
-            </Link>
+            <Button
+              href="/dashboard"
+              variant="saffron"
+              size="sm"
+              className="rounded-full text-xs py-1.5 px-3 h-auto"
+            >
+              <span>Open Full App</span>
+              <ArrowRight className="w-3 h-3 ml-1" />
+            </Button>
           </div>
         </div>
 
@@ -284,11 +283,9 @@ export function DashboardPreview() {
                     </div>
                   </div>
 
-                  <Link href="/remedial-plans">
-                    <Button variant="outline" size="sm" className="rounded-full text-xs h-8 text-[#49352F] border-[#49352F]/20 hover:bg-[#FAF6E9]">
-                      Remediate &rarr;
-                    </Button>
-                  </Link>
+                  <Button href="/remedial-plans" variant="outline" size="sm" className="rounded-full text-xs h-8 text-[#49352F] border-[#49352F]/20 hover:bg-[#FAF6E9]">
+                    Remediate &rarr;
+                  </Button>
                 </div>
               ))}
             </div>

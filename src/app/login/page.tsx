@@ -35,16 +35,12 @@ import {
   Phone,
 } from "lucide-react";
 
-const BridgeCanvas3D = dynamic(
-  () => import("@/components/3d/BridgeCanvas3D").then((m) => m.BridgeCanvas3D),
-  { ssr: false }
-);
-
 function LoginCardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login, registerTeacher, loginAsDemoTeacher, loginAsDemoAdmin, loginAsDemoParent, loginWithSessionUser, setSelectedSubject } = useAuth();
-  const { language } = useLanguage();
+  const { t, tr, formatSubject, formatClass } = useLanguage();
+  const lg = t.login;
 
   // Mode: "login" or "register"
   const initialMode = searchParams.get("mode") === "register" || searchParams.get("unregistered") === "true" ? "register" : "login";
@@ -67,7 +63,7 @@ function LoginCardContent() {
 
   // Login form state
   const [email, setEmail] = useState(searchParams.get("email") || "teacher@studysaathi.edu.in");
-  const [password, setPassword] = useState("DemoPass2026!");
+  const [password, setPassword] = useState("teacher123");
   const [showPassword, setShowPassword] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
@@ -90,7 +86,7 @@ function LoginCardContent() {
 
   const handleConfirmSubject = () => {
     if (!selectedModalSubject) {
-      setSubjectModalError(language === "gu" ? "કૃપા કરીને આગળ વધવા માટે એક વિષય પસંદ કરો." : "Please select a subject to continue.");
+      setSubjectModalError(lg.errSelectSubject);
       return;
     }
     setSelectedSubject(selectedModalSubject);
@@ -118,10 +114,7 @@ function LoginCardContent() {
       if (unregName) setRegName(unregName);
       setBannerNotice({
         type: "warning",
-        message:
-          language === "gu"
-            ? "આ Google એકાઉન્ટ રજીસ્ટર થયેલ નથી. કૃપા કરીને પ્રથમ તમારું શિક્ષક એકાઉન્ટ બનાવો."
-            : "This Google account is not registered in StudySaathi AI. Please create your teacher account below to continue.",
+        message: lg.oauthUnregistered,
       });
     } else if (existing === "true") {
       setAuthMode("login");
@@ -129,36 +122,23 @@ function LoginCardContent() {
       if (existEmail) setEmail(existEmail);
       setBannerNotice({
         type: "info",
-        message:
-          language === "gu"
-            ? "આ ઈમેલ સાથેનું એકાઉન્ટ પહેલેથી અસ્તિત્વમાં છે. કૃપા કરીને નીચે સાઇન ઇન કરો."
-            : "An account with this email/Google account already exists. Please sign in below.",
+        message: lg.oauthExisting,
       });
     } else if (error === "google_cancelled") {
       setBannerNotice({
         type: "info",
-        message:
-          language === "gu"
-            ? "Google પ્રમાણીકરણ રદ કરવામાં આવ્યું હતું. તમે ઈમેલ/પાસવર્ડથી પ્રવેશ કરી શકો છો."
-            : "Google sign-in was cancelled. You can sign in using your email and password or try again.",
+        message: lg.oauthCancelled,
       });
     } else if (error === "oauth_failed") {
       const msg = searchParams.get("message");
       setBannerNotice({
         type: "error",
-        message:
-          msg ||
-          (language === "gu"
-            ? "Google પ્રમાણીકરણ નિષ્ફળ ગયું. કૃપા કરીને પુનઃ પ્રયાસ કરો."
-            : "Google authentication failed. Please try again or sign in with your credentials."),
+        message: msg || lg.oauthFailed,
       });
     } else if (error === "invalid_state") {
       setBannerNotice({
         type: "error",
-        message:
-          language === "gu"
-            ? "સુરક્ષા સત્ર સમાપ્ત થઈ ગયું છે. કૃપા કરીને ફરીથી પ્રયાસ કરો."
-            : "Security session expired. Please try signing in again.",
+        message: lg.oauthExpired,
       });
     }
 
@@ -177,7 +157,7 @@ function LoginCardContent() {
         }
       })
       .catch(() => setGoogleConfigured(false));
-  }, [searchParams, language]);
+  }, [searchParams, lg]);
 
   // Real SMS OTP resend countdown timer
   useEffect(() => {
@@ -195,11 +175,7 @@ function LoginCardContent() {
 
     const cleanPhone = otpPhone.trim();
     if (!cleanPhone || cleanPhone.replace(/\D/g, "").length < 10) {
-      setOtpError(
-        language === "gu"
-          ? "કૃપા કરીને માન્ય 10-અંકનો ભારતીય મોબાઇલ નંબર દાખલ કરો."
-          : "Please enter a valid 10-digit Indian mobile phone number."
-      );
+      setOtpError(lg.otpInvalidPhone);
       return;
     }
 
@@ -214,32 +190,19 @@ function LoginCardContent() {
 
       if (!res.ok || !data.success) {
         if (res.status === 404) {
-          throw new Error(
-            language === "gu"
-              ? "આ મોબાઇલ નંબર શાળાના સ્ટાફ / શિક્ષક તરીકે નોંધાયેલ નથી. કૃપા કરીને શાળા વહીવટકર્તાનો સંપર્ક કરો અથવા તમારા ઈમેલ દ્વારા પ્રવેશ કરો."
-              : "This phone number is not registered as an authorized school teacher or staff member. Please use your registered phone or sign in with email."
-          );
+          throw new Error(lg.otpNotRegistered);
         }
         if (res.status === 429) {
-          throw new Error(
-            data.error ||
-              (language === "gu"
-                ? "ખૂબ વધુ વિનંતીઓ. કૃપા કરીને થોડીવાર પછી ફરીથી પ્રયાસ કરો."
-                : "Rate limit reached. Please wait before requesting another OTP.")
-          );
+          throw new Error(data.error || lg.otpRateLimit);
         }
-        throw new Error(data.error || "Failed to send SMS OTP.");
+        throw new Error(data.error || lg.otpSendFailed);
       }
 
       setOtpStep("code");
       setOtpCooldown(60);
-      setOtpSuccess(
-        language === "gu"
-          ? `6-અંકનો ચકાસણી કોડ ${data.maskedPhone || cleanPhone} પર SMS દ્વારા મોકલવામાં આવ્યો છે.`
-          : `A 6-digit OTP code has been sent via SMS to ${data.maskedPhone || cleanPhone}.`
-      );
+      setOtpSuccess(tr("login.otpSentSuccess", { phone: data.maskedPhone || cleanPhone }));
     } catch (err: any) {
-      setOtpError(err.message || "Failed to send SMS OTP.");
+      setOtpError(err.message || lg.otpSendFailed);
     } finally {
       setOtpSending(false);
     }
@@ -251,11 +214,7 @@ function LoginCardContent() {
 
     const cleanCode = otpCode.trim();
     if (!cleanCode || cleanCode.length !== 6) {
-      setOtpError(
-        language === "gu"
-          ? "કૃપા કરીને 6-અંકનો ચકાસણી કોડ દાખલ કરો."
-          : "Please enter the 6-digit verification code."
-      );
+      setOtpError(lg.otpInvalidCodeLen);
       return;
     }
 
@@ -273,7 +232,7 @@ function LoginCardContent() {
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        throw new Error(data.error || "Invalid OTP code. Please try again.");
+        throw new Error(data.error || lg.otpInvalidCode);
       }
 
       if (data.user) {
@@ -281,7 +240,7 @@ function LoginCardContent() {
       }
       router.push("/dashboard");
     } catch (err: any) {
-      setOtpError(err.message || "OTP verification failed.");
+      setOtpError(err.message || lg.otpVerifyFailed);
     } finally {
       setOtpVerifying(false);
     }
@@ -291,11 +250,7 @@ function LoginCardContent() {
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
-      setLoginError(
-        language === "gu"
-          ? "કૃપા કરીને ઈમેલ અને પાસવર્ડ બંને ભરો."
-          : "Please enter both your email address and password."
-      );
+      setLoginError(lg.errBothFields);
       return;
     }
     setLoginLoading(true);
@@ -309,11 +264,7 @@ function LoginCardContent() {
 
       const asgs = result.assignments || [];
       if (asgs.length === 0) {
-        setLoginError(
-          language === "gu"
-            ? "તમારા એકાઉન્ટને કોઈ વિષય સોંપવામાં આવ્યો નથી. કૃપા કરીને તમારા વહીવટકર્તાનો સંપર્ક કરો."
-            : "No subjects have been assigned to your account. Please contact your administrator."
-        );
+        setLoginError(lg.errNoSubjectsAssigned);
         return;
       }
 
@@ -327,11 +278,7 @@ function LoginCardContent() {
       setSelectedModalSubject(asgs[0].subjectCode);
       setShowSubjectModal(true);
     } catch (err: any) {
-      setLoginError(
-        language === "gu"
-          ? "ખોટો ઈમેલ અથવા પાસવર્ડ. કૃપા કરીને પુનઃ પ્રયાસ કરો."
-          : (err?.message || "Invalid email or password. Please try again.")
-      );
+      setLoginError(err?.message || lg.errInvalidCredFallback);
     } finally {
       setLoginLoading(false);
     }
@@ -341,23 +288,19 @@ function LoginCardContent() {
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!regName.trim()) {
-      setRegError(language === "gu" ? "કૃપા કરીને તમારું પૂરું નામ દાખલ કરો." : "Please enter your full name.");
+      setRegError(lg.errRegName);
       return;
     }
     if (!regEmail.trim() || !regEmail.includes("@")) {
-      setRegError(language === "gu" ? "કૃપા કરીને માન્ય ઈમેલ સરનામું દાખલ કરો." : "Please enter a valid email address.");
+      setRegError(lg.errRegEmail);
       return;
     }
     if (!regPassword || regPassword.length < 6) {
-      setRegError(
-        language === "gu"
-          ? "પાસવર્ડ ઓછામાં ઓછો ૬ અક્ષરનો હોવો જોઈએ."
-          : "Password must be at least 6 characters long."
-      );
+      setRegError(lg.errRegPassLen);
       return;
     }
     if (regPassword !== regConfirmPassword) {
-      setRegError(language === "gu" ? "પાસવર્ડ મેળ ખાતા નથી." : "Passwords do not match.");
+      setRegError(lg.errRegPassMatch);
       return;
     }
 
@@ -368,7 +311,7 @@ function LoginCardContent() {
     if (result.success) {
       router.push("/dashboard");
     } else {
-      setRegError(result.error || (language === "gu" ? "એકાઉન્ટ બનાવવામાં નિષ્ફળ." : "Failed to create account."));
+      setRegError(result.error || lg.errRegFailed);
       setRegLoading(false);
     }
   };
@@ -450,14 +393,14 @@ function LoginCardContent() {
                   : "text-[#7A6862] dark:text-[#FAF6E9]/70 hover:text-[#49352F] dark:hover:text-[#F4F1E1]"
               }`}
             >
-              {language === "gu" ? "શિક્ષક પ્રવેશ" : "Teacher Login"}
+              {lg.tabTeacherLogin}
             </button>
             <Link
               href="/parent/login"
               className="px-3.5 sm:px-5 py-1.5 rounded-xl text-xs font-bold text-[#7A6862] dark:text-[#FAF6E9]/70 hover:text-[#49352F] dark:hover:text-[#F4F1E1] hover:bg-[#F2CAB3]/30 transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <Users className="w-3.5 h-3.5 text-[#B26A1B] dark:text-[#F2CAB3]" />
-              <span>{language === "gu" ? "વાલી પ્રવેશ" : "Parent Login"}</span>
+              <span>{lg.tabParentLogin}</span>
             </Link>
             <button
               type="button"
@@ -471,23 +414,15 @@ function LoginCardContent() {
                   : "text-[#7A6862] dark:text-[#FAF6E9]/70 hover:text-[#49352F] dark:hover:text-[#F4F1E1]"
               }`}
             >
-              {language === "gu" ? "નવું એકાઉન્ટ" : "Create Account"}
+              {lg.tabCreateAccount}
             </button>
           </div>
 
           <h2 className="font-heading text-2xl font-black text-[#49352F] dark:text-[#F4F1E1] tracking-tight">
-            {authMode === "login"
-              ? language === "gu"
-                ? "StudySaathi માં પ્રવેશ કરો"
-                : "Sign In to StudySaathi AI"
-              : language === "gu"
-              ? "નવું શિક્ષક એકાઉન્ટ બનાવો"
-              : "Register New Teacher Account"}
+            {authMode === "login" ? lg.headingLogin : lg.headingRegister}
           </h2>
           <p className="text-xs text-[#7A6862] dark:text-[#FAF6E9]/75">
-            {language === "gu"
-              ? "પ્રાથમિક શાળા શિક્ષણ ઉપચારાત્મક પ્રણાલી"
-              : "Primary School Pedagogical Remedial System"}
+            {lg.subheadingSystem}
           </p>
         </div>
 
@@ -514,57 +449,35 @@ function LoginCardContent() {
           </div>
         )}
 
-        {/* 1-Click Demo Evaluation Box (Available in Login Mode) */}
+        {/* 1-Click Demo Quick Access */}
         {authMode === "login" && (
-          <div className="p-4 rounded-2xl bg-gradient-to-br from-[#F2DCB5]/70 via-[#FAF6E9] to-[#F2CAB3]/60 dark:from-[#2A231E] dark:via-[#221C18] dark:to-[#1E1916] border border-[#49352F]/15 dark:border-[#F2CAB3]/25 shadow-inner space-y-3 text-[#49352F] dark:text-[#F4F1E1]">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-[#B26A1B] dark:text-[#F2CAB3]" />
-                {language === "gu" ? "હેકાથોન જ્યુરી ૧-ક્લિક પ્રવેશ" : "Hackathon Jury 1-Click Access"}
-              </span>
-              <Badge variant="mint" size="sm">
-                {language === "gu" ? "સાઇન-અપ મુક્ત" : "No Sign Up"}
-              </Badge>
-            </div>
-            <p className="text-[11px] text-[#7A6862] dark:text-[#FAF6E9]/75 leading-relaxed">
-              {language === "gu"
-                ? "લાઇવ પ્રાથમિક સમૂહનું સીધું અન્વેષણ કરવા માટે પૂર્વ-રૂપરેખાંકિત ભૂમિકા પસંદ કરો:"
-                : "Select a pre-configured role to immediately explore the live primary cohort:"}
-            </p>
-
-            <div className="grid grid-cols-3 gap-2 pt-1">
-              <Button
+          <div className="p-3 rounded-2xl bg-[#FAF6E9]/90 dark:bg-[#26201C] border border-[#49352F]/12 dark:border-[#F2CAB3]/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+            <span className="text-[11px] font-semibold text-[#7A6862] dark:text-[#FAF6E9]/75 flex items-center gap-1.5 shrink-0">
+              <Sparkles className="w-3.5 h-3.5 text-[#B26A1B] dark:text-[#F2CAB3]" />
+              <span>{lg.juryAccessTitle || "Quick Demo Access"}</span>
+            </span>
+            <div className="grid grid-cols-3 gap-1.5 sm:flex sm:items-center">
+              <button
                 type="button"
-                variant="saffron"
-                size="sm"
                 onClick={handleTeacherDemo}
-                className="rounded-xl text-xs font-black shadow-xs cursor-pointer px-2"
+                className="px-3 py-1.5 rounded-xl text-[11px] font-bold bg-[#F2CAB3] hover:bg-white text-[#49352F] border border-[#49352F]/15 transition-all text-center cursor-pointer shadow-2xs active:scale-95 whitespace-nowrap"
               >
-                <UserCheck className="w-3.5 h-3.5 mr-1 shrink-0" />
-                <span className="truncate">{language === "gu" ? "શિક્ષક" : "Teacher Role"}</span>
-              </Button>
-
-              <Button
+                {lg.roleTeacherShort || "Teacher"}
+              </button>
+              <button
                 type="button"
-                variant="outline"
-                size="sm"
                 onClick={handleParentDemo}
-                className="rounded-xl text-xs font-bold border-[#B26A1B]/40 hover:border-[#B26A1B] bg-[#F2CAB3]/25 hover:bg-[#F2CAB3]/50 text-[#49352F] dark:text-[#F4F1E1] cursor-pointer px-2"
+                className="px-3 py-1.5 rounded-xl text-[11px] font-bold bg-white dark:bg-[#201A16] text-[#49352F] dark:text-[#F4F1E1] hover:bg-[#F2CAB3] border border-[#49352F]/15 transition-all text-center cursor-pointer shadow-2xs active:scale-95 whitespace-nowrap"
               >
-                <Users className="w-3.5 h-3.5 mr-1 shrink-0 text-[#B26A1B] dark:text-[#F2CAB3]" />
-                <span className="truncate">{language === "gu" ? "વાલી" : "Parent Role"}</span>
-              </Button>
-
-              <Button
+                {lg.roleParentShort || "Parent"}
+              </button>
+              <button
                 type="button"
-                variant="outline"
-                size="sm"
                 onClick={handleAdminDemo}
-                className="rounded-xl text-xs font-bold border-[#49352F]/15 dark:border-[#F2CAB3]/30 hover:border-[#49352F]/30 bg-white dark:bg-[#26201C] text-[#49352F] dark:text-[#F4F1E1] cursor-pointer px-2"
+                className="px-3 py-1.5 rounded-xl text-[11px] font-bold bg-white dark:bg-[#201A16] text-[#7A6862] dark:text-[#FAF6E9]/70 hover:bg-[#FAF6E9] border border-[#49352F]/15 transition-all text-center cursor-pointer shadow-2xs active:scale-95 whitespace-nowrap"
               >
-                <ShieldCheck className="w-3.5 h-3.5 mr-1 shrink-0 text-[#7A6862] dark:text-[#FAF6E9]" />
-                <span className="truncate">{language === "gu" ? "પ્રશાસક" : "Admin Role"}</span>
-              </Button>
+                {lg.roleAdminShort || "Admin"}
+              </button>
             </div>
           </div>
         )}
@@ -590,7 +503,7 @@ function LoginCardContent() {
                 }`}
               >
                 <Mail className="w-3.5 h-3.5" />
-                <span>{language === "gu" ? "ઈમેલ અને પાસવર્ડ" : "Email & Password"}</span>
+                <span>{lg.methodPassword}</span>
               </button>
               <button
                 type="button"
@@ -605,7 +518,7 @@ function LoginCardContent() {
                 }`}
               >
                 <Smartphone className="w-3.5 h-3.5 text-[#B26A1B] dark:text-[#F2CAB3]" />
-                <span>{language === "gu" ? "મોબાઈલ SMS OTP" : "Mobile SMS OTP"}</span>
+                <span>{lg.methodOtp}</span>
               </button>
             </div>
 
@@ -614,7 +527,7 @@ function LoginCardContent() {
               <form onSubmit={handleLoginSubmit} className="space-y-3.5">
                 <div>
                   <label className="block text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] mb-1">
-                    {language === "gu" ? "ઈમેલ સરનામું" : "Email Address"}
+                    {lg.emailLabel}
                   </label>
                   <div className="relative">
                     <Mail className="absolute left-3.5 top-3 h-4 w-4 text-[#7A6862]" />
@@ -630,7 +543,7 @@ function LoginCardContent() {
 
                 <div>
                   <label className="block text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] mb-1">
-                    {language === "gu" ? "પાસવર્ડ" : "Password"}
+                    {lg.passwordLabel}
                   </label>
                   <div className="relative">
                     <Lock className="absolute left-3.5 top-3 h-4 w-4 text-[#7A6862]" />
@@ -664,13 +577,7 @@ function LoginCardContent() {
                   className="w-full rounded-full text-xs font-black shadow-xs cursor-pointer"
                 >
                   <span>
-                    {loginLoading
-                      ? language === "gu"
-                        ? "પ્રવેશ થઈ રહ્યો છે..."
-                        : "Signing In..."
-                      : language === "gu"
-                      ? "ડેશબોર્ડમાં પ્રવેશ કરો"
-                      : "Sign In to Dashboard"}
+                    {loginLoading ? lg.signingIn : lg.signInDashboardBtn}
                   </span>
                   <ArrowRight className="w-4 h-4 ml-1.5" />
                 </Button>
@@ -685,16 +592,14 @@ function LoginCardContent() {
                   <div className="flex items-center justify-between">
                     <span className="font-bold flex items-center gap-1.5 text-[#49352F] dark:text-[#F4F1E1]">
                       <Phone className="w-3.5 h-3.5 text-[#B26A1B] dark:text-[#F2CAB3]" />
-                      <span>{language === "gu" ? "વાસ્તવિક SMS OTP પ્રવેશ" : "Verified Carrier SMS Authentication"}</span>
+                      <span>{lg.smsAuthBadgeTitle}</span>
                     </span>
                     <Badge variant={smsProviderConfigured ? "mint" : "outline"} size="sm">
-                      {smsProviderConfigured ? (smsProviderName || "Twilio / MSG91") : "Carrier Gateway"}
+                      {smsProviderConfigured ? (smsProviderName || "Twilio / MSG91") : lg.carrierGatewayFallback}
                     </Badge>
                   </div>
                   <p className="text-[11px] text-[#7A6862] dark:text-[#FAF6E9]/70 leading-relaxed">
-                    {language === "gu"
-                      ? "તમારા નોંધાયેલ શાળા ફોન નંબર પર વાસ્તવિક SMS OTP મોકલવામાં આવશે. ફક્ત માન્ય શિક્ષક એકાઉન્ટ જ પ્રવેશી શકે છે."
-                      : "A real carrier SMS OTP is delivered to your registered mobile phone. Only verified school teachers in the roster can sign in."}
+                    {lg.smsAuthDesc}
                   </p>
                 </div>
 
@@ -702,7 +607,7 @@ function LoginCardContent() {
                   <form onSubmit={handleSendTeacherOtp} className="space-y-3">
                     <div>
                       <label className="block text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] mb-1">
-                        {language === "gu" ? "નોંધાયેલ મોબાઇલ નંબર" : "Registered Mobile Phone Number"}
+                        {lg.registeredPhoneLabel}
                       </label>
                       <div className="relative flex rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/25 bg-[#FAF6E9] dark:bg-[#26201C] overflow-hidden focus-within:border-[#F2CAB3] focus-within:bg-white dark:focus-within:bg-[#201A16]">
                         <span className="inline-flex items-center px-3 text-xs font-bold text-[#7A6862] dark:text-[#FAF6E9]/70 bg-[#49352F]/5 dark:bg-[#F2CAB3]/10 border-r border-[#49352F]/10 dark:border-[#F2CAB3]/20">
@@ -730,7 +635,7 @@ function LoginCardContent() {
                     >
                       <span className="flex items-center gap-1.5 font-medium">
                         <UserCheck className="w-3.5 h-3.5 text-[#B26A1B]" />
-                        <span>Pooja Sharma (Class 4-A Teacher)</span>
+                        <span>{lg.demoTeacherShortcut}</span>
                       </span>
                       <span className="font-mono text-[10px] text-[#B26A1B] dark:text-[#F2CAB3] font-bold">+91 98765 43210</span>
                     </button>
@@ -749,13 +654,7 @@ function LoginCardContent() {
                       className="w-full rounded-full text-xs font-black shadow-xs cursor-pointer"
                     >
                       <span>
-                        {otpSending
-                          ? language === "gu"
-                            ? "SMS OTP મોકલી રહ્યા છીએ..."
-                            : "Sending Carrier SMS OTP..."
-                          : language === "gu"
-                          ? "SMS OTP મોકલો"
-                          : "Send SMS OTP"}
+                        {otpSending ? lg.sendingOtpBtn : lg.sendOtpBtn}
                       </span>
                       <ArrowRight className="w-4 h-4 ml-1.5" />
                     </Button>
@@ -771,7 +670,7 @@ function LoginCardContent() {
                     <div>
                       <div className="flex items-center justify-between mb-1">
                         <label className="text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1]">
-                          {language === "gu" ? "૬-અંકનો SMS ચકાસણી કોડ" : "6-Digit SMS Verification Code"}
+                          {lg.otpCodeLabel}
                         </label>
                         <button
                           type="button"
@@ -782,7 +681,7 @@ function LoginCardContent() {
                           }}
                           className="text-[11px] text-[#B26A1B] dark:text-[#F2CAB3] hover:underline cursor-pointer"
                         >
-                          {language === "gu" ? "નંબર બદલો" : "Change Number"}
+                          {lg.changeNumberBtn}
                         </button>
                       </div>
                       <div className="relative">
@@ -801,13 +700,7 @@ function LoginCardContent() {
 
                     <div className="flex items-center justify-between text-[11px]">
                       <span className="text-[#7A6862] dark:text-[#FAF6E9]/70">
-                        {otpCooldown > 0 ? (
-                          language === "gu"
-                            ? `ફરીથી OTP મોકલવા માટે: ${otpCooldown} સેકન્ડ`
-                            : `Resend available in ${otpCooldown}s`
-                        ) : (
-                          language === "gu" ? "OTP મળ્યો નથી?" : "Didn't receive SMS?"
-                        )}
+                        {otpCooldown > 0 ? tr("login.otpCooldown", { seconds: otpCooldown }) : lg.didntReceiveSms}
                       </span>
                       {otpCooldown === 0 && (
                         <button
@@ -817,7 +710,7 @@ function LoginCardContent() {
                           className="text-[#B26A1B] dark:text-[#F2CAB3] font-bold hover:underline flex items-center gap-1 cursor-pointer disabled:opacity-50"
                         >
                           <RotateCcw className="w-3 h-3" />
-                          <span>{language === "gu" ? "ફરીથી મોકલો" : "Resend SMS"}</span>
+                          <span>{lg.resendSmsBtn}</span>
                         </button>
                       )}
                     </div>
@@ -836,13 +729,7 @@ function LoginCardContent() {
                       className="w-full rounded-full text-xs font-black shadow-xs cursor-pointer"
                     >
                       <span>
-                        {otpVerifying
-                          ? language === "gu"
-                            ? "ચકાસણી ચાલુ છે..."
-                            : "Verifying Carrier OTP..."
-                          : language === "gu"
-                          ? "ચકાસો અને પ્રવેશ કરો"
-                          : "Verify & Sign In"}
+                        {otpVerifying ? lg.verifyingOtpBtn : lg.verifySignInBtn}
                       </span>
                       <ArrowRight className="w-4 h-4 ml-1.5" />
                     </Button>
@@ -857,7 +744,7 @@ function LoginCardContent() {
                 <div className="w-full border-t border-[#49352F]/15 dark:border-[#F2CAB3]/20" />
               </div>
               <span className="relative bg-white dark:bg-[#1E1916] px-3 text-[11px] font-bold text-[#7A6862] dark:text-[#FAF6E9]/75 tracking-wider uppercase">
-                {language === "gu" ? "અથવા આનાથી પ્રવેશ કરો" : "OR CONTINUE WITH"}
+                {lg.orContinueWith}
               </span>
             </div>
 
@@ -898,13 +785,7 @@ function LoginCardContent() {
                 </svg>
               )}
               <span>
-                {googleLoading
-                  ? language === "gu"
-                    ? "Google સાથે કનેક્ટ થઈ રહ્યું છે..."
-                    : "Connecting with Google..."
-                  : language === "gu"
-                  ? "Google સાથે આગળ વધો"
-                  : "Continue with Google"}
+                {googleLoading ? lg.googleConnecting : lg.googleContinue}
               </span>
             </button>
           </div>
@@ -918,7 +799,7 @@ function LoginCardContent() {
             <form onSubmit={handleRegisterSubmit} className="space-y-3.5">
               <div>
                 <label className="block text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] mb-1">
-                  {language === "gu" ? "શિક્ષકનું પૂરું નામ" : "Teacher Full Name"}
+                  {lg.regFullNameLabel}
                 </label>
                 <div className="relative">
                   <UserIcon className="absolute left-3.5 top-3 h-4 w-4 text-[#7A6862]" />
@@ -927,7 +808,7 @@ function LoginCardContent() {
                     required
                     value={regName}
                     onChange={(e) => setRegName(e.target.value)}
-                    placeholder="e.g. Pooja Sharma"
+                    placeholder={lg.regFullNamePlaceholder}
                     className="w-full rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/25 bg-[#FAF6E9] dark:bg-[#26201C] py-2.5 pl-10 pr-3 text-xs text-[#49352F] dark:text-[#F4F1E1] placeholder-[#7A6862] focus:border-[#F2CAB3] focus:bg-white dark:focus:bg-[#201A16] outline-hidden"
                   />
                 </div>
@@ -935,7 +816,7 @@ function LoginCardContent() {
 
               <div>
                 <label className="block text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] mb-1">
-                  {language === "gu" ? "સત્તાવાર ઈમેલ સરનામું" : "Official Email Address"}
+                  {lg.regOfficialEmailLabel}
                 </label>
                 <div className="relative">
                   <Mail className="absolute left-3.5 top-3 h-4 w-4 text-[#7A6862]" />
@@ -952,7 +833,7 @@ function LoginCardContent() {
 
               <div>
                 <label className="block text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] mb-1">
-                  {language === "gu" ? "શાળા સંલગ્નતા (School ID)" : "School Association"}
+                  {lg.regSchoolLabel}
                 </label>
                 <div className="relative">
                   <Building2 className="absolute left-3.5 top-3 h-4 w-4 text-[#7A6862]" />
@@ -961,15 +842,9 @@ function LoginCardContent() {
                     onChange={(e) => setRegSchoolId(e.target.value)}
                     className="w-full rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/25 bg-[#FAF6E9] dark:bg-[#26201C] py-2.5 pl-10 pr-3 text-xs text-[#49352F] dark:text-[#F4F1E1] focus:border-[#F2CAB3] focus:bg-white dark:focus:bg-[#201A16] outline-hidden cursor-pointer"
                   >
-                    <option value="sch-gn-01">
-                      Model Primary School, Gandhinagar (sch-gn-01)
-                    </option>
-                    <option value="sch-ah-02">
-                      Sardar Patel Primary Vidyalaya, Ahmedabad (sch-ah-02)
-                    </option>
-                    <option value="sch-br-03">
-                      Sayajirao Primary School, Vadodara (sch-br-03)
-                    </option>
+                    <option value="sch-gn-01">{lg.regSchool1}</option>
+                    <option value="sch-ah-02">{lg.regSchool2}</option>
+                    <option value="sch-br-03">{lg.regSchool3}</option>
                   </select>
                 </div>
               </div>
@@ -977,7 +852,7 @@ function LoginCardContent() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] mb-1">
-                    {language === "gu" ? "પાસવર્ડ" : "Password"}
+                    {lg.passwordLabel}
                   </label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-3 h-3.5 w-3.5 text-[#7A6862]" />
@@ -986,7 +861,7 @@ function LoginCardContent() {
                       required
                       value={regPassword}
                       onChange={(e) => setRegPassword(e.target.value)}
-                      placeholder="Min. 6 chars"
+                      placeholder={lg.regPassPlaceholder}
                       className="w-full rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/25 bg-[#FAF6E9] dark:bg-[#26201C] py-2.5 pl-9 pr-3 text-xs text-[#49352F] dark:text-[#F4F1E1] placeholder-[#7A6862] focus:border-[#F2CAB3] focus:bg-white dark:focus:bg-[#201A16] outline-hidden"
                     />
                   </div>
@@ -994,7 +869,7 @@ function LoginCardContent() {
 
                 <div>
                   <label className="block text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1] mb-1">
-                    {language === "gu" ? "પાસવર્ડ પુષ્ટિ" : "Confirm"}
+                    {lg.regConfirmLabel}
                   </label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-3 h-3.5 w-3.5 text-[#7A6862]" />
@@ -1003,7 +878,7 @@ function LoginCardContent() {
                       required
                       value={regConfirmPassword}
                       onChange={(e) => setRegConfirmPassword(e.target.value)}
-                      placeholder="Repeat password"
+                      placeholder={lg.regConfirmPlaceholder}
                       className="w-full rounded-xl border border-[#49352F]/15 dark:border-[#F2CAB3]/25 bg-[#FAF6E9] dark:bg-[#26201C] py-2.5 pl-9 pr-3 text-xs text-[#49352F] dark:text-[#F4F1E1] placeholder-[#7A6862] focus:border-[#F2CAB3] focus:bg-white dark:focus:bg-[#201A16] outline-hidden"
                     />
                   </div>
@@ -1024,13 +899,7 @@ function LoginCardContent() {
                 className="w-full rounded-full text-xs font-black shadow-xs cursor-pointer"
               >
                 <span>
-                  {regLoading
-                    ? language === "gu"
-                      ? "ખાતું બની રહ્યું છે..."
-                      : "Creating Teacher Account..."
-                    : language === "gu"
-                    ? "નવું શિક્ષક ખાતું બનાવો"
-                    : "Create Teacher Account"}
+                  {regLoading ? lg.regCreatingBtn : lg.regCreateBtn}
                 </span>
                 <ArrowRight className="w-4 h-4 ml-1.5" />
               </Button>
@@ -1042,7 +911,7 @@ function LoginCardContent() {
                 <div className="w-full border-t border-[#49352F]/15 dark:border-[#F2CAB3]/20" />
               </div>
               <span className="relative bg-white dark:bg-[#1E1916] px-3 text-[11px] font-bold text-[#7A6862] dark:text-[#FAF6E9]/75 tracking-wider uppercase">
-                {language === "gu" ? "અથવા આનાથી સાઇન અપ કરો" : "OR SIGN UP WITH"}
+                {lg.orSignUpWith}
               </span>
             </div>
 
@@ -1083,13 +952,7 @@ function LoginCardContent() {
                 </svg>
               )}
               <span>
-                {googleLoading
-                  ? language === "gu"
-                    ? "Google સાથે કનેક્ટ થઈ રહ્યું છે..."
-                    : "Connecting with Google..."
-                  : language === "gu"
-                  ? "Google સાથે સાઇન અપ કરો"
-                  : "Sign up with Google"}
+                {googleLoading ? lg.googleConnecting : lg.googleSignUp}
               </span>
             </button>
           </div>
@@ -1098,13 +961,13 @@ function LoginCardContent() {
         {/* Parent Portal Direct Entry */}
         <div className="pt-3 border-t border-[#49352F]/10 dark:border-[#F2CAB3]/15 text-center">
           <p className="text-xs text-[#7A6862] dark:text-[#FAF6E9]/70">
-            {language === "gu" ? "વિદ્યાર્થીના વાલી છો? " : "Are you a Student's Parent or Guardian? "}
+            {lg.parentPromptQuestion}{" "}
             <Link
               href="/parent/login"
               className="font-bold text-[#B26A1B] dark:text-[#F2CAB3] hover:underline inline-flex items-center gap-1 ml-1"
             >
               <Users className="w-3.5 h-3.5" />
-              <span>{language === "gu" ? "વાલી પોર્ટલ પ્રવેશ →" : "Sign In to Parent Portal →"}</span>
+              <span>{lg.parentPromptLink} <span className="rtl:inline-block rtl:rotate-180">→</span></span>
             </Link>
           </p>
         </div>
@@ -1116,15 +979,13 @@ function LoginCardContent() {
           <div className="max-w-md w-full rounded-3xl bg-white dark:bg-[#1E1916] border border-[#49352F]/20 dark:border-[#F2CAB3]/30 p-6 shadow-2xl space-y-5 text-[#49352F] dark:text-[#F4F1E1]">
             <div className="text-center space-y-1">
               <span className="text-xs uppercase tracking-wider font-semibold text-[#B26A1B] dark:text-[#F2CAB3]">
-                ShikshaSetu AI
+                {t.app.name}
               </span>
               <h3 className="font-heading text-xl font-bold text-[#49352F] dark:text-[#F4F1E1]">
-                {language === "gu" ? "સ્વાગત છે, શિક્ષક!" : "Welcome, Teacher!"}
+                {lg.subjectModalWelcome}
               </h3>
               <p className="text-xs text-[#7A6862] dark:text-[#FAF6E9]/80">
-                {language === "gu"
-                  ? "શિક્ષણ સત્ર શરૂ કરવા માટે તમારો સોંપેલ વિષય પસંદ કરો:"
-                  : "Select your assigned subject to begin your teaching session:"}
+                {lg.subjectModalPrompt}
               </p>
             </div>
 
@@ -1136,21 +997,12 @@ function LoginCardContent() {
 
             <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
               {pendingAssignments.map((asg) => {
-                const subjectInfo = {
-                  MATH: { name: "Mathematics", gu: "ગણિત" },
-                  ENG: { name: "English", gu: "અંગ્રેજી" },
-                  GUJ: { name: "Gujarati", gu: "ગુજરાતી" },
-                  EVS: { name: "Environmental Studies", gu: "પર્યાવરણ" },
-                  SCI: { name: "Science", gu: "વિજ્ઞાન" },
-                  SST: { name: "Social Science", gu: "સામાજિક વિજ્ઞાન" },
-                  HIN: { name: "Hindi", gu: "હિન્દી" },
-                }[asg.subjectCode] || { name: asg.subjectCode, gu: asg.subjectCode };
-
+                const subjectLabel = formatSubject(asg.subjectCode);
                 const isSelected = selectedModalSubject === asg.subjectCode;
                 const classesText = asg.grades && asg.grades.length > 0
-                  ? (language === "gu"
-                      ? `વર્ગ: ${asg.grades.slice().sort().join(", ")}`
-                      : `Classes: ${asg.grades.slice().sort().join(", ")}`)
+                  ? tr("login.classesPrefix", {
+                      classes: asg.grades.slice().sort().map((g) => formatClass(g)).join(", "),
+                    })
                   : "";
 
                 return (
@@ -1170,7 +1022,7 @@ function LoginCardContent() {
                     <div className="space-y-0.5">
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-sm text-[#49352F] dark:text-[#F4F1E1]">
-                          {language === "gu" ? subjectInfo.gu : subjectInfo.name}
+                          {subjectLabel}
                         </span>
                         <span className="px-2 py-0.5 text-[10px] font-mono rounded-md bg-[#FAF6E9] dark:bg-[#1E1916] text-[#B26A1B] dark:text-[#F2CAB3] font-bold border border-[#49352F]/10">
                           {asg.subjectCode}
@@ -1201,7 +1053,7 @@ function LoginCardContent() {
               onClick={handleConfirmSubject}
               className="w-full py-3 rounded-2xl bg-[#B26A1B] hover:bg-[#8F5213] text-white font-medium text-sm shadow-md transition-all cursor-pointer"
             >
-              {language === "gu" ? "આગળ વધો (Continue)" : "Continue"}
+              {lg.subjectModalContinue}
             </Button>
           </div>
         </div>
@@ -1215,7 +1067,7 @@ function LoginCardContent() {
               <div className="flex items-center gap-2">
                 <Info className="w-5 h-5 text-[#B26A1B] dark:text-[#F2CAB3]" />
                 <h3 className="font-heading text-base font-bold">
-                  {language === "gu" ? "Google OAuth સેટઅપ માર્ગદર્શિકા" : "Google OAuth Setup Required"}
+                  {lg.oauthModalTitle}
                 </h3>
               </div>
               <button
@@ -1228,20 +1080,18 @@ function LoginCardContent() {
             </div>
 
             <p className="text-xs text-[#7A6862] dark:text-[#FAF6E9]/80 leading-relaxed">
-              {language === "gu"
-                ? "વાસ્તવિક Google લૉગિન સક્ષમ કરવા માટે, તમારા .env ફાઈલમાં Google Cloud Console માંથી મેળવેલ Client ID અને Secret દાખલ કરો:"
-                : "To enable live Google OAuth in this deployment, configure your OAuth 2.0 Client credentials in your environment:"}
+              {lg.oauthModalDesc}
             </p>
 
             <div className="p-3.5 rounded-2xl bg-[#FAF6E9] dark:bg-[#26201C] border border-[#49352F]/15 dark:border-[#F2CAB3]/20 text-[11px] font-mono space-y-1.5 select-all">
-              <div className="text-[#B26A1B] dark:text-[#F2CAB3] font-bold"># Add to .env or Vercel Environment:</div>
+              <div className="text-[#B26A1B] dark:text-[#F2CAB3] font-bold">{lg.oauthModalEnvComment}</div>
               <div>GOOGLE_CLIENT_ID=&quot;your-id.apps.googleusercontent.com&quot;</div>
               <div>GOOGLE_CLIENT_SECRET=&quot;your-client-secret&quot;</div>
               <div>NEXTAUTH_SECRET=&quot;studysaathi_session_secret_2026&quot;</div>
             </div>
 
             <div className="space-y-1.5 text-xs text-[#7A6862] dark:text-[#FAF6E9]/75">
-              <div className="font-semibold text-[#49352F] dark:text-[#F4F1E1]">Authorized Redirect URIs:</div>
+              <div className="font-semibold text-[#49352F] dark:text-[#F4F1E1]">{lg.oauthModalRedirectHeading}</div>
               <div className="p-2 rounded-xl bg-slate-100 dark:bg-[#2D241F] font-mono text-[11px] text-[#49352F] dark:text-[#F4F1E1]">
                 https://shikshasetu-ai-iota.vercel.app/api/auth/callback/google
               </div>
@@ -1267,7 +1117,7 @@ function LoginCardContent() {
                 onClick={() => setShowSetupModal(false)}
                 className="rounded-full text-xs font-bold"
               >
-                {language === "gu" ? "સમજાયું (Got It)" : "Close & Use Email/Password"}
+                {lg.oauthModalClose}
               </Button>
             </div>
           </div>
@@ -1277,14 +1127,17 @@ function LoginCardContent() {
   );
 }
 
+function LoginLoadingFallback() {
+  const { t } = useLanguage();
+  return <div className="p-8 text-center text-sm font-bold text-[#49352F]">{t.login.loadingAuth}</div>;
+}
+
 export default function LoginPage() {
-  const { language } = useLanguage();
+  const { t } = useLanguage();
+  const lg = t.login;
 
   return (
     <div className="min-h-screen bg-[#F4F1E1] dark:bg-[#15110E] text-[#49352F] dark:text-[#F4F1E1] flex flex-col justify-between overflow-hidden relative">
-      {/* Background 3D Bridge Canvas */}
-      <BridgeCanvas3D progress={0.5} />
-
       {/* Top Navbar */}
       <header className="relative z-20 flex items-center justify-between p-5 sm:px-10 max-w-7xl w-full mx-auto backdrop-blur-xs">
         <Link href="/" className="cursor-pointer">
@@ -1303,60 +1156,36 @@ export default function LoginPage() {
           <div className="hidden lg:flex lg:col-span-6 flex-col justify-center space-y-6 text-left pr-6">
             <div className="flex items-center gap-2">
               <Badge variant="saffron" size="sm" pulse>
-                SFIC Gujarat Hackathon 2026
+                {lg.heroBadgeHackathon}
               </Badge>
               <Badge variant="mint" size="sm">
-                100% Offline-First
+                {lg.heroBadgeOffline}
               </Badge>
             </div>
 
-            <h1 className="font-heading text-4xl xl:text-5xl font-extrabold text-[#49352F] dark:text-[#F4F1E1] leading-tight tracking-tight">
-              {language === "gu" ? (
-                <>
-                  અધ્યયન ત્રુટિથી સિદ્ધિ સુધીનો{" "}
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#B26A1B] to-[#2E7D5E]">
-                    સુવર્ણ સેતુ.
-                  </span>
-                </>
-              ) : (
-                <>
-                  The Bridge from Learning Gaps to{" "}
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#B26A1B] to-[#2E7D5E]">
-                    Mastery.
-                  </span>
-                </>
-              )}
-            </h1>
+            <h1 className="font-heading text-4xl xl:text-5xl font-extrabold text-[#49352F] dark:text-[#F4F1E1] leading-tight tracking-tight">{lg.heroTitleBefore}<span className="text-transparent bg-clip-text bg-gradient-to-r from-[#B26A1B] to-[#2E7D5E]">{lg.heroTitleHighlight}</span></h1>
 
             <p className="text-sm text-[#7A6862] dark:text-[#FAF6E9]/80 leading-relaxed max-w-lg">
-              {language === "gu"
-                ? "પ્રાથમિક શાળાના શિક્ષકો માટે પારદર્શક AI ડિટેક્શન અને ૫-પગલાંની પ્રવૃત્તિ-આધારિત ઉપચારાત્મક યોજનાઓ."
-                : "Deterministic rule-based tracking, explainable cognitive diagnosis, and concrete 5-step remedial curricula for Gujarat primary schools."}
+              {lg.heroDesc}
             </p>
 
             <div className="space-y-3 pt-2 text-xs text-[#7A6862] dark:text-[#FAF6E9]/75">
               <div className="flex items-center gap-2.5">
                 <CheckCircle2 className="w-4 h-4 text-[#2E7D5E] dark:text-[#4EE2A7] shrink-0" />
                 <span>
-                  {language === "gu"
-                    ? "નિશ્ચિત ૬૦% વિકાસશીલ અને ૮૦% નિપુણતા બેન્ચમાર્ક્સ"
-                    : "Deterministic 60% developing & 80% mastery benchmarks"}
+                  {lg.bulletBenchmarks}
                 </span>
               </div>
               <div className="flex items-center gap-2.5">
                 <CheckCircle2 className="w-4 h-4 text-[#B26A1B] dark:text-[#F2CAB3] shrink-0" />
                 <span>
-                  {language === "gu"
-                    ? "ઇન્ટરેક્ટિવ ૩D વર્ગ નિપુણતા હીટમેપ અને કૌશલ્ય પ્રગતિ વૃક્ષ"
-                    : "Interactive 3D class mastery heatmap & student skill progression trees"}
+                  {lg.bulletHeatmap}
                 </span>
               </div>
               <div className="flex items-center gap-2.5">
                 <CheckCircle2 className="w-4 h-4 text-[#2E7D5E] dark:text-[#4EE2A7] shrink-0" />
                 <span>
-                  {language === "gu"
-                    ? "કોઈ ચૂકવણી કરેલ API જરૂરી નથી; ગ્રામીણ શાળાઓમાં સંપૂર્ણ ઑફલાઇન ચાલે છે"
-                    : "Zero paid APIs required; operates completely offline in rural schools"}
+                  {lg.bulletOffline}
                 </span>
               </div>
             </div>
@@ -1364,7 +1193,7 @@ export default function LoginPage() {
 
           {/* Right Column: Warm Login / Register Card */}
           <div className="w-full lg:col-span-6 max-w-md mx-auto">
-            <Suspense fallback={<div className="p-8 text-center text-xs text-[#7A6862]">Loading authentication...</div>}>
+            <Suspense fallback={<LoginLoadingFallback />}>
               <LoginCardContent />
             </Suspense>
           </div>
@@ -1373,7 +1202,7 @@ export default function LoginPage() {
 
       {/* Footer */}
       <footer className="relative z-20 py-4 text-center text-xs text-[#7A6862] dark:text-[#FAF6E9]/60 border-t border-[#49352F]/10 dark:border-[#F2CAB3]/15">
-        <p>© 2026 StudySaathi AI • SFIC Gujarat Hackathon PS-60. Offline-First PWA.</p>
+        <p>{lg.footerCopyright}</p>
       </footer>
     </div>
   );

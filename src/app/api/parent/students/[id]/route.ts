@@ -58,14 +58,12 @@ export async function GET(
       );
     }
 
-    // Fetch real assessment results
-    const results = db.getResults(studentId);
-
-    // Fetch real learning gaps
-    const learningGaps = db.getLearningGaps(studentId);
-
-    // Fetch real remedial plans
-    const remedialPlans = db.getRemedialPlans(studentId);
+    // Fetch real assessment results, learning gaps, and remedial plans
+    const [results, learningGaps, remedialPlans] = await Promise.all([
+      db.getResultsAsync(studentId),
+      db.getLearningGapsAsync(studentId),
+      db.getRemedialPlansAsync(studentId),
+    ]);
 
     // Fetch school notices targeted to this student's grade or all students
     const allNotices = db.getNotices();

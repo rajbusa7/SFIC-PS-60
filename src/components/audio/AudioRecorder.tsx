@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Mic, Square, X, Loader2, AlertCircle, Sparkles, Volume2 } from "lucide-react";
 import type { SupportedLanguage } from "@/lib/types";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface AudioRecorderProps {
   language?: SupportedLanguage;
@@ -15,8 +16,11 @@ export function AudioRecorder({
   language = "en",
   onTranscript,
   className = "",
-  buttonLabel = "Voice Input",
+  buttonLabel,
 }: AudioRecorderProps) {
+  const { t, tr } = useLanguage();
+  const au = t.audio;
+  const resolvedLabel = buttonLabel ?? au.voiceInputDefault;
   const [isRecording, setIsRecording] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -93,7 +97,7 @@ export function AudioRecorder({
         console.warn("MediaRecorder permission or device error:", err);
         if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
           setPermissionDenied(true);
-          setError("Microphone permission was denied. Please allow microphone access in your browser settings.");
+          setError(au.micDenied);
           return;
         }
       }
@@ -110,12 +114,32 @@ export function AudioRecorder({
         recognition.continuous = false;
         recognition.interimResults = false;
 
-        const langMap: Record<string, string> = {
-          gu: "gu-IN",
-          hi: "hi-IN",
-          en: "en-IN",
-        };
-        recognition.lang = langMap[language] || "en-IN";
+        const SPEECH_LOCALE_MAP: Record<string, string> = {
+      en: "en-IN",
+      gu: "gu-IN",
+      hi: "hi-IN",
+      mr: "mr-IN",
+      bn: "bn-IN",
+      pa: "pa-IN",
+      ta: "ta-IN",
+      te: "te-IN",
+      kn: "kn-IN",
+      ml: "ml-IN",
+      as: "as-IN",
+      or: "or-IN",
+      ur: "ur-IN",
+      sa: "sa-IN",
+      ne: "ne-IN",
+      kok: "kok-IN",
+      mai: "mai-IN",
+      brx: "brx-IN",
+      doi: "doi-IN",
+      ks: "ks-IN",
+      mni: "mni-IN",
+      sat: "sat-IN",
+      sd: "sd-IN",
+    };
+        recognition.lang = SPEECH_LOCALE_MAP[language] || "en-IN";
 
         recognition.onstart = () => {
           setIsRecording(true);
@@ -129,7 +153,7 @@ export function AudioRecorder({
         };
 
         recognition.onerror = (e: any) => {
-          setError(`Speech recognition notice: ${e.error || "Recognition failed"}`);
+          setError(tr("audio.sttErrorNotice", { error: e.error || au.sttUnknownError }));
           setIsRecording(false);
         };
 
@@ -140,10 +164,10 @@ export function AudioRecorder({
         recognition.start();
         return;
       } catch (e: any) {
-        setError(`Speech recognition could not start: ${e.message}`);
+        setError(tr("audio.sttStartError", { error: e.message }));
       }
     } else {
-      setError("Audio recording is not supported in this browser environment. Please type your message.");
+      setError(au.sttNotSupported);
     }
   };
 
@@ -201,17 +225,17 @@ export function AudioRecorder({
 
       const data = await res.json();
       if (!res.ok || !data.success) {
-        throw new Error(data.error || "Speech transcription failed.");
+        throw new Error(data.error || au.sttFailed);
       }
 
       if (data.transcription && data.transcription.trim()) {
         onTranscript(data.transcription.trim());
       } else {
-        setError("No clear speech detected in recording. Please try speaking closer to the microphone.");
+        setError(au.sttNoSpeech);
       }
     } catch (err: any) {
       console.error("Transcription error:", err);
-      setError(err.message || "Could not transcribe audio. You can still type your notice manually.");
+      setError(err.message || au.sttTranscribeErr);
     } finally {
       setIsProcessing(false);
       setRecordingDuration(0);
@@ -225,11 +249,11 @@ export function AudioRecorder({
           type="button"
           onClick={startRecording}
           className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#F4F1E1] hover:bg-[#F2CAB3]/40 text-[#49352F] border border-[#49352F]/15 transition-all shadow-sm active:scale-95 cursor-pointer"
-          title={`Click to record voice in ${language.toUpperCase()}`}
-          aria-label={buttonLabel}
+          title={tr("audio.recordTitle", { lang: language.toUpperCase() })}
+          aria-label={resolvedLabel}
         >
           <Mic className="w-3.5 h-3.5 text-[#49352F]" />
-          <span>{buttonLabel}</span>
+          <span>{resolvedLabel}</span>
         </button>
       )}
 
@@ -238,15 +262,15 @@ export function AudioRecorder({
           <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-ping" />
           <span className="font-mono font-bold text-red-700">{formatDuration(recordingDuration)}</span>
           <span className="text-[11px] text-red-600 font-semibold uppercase tracking-wider">
-            Recording ({language})
+            {tr("audio.recordingBadge", { lang: language.toUpperCase() })}
           </span>
 
           <button
             type="button"
             onClick={stopRecording}
             className="p-1 rounded hover:bg-red-200 text-red-900 transition-colors ml-1 cursor-pointer"
-            title="Stop and transcribe"
-            aria-label="Stop recording"
+            title={au.stopRecordTitle}
+            aria-label={au.stopRecordAria}
           >
             <Square className="w-3.5 h-3.5 fill-current" />
           </button>
@@ -255,8 +279,8 @@ export function AudioRecorder({
             type="button"
             onClick={cancelRecording}
             className="p-1 rounded hover:bg-red-200 text-red-700 transition-colors cursor-pointer"
-            title="Cancel recording"
-            aria-label="Cancel recording"
+            title={au.cancelRecordTitle}
+            aria-label={au.cancelRecordAria}
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -266,7 +290,7 @@ export function AudioRecorder({
       {isProcessing && (
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-[#F2CAB3]/30 text-[#49352F] border border-[#49352F]/15 shadow-sm">
           <Loader2 className="w-3.5 h-3.5 animate-spin text-[#49352F]" />
-          <span className="font-semibold">Transcribing speech with AI...</span>
+          <span className="font-semibold">{au.transcribing}</span>
         </div>
       )}
 

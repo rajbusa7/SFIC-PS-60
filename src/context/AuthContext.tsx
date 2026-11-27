@@ -131,6 +131,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(resolvedUser);
             setIsDemoMode(false);
             saveUserStorage(resolvedUser);
+            if (typeof window !== "undefined" && resolvedUser.preferredLanguage) {
+              window.dispatchEvent(
+                new CustomEvent("studysaathi:user-preferences", {
+                  detail: {
+                    preferredLanguage: resolvedUser.preferredLanguage,
+                    preferredScript: resolvedUser.preferredScript,
+                  },
+                })
+              );
+            }
 
             if (data.assignments && Array.isArray(data.assignments)) {
               setAssignments(data.assignments);
@@ -222,6 +232,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(resolvedUser);
     setIsDemoMode(false);
     saveUserStorage(resolvedUser, realAssignments);
+    if (typeof window !== "undefined" && resolvedUser.preferredLanguage) {
+      window.dispatchEvent(
+        new CustomEvent("studysaathi:user-preferences", {
+          detail: {
+            preferredLanguage: resolvedUser.preferredLanguage,
+            preferredScript: resolvedUser.preferredScript,
+            forceSync: true,
+          },
+        })
+      );
+    }
 
     if (realAssignments.length === 1) {
       setSelectedSubject(realAssignments[0].subjectCode);

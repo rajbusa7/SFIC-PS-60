@@ -42,7 +42,9 @@ export function ActivityPlayerModal({
   onCompleted,
   onLaunchNext,
 }: ActivityPlayerModalProps) {
-  const { language, formatSubject } = useLanguage();
+  const { t, tr, language, formatSubject, formatClass } = useLanguage();
+  const ac = t.activities;
+  const showGuField = language === "gu";
 
   // Mode: "intro" | "playing" | "completed"
   const [stage, setStage] = useState<"intro" | "playing" | "completed">("intro");
@@ -190,12 +192,12 @@ export function ActivityPlayerModal({
     <Dialog
       isOpen={isOpen}
       onClose={onClose}
-      title={`${activity.title} — ${studentName || (language === "gu" ? "વિદ્યાર્થી મહાવરો" : "Student Practice")}`}
-      description={
-        language === "gu"
-          ? `ઇન્ટરેક્ટિવ મહાવરો • ${formatSubject(activity.subjectCode)} • ધોરણ ${activity.grade} • ${activity.difficulty}`
-          : `Interactive Practice • ${formatSubject(activity.subjectCode)} • Grade ${activity.grade} • ${activity.difficulty}`
-      }
+      title={`${activity.title} — ${studentName || ac.playerStudentFallback}`}
+      description={tr("activities.playerDesc", {
+        subject: formatSubject(activity.subjectCode),
+        cls: formatClass(activity.grade),
+        difficulty: activity.difficulty === "Easy" ? ac.easyShort : activity.difficulty === "Medium" ? ac.mediumShort : ac.hardShort,
+      })}
       maxWidth="xl"
     >
       {/* ───────────────── STAGE 1: INTRO SCREEN ───────────────── */}
@@ -206,7 +208,7 @@ export function ActivityPlayerModal({
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <Badge variant="outline" size="sm">
-                  {formatSubject(activity.subjectCode)} • {language === "gu" ? `ધોરણ ${activity.grade}` : `Grade ${activity.grade}`}
+                  {formatSubject(activity.subjectCode)} • {formatClass(activity.grade)}
                 </Badge>
                 <Badge
                   variant={
@@ -219,16 +221,16 @@ export function ActivityPlayerModal({
                   size="sm"
                 >
                   {activity.difficulty === "Easy"
-                    ? language === "gu" ? "સરળ / પ્રારંભિક" : "Beginner / Easy"
+                    ? ac.beginnerEasy
                     : activity.difficulty === "Medium"
-                    ? language === "gu" ? "મધ્યમ" : "Intermediate"
-                    : language === "gu" ? "કઠિન" : "Advanced"}
+                    ? ac.intermediate
+                    : ac.advanced}
                 </Badge>
               </div>
 
               <div className="flex items-center gap-1.5 text-xs font-semibold text-[#7A6862]">
                 <Clock className="w-3.5 h-3.5 text-[#B26A1B]" />
-                <span>~{activity.estimatedMinutes || 10} {language === "gu" ? "મિનિટ" : "mins"}</span>
+                <span>~{activity.estimatedMinutes || 10} {ac.minsUnit}</span>
               </div>
             </div>
 
@@ -241,8 +243,8 @@ export function ActivityPlayerModal({
 
             {(activity as any).chapter && (
               <p className="text-xs text-[#7A6862]">
-                <strong>{language === "gu" ? "પ્રકરણ:" : "Chapter:"}</strong>{" "}
-                {language === "gu" && (activity as any).chapterGujarati
+                <strong>{ac.chapterLabel}</strong>{" "}
+                {showGuField && (activity as any).chapterGujarati
                   ? (activity as any).chapterGujarati
                   : (activity as any).chapter}
               </p>
@@ -252,13 +254,13 @@ export function ActivityPlayerModal({
             <div className="mt-3 p-3.5 rounded-xl bg-white/90 border border-[#49352F]/10 space-y-1">
               <span className="text-xs font-bold text-[#B26A1B] uppercase tracking-wider flex items-center gap-1">
                 <BookOpen className="w-3.5 h-3.5" />
-                {language === "gu" ? "અધ્યયન નિષ્પત્તિ (Learning Objective):" : "Learning Objective:"}
+                {ac.learningObjectiveLabel}
               </span>
               <p className="text-xs text-[#49352F] leading-relaxed">
                 {(activity as any).learningObjective ||
-                  "Practice foundational concepts through interactive question validation and immediate feedback."}
+                  ac.defaultObjective}
               </p>
-              {language === "gu" && (activity as any).learningObjectiveGujarati && (
+              {showGuField && (activity as any).learningObjectiveGujarati && (
                 <p className="text-xs text-[#7A6862] font-serif leading-relaxed">
                   {(activity as any).learningObjectiveGujarati}
                 </p>
@@ -272,12 +274,10 @@ export function ActivityPlayerModal({
               <Zap className="w-5 h-5 text-[#B26A1B] shrink-0 mt-0.5" />
               <div className="text-xs">
                 <span className="font-bold text-[#49352F] block">
-                  {language === "gu" ? "XP પુરસ્કાર" : "Earn +35 XP"}
+                  {ac.earnXpTitle}
                 </span>
                 <span className="text-[#7A6862]">
-                  {language === "gu"
-                    ? "સાચા જવાબો સાથે મહાવરો પૂર્ણ કરી XP મેળવો."
-                    : "Earn XP points and mastery badges for accurate completion."}
+                  {ac.earnXpDesc}
                 </span>
               </div>
             </div>
@@ -286,12 +286,10 @@ export function ActivityPlayerModal({
               <Lightbulb className="w-5 h-5 text-[#2E7D5E] shrink-0 mt-0.5" />
               <div className="text-xs">
                 <span className="font-bold text-[#49352F] block">
-                  {language === "gu" ? "સહાયક સંકેતો ઉપલબ્ધ" : "Hints Available"}
+                  {ac.hintsTitle}
                 </span>
                 <span className="text-[#7A6862]">
-                  {language === "gu"
-                    ? "જવાબ ન આવડે તો સંકેત જુઓ અને શીખો."
-                    : "Use hints if you get stuck and review explanations after each question."}
+                  {ac.hintsDesc}
                 </span>
               </div>
             </div>
@@ -305,7 +303,7 @@ export function ActivityPlayerModal({
               className="inline-flex items-center gap-2 px-6 py-3 text-sm font-bold bg-[#F2CAB3] hover:bg-white text-[#49352F] border border-[#49352F]/16 rounded-xl shadow-sm transition-all cursor-pointer"
             >
               <Play className="w-4 h-4 fill-current" />
-              <span>{language === "gu" ? "મહાવરો શરૂ કરો" : "Start Practice"}</span>
+              <span>{ac.startPracticeBtn}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -320,9 +318,7 @@ export function ActivityPlayerModal({
             <div className="flex items-center justify-between text-xs font-semibold text-[#7A6862]">
               <div className="flex items-center gap-2">
                 <span>
-                  {language === "gu"
-                    ? `પ્રશ્ન ${currentIdx + 1} / ${totalQuestions}`
-                    : `Question ${currentIdx + 1} of ${totalQuestions}`}
+                  {tr("activities.questionNumber", { curr: currentIdx + 1, total: totalQuestions })}
                 </span>
                 <span className="text-[#49352F]/30">•</span>
                 <span className="inline-flex items-center gap-1 text-[#49352F]">
@@ -332,7 +328,7 @@ export function ActivityPlayerModal({
               </div>
 
               <span>
-                {Math.round(((currentIdx + 1) / totalQuestions) * 100)}% {language === "gu" ? "પૂર્ણ" : "Complete"}
+                {tr("activities.percentComplete", { pct: Math.round(((currentIdx + 1) / totalQuestions) * 100) })}
               </span>
             </div>
 
@@ -359,9 +355,7 @@ export function ActivityPlayerModal({
                 >
                   <HelpCircle className="w-3.5 h-3.5" />
                   <span>
-                    {language === "gu"
-                      ? showHint ? "સંકેત છુપાવો" : "સંકેત જોઈએ છે?"
-                      : showHint ? "Hide Hint" : "Need a Hint?"}
+                    {showHint ? ac.hideHint : ac.needHint}
                   </span>
                 </button>
               )}
@@ -382,8 +376,8 @@ export function ActivityPlayerModal({
               <div className="p-3 rounded-xl bg-[#F2DCB5]/50 border border-[#49352F]/12 text-xs text-[#49352F] font-medium flex items-start gap-2.5">
                 <Lightbulb className="w-4 h-4 text-[#8D4E10] shrink-0 mt-0.5" />
                 <div>
-                  <strong>{language === "gu" ? "શિક્ષક સંકેત:" : "Hint:"}</strong> {currentQ.hint}
-                  {language === "gu" && (currentQ as any).hintGujarati && (
+                  <strong>{ac.hintPrefix}</strong> {currentQ.hint}
+                  {showGuField && (currentQ as any).hintGujarati && (
                     <p className="mt-1 font-serif text-[#7A6862]">{(currentQ as any).hintGujarati}</p>
                   )}
                 </div>
@@ -422,7 +416,7 @@ export function ActivityPlayerModal({
                 >
                   <div className="space-y-0.5">
                     <span className="block font-medium">{opt}</span>
-                    {language === "gu" && optGuj && (
+                    {showGuField && optGuj && (
                       <span className="block text-xs font-serif opacity-80">{optGuj}</span>
                     )}
                   </div>
@@ -454,21 +448,21 @@ export function ActivityPlayerModal({
                 {isCurrentCorrect ? (
                   <>
                     <CheckCircle2 className="w-4 h-4 text-[#2E7D5E]" />
-                    <span>{language === "gu" ? "ખૂબ સરસ! સાચો જવાબ!" : "Brilliant! That's correct!"}</span>
+                    <span>{ac.brilliantCorrect}</span>
                   </>
                 ) : (
                   <>
                     <XCircle className="w-4 h-4 text-[#B91C1C]" />
-                    <span>{language === "gu" ? "ચિંતા ન કરો, સમજીએ:" : "Not quite, but let's understand why:"}</span>
+                    <span>{ac.notQuiteWhy}</span>
                   </>
                 )}
               </div>
 
               <p className="leading-relaxed">
-                <strong>{language === "gu" ? "સમજૂતી:" : "Explanation:"}</strong> {currentQ.explanation}
+                <strong>{ac.explanationPrefix}</strong> {currentQ.explanation}
               </p>
 
-              {language === "gu" && (currentQ as any).explanationGujarati && (
+              {showGuField && (currentQ as any).explanationGujarati && (
                 <p className="font-serif leading-relaxed text-[#7A6862]">
                   {(currentQ as any).explanationGujarati}
                 </p>
@@ -484,7 +478,7 @@ export function ActivityPlayerModal({
               onClick={() => setCurrentIdx(currentIdx - 1)}
               className="px-4 py-2 text-xs font-semibold text-[#7A6862] hover:bg-[#FAF6E9] hover:text-[#49352F] rounded-xl disabled:opacity-40 cursor-pointer transition-colors"
             >
-              {language === "gu" ? "પાછળ" : "Previous"}
+              {ac.previousBtn}
             </button>
 
             <div className="flex items-center gap-2">
@@ -495,7 +489,7 @@ export function ActivityPlayerModal({
                   onClick={handleCheckAnswer}
                   className="px-5 py-2.5 text-xs font-bold bg-[#FAF6E9] hover:bg-[#F2CAB3] text-[#49352F] border border-[#49352F]/20 rounded-xl shadow-2xs transition-all disabled:opacity-50 cursor-pointer"
                 >
-                  {language === "gu" ? "જવાબ ચકાસો" : "Check Answer"}
+                  {ac.checkAnswerBtn}
                 </button>
               ) : (
                 <button
@@ -507,9 +501,9 @@ export function ActivityPlayerModal({
                   <span>
                     {currentIdx === totalQuestions - 1
                       ? isSaving
-                        ? language === "gu" ? "સબમિટ થઈ રહ્યું છે..." : "Submitting..."
-                        : language === "gu" ? "જવાબો સબમિટ કરો" : "Finish & View Results"
-                      : language === "gu" ? "આગળનો પ્રશ્ન" : "Next Question"}
+                        ? ac.submittingBtn
+                        : ac.finishViewResultsBtn
+                      : ac.nextQuestion}
                   </span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
@@ -529,12 +523,10 @@ export function ActivityPlayerModal({
             </div>
 
             <h4 className="text-xl font-bold text-[#49352F]">
-              {language === "gu" ? "અભિનંદન! પ્રવૃત્તિ પૂર્ણ થઈ!" : "Congratulations! Activity Completed!"}
+              {ac.congratsTitle}
             </h4>
             <p className="text-xs text-[#7A6862]">
-              {language === "gu"
-                ? `${studentName || "વિદ્યાર્થી"} માટે પ્રગતિ અને સ્કોર નોંધાયો`
-                : `Progress and score successfully saved for ${studentName || "Student"}`}
+              {tr("activities.progressSavedFor", { name: studentName || ac.studentFallback })}
             </p>
           </div>
 
@@ -545,7 +537,7 @@ export function ActivityPlayerModal({
                 {attemptResult?.percentage}%
               </span>
               <span className="text-[11px] font-semibold text-[#7A6862]">
-                {language === "gu" ? "ચોકસાઈ દર" : "Accuracy"}
+                {ac.accuracyStat}
               </span>
             </div>
 
@@ -554,7 +546,7 @@ export function ActivityPlayerModal({
                 {attemptResult?.score} / {attemptResult?.totalQuestions || totalQuestions}
               </span>
               <span className="text-[11px] font-semibold text-[#7A6862]">
-                {language === "gu" ? "સાચા જવાબો" : "Correct"}
+                {ac.correctStat}
               </span>
             </div>
 
@@ -563,7 +555,7 @@ export function ActivityPlayerModal({
                 +{attemptResult?.xpEarned || 35}
               </span>
               <span className="text-[11px] font-semibold text-[#7A6862]">
-                {language === "gu" ? "મેળવેલ XP" : "XP Earned"}
+                {ac.xpEarnedStat}
               </span>
             </div>
 
@@ -572,7 +564,7 @@ export function ActivityPlayerModal({
                 {formatTime(secondsElapsed)}
               </span>
               <span className="text-[11px] font-semibold text-[#7A6862]">
-                {language === "gu" ? "સમય લાગ્યો" : "Time Spent"}
+                {ac.timeSpentStat}
               </span>
             </div>
           </div>
@@ -582,7 +574,7 @@ export function ActivityPlayerModal({
             <Award className="w-5 h-5 text-[#B26A1B] shrink-0 mt-0.5" />
             <div>
               <strong className="text-[#49352F] block">
-                {attemptResult?.milestoneBadge || "Practice Verified"}
+                {attemptResult?.milestoneBadge || ac.verifiedBadgeFallback}
               </strong>
               <p className="text-[#7A6862] mt-0.5">{attemptResult?.feedback}</p>
             </div>
@@ -593,9 +585,7 @@ export function ActivityPlayerModal({
             <div className="rounded-xl border border-[#B91C1C]/15 bg-[#B91C1C]/5 p-3.5 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-[#991B1B]">
-                  {language === "gu"
-                    ? `પુનરાવર્તન જરૂરી (${attemptResult.incorrectQuestions.length} પ્રશ્નો)`
-                    : `Questions to Review (${attemptResult.incorrectQuestions.length} items)`}
+                  {tr("activities.questionsToReview", { count: attemptResult.incorrectQuestions.length })}
                 </span>
 
                 <button
@@ -604,7 +594,7 @@ export function ActivityPlayerModal({
                   className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold bg-white text-[#991B1B] border border-[#B91C1C]/20 rounded-lg hover:bg-[#FAF6E9] cursor-pointer"
                 >
                   <RotateCcw className="w-3 h-3" />
-                  <span>{language === "gu" ? "આ પ્રશ્નો ફરી કરો" : "Retry Missed Only"}</span>
+                  <span>{ac.retryMissedBtn}</span>
                 </button>
               </div>
             </div>
@@ -617,7 +607,7 @@ export function ActivityPlayerModal({
               onClick={resetActivity}
               className="px-4 py-2 text-xs font-semibold text-[#7A6862] hover:bg-[#FAF6E9] hover:text-[#49352F] rounded-xl cursor-pointer transition-colors"
             >
-              {language === "gu" ? "આખી પ્રવૃત્તિ ફરી કરો" : "Practice All Again"}
+              {ac.practiceAllAgainBtn}
             </button>
 
             <div className="flex items-center gap-2">
@@ -628,7 +618,7 @@ export function ActivityPlayerModal({
                   className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold bg-[#FAF6E9] hover:bg-[#F2CAB3] text-[#49352F] border border-[#49352F]/16 rounded-xl cursor-pointer"
                 >
                   <Sparkles className="w-3.5 h-3.5 text-[#B26A1B]" />
-                  <span>{language === "gu" ? "આગળની પ્રવૃત્તિ શરૂ કરો" : "Next Recommended"}</span>
+                  <span>{ac.nextRecommendedBtn}</span>
                 </button>
               )}
 
@@ -637,7 +627,7 @@ export function ActivityPlayerModal({
                 onClick={onClose}
                 className="px-6 py-2 text-xs font-bold bg-[#F2CAB3] hover:bg-white text-[#49352F] border border-[#49352F]/16 rounded-xl shadow-xs cursor-pointer transition-colors"
               >
-                {language === "gu" ? "પૂર્ણ કરો" : "Done"}
+                {ac.doneBtn}
               </button>
             </div>
           </div>

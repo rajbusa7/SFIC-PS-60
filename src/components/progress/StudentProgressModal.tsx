@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Badge } from "@/components/ui/Badge";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   X,
   TrendingUp,
@@ -19,10 +20,12 @@ import {
   FileText,
 } from "lucide-react";
 
+import type { SupportedLanguage } from "@/lib/types";
+
 interface StudentProgressModalProps {
   student: any;
   onClose: () => void;
-  language: "en" | "gu";
+  language: SupportedLanguage;
   formatSubject: (code: string) => string;
   formatClass: (cls: string) => string;
 }
@@ -34,9 +37,11 @@ export function StudentProgressModal({
   formatSubject,
   formatClass,
 }: StudentProgressModalProps) {
-  if (!student) return null;
+  const { t, tr, formatStatus, formatDate } = useLanguage();
+  const pm = t.progressModal;
+  void language;
 
-  const isGu = language === "gu";
+  if (!student) return null;
 
   const handlePrint = () => {
     window.print();
@@ -71,7 +76,7 @@ export function StudentProgressModal({
               </div>
               <p className="text-xs text-[#7A6862]">
                 {formatClass(`Class ${student.grade}-${student.section}`)} •{" "}
-                {isGu ? "શૈક્ષણિક પ્રગતિ પ્રોફાઇલ" : "Academic Progress Profile"}
+                {pm.academicProfile}
               </p>
             </div>
           </div>
@@ -83,7 +88,7 @@ export function StudentProgressModal({
               className="p-2 rounded-xl border border-[#49352F]/15 text-[#49352F] hover:bg-[#F2CAB3]/20 transition-colors text-xs font-semibold flex items-center gap-1.5"
             >
               <Printer className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{isGu ? "પ્રિન્ટ" : "Print"}</span>
+              <span className="hidden sm:inline">{pm.printBtn}</span>
             </button>
             <button
               onClick={onClose}
@@ -101,19 +106,19 @@ export function StudentProgressModal({
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="bg-white p-3.5 rounded-2xl border border-[#49352F]/10 shadow-xs">
               <span className="text-[10px] font-semibold uppercase tracking-wider text-[#7A6862] block">
-                {isGu ? "સરેરાશ ગુણ" : "Overall Average"}
+                {pm.overallAverage}
               </span>
               <div className="text-2xl font-extrabold text-[#49352F] font-heading mt-1">
                 {student.averageScore !== null ? `${student.averageScore}%` : "—"}
               </div>
               <span className="text-[10px] text-[#7A6862] mt-0.5 block">
-                {isGu ? "સર્વોચ્ચ:" : "Highest:"} {student.highestScore !== null ? `${student.highestScore}%` : "—"}
+                {pm.highestPrefix} {student.highestScore !== null ? `${student.highestScore}%` : "—"}
               </span>
             </div>
 
             <div className="bg-white p-3.5 rounded-2xl border border-[#49352F]/10 shadow-xs">
               <span className="text-[10px] font-semibold uppercase tracking-wider text-[#7A6862] block">
-                {isGu ? "પ્રગતિ પ્રવાહ" : "Trend & Delta"}
+                {pm.trendDelta}
               </span>
               <div className="flex items-center gap-1.5 mt-1">
                 {getTrendIcon()}
@@ -133,32 +138,32 @@ export function StudentProgressModal({
               </div>
               <span className="text-[10px] text-[#7A6862] mt-0.5 block">
                 {student.relativeGrowth !== null
-                  ? `${student.relativeGrowth > 0 ? "+" : ""}${student.relativeGrowth}% relative`
-                  : isGu ? "એક જ કસોટી" : "Single test"}
+                  ? tr("progressModal.relativeUnit", { val: `${student.relativeGrowth > 0 ? "+" : ""}${student.relativeGrowth}` })
+                  : pm.singleTest}
               </span>
             </div>
 
             <div className="bg-white p-3.5 rounded-2xl border border-[#49352F]/10 shadow-xs">
               <span className="text-[10px] font-semibold uppercase tracking-wider text-[#7A6862] block">
-                {isGu ? "કસોટી ચોકસાઈ" : "Question Accuracy"}
+                {pm.questionAccuracy}
               </span>
               <div className="text-2xl font-extrabold text-[#49352F] font-heading mt-1">
                 {student.accuracy}%
               </div>
               <span className="text-[10px] text-[#7A6862] mt-0.5 block">
-                {student.correctAnswers}/{student.totalQuestions} {isGu ? "સાચા" : "correct"}
+                {tr("progressModal.correctCount", { correct: student.correctAnswers, total: student.totalQuestions })}
               </span>
             </div>
 
             <div className="bg-white p-3.5 rounded-2xl border border-[#49352F]/10 shadow-xs">
               <span className="text-[10px] font-semibold uppercase tracking-wider text-[#7A6862] block">
-                {isGu ? "પ્રવૃત્તિઓ અને XP" : "Activities & XP"}
+                {pm.activitiesXp}
               </span>
               <div className="text-2xl font-extrabold text-[#B26A1B] font-heading mt-1">
-                {student.activitiesCompleted} {isGu ? "પૂર્ણ" : "Done"}
+                {tr("progressModal.doneCount", { count: student.activitiesCompleted })}
               </div>
               <span className="text-[10px] text-[#7A6862] mt-0.5 block">
-                {student.xpEarned} XP {isGu ? "મેળવ્યા" : "earned"}
+                {tr("progressModal.earnedXp", { xp: student.xpEarned })}
               </span>
             </div>
           </div>
@@ -171,7 +176,7 @@ export function StudentProgressModal({
               </div>
               <div className="space-y-1">
                 <h4 className="text-xs font-bold text-[#49352F] uppercase tracking-wider">
-                  {isGu ? "શિક્ષક માટે ભલામણ અને કાર્ય યોજના" : "Teacher Actionable Recommendation"}
+                  {pm.teacherRecTitle}
                 </h4>
                 <p className="text-xs sm:text-sm text-[#49352F]/90 font-medium leading-relaxed">
                   {student.recommendation}
@@ -179,15 +184,15 @@ export function StudentProgressModal({
                 <div className="flex flex-wrap items-center gap-3 pt-2 text-[11px] text-[#7A6862]">
                   <span className="flex items-center gap-1">
                     <Target className="w-3.5 h-3.5 text-[#2E7D5E]" />
-                    {student.conceptsMasteredCount} {isGu ? "સિદ્ધ સંકલ્પનાઓ" : "Mastered"}
+                    {tr("progressModal.masteredCount", { count: student.conceptsMasteredCount })}
                   </span>
                   <span className="flex items-center gap-1">
                     <Clock className="w-3.5 h-3.5 text-[#B26A1B]" />
-                    {student.conceptsDevelopingCount} {isGu ? "પ્રગતિ હેઠળ" : "Developing"}
+                    {tr("progressModal.developingCount", { count: student.conceptsDevelopingCount })}
                   </span>
                   <span className="flex items-center gap-1">
                     <AlertTriangle className="w-3.5 h-3.5 text-[#C54738]" />
-                    {student.conceptsSupportCount} {isGu ? "સહાય જરૂરી" : "Needs Support"}
+                    {tr("progressModal.needsSupportCount", { count: student.conceptsSupportCount })}
                   </span>
                 </div>
               </div>
@@ -199,10 +204,10 @@ export function StudentProgressModal({
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-[#49352F] font-heading flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-[#B26A1B]" />
-                {isGu ? "વિષય અને સંકલ્પના પ્રભુત્વ વિગત" : "Subject & Concept Mastery Ledger"}
+                {pm.subjectLedgerTitle}
               </h3>
               <span className="text-xs text-[#7A6862]">
-                {student.concepts?.length || 0} {isGu ? "સંકલ્પનાઓ નોંધાયેલ" : "concepts evaluated"}
+                {tr("progressModal.conceptsEvaluated", { count: student.concepts?.length || 0 })}
               </span>
             </div>
 
@@ -210,13 +215,13 @@ export function StudentProgressModal({
               <table className="w-full text-left text-xs">
                 <thead className="bg-[#FAF6E9] border-b border-[#49352F]/10 text-[#7A6862] uppercase tracking-wider text-[10px]">
                   <tr>
-                    <th className="p-2.5">{isGu ? "વિષય" : "Subject"}</th>
-                    <th className="p-2.5">{isGu ? "સંકલ્પના" : "Concept"}</th>
-                    <th className="p-2.5 text-center">{isGu ? "મૂલ્યાંકનો" : "Tests"}</th>
-                    <th className="p-2.5 text-center">{isGu ? "પ્રારંભિક" : "Initial"}</th>
-                    <th className="p-2.5 text-center">{isGu ? "તાજેતરનો" : "Latest"}</th>
-                    <th className="p-2.5 text-center">{isGu ? "ડેલ્ટા" : "Delta (pp)"}</th>
-                    <th className="p-2.5 text-right">{isGu ? "સ્થિતિ" : "Status"}</th>
+                    <th className="p-2.5">{pm.colSubject}</th>
+                    <th className="p-2.5">{pm.colConcept}</th>
+                    <th className="p-2.5 text-center">{pm.colTests}</th>
+                    <th className="p-2.5 text-center">{pm.colInitial}</th>
+                    <th className="p-2.5 text-center">{pm.colLatest}</th>
+                    <th className="p-2.5 text-center">{pm.colDelta}</th>
+                    <th className="p-2.5 text-right">{pm.colStatus}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#49352F]/10">
@@ -233,7 +238,7 @@ export function StudentProgressModal({
                             <span className="text-[10px] text-[#7A6862]">{item.chapter}</span>
                           </td>
                           <td className="p-2.5 text-center font-semibold text-[#49352F]">
-                            {item.attemptsCount} {isGu ? "કસોટી(ઓ)" : "test(s)"}
+                            {tr("progressModal.testsCountUnit", { count: item.attemptsCount })}
                           </td>
                           <td className="p-2.5 text-center text-[#7A6862]">
                             {item.initialPercentage}%
@@ -256,7 +261,7 @@ export function StudentProgressModal({
                               </span>
                             ) : (
                               <span className="text-[10px] text-[#7A6862] italic">
-                                {isGu ? "૧ કસોટી" : "1 test"}
+                                {pm.oneTestShort}
                               </span>
                             )}
                           </td>
@@ -271,11 +276,7 @@ export function StudentProgressModal({
                               }
                               size="sm"
                             >
-                              {isMastered
-                                ? isGu ? "સિદ્ધ" : "Mastered"
-                                : item.latestPercentage >= 60
-                                ? isGu ? "પ્રગતિ હેઠળ" : "Developing"
-                                : isGu ? "સહાય જરૂરી" : "Needs Support"}
+                              {formatStatus(isMastered ? "Mastered" : item.latestPercentage >= 60 ? "Developing" : "Needs Support")}
                             </Badge>
                           </td>
                         </tr>
@@ -284,7 +285,7 @@ export function StudentProgressModal({
                   ) : (
                     <tr>
                       <td colSpan={7} className="p-4 text-center text-xs text-[#7A6862]">
-                        {isGu ? "કોઈ સંકલ્પના મૂલ્યાંકન ડેટા નથી" : "No concept evaluation records found"}
+                        {pm.noConceptRecords}
                       </td>
                     </tr>
                   )}
@@ -297,7 +298,7 @@ export function StudentProgressModal({
           <div className="bg-white rounded-2xl border border-[#49352F]/10 p-4 sm:p-5 shadow-xs space-y-3">
             <h3 className="text-sm font-bold text-[#49352F] font-heading flex items-center gap-2">
               <Calendar className="w-4 h-4 text-[#B26A1B]" />
-              {isGu ? "કસોટી ઇતિહાસ અને નોંધણી" : "Diagnostic Assessment Audit Trail"}
+              {pm.auditTrailTitle}
             </h3>
 
             <div className="space-y-2.5">
@@ -323,9 +324,9 @@ export function StudentProgressModal({
                       </span>
                     </div>
                     <div className="text-[10px] text-[#7A6862] flex items-center gap-2">
-                      <span>{new Date(entry.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
+                      <span>{formatDate(entry.date)}</span>
                       <span>•</span>
-                      <span>Marks: {entry.marks}</span>
+                      <span>{tr("progressModal.marksPrefix", { marks: entry.marks })}</span>
                       {entry.notes && (
                         <>
                           <span>•</span>
@@ -346,20 +347,16 @@ export function StudentProgressModal({
         {/* Modal Footer */}
         <div className="px-5 sm:px-7 py-3 border-t border-[#49352F]/10 bg-white/60 flex items-center justify-between print:hidden">
           <span className="text-xs text-[#7A6862]">
-            {isGu ? "અંતિમ મૂલ્યાંકન તારીખ:" : "Last assessment:"}{" "}
+            {pm.lastAssessmentPrefix}{" "}
             {student.lastAssessmentDate
-              ? new Date(student.lastAssessmentDate).toLocaleDateString("en-IN", {
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                })
-              : isGu ? "કોઈ ડેટા નથી" : "No record"}
+              ? formatDate(student.lastAssessmentDate)
+              : pm.noRecord}
           </span>
           <button
             onClick={onClose}
             className="px-4 py-2 rounded-xl bg-[#49352F] text-[#FAF6E9] hover:bg-[#382823] text-xs font-bold transition-colors"
           >
-            {isGu ? "બંધ કરો" : "Close"}
+            {pm.closeBtn}
           </button>
         </div>
       </div>

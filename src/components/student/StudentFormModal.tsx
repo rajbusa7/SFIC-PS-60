@@ -20,7 +20,8 @@ export function StudentFormModal({
   student,
   onSuccess,
 }: StudentFormModalProps) {
-  const { language } = useLanguage();
+  const { t, formatClass } = useLanguage();
+  const sf = t.studentForm;
   const [studentCode, setStudentCode] = useState(student?.studentCode || "");
   const [displayName, setDisplayName] = useState(student?.displayName || "");
   const [grade, setGrade] = useState<number>(student?.grade || 4);
@@ -69,20 +70,12 @@ export function StudentFormModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!displayName.trim()) {
-      setError(
-        language === "gu"
-          ? "કૃપા કરીને વિદ્યાર્થીનું પૂરું નામ દાખલ કરો."
-          : "Please enter the student's full name."
-      );
+      setError(sf.nameRequired);
       return;
     }
 
     if (!studentCode.trim()) {
-      setError(
-        language === "gu"
-          ? "કૃપા કરીને વિદ્યાર્થી કોડ / રોલ નંબર દાખલ કરો."
-          : "Please enter student code / roll number."
-      );
+      setError(sf.codeRequired);
       return;
     }
 
@@ -114,19 +107,10 @@ export function StudentFormModal({
         onSuccess();
         onClose();
       } else {
-        setError(
-          data.error ||
-            (language === "gu"
-              ? "વિદ્યાર્થી રેકોર્ડ સાચવવામાં નિષ્ફળ"
-              : "Failed to save student record")
-        );
+        setError(data.error || sf.saveFailed);
       }
     } catch {
-      setError(
-        language === "gu"
-          ? "નેટવર્ક ભૂલ: વિદ્યાર્થી સાચવી શકાયો નથી"
-          : "Network error saving student to database"
-      );
+      setError(sf.networkError);
     } finally {
       setIsSubmitting(false);
     }
@@ -136,20 +120,8 @@ export function StudentFormModal({
     <Dialog
       isOpen={isOpen}
       onClose={onClose}
-      title={
-        student
-          ? language === "gu"
-            ? "વિદ્યાર્થી વિગતો સંપાદિત કરો"
-            : "Edit Student Details"
-          : language === "gu"
-          ? "નવા વિદ્યાર્થીની નોંધણી કરો"
-          : "Register New Student"
-      }
-      description={
-        language === "gu"
-          ? "પ્રાથમિક શાળા પ્રવેશ માહિતી નોંધો. સંવેદનશીલ પારિવારિક/બાયોમેટ્રિક ડેટા એકત્રિત કરવામાં આવતો નથી."
-          : "Record primary school enrollment information. Sensitive family/biometric data is not collected."
-      }
+      title={student ? sf.editTitle : sf.registerTitle}
+      description={sf.description}
       maxWidth="md"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -157,7 +129,7 @@ export function StudentFormModal({
         <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#FAF6E9] border border-[#49352F]/10 text-xs">
           <span className="text-[#7A6862] font-semibold flex items-center gap-1.5">
             <Building className="w-3.5 h-3.5 text-[#B26A1B]" />
-            {language === "gu" ? "શાળા સંલગ્નતા:" : "School Association:"}
+            {sf.schoolAssociation}
           </span>
           <span className="font-bold text-[#49352F] font-heading">
             Model Primary School, Gandhinagar
@@ -166,7 +138,7 @@ export function StudentFormModal({
 
         <div>
           <label className="block text-xs font-semibold text-[#49352F] mb-1">
-            {language === "gu" ? "વિદ્યાર્થીનું પૂરું નામ" : "Student Full Name"}{" "}
+            {sf.fullNameLabel}{" "}
             <span className="text-rose-500">*</span>
           </label>
           <input
@@ -177,7 +149,7 @@ export function StudentFormModal({
               setDisplayName(e.target.value);
               if (error) setError(null);
             }}
-            placeholder={language === "gu" ? "દા.ત. આરવ પટેલ" : "e.g. Aarav Patel"}
+            placeholder={sf.fullNamePlaceholder}
             className="w-full rounded-xl border border-[#49352F]/15 bg-white p-2.5 text-sm text-[#49352F] focus:border-[#B26A1B] focus:ring-1 focus:ring-[#B26A1B] outline-hidden"
           />
         </div>
@@ -185,7 +157,7 @@ export function StudentFormModal({
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-semibold text-[#49352F] mb-1">
-              {language === "gu" ? "વિદ્યાર્થી કોડ / રોલ" : "Student Code / Roll"}{" "}
+              {sf.codeLabel}{" "}
               <span className="text-rose-500">*</span>
             </label>
             <input
@@ -202,50 +174,46 @@ export function StudentFormModal({
           </div>
           <div>
             <label className="block text-xs font-semibold text-[#49352F] mb-1">
-              {language === "gu" ? "ધોરણ (વર્ગ)" : "Grade (Class)"}
+              {sf.gradeLabel}
             </label>
             <select
               value={grade}
               onChange={(e) => handleGradeChange(Number(e.target.value))}
               className="w-full rounded-xl border border-[#49352F]/15 bg-white p-2.5 text-sm text-[#49352F] focus:border-[#B26A1B] focus:ring-1 focus:ring-[#B26A1B] outline-hidden cursor-pointer"
             >
-              <option value={1}>{language === "gu" ? "ધોરણ ૧" : "Class 1"}</option>
-              <option value={2}>{language === "gu" ? "ધોરણ ૨" : "Class 2"}</option>
-              <option value={3}>{language === "gu" ? "ધોરણ ૩" : "Class 3"}</option>
-              <option value={4}>{language === "gu" ? "ધોરણ ૪" : "Class 4"}</option>
-              <option value={5}>{language === "gu" ? "ધોરણ ૫" : "Class 5"}</option>
+              <option value={1}>{formatClass(1)}</option>
+              <option value={2}>{formatClass(2)}</option>
+              <option value={3}>{formatClass(3)}</option>
+              <option value={4}>{formatClass(4)}</option>
+              <option value={5}>{formatClass(5)}</option>
             </select>
           </div>
         </div>
 
         <div>
           <label className="block text-xs font-semibold text-[#49352F] mb-1">
-            {language === "gu" ? "વિભાગ" : "Section"}
+            {sf.sectionLabel}
           </label>
           <select
             value={section}
             onChange={(e) => handleSectionChange(e.target.value)}
             className="w-full rounded-xl border border-[#49352F]/15 bg-white p-2.5 text-sm text-[#49352F] focus:border-[#B26A1B] focus:ring-1 focus:ring-[#B26A1B] outline-hidden cursor-pointer"
           >
-            <option value="A">{language === "gu" ? "વિભાગ અ (Section A)" : "Section A"}</option>
-            <option value="B">{language === "gu" ? "વિભાગ બ (Section B)" : "Section B"}</option>
-            <option value="C">{language === "gu" ? "વિભાગ ક (Section C)" : "Section C"}</option>
+            <option value="A">{sf.sectionA}</option>
+            <option value="B">{sf.sectionB}</option>
+            <option value="C">{sf.sectionC}</option>
           </select>
         </div>
 
         <div>
           <label className="block text-xs font-semibold text-[#49352F] mb-1">
-            {language === "gu" ? "શિક્ષકની નોંધ અને અવલોકનો" : "Teacher Notes & Observations"}
+            {sf.notesLabel}
           </label>
           <textarea
             rows={2}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder={
-              language === "gu"
-                ? "દા.ત. વિઝ્યુઅલ ચાર્ટ્સ દ્વારા ઝડપી શીખે છે; વાંચન માટે વધારાના સમયની જરૂર છે."
-                : "e.g. Responsive to visual charts; needs extra time for reading."
-            }
+            placeholder={sf.notesPlaceholder}
             className="w-full rounded-xl border border-[#49352F]/15 bg-white p-2.5 text-xs text-[#49352F] placeholder-[#7A6862]/60 focus:border-[#B26A1B] focus:ring-1 focus:ring-[#B26A1B] outline-hidden"
           />
         </div>
@@ -263,7 +231,7 @@ export function StudentFormModal({
             onClick={onClose}
             className="px-4 py-2 text-xs font-semibold text-[#7A6862] hover:bg-[#FAF6E9] hover:text-[#49352F] rounded-xl cursor-pointer transition-colors"
           >
-            {language === "gu" ? "રદ કરો" : "Cancel"}
+            {t.common.cancel}
           </button>
           <button
             type="submit"
@@ -273,22 +241,12 @@ export function StudentFormModal({
             {isSubmitting ? (
               <>
                 <Sparkles className="w-3.5 h-3.5 animate-spin text-[#B26A1B]" />
-                <span>
-                  {language === "gu"
-                    ? "ડેટાબેઝમાં સાચવી રહ્યું છે..."
-                    : "Saving to Database..."}
-                </span>
+                <span>{sf.saving}</span>
               </>
             ) : student ? (
-              language === "gu" ? (
-                "વિદ્યાર્થી અપડેટ કરો"
-              ) : (
-                "Update Student"
-              )
-            ) : language === "gu" ? (
-              "વિદ્યાર્થી નોંધણી કરો"
+              sf.updateBtn
             ) : (
-              "Register Student"
+              sf.registerBtn
             )}
           </button>
         </div>

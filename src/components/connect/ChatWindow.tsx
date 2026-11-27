@@ -50,7 +50,6 @@ interface MessageBubbleProps {
   isOutgoing: boolean;
   conversationType: string;
   currentUserId: string;
-  language: string;
   hasTranslation: boolean;
   translatedText?: string;
   isTranslating: boolean;
@@ -64,7 +63,6 @@ const MessageBubble = React.memo(function MessageBubble({
   msg,
   isOutgoing,
   conversationType,
-  language,
   hasTranslation,
   translatedText,
   isTranslating,
@@ -73,10 +71,11 @@ const MessageBubble = React.memo(function MessageBubble({
   onReport,
   onRetry,
 }: MessageBubbleProps) {
-  const formatTime = (isoString: string) => {
+  const { t, formatTime: fmtTime } = useLanguage();
+  const cn = t.connect;
+  const formatMsgTime = (isoString: string) => {
     try {
-      const d = new Date(isoString);
-      return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      return fmtTime(isoString, { hour: "2-digit", minute: "2-digit" });
     } catch {
       return "";
     }
@@ -124,6 +123,7 @@ const MessageBubble = React.memo(function MessageBubble({
                       src={att.url}
                       alt={att.name}
                       loading="lazy"
+                      decoding="async"
                       className="max-h-56 w-full object-cover cursor-pointer hover:opacity-95"
                       onClick={() => window.open(att.url, "_blank")}
                     />
@@ -163,7 +163,7 @@ const MessageBubble = React.memo(function MessageBubble({
           <div className="mt-2 pt-2 border-t border-[#2E7D5E]/20 text-xs text-[#1F513F] dark:text-[#86EFAC] bg-[#2E7D5E]/5 p-2 rounded-lg">
             <div className="text-[10px] font-bold uppercase tracking-wider mb-0.5 flex items-center gap-1">
               <Globe className="w-3 h-3" />
-              <span>{language === "gu" ? "ગુજરાતી અનુવાદ:" : "Translation:"}</span>
+              <span>{cn.translationLabel}</span>
             </div>
             <p className="whitespace-pre-wrap">{translatedText}</p>
           </div>
@@ -171,7 +171,7 @@ const MessageBubble = React.memo(function MessageBubble({
 
         {/* Timestamp & Read Receipt */}
         <div className="flex items-center justify-end gap-1 mt-1 text-[10px] text-[#667781] dark:text-[#8696A0]">
-          <span>{formatTime(msg.createdAt)}</span>
+          <span>{formatMsgTime(msg.createdAt)}</span>
           {isOutgoing && (
             <span title={msg.status}>
               {msg.status === "sending" ? (
@@ -184,7 +184,7 @@ const MessageBubble = React.memo(function MessageBubble({
                     className="hover:underline flex items-center gap-0.5 font-bold"
                   >
                     <RotateCcw className="w-2.5 h-2.5" />
-                    <span>{language === "gu" ? "ફરી પ્રયાસ કરો" : "Retry"}</span>
+                    <span>{cn.retryBtn}</span>
                   </button>
                 </div>
               ) : msg.status === "read" ? (
@@ -203,7 +203,7 @@ const MessageBubble = React.memo(function MessageBubble({
       <div className="flex items-center gap-1.5 mt-0.5 opacity-0 group-hover:opacity-100 transition px-1">
         <button
           onClick={() => onReply(msg)}
-          title={language === "gu" ? "જવાબ આપો" : "Reply"}
+          title={cn.replyTooltip}
           className="p-1 rounded text-gray-500 hover:text-[#2E7D5E] hover:bg-black/5"
         >
           <Reply className="w-3.5 h-3.5" />
@@ -213,11 +213,7 @@ const MessageBubble = React.memo(function MessageBubble({
           <button
             onClick={() => onTranslate(msg)}
             disabled={isTranslating}
-            title={
-              hasTranslation
-                ? language === "gu" ? "મૂળ જુઓ" : "Show Original"
-                : language === "gu" ? "ગુજરાતીમાં અનુવાદ" : "Translate"
-            }
+            title={hasTranslation ? cn.showOriginalTooltip : cn.translateTooltip}
             className="p-1 rounded text-gray-500 hover:text-[#2E7D5E] hover:bg-black/5"
           >
             {isTranslating ? (
@@ -231,14 +227,10 @@ const MessageBubble = React.memo(function MessageBubble({
         {!isOutgoing && onReport && (
           <button
             onClick={() => {
-              const reason = prompt(
-                language === "gu"
-                  ? "સંદેશ રિપોર્ટ કરવાનું કારણ દાખલ કરો:"
-                  : "Reason for reporting message:"
-              );
+              const reason = prompt(cn.reportPrompt);
               if (reason) onReport(msg.id, reason);
             }}
-            title={language === "gu" ? "રિપોર્ટ કરો" : "Report"}
+            title={cn.reportTooltip}
             className="p-1 rounded text-gray-400 hover:text-red-500 hover:bg-black/5"
           >
             <Flag className="w-3 h-3" />
@@ -263,10 +255,13 @@ export function ChatWindow({
   onLoadOlder,
   loadingOlder = false,
 }: ChatWindowProps) {
-  const { language } = useLanguage();
+  const { t, tr, language } = useLanguage();
+  const cn = t.connect;
+  const showGuTitle = language === "gu";
   const [inputText, setInputText] = useState("");
   const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
   const [attachments, setAttachments] = useState<ChatMessageAttachment[]>([]);
+  const [attachmentError, setAttachmentError] = useState<string | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [translatedMessages, setTranslatedMessages] = useState<Record<string, string>>({});
   const [translatingId, setTranslatingId] = useState<string | null>(null);
@@ -350,7 +345,8 @@ export function ChatWindow({
 
     const file = files[0];
     if (file.size > 10 * 1024 * 1024) {
-      alert(language === "gu" ? "ફાઇલ ૧૦MB કરતા નાની હોવી જોઈએ." : "File must be under 10MB.");
+      setAttachmentError(cn.fileTooLarge);
+      setTimeout(() => setAttachmentError(null), 4000);
       return;
     }
 
@@ -385,7 +381,7 @@ export function ChatWindow({
 
     setTranslatingId(msg.id);
     try {
-      const targetLang = language === "gu" ? "gu" : "en";
+      const targetLang = language;
       const res = await fetch("/api/connect/translate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -405,7 +401,13 @@ export function ChatWindow({
     }
   }, [language, translatedMessages]);
 
-  const quickEmojis = ["🙏", "👍", "❤️", "👏", "🎉", "📚", "✅", "👌", "😊", "💐"];
+  const quickPhrases = [
+    cn.quickPhrase1,
+    cn.quickPhrase2,
+    cn.quickPhrase3,
+    cn.quickPhrase4,
+    cn.quickPhrase5,
+  ];
 
   const isParentRepliesDisabled =
     conversation.type === "announcement" &&
@@ -441,18 +443,16 @@ export function ChatWindow({
 
             <div className="min-w-0">
               <h3 className="font-bold text-xs sm:text-sm text-[#49352F] dark:text-[#F4F1E1] truncate">
-                {language === "gu" && conversation.titleGujarati
+                {showGuTitle && conversation.titleGujarati
                   ? conversation.titleGujarati
                   : conversation.title}
               </h3>
               <p className="text-[11px] text-[#49352F]/60 dark:text-[#F4F1E1]/60 truncate">
                 {conversation.type === "direct"
-                  ? language === "gu" ? "ઓનલાઇન • ખાનગી સલાહ" : "Online • Direct Consultation"
+                  ? cn.onlineDirect
                   : conversation.type === "announcement"
-                  ? language === "gu" ? "સત્તાવાર સૂચના પ્રસારણ" : "Official Broadcast"
-                  : `${conversation.participantIds?.length || 4} ${
-                      language === "gu" ? "સભ્યો" : "participants"
-                    }`}
+                  ? cn.officialBroadcast
+                  : tr("connect.participantsCount", { count: conversation.participantIds?.length || 4 })}
               </p>
             </div>
           </div>
@@ -462,7 +462,7 @@ export function ChatWindow({
         <div className="flex items-center gap-1.5">
           <button
             onClick={onOpenGroupInfo}
-            title={language === "gu" ? "માહિતી જુઓ" : "View Info"}
+            title={cn.viewInfoTooltip}
             className="p-2 rounded-xl text-[#49352F]/70 dark:text-[#F4F1E1]/70 hover:bg-[#49352F]/10 dark:hover:bg-white/10 transition"
           >
             <Users className="w-4 h-4" />
@@ -475,9 +475,7 @@ export function ChatWindow({
         <div className="bg-[#FFF8E7] dark:bg-[#332A1E] border-b border-[#D97706]/20 px-4 py-2 flex items-center gap-2 text-xs text-[#92400E] dark:text-[#FDE68A]">
           <Pin className="w-3.5 h-3.5 flex-shrink-0 text-[#D97706]" />
           <span className="font-semibold">
-            {language === "gu"
-              ? "આ એક પિન કરેલી સત્તાવાર સૂચના ચેનલ છે."
-              : "Pinned Official Notice Channel."}
+            {cn.pinnedChannelNotice}
           </span>
         </div>
       )}
@@ -499,10 +497,10 @@ export function ChatWindow({
               {loadingOlder ? (
                 <>
                   <Loader2 className="w-3 h-3 animate-spin text-[#2E7D5E]" />
-                  <span>{language === "gu" ? "લોડ કરી રહ્યું છે..." : "Loading older messages..."}</span>
+                  <span>{cn.loadingOlder}</span>
                 </>
               ) : (
-                <span>{language === "gu" ? "અગાઉના સંદેશા જુઓ" : "Load older messages"}</span>
+                <span>{cn.loadOlderBtn}</span>
               )}
             </button>
           </div>
@@ -514,12 +512,10 @@ export function ChatWindow({
               <Sparkles className="w-6 h-6" />
             </div>
             <h4 className="font-bold text-sm mb-1">
-              {language === "gu" ? "હજુ સુધી કોઈ સંદેશા નથી" : "No messages yet"}
+              {cn.noMessagesTitle}
             </h4>
             <p className="text-xs max-w-xs">
-              {language === "gu"
-                ? "શિક્ષક અથવા વાલી સાથે સુરક્ષિત વાતચીત શરૂ કરવા માટે નીચે સંદેશ લખો."
-                : "Type a message below to start a secure conversation between teacher and parent."}
+              {cn.noMessagesSubtitle}
             </p>
           </div>
         ) : (
@@ -530,7 +526,6 @@ export function ChatWindow({
               isOutgoing={msg.senderId === currentUserId}
               conversationType={conversation.type}
               currentUserId={currentUserId}
-              language={language}
               hasTranslation={Boolean(translatedMessages[msg.id])}
               translatedText={translatedMessages[msg.id]}
               isTranslating={translatingId === msg.id}
@@ -586,35 +581,48 @@ export function ChatWindow({
         </div>
       )}
 
-      {/* Quick Emoji Bar (Collapsible) */}
+      {/* Quick Phrase Bar (Collapsible) */}
       {showEmojiPicker && (
-        <div className="p-2 bg-[#FAF8F2] dark:bg-[#201A17] border-t border-[#49352F]/15 flex items-center gap-2 overflow-x-auto text-lg z-10">
-          {quickEmojis.map((emoji) => (
+        <div className="p-2 bg-[#FAF8F2] dark:bg-[#201A17] border-t border-[#49352F]/15 flex items-center gap-2 overflow-x-auto text-xs z-10">
+          {quickPhrases.map((phrase, idx) => (
             <button
-              key={emoji}
-              onClick={() => setInputText((prev) => prev + emoji)}
-              className="p-1.5 hover:bg-black/5 rounded-lg active:scale-125 transition"
+              key={idx}
+              type="button"
+              onClick={() => setInputText((prev) => (prev ? `${prev} ${phrase}` : phrase))}
+              className="px-2.5 py-1 rounded-full bg-white dark:bg-[#261E1A] border border-[#49352F]/15 text-[#49352F] dark:text-[#F4F1E1] hover:bg-[#F2CAB3]/40 whitespace-nowrap transition font-medium"
             >
-              {emoji}
+              {phrase}
             </button>
           ))}
+        </div>
+      )}
+
+      {/* Attachment Error Notice */}
+      {attachmentError && (
+        <div className="p-2.5 px-4 bg-rose-500/10 border-t border-rose-500/20 text-rose-800 dark:text-rose-300 text-xs flex items-center justify-between">
+          <span>{attachmentError}</span>
+          <button
+            type="button"
+            onClick={() => setAttachmentError(null)}
+            className="text-rose-600 hover:text-rose-800 font-bold p-1 cursor-pointer"
+          >
+            &times;
+          </button>
         </div>
       )}
 
       {/* Bottom Message Input Area */}
       {isParentRepliesDisabled ? (
         <div className="p-4 bg-[#F4F1E1] dark:bg-[#261E1A] border-t border-[#49352F]/15 text-center text-xs font-semibold text-[#49352F]/70 dark:text-[#F4F1E1]/70">
-          {language === "gu"
-            ? "આ સત્તાવાર શાળા સૂચના ચેનલમાં વાલીઓનો પ્રત્યુત્તર નિષ્ક્રિય કરેલ છે."
-            : "Replies from parents are disabled in this official school announcement channel."}
+          {cn.repliesDisabled}
         </div>
       ) : (
         <div className="p-2.5 sm:p-3 bg-[#F4F1E1] dark:bg-[#261E1A] border-t border-[#49352F]/15 dark:border-[#F4F1E1]/10 flex items-center gap-2 z-10">
-          {/* Emoji Toggle */}
+          {/* Quick Phrases Toggle */}
           <button
             type="button"
             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-            title="Emojis"
+            title={cn.quickRepliesTooltip}
             className="p-2 rounded-xl text-[#49352F]/70 dark:text-[#F4F1E1]/70 hover:bg-[#49352F]/10 dark:hover:bg-white/10 transition"
           >
             <Smile className="w-5 h-5" />
@@ -624,7 +632,7 @@ export function ChatWindow({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            title="Attach File or Worksheet"
+            title={cn.attachTooltip}
             className="p-2 rounded-xl text-[#49352F]/70 dark:text-[#F4F1E1]/70 hover:bg-[#49352F]/10 dark:hover:bg-white/10 transition"
           >
             <Paperclip className="w-5 h-5" />
@@ -643,11 +651,7 @@ export function ChatWindow({
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={
-              language === "gu"
-                ? "સંદેશ લખો... (Shift+Enter નવી લાઇન માટે)"
-                : "Type a message... (Shift+Enter for newline)"
-            }
+            placeholder={cn.messagePlaceholder}
             className="flex-1 py-2 px-3.5 text-xs sm:text-sm rounded-xl border border-[#49352F]/15 dark:border-[#F4F1E1]/15 bg-white dark:bg-[#1B1614] text-[#49352F] dark:text-[#F4F1E1] resize-none focus:outline-none focus:ring-2 focus:ring-[#2E7D5E]/30 max-h-24 overflow-y-auto"
           />
 

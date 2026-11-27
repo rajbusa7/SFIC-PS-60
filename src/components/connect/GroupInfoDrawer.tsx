@@ -24,12 +24,19 @@ export function GroupInfoDrawer({
   onUpdateGroup,
   onDeleteGroup,
 }: GroupInfoDrawerProps) {
-  const { language } = useLanguage();
+  const { t, tr, language } = useLanguage();
+  const cn = t.connect;
+  const showGuTitle = language === "gu";
   const [participants, setParticipants] = useState<ConversationParticipant[]>([]);
   const [loading, setLoading] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
   const [availableContacts, setAvailableContacts] = useState<any[]>([]);
   const [actionLoading, setActionLoading] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  } | null>(null);
 
   const isConvAdmin =
     conversation.adminIds?.includes(currentUserId) || currentUserRole === "admin";
@@ -64,19 +71,22 @@ export function GroupInfoDrawer({
 
   if (!isOpen) return null;
 
-  const handleRemoveMember = async (userId: string) => {
-    if (!confirm(language === "gu" ? "શું તમે આ સભ્યને જૂથમાંથી દૂર કરવા માંગો છો?" : "Remove this member from group?")) {
-      return;
-    }
-    setActionLoading(true);
-    try {
-      await onUpdateGroup({ removeParticipants: [userId] });
-      setParticipants((prev) => prev.filter((p) => p.userId !== userId));
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setActionLoading(false);
-    }
+  const handleRemoveMember = (userId: string) => {
+    setConfirmDialog({
+      title: (cn as any)?.removeMemberBtn || "Remove Member",
+      message: cn.confirmRemoveMember,
+      onConfirm: async () => {
+        setActionLoading(true);
+        try {
+          await onUpdateGroup({ removeParticipants: [userId] });
+          setParticipants((prev) => prev.filter((p) => p.userId !== userId));
+        } catch (e) {
+          console.error(e);
+        } finally {
+          setActionLoading(false);
+        }
+      },
+    });
   };
 
   const handleAddMember = async (userId: string) => {
@@ -95,12 +105,15 @@ export function GroupInfoDrawer({
     }
   };
 
-  const handleDelete = async () => {
-    if (!confirm(language === "gu" ? "શું તમે આ વાતચીતને કાયમ માટે કાઢી નાખવા માંગો છો?" : "Permanently delete this conversation and its messages?")) {
-      return;
-    }
-    await onDeleteGroup(conversation.id);
-    onClose();
+  const handleDelete = () => {
+    setConfirmDialog({
+      title: cn.deleteConvBtn || "Delete Group",
+      message: cn.confirmDeleteConv,
+      onConfirm: async () => {
+        await onDeleteGroup(conversation.id);
+        onClose();
+      },
+    });
   };
 
   return (
@@ -109,9 +122,7 @@ export function GroupInfoDrawer({
       <div className="flex items-center justify-between p-4 border-b border-[#49352F]/10 dark:border-[#F4F1E1]/10 bg-[#F4F1E1] dark:bg-[#261E1A]">
         <h3 className="font-bold text-[#49352F] dark:text-[#F4F1E1] flex items-center gap-2">
           <Users className="w-4 h-4 text-[#2E7D5E]" />
-          {conversation.type === "direct"
-            ? language === "gu" ? "સંપર્ક વિગત" : "Contact Info"
-            : language === "gu" ? "જૂથ માહિતી" : "Group Info"}
+          {conversation.type === "direct" ? cn.contactInfoTitle : cn.groupInfoTitle}
         </h3>
         <button
           onClick={onClose}
@@ -129,10 +140,10 @@ export function GroupInfoDrawer({
             {conversation.title.charAt(0)}
           </div>
           <h2 className="text-base font-bold text-[#49352F] dark:text-[#F4F1E1]">
-            {language === "gu" && conversation.titleGujarati ? conversation.titleGujarati : conversation.title}
+            {showGuTitle && conversation.titleGujarati ? conversation.titleGujarati : conversation.title}
           </h2>
           <p className="text-xs text-[#49352F]/60 dark:text-[#F4F1E1]/60 mt-1">
-            {conversation.description || (language === "gu" ? "શિક્ષાસેતુ કનેક્ટ અધિકૃત જૂથ" : "Official StudySaathi Connect Channel")}
+            {conversation.description || cn.defaultChannelDesc}
           </p>
           {conversation.classroomId && (
             <div className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#2E7D5E]/10 text-[#2E7D5E]">
@@ -146,7 +157,7 @@ export function GroupInfoDrawer({
         <div>
           <div className="flex items-center justify-between mb-2">
             <h4 className="text-xs font-bold uppercase tracking-wider text-[#49352F]/70 dark:text-[#F4F1E1]/70">
-              {language === "gu" ? "સભ્યો" : "Participants"} ({participants.length})
+              {tr("connect.participantsHeading", { count: participants.length })}
             </h4>
             {isConvAdmin && conversation.type === "class_group" && (
               <button
@@ -154,7 +165,7 @@ export function GroupInfoDrawer({
                 className="text-xs font-bold text-[#2E7D5E] hover:underline flex items-center gap-1"
               >
                 <Plus className="w-3.5 h-3.5" />
-                {language === "gu" ? "સભ્ય ઉમેરો" : "Add Member"}
+                {cn.addMemberBtn}
               </button>
             )}
           </div>
@@ -163,7 +174,7 @@ export function GroupInfoDrawer({
           {showAddMember && (
             <div className="mb-3 p-3 rounded-xl border border-[#2E7D5E]/30 bg-[#2E7D5E]/5 space-y-2">
               <span className="text-xs font-semibold text-[#49352F] dark:text-[#F4F1E1]">
-                {language === "gu" ? "ઉમેરવા માટે પસંદ કરો:" : "Select to Add:"}
+                {cn.selectToAdd}
               </span>
               <div className="max-h-32 overflow-y-auto space-y-1">
                 {availableContacts.map((c) => (
@@ -183,7 +194,7 @@ export function GroupInfoDrawer({
           {loading ? (
             <div className="py-6 text-center text-xs text-gray-500 flex items-center justify-center gap-2">
               <Loader2 className="w-4 h-4 animate-spin text-[#2E7D5E]" />
-              <span>{language === "gu" ? "લોડ થઈ રહ્યું છે..." : "Loading members..."}</span>
+              <span>{cn.loadingMembers}</span>
             </div>
           ) : (
             <div className="space-y-2">
@@ -200,10 +211,10 @@ export function GroupInfoDrawer({
                       </div>
                       <div className="min-w-0">
                         <div className="font-semibold text-[#49352F] dark:text-[#F4F1E1] truncate">
-                          {p.name} {p.userId === currentUserId && "(You)"}
+                          {p.name} {p.userId === currentUserId && cn.youSuffix}
                         </div>
                         <div className="text-[10px] text-[#49352F]/60 dark:text-[#F4F1E1]/60 truncate">
-                          {p.childName ? `Parent of ${p.childName}` : p.role.toUpperCase()}
+                          {p.childName ? tr("connect.parentOf", { child: p.childName }) : p.role.toUpperCase()}
                         </div>
                       </div>
                     </div>
@@ -211,13 +222,13 @@ export function GroupInfoDrawer({
                     <div className="flex items-center gap-2">
                       {isAdmin && (
                         <span className="text-[10px] px-1.5 py-0.5 rounded font-bold bg-[#2E7D5E]/15 text-[#2E7D5E]">
-                          Admin
+                          {cn.adminBadge}
                         </span>
                       )}
                       {isConvAdmin && p.userId !== currentUserId && (
                         <button
                           onClick={() => handleRemoveMember(p.userId)}
-                          title="Remove member"
+                          title={cn.removeMemberTooltip}
                           disabled={actionLoading}
                           className="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded"
                         >
@@ -240,11 +251,45 @@ export function GroupInfoDrawer({
               className="w-full py-2 px-3 rounded-xl border border-red-500/30 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 text-xs font-semibold flex items-center justify-center gap-2 transition"
             >
               <Trash2 className="w-4 h-4" />
-              {language === "gu" ? "વાર્તાલાપ કાઢી નાખો" : "Delete Conversation"}
+              {cn.deleteConvBtn}
             </button>
           </div>
         )}
       </div>
+
+      {/* Confirmation Modal */}
+      {confirmDialog && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+          <div className="bg-white dark:bg-[#201A17] p-5 rounded-2xl max-w-xs w-full border border-[#49352F]/15 dark:border-[#F2CAB3]/20 shadow-xl space-y-3">
+            <h4 className="font-bold text-sm text-[#49352F] dark:text-[#F4F1E1]">
+              {confirmDialog.title}
+            </h4>
+            <p className="text-xs text-[#7A6862] dark:text-[#FAF6E9]/70 leading-relaxed">
+              {confirmDialog.message}
+            </p>
+            <div className="flex items-center justify-end gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setConfirmDialog(null)}
+                className="px-3 py-1.5 rounded-xl text-xs font-semibold text-[#7A6862] hover:bg-[#FAF6E9] dark:hover:bg-[#261E1A] cursor-pointer"
+              >
+                {t.actions?.cancel || "Cancel"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const action = confirmDialog.onConfirm;
+                  setConfirmDialog(null);
+                  action();
+                }}
+                className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#C54738] hover:bg-[#A8382B] text-white shadow-xs cursor-pointer"
+              >
+                {t.actions?.confirm || "Confirm"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

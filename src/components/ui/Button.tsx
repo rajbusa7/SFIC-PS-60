@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { clsx } from "clsx";
 import { Loader2 } from "lucide-react";
 
@@ -10,6 +11,8 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
+  href?: string;
+  target?: string;
   children: React.ReactNode;
 }
 
@@ -19,13 +22,15 @@ export function Button({
   isLoading = false,
   leftIcon,
   rightIcon,
+  href,
+  target,
   className,
   disabled,
   children,
   ...props
 }: ButtonProps) {
   const baseClasses =
-    "inline-flex items-center justify-center font-semibold rounded-full select-none transition-all duration-150 ease-out active:scale-[0.98] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#8D4E10] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FAF6E9] disabled:opacity-50 disabled:pointer-events-none cursor-pointer";
+    "inline-flex flex-row flex-nowrap items-center justify-center font-semibold rounded-full select-none whitespace-nowrap transition-all duration-150 ease-out active:scale-[0.98] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#8D4E10] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FAF6E9] disabled:opacity-50 disabled:pointer-events-none cursor-pointer";
 
   const sizeClasses = {
     sm: "text-xs px-3.5 py-1.5 gap-1.5",
@@ -52,6 +57,31 @@ export function Button({
       "bg-[#FBECE9] text-[#A93327] hover:bg-[#A93327] hover:text-white font-bold border border-[#A93327]/25 shadow-xs hover:-translate-y-0.5 focus-visible:ring-[#A93327]",
   };
 
+  const content = (
+    <>
+      {isLoading ? (
+        <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0 self-center" aria-hidden="true" />
+      ) : (
+        leftIcon && <span className="shrink-0 inline-flex items-center justify-center self-center" aria-hidden="true">{leftIcon}</span>
+      )}
+      <span className="inline-flex flex-row flex-nowrap items-center justify-center gap-1.5 leading-none self-center whitespace-nowrap">{children}</span>
+      {!isLoading && rightIcon && <span className="shrink-0 inline-flex items-center justify-center self-center" aria-hidden="true">{rightIcon}</span>}
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        target={target}
+        className={clsx(baseClasses, sizeClasses[size], variantClasses[variant], className)}
+        {...(props as any)}
+      >
+        {content}
+      </Link>
+    );
+  }
+
   return (
     <button
       className={clsx(baseClasses, sizeClasses[size], variantClasses[variant], className)}
@@ -59,13 +89,7 @@ export function Button({
       aria-busy={isLoading ? "true" : undefined}
       {...props}
     >
-      {isLoading ? (
-        <Loader2 className="w-4 h-4 animate-spin shrink-0" aria-hidden="true" />
-      ) : (
-        leftIcon && <span className="shrink-0" aria-hidden="true">{leftIcon}</span>
-      )}
-      <span>{children}</span>
-      {!isLoading && rightIcon && <span className="shrink-0" aria-hidden="true">{rightIcon}</span>}
+      {content}
     </button>
   );
 }

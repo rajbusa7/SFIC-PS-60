@@ -36,7 +36,7 @@ interface TargetRect {
 export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps = {}) {
   const router = useRouter();
   const pathname = usePathname();
-  const { t, language } = useLanguage();
+  const { tr } = useLanguage();
   const {
     tutorialOpen,
     tutorialMode,
@@ -59,17 +59,7 @@ export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps
 
   // Helper to resolve translation string by key path
   const resolveText = (keyPath: string, fallback: string = ""): string => {
-    try {
-      const parts = keyPath.split(".");
-      let val: any = t;
-      for (const p of parts) {
-        if (!val || typeof val !== "object") return fallback;
-        val = val[p];
-      }
-      return typeof val === "string" ? val : fallback;
-    } catch {
-      return fallback;
-    }
+    return tr(keyPath, undefined, fallback);
   };
 
   // Scroll active target into view once when step changes
@@ -95,13 +85,15 @@ export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps
     if (el) {
       const rect = el.getBoundingClientRect();
       const padding = 8;
+      // Clamp height to max 240px to prevent huge sections from consuming the whole viewport
+      const height = Math.min(rect.height + padding * 2, 240);
       setTargetRect({
         top: Math.max(0, rect.top - padding),
         left: Math.max(0, rect.left - padding),
         width: rect.width + padding * 2,
-        height: rect.height + padding * 2,
+        height,
         right: rect.right + padding,
-        bottom: rect.bottom + padding,
+        bottom: Math.max(0, rect.top - padding) + height,
       });
     } else {
       setTargetRect(null);
@@ -116,6 +108,7 @@ export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps
     const timer1 = setTimeout(updateTargetRect, 80);
     const timer2 = setTimeout(updateTargetRect, 220);
     const timer3 = setTimeout(updateTargetRect, 500);
+    const timer4 = setTimeout(updateTargetRect, 700);
 
     window.addEventListener("resize", updateTargetRect, { passive: true });
     window.addEventListener("scroll", updateTargetRect, { passive: true });
@@ -124,6 +117,7 @@ export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps
       clearTimeout(timer1);
       clearTimeout(timer2);
       clearTimeout(timer3);
+      clearTimeout(timer4);
       window.removeEventListener("resize", updateTargetRect);
       window.removeEventListener("scroll", updateTargetRect);
     };
@@ -194,25 +188,37 @@ export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps
 
     const margin = 16;
     const tooltipWidth = 360;
+    const tooltipHeight = 250;
     const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
     const winWidth = typeof window !== "undefined" ? window.innerWidth : 1200;
     const winHeight = typeof window !== "undefined" ? window.innerHeight : 800;
 
-    // Default below target
-    let top = targetRect.bottom + margin;
+    let top: number;
     let left = targetRect.left + targetRect.width / 2 - tooltipWidth / 2;
 
-    // Check bottom overflow, flip to top if needed
-    if (top + 220 > winHeight && targetRect.top > 220) {
-      top = Math.max(margin, targetRect.top - 240);
+    const wantsTop = currentStep.placement === "top";
+    const spaceAbove = targetRect.top - margin;
+    const spaceBelow = winHeight - targetRect.bottom - margin;
+
+    if (wantsTop && spaceAbove >= tooltipHeight) {
+      top = targetRect.top - tooltipHeight - margin;
+    } else if (spaceBelow >= tooltipHeight) {
+      top = targetRect.bottom + margin;
+    } else if (spaceAbove >= tooltipHeight) {
+      top = targetRect.top - tooltipHeight - margin;
+    } else {
+      top = spaceBelow > spaceAbove
+        ? targetRect.bottom + margin
+        : targetRect.top - tooltipHeight - margin;
     }
 
-    // Keep horizontally in bounds
+    // Always keep strictly inside viewport boundaries
+    top = Math.max(margin, Math.min(top, winHeight - tooltipHeight - margin));
+
     if (isMobile) {
-      left = margin;
       return {
         position: "fixed",
-        top: `${Math.min(top, winHeight - 250)}px`,
+        top: `${top}px`,
         left: `${margin}px`,
         width: `calc(100vw - ${margin * 2}px)`,
         maxWidth: "380px",
@@ -224,7 +230,7 @@ export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps
 
     return {
       position: "fixed",
-      top: `${Math.max(margin, Math.min(top, winHeight - 260))}px`,
+      top: `${top}px`,
       left: `${left}px`,
       width: `${tooltipWidth}px`,
       zIndex: 60,
@@ -267,22 +273,22 @@ export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps
             )}
           </mask>
         </defs>
-        {/* Dimmed backdrop rect using mask */}
+        {/* Dimmed warm backdrop rect using mask */}
         <rect
           x="0"
           y="0"
           width="100%"
           height="100%"
-          fill="#070a13"
-          fillOpacity={isCentered ? "0.85" : "0.78"}
+          fill="#1B1614"
+          fillOpacity={isCentered ? "0.78" : "0.70"}
           mask={`url(#spotlight-mask-${currentPage})`}
         />
       </svg>
 
-      {/* Glowing outline around target element */}
+      {/* Glowing outline around target element matching warm website palette */}
       {targetRect && (
         <div
-          className="fixed pointer-events-none transition-all duration-300 rounded-2xl animate-pulse"
+          className="fixed pointer-events-none transition-all duration-300 rounded-2xl"
           style={{
             top: `${targetRect.top}px`,
             left: `${targetRect.left}px`,
@@ -290,7 +296,7 @@ export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps
             height: `${targetRect.height}px`,
             zIndex: 55,
             boxShadow:
-              "0 0 0 3px #FF8A3D, 0 0 25px rgba(255, 138, 61, 0.55), inset 0 0 15px rgba(255, 138, 61, 0.2)",
+              "0 0 0 2.5px #B26A1B, 0 0 0 5px rgba(242, 202, 179, 0.45), 0 0 20px rgba(178, 106, 27, 0.35)",
           }}
         />
       )}
@@ -299,22 +305,20 @@ export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps
       <div
         ref={tooltipRef}
         style={getTooltipStyle()}
-        className="rounded-3xl bg-[#14123D]/95 border border-[#FF8A3D]/40 p-5 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.9)] backdrop-blur-2xl text-white transition-all duration-300 ring-1 ring-white/10"
+        className="rounded-3xl bg-[#FAF6E9] dark:bg-[#221C18] border border-[#49352F]/16 dark:border-[#F2CAB3]/25 p-5 shadow-[0_20px_50px_rgba(73,53,47,0.18)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.7)] backdrop-blur-2xl text-[#49352F] dark:text-[#F4F1E1] transition-all duration-300 ring-1 ring-[#49352F]/8 dark:ring-white/10 animate-grow-center"
       >
         {/* Top Header: Badge, Step counter, Close / Skip button */}
-        <div className="flex items-center justify-between pb-3 border-b border-white/10">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#FF8A3D] to-[#2B2A6B] flex items-center justify-center text-xs shadow-md shadow-[#FF8A3D]/20">
-              <Bot className="w-4 h-4 text-white" />
+        <div className="flex items-center justify-between pb-3 border-b border-[#49352F]/10 dark:border-[#F2CAB3]/15">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-full bg-[#F2CAB3] dark:bg-[#F2CAB3]/25 border border-[#49352F]/15 dark:border-[#F2CAB3]/30 flex items-center justify-center text-xs shadow-xs text-[#49352F] dark:text-[#F4F1E1]">
+              <Bot className="w-4 h-4" />
             </div>
             <div>
-              <span className="text-[10px] font-bold tracking-wider uppercase text-[#3DDBA9]">
-                {badgeText || (language === "gu" ? "માર્ગદર્શિત ટૂર" : "Interactive Tour")}
+              <span className="text-[10px] font-bold tracking-wider uppercase text-[#B26A1B] dark:text-[#F2CAB3]">
+                {badgeText || tr("spotlight.interactiveTour")}
               </span>
-              <div className="text-[11px] font-semibold text-slate-300">
-                {language === "gu"
-                  ? `પગલું ${tutorialStep + 1} / ${steps.length}`
-                  : `Step ${tutorialStep + 1} of ${steps.length}`}
+              <div className="text-[11px] font-semibold text-[#7A6862] dark:text-[#FAF6E9]/75">
+                {tr("spotlight.stepCounter", { current: tutorialStep + 1, total: steps.length })}
               </div>
             </div>
           </div>
@@ -322,8 +326,8 @@ export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps
           <button
             type="button"
             onClick={closeTutorial}
-            className="p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-            aria-label={language === "gu" ? "ટૂર બંધ કરો" : "Close tour"}
+            className="p-1.5 rounded-full text-[#7A6862] hover:text-[#49352F] hover:bg-[#49352F]/10 dark:text-[#FAF6E9]/70 dark:hover:text-[#F4F1E1] transition-colors cursor-pointer"
+            aria-label={tr("spotlight.closeAria")}
           >
             <X className="w-4 h-4" />
           </button>
@@ -331,26 +335,24 @@ export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps
 
         {/* Content Body */}
         <div className="py-4 space-y-2.5">
-          <h4 className="font-heading text-base font-bold text-white tracking-tight flex items-center gap-1.5">
+          <h4 className="font-heading text-base font-bold text-[#49352F] dark:text-[#F4F1E1] tracking-tight flex items-center gap-1.5">
             <span>{stepTitle}</span>
           </h4>
-          <p className="text-xs text-slate-300 leading-relaxed font-normal">
+          <p className="text-xs text-[#7A6862] dark:text-[#FAF6E9]/80 leading-relaxed font-normal">
             {stepDesc}
           </p>
 
-          {/* ShikshaBot speech callout tip */}
-          <div className="mt-2.5 p-2.5 rounded-2xl bg-white/5 border border-white/10 flex items-start gap-2 text-[11px] text-amber-200/90 leading-snug">
-            <Lightbulb className="w-4 h-4 text-amber-300 shrink-0 mt-0.5" aria-hidden="true" />
+          {/* SaathiBot tip callout */}
+          <div className="mt-2.5 p-2.5 rounded-2xl bg-white/80 dark:bg-[#2A231E] border border-[#49352F]/10 dark:border-[#F2CAB3]/15 flex items-start gap-2 text-[11px] text-[#49352F] dark:text-[#F4F1E1] leading-snug">
+            <Lightbulb className="w-4 h-4 text-[#B26A1B] dark:text-[#F2CAB3] shrink-0 mt-0.5" aria-hidden="true" />
             <span>
-              {language === "gu"
-                ? "શિક્ષાબોટ ટિપ: તમે ઉપરના ટૂલબારમાંથી અથવા 'Esc' દબાવીને આ ટૂર ગમે ત્યારે ફરી જોઈ શકો છો."
-                : "ShikshaBot tip: You can replay this guided walkthrough anytime from the top bar or press 'Esc' to exit."}
+              {tr("spotlight.tip")}
             </span>
           </div>
         </div>
 
         {/* Action Controls: Progress Dots, Back, Next / CTA */}
-        <div className="pt-3 border-t border-white/10 flex items-center justify-between gap-2">
+        <div className="pt-3 border-t border-[#49352F]/10 dark:border-[#F2CAB3]/15 flex items-center justify-between gap-2">
           {/* Progress dots */}
           <div className="flex items-center gap-1">
             {steps.map((_, idx) => (
@@ -358,8 +360,8 @@ export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps
                 key={idx}
                 className={`h-1.5 rounded-full transition-all duration-300 ${
                   idx === tutorialStep
-                    ? "w-4 bg-[#FF8A3D]"
-                    : "w-1.5 bg-slate-600/70"
+                    ? "w-4 bg-[#B26A1B] dark:bg-[#F2CAB3]"
+                    : "w-1.5 bg-[#49352F]/20 dark:bg-white/20"
                 }`}
               />
             ))}
@@ -371,28 +373,24 @@ export function SpotlightTour({ page, autoStartDelay = 600 }: SpotlightTourProps
               <button
                 type="button"
                 onClick={handleBack}
-                className="px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer flex items-center gap-1 min-h-[38px]"
+                className="px-3 py-1.5 rounded-xl text-xs font-semibold text-[#7A6862] hover:text-[#49352F] hover:bg-[#49352F]/8 dark:text-[#FAF6E9]/75 dark:hover:text-[#F4F1E1] transition-colors cursor-pointer flex items-center gap-1 min-h-[36px]"
               >
-                <ChevronLeft className="w-3.5 h-3.5" />
-                <span>{language === "gu" ? "પાછળ" : "Back"}</span>
+                <ChevronLeft className="w-3.5 h-3.5 rtl:rotate-180" />
+                <span>{tr("spotlight.back")}</span>
               </button>
             )}
 
             <button
               type="button"
               onClick={handleNext}
-              className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-[#FF8A3D] to-amber-500 hover:from-[#FF8A3D] hover:to-amber-400 text-slate-950 text-xs font-black shadow-md shadow-[#FF8A3D]/25 transition-all cursor-pointer flex items-center gap-1 min-h-[38px] active:scale-95"
+              className="px-4 py-1.5 rounded-xl bg-[#F2CAB3] hover:bg-white text-[#49352F] border border-[#49352F]/16 text-xs font-bold shadow-xs transition-all cursor-pointer flex items-center gap-1 min-h-[36px] active:scale-95"
             >
               <span>
                 {isLast
                   ? currentStep.ctaTextKey
-                    ? resolveText(currentStep.ctaTextKey, "Finish Tour")
-                    : language === "gu"
-                    ? "સમાપ્ત કરો"
-                    : "Finish Tour"
-                  : language === "gu"
-                  ? "આગળ"
-                  : "Next"}
+                    ? resolveText(currentStep.ctaTextKey, tr("spotlight.finish"))
+                    : tr("spotlight.finish")
+                  : tr("spotlight.next")}
               </span>
               {isLast ? (
                 <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />

@@ -23,6 +23,7 @@ import { WhatsAppShareButton } from "@/components/ptm/WhatsAppShareButton";
 import { MeetingNotesModal } from "@/components/ptm/MeetingNotesModal";
 import { MeetingAttendanceModal } from "@/components/ptm/MeetingAttendanceModal";
 import { buildMeetingJoinUrl } from "@/lib/auth/signedMeetingToken";
+import { translations } from "@/lib/i18n/translations";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
 import { apiClient } from "@/services/apiClient";
@@ -66,11 +67,16 @@ function getMeetingDateParts(isoString: string, lang: string) {
 export default function TeacherMeetingsPage() {
   const router = useRouter();
   const { t: baseT, language, formatClass } = useLanguage();
+  const langKey = language === "gu" ? "gu" : "en";
+  const trPtm = translations[langKey]?.ptm || translations.en.ptm || {};
+  const trVideo = (translations[langKey] as any)?.video || (translations.en as any).video || {};
+  const trCommon = translations[langKey]?.common || translations.en.common || {};
+
   const t: any = {
     ...baseT,
-    ptm: (baseT as any)?.ptm || {},
-    video: (baseT as any)?.video || {},
-    common: (baseT as any)?.common || {},
+    ptm: { ...trPtm, ...((baseT as any)?.ptm || {}) },
+    video: { ...trVideo, ...((baseT as any)?.video || {}) },
+    common: { ...trCommon, ...((baseT as any)?.common || {}) },
   };
   const { user } = useAuth();
 
@@ -559,7 +565,10 @@ export default function TeacherMeetingsPage() {
                             <Button
                               variant="primary"
                               size="sm"
-                              onClick={() => router.push(`/meetings/room/${mtg.roomId}`)}
+                              onClick={() => {
+                                const targetRoom = mtg.roomId || (mtg as any).meetingCode || mtg.id;
+                                router.push(`/meetings/room/${targetRoom}`);
+                              }}
                               className="w-full font-bold"
                               leftIcon={<Sparkles className="w-3.5 h-3.5" />}
                             >

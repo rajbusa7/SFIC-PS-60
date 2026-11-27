@@ -78,7 +78,7 @@ export default function MeetingRoomPage() {
 
   const { t, language } = useLanguage();
   const { user, role } = useAuth();
-  const vt = t.video;
+  const vt = (t as any).video || {};
 
   // Screen states: 'loading' | 'prejoin' | 'waiting' | 'in_call' | 'ended' | 'error'
   const [screenState, setScreenState] = useState<

@@ -185,7 +185,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
           localStorage.getItem("studysaathi_lang") || localStorage.getItem("shikshasetu_lang");
         const savedScript = localStorage.getItem("studysaathi_script") as SupportedScript | null;
         if (savedLang && isValidLanguageCode(savedLang)) {
-          void activateLocale(savedLang, savedScript, { persistLocal: false, persistRemote: false });
+          void activateLocale(savedLang as any, savedScript, { persistLocal: false, persistRemote: false });
         } else {
           syncDocumentAttributes("en", defaultScriptMeta);
         }
@@ -210,7 +210,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       if (!detail?.preferredLanguage || !isValidLanguageCode(detail.preferredLanguage)) return;
       if (manualOverrideRef.current && !detail.forceSync) return;
 
-      void activateLocale(detail.preferredLanguage, detail.preferredScript, {
+      void activateLocale(detail.preferredLanguage as any, detail.preferredScript, {
         persistLocal: true,
         persistRemote: false,
       });

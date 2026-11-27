@@ -65,7 +65,8 @@ function getMeetingDateParts(isoString: string, lang: string) {
 
 export default function TeacherMeetingsPage() {
   const router = useRouter();
-  const { t, language, formatClass } = useLanguage();
+  const { t: baseT, language, formatClass } = useLanguage();
+  const t: any = baseT;
   const { user } = useAuth();
 
   const [meetings, setMeetings] = useState<MeetingWithInvites[]>([]);

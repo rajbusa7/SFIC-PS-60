@@ -3738,7 +3738,7 @@ export const db = {
   async getMeetingNotesForParentAsync(meetingId: string, parentId?: string): Promise<any[]> {
     return this.getPtmMeetingNotesAsync(meetingId);
   },
-  async getMeetingNotesAsync(meetingId: string): Promise<any[]> {
+  async getMeetingNotesAsync(meetingId: string, ...rest: any[]): Promise<any[]> {
     return this.getPtmMeetingNotesAsync(meetingId);
   },
   async saveMeetingNoteAsync(data: any): Promise<any> {
@@ -3759,7 +3759,7 @@ export const db = {
   async getInvitesForMeetingAsync(meetingId: string): Promise<any[]> {
     return [];
   },
-  async findNotificationAsync(filters: any): Promise<any> {
+  async findNotificationAsync(...args: any[]): Promise<any> {
     return null;
   },
   async createNotificationAsync(notif: any): Promise<any> {

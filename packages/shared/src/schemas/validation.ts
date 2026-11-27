@@ -155,14 +155,15 @@ export function validateAiTutorRequest(body: any): ValidationResult<{
 
 export function validateCreateMeeting(body: any): ValidationResult<{
   title: string;
-  agenda?: string;
-  type?: "one_to_one" | "group";
-  startTime?: string;
-  durationMin?: number;
+  agenda: string;
+  type: "one_to_one" | "group";
+  startTime: string;
+  durationMin: number;
   classId?: string;
   studentIds?: string[];
-  parentIds?: string[];
-  scheduledDate?: string;
+  parentId?: string;
+  offeredSlots?: string[];
+  targetMode?: "parent" | "students" | "class";
 }> {
   const errors: ValidationError[] = [];
   if (!body || typeof body !== "object") {
@@ -174,7 +175,18 @@ export function validateCreateMeeting(body: any): ValidationResult<{
   return {
     isValid: errors.length === 0,
     errors,
-    data: errors.length === 0 ? body : undefined,
+    data: errors.length === 0 ? {
+      title: body.title,
+      agenda: body.agenda || "",
+      type: body.type || "one_to_one",
+      startTime: body.startTime || "",
+      durationMin: Number(body.durationMin) || 30,
+      classId: body.classId,
+      studentIds: body.studentIds,
+      parentId: body.parentId,
+      offeredSlots: body.offeredSlots,
+      targetMode: body.targetMode,
+    } : undefined,
   };
 }
 

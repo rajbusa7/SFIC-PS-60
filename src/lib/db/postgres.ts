@@ -654,6 +654,28 @@ export async function ensurePostgresSchema(): Promise<void> {
             updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
 
+        -- Ensure columns exist if table was previously created with older schema
+        ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS scheduled_date DATE;
+        ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS start_time VARCHAR(8);
+        ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS duration_minutes INTEGER DEFAULT 30;
+        ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS meeting_code VARCHAR(32);
+        ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS title VARCHAR(255);
+        ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS description TEXT;
+        ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS agenda TEXT;
+        ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS teacher_notes TEXT;
+        ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS teacher_id VARCHAR(64);
+        ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS teacher_name VARCHAR(255);
+        ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS student_id VARCHAR(64);
+        ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS student_name VARCHAR(255);
+        ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS parent_id VARCHAR(64);
+        ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS parent_name VARCHAR(255);
+        ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS parent_email VARCHAR(255);
+        ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS parent_phone VARCHAR(32);
+        ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'scheduled';
+        ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS join_token_hash VARCHAR(128);
+        ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE ptm_meetings ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
+
         CREATE TABLE IF NOT EXISTS ptm_meeting_notes (
             id VARCHAR(64) PRIMARY KEY,
             meeting_id VARCHAR(64) REFERENCES ptm_meetings(id) ON DELETE CASCADE,
@@ -2545,7 +2567,7 @@ export const postgresPtmDb = {
          parent_id, parent_name, parent_email, parent_phone,
          scheduled_date, start_time, duration_minutes, status, join_token_hash,
          created_at, updated_at
-       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, NOW(), NOW())
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, NOW(), NOW())
        RETURNING id, meeting_code as "meetingCode", title, description, agenda, teacher_notes as "teacherNotes",
                  teacher_id as "teacherId", teacher_name as "teacherName",
                  student_id as "studentId", student_name as "studentName",

@@ -3489,7 +3489,12 @@ export const db = {
     date?: string;
   }): Promise<PtmMeeting[]> {
     if (isPostgresConfigured()) {
-      return postgresPtmDb.getMeetings(options);
+      try {
+        const pgRows = await postgresPtmDb.getMeetings(options);
+        if (pgRows && pgRows.length > 0) return pgRows;
+      } catch (err: any) {
+        console.warn("[Database] Postgres getPtmMeetings failed, fallback to local store:", err?.message);
+      }
     }
     return this.getPtmMeetings(options);
   },
@@ -3502,7 +3507,12 @@ export const db = {
 
   async getPtmMeetingByIdAsync(idOrCode: string): Promise<PtmMeeting | null> {
     if (isPostgresConfigured()) {
-      return postgresPtmDb.getMeetingById(idOrCode);
+      try {
+        const pgMeeting = await postgresPtmDb.getMeetingById(idOrCode);
+        if (pgMeeting) return pgMeeting;
+      } catch (err: any) {
+        console.warn("[Database] Postgres getMeetingById failed, fallback to local store:", err?.message);
+      }
     }
     return this.getPtmMeetingById(idOrCode);
   },
@@ -3517,7 +3527,12 @@ export const db = {
 
   async createPtmMeetingAsync(meeting: PtmMeeting): Promise<PtmMeeting> {
     if (isPostgresConfigured()) {
-      return postgresPtmDb.createMeeting(meeting);
+      try {
+        return await postgresPtmDb.createMeeting(meeting);
+      } catch (err: any) {
+        console.warn("[Database] Postgres createMeeting failed, fallback to local store:", err?.message);
+        return this.createPtmMeeting(meeting);
+      }
     }
     return this.createPtmMeeting(meeting);
   },
@@ -3535,7 +3550,12 @@ export const db = {
 
   async updatePtmMeetingStatusAsync(id: string, status: PtmMeetingStatus): Promise<PtmMeeting | null> {
     if (isPostgresConfigured()) {
-      return postgresPtmDb.updateMeetingStatus(id, status);
+      try {
+        return await postgresPtmDb.updateMeetingStatus(id, status);
+      } catch (err: any) {
+        console.warn("[Database] Postgres updateMeetingStatus failed, fallback to local store:", err?.message);
+        return this.updatePtmMeetingStatus(id, status);
+      }
     }
     return this.updatePtmMeetingStatus(id, status);
   },
@@ -3556,7 +3576,11 @@ export const db = {
 
   async getPtmMeetingStatsAsync(teacherId?: string, parentId?: string): Promise<PtmMeetingStats> {
     if (isPostgresConfigured()) {
-      return postgresPtmDb.getStats(teacherId, parentId);
+      try {
+        return await postgresPtmDb.getStats(teacherId, parentId);
+      } catch (err: any) {
+        console.warn("[Database] Postgres getStats failed, fallback to local store:", err?.message);
+      }
     }
     return this.getPtmMeetingStats(teacherId, parentId);
   },

@@ -1810,6 +1810,7 @@ window.__seek   = v => { clock = v; drawn = null; };
    * shaders
    * ================================================================== */
   var LIGHT_GLSL = [
+    'precision highp float;',
     'uniform vec3 uKeyDir, uKeyCol, uFillDir, uFillCol, uAmbCol, uHazeCol;',
     'uniform float uHaze, uFog, uMaskOn, uHazeLift;',
     'uniform vec4 uMask;',
@@ -1877,6 +1878,7 @@ window.__seek   = v => { clock = v; drawn = null; };
   ].join('\n');
 
   var WIND_GLSL = [
+    'precision highp float;',
     'uniform float uTime;',
     'uniform float uWind;',
     'vec3 windOffset(vec3 p){',
@@ -1892,11 +1894,12 @@ window.__seek   = v => { clock = v; drawn = null; };
   function barkMaterial(cfg) {
     return new THREE.ShaderMaterial({
       uniforms: cfg.uniforms,
+      precision: 'highp',
       extensions: { derivatives: true },
       vertexShader: WIND_GLSL + [
         'attribute vec3 inf;',
         'varying vec3 vN; varying vec3 vW; varying vec3 vInf; varying float vH; varying vec3 vL;',
-        'uniform float uBoxH;',
+        'uniform highp float uBoxH;',
         'void main(){',
         '  vInf = inf;',
         '  vN = normalize(normal);',
@@ -1910,7 +1913,7 @@ window.__seek   = v => { clock = v; drawn = null; };
       ].join('\n'),
       fragmentShader: NOISE_GLSL + LIGHT_GLSL + [
         'precision highp float;',
-        'uniform float uAlpha; uniform float uBoxH;',
+        'uniform highp float uAlpha; uniform highp float uBoxH;',
         'varying vec3 vN; varying vec3 vW; varying vec3 vInf; varying float vH; varying vec3 vL;',
 
         /* Bark grain is strongly anisotropic — features run ten times longer
@@ -2000,6 +2003,7 @@ window.__seek   = v => { clock = v; drawn = null; };
   function grassMaterial(cfg) {
     return new THREE.ShaderMaterial({
       uniforms: cfg.uniforms,
+      precision: 'highp',
       side: THREE.DoubleSide,
       transparent: cfg.transparent === true,
       depthWrite: cfg.depthWrite !== false,
@@ -2010,7 +2014,7 @@ window.__seek   = v => { clock = v; drawn = null; };
         'attribute float aux;',
         'uniform vec3 uMouse;',
         'uniform float uMouseR;',
-        'uniform float uBoxH;',
+        'uniform highp float uBoxH;',
         'varying float vT; varying float vShade; varying float vDark;',
         'varying float vTone; varying float vH; varying vec3 vN; varying vec3 vW; varying vec3 vL;',
 
@@ -2063,7 +2067,7 @@ window.__seek   = v => { clock = v; drawn = null; };
       ].join('\n'),
       fragmentShader: LIGHT_GLSL + [
         'precision highp float;',
-        'uniform float uAlpha; uniform float uBoxH;',
+        'uniform highp float uAlpha; uniform highp float uBoxH;',
         'varying float vT; varying float vShade; varying float vDark;',
         'varying float vTone; varying float vH; varying vec3 vN; varying vec3 vW; varying vec3 vL;',
         'void main(){',
@@ -2165,12 +2169,13 @@ window.__seek   = v => { clock = v; drawn = null; };
   function fernMaterial(cfg) {
     return new THREE.ShaderMaterial({
       uniforms: cfg.uniforms,
+      precision: 'highp',
       side: THREE.DoubleSide,
       vertexShader: WIND_GLSL + [
         'attribute vec3 iPos;',
         'attribute vec4 iQuat;',
         'attribute vec2 iRnd;',
-        'uniform float uBoxH;',
+        'uniform highp float uBoxH;',
         'varying vec2 vUv; varying vec3 vN; varying vec3 vW; varying float vH; varying float vTint; varying vec3 vL;',
         'vec3 qrot(vec4 q, vec3 v){ return v + 2.0 * cross(q.xyz, cross(q.xyz, v) + q.w * v); }',
         'void main(){',
@@ -2191,7 +2196,7 @@ window.__seek   = v => { clock = v; drawn = null; };
       ].join('\n'),
       fragmentShader: LIGHT_GLSL + [
         'precision highp float;',
-        'uniform float uAlpha; uniform float uBoxH;',
+        'uniform highp float uAlpha; uniform highp float uBoxH;',
         'varying vec2 vUv; varying vec3 vN; varying vec3 vW; varying float vH; varying float vTint; varying vec3 vL;',
         'void main(){',
         '  if (unscanned(vW, 520.0)) discard;',
@@ -2311,11 +2316,12 @@ window.__seek   = v => { clock = v; drawn = null; };
   function flowerMaterial(cfg) {
     return new THREE.ShaderMaterial({
       uniforms: cfg.uniforms,
+      precision: 'highp',
       transparent: true, depthWrite: false, side: THREE.DoubleSide,
       vertexShader: WIND_GLSL + [
         'attribute vec3 iPos;',
         'attribute vec2 iRnd;',
-        'uniform float uBoxH;',
+        'uniform highp float uBoxH;',
         'varying vec2 vUv; varying float vH; varying vec3 vL; varying vec3 vW;',
         'void main(){',
         '  vUv = uv;',
@@ -2336,7 +2342,7 @@ window.__seek   = v => { clock = v; drawn = null; };
       fragmentShader: LIGHT_GLSL + [
         'precision highp float;',
         'uniform sampler2D uMap;',
-        'uniform float uAlpha; uniform float uBoxH;',
+        'uniform highp float uAlpha; uniform highp float uBoxH;',
         'varying vec2 vUv; varying float vH; varying vec3 vL; varying vec3 vW;',
         'void main(){',
         '  if (unscanned(vW, 520.0)) discard;',

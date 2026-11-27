@@ -193,7 +193,9 @@ export function buildBilingualPtmMessage(
  */
 export function buildPtmWhatsAppMessage(ctx: PtmMessageContext, lang: "en" | "gu" = "gu"): string {
   const { date, time } = formatDateTimeLocalized(ctx.startTime, lang);
-  const join = ctx.joinUrl ? `\n🔗 ${lang === "gu" ? "જોડાવા માટેની લિંક:" : "Join Link:"} ${ctx.joinUrl}` : "";
+  const join = ctx.joinUrl
+    ? `\n\n👉 *${lang === "gu" ? "મીટિંગમાં સીધા જોડાવા માટે લિંક પર ક્લિક કરો:" : "Click here to join meeting directly:"}*\n${ctx.joinUrl}`
+    : "";
   const school = ctx.schoolName ? `\n🏫 ${ctx.schoolName}` : "";
 
   if (lang === "gu") {

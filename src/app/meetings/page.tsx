@@ -578,7 +578,13 @@ export default function TeacherMeetingsPage() {
                             </Button>
                           )}
 
-                          <WhatsAppShareButton meeting={mtg} variant="outline" className="w-full" />
+                          <WhatsAppShareButton
+                            meeting={mtg}
+                            studentName={(mtg as any).studentName || (mtg.invites && mtg.invites[0]?.studentName)}
+                            parentPhone={(mtg as any).parentPhone || (mtg.invites && mtg.invites[0]?.parentPhone)}
+                            variant="outline"
+                            className="w-full"
+                          />
 
                           <div className="grid grid-cols-2 gap-2">
                             <Button

@@ -33,6 +33,13 @@ export function WhatsAppShareButton({
   const { language } = useLanguage();
 
   const handleShare = () => {
+    const origin = typeof window !== "undefined" && window.location.origin
+      ? window.location.origin
+      : (process.env.NEXT_PUBLIC_APP_URL || "https://shikshasetu-ai-iota.vercel.app");
+
+    const targetRoom = (meeting as any).roomId || (meeting as any).meetingCode || meeting.id || "live-consultation";
+    const effectiveJoinUrl = joinUrl || `${origin}/meetings/room/${targetRoom}`;
+
     const text = buildPtmWhatsAppMessage(
       {
         meetingTitle: meeting.title,
@@ -40,7 +47,7 @@ export function WhatsAppShareButton({
         startTime: meeting.startTime,
         durationMin: meeting.durationMin,
         studentName,
-        joinUrl,
+        joinUrl: effectiveJoinUrl,
         schoolName,
       },
       language as "en" | "gu"

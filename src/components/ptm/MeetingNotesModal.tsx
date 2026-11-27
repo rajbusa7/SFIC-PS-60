@@ -14,6 +14,7 @@ import {
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { useLanguage } from "@/context/LanguageContext";
+import { translations } from "@/lib/i18n/translations";
 import { apiClient } from "@/services/apiClient";
 import type { MeetingWithInvites, MeetingActionItem } from "@shared/types";
 
@@ -31,7 +32,11 @@ export function MeetingNotesModal({
   onSaved,
 }: MeetingNotesModalProps) {
   const { t, language } = useLanguage();
-  const vt = (t as any).video || {};
+  const langKey = language === "gu" ? "gu" : "en";
+  const vt = {
+    ...translations[langKey].video,
+    ...((t as any).video || {}),
+  };
 
   const [selectedStudentId, setSelectedStudentId] = useState<string>("");
   const [notes, setNotes] = useState<string>("");
@@ -62,16 +67,20 @@ export function MeetingNotesModal({
       setError(null);
       setFeedback(null);
 
+      // 1. Fetch worksheets safely
       try {
-        // Fetch worksheets
         const wsRes = await apiClient.getWorksheetsList();
-        if (mounted && wsRes.success) {
+        if (mounted && wsRes && wsRes.success) {
           setWorksheets(wsRes.worksheets || []);
         }
+      } catch (wsErr) {
+        console.warn("[MeetingNotes] Non-blocking worksheets warning:", wsErr);
+      }
 
-        // Fetch notes for this meeting and student
+      // 2. Fetch notes for this meeting and student
+      try {
         const notesRes = await apiClient.getMeetingNotes(meeting!.id, selectedStudentId || undefined);
-        if (mounted && notesRes.success && notesRes.notes.length > 0) {
+        if (mounted && notesRes && notesRes.success && notesRes.notes && notesRes.notes.length > 0) {
           const currentNote = notesRes.notes[0];
           setNotes(currentNote.notes || "");
           const formattedActions: MeetingActionItem[] = (currentNote.actionItems || []).map(
@@ -91,8 +100,8 @@ export function MeetingNotesModal({
           setNotes("");
           setActionItems([]);
         }
-      } catch (err: any) {
-        if (mounted) setError(err.message || "Failed to load notes");
+      } catch (notesErr) {
+        console.warn("[MeetingNotes] Non-blocking notes warning:", notesErr);
       } finally {
         if (mounted) setLoading(false);
       }
@@ -228,13 +237,15 @@ export function MeetingNotesModal({
 
         {/* Teacher Notes Area */}
         <div className="space-y-1.5">
-          <label className="text-xs font-bold">Discussion Notes</label>
+          <label className="text-xs font-bold text-[#49352F] dark:text-[#FAF6E9]">
+            {vt.discussionNotes || (language === "gu" ? "ચર્ચા નોંધો" : "Discussion Notes")}
+          </label>
           <textarea
             rows={4}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder={vt.notesPlaceholder}
-            className="w-full rounded-2xl bg-white dark:bg-[#1E1916] border border-[#49352F]/15 dark:border-[#F2CAB3]/20 px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#B26A1B]"
+            placeholder={vt.notesPlaceholder || (language === "gu" ? "મીટિંગ દરમિયાન થયેલી મુખ્ય ચર્ચાઓ અને મુદ્દાઓ અહીં લખો..." : "Record key discussion points and pedagogical observations from this meeting...")}
+            className="w-full rounded-2xl bg-white dark:bg-[#1E1916] border border-[#49352F]/15 dark:border-[#F2CAB3]/20 px-3.5 py-2.5 text-xs text-[#49352F] dark:text-[#FAF6E9] focus:outline-none focus:ring-2 focus:ring-[#B26A1B]"
           />
         </div>
 
@@ -242,7 +253,7 @@ export function MeetingNotesModal({
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h4 className="text-xs font-bold uppercase tracking-wider text-[#7A6862] dark:text-[#FAF6E9]/70">
-              {vt.actionItemsHeading}
+              {vt.actionItemsHeading || (language === "gu" ? "ઘર અને શાળા માટે કાર્ય આઇટમ્સ" : "Action Items for Home & School")}
             </h4>
             <Button
               variant="outline"
@@ -250,14 +261,16 @@ export function MeetingNotesModal({
               onClick={handleAddActionItem}
               leftIcon={<Plus className="w-3.5 h-3.5" />}
             >
-              {vt.addActionItemBtn}
+              {vt.addActionItemBtn || (language === "gu" ? "+ કાર્ય આઇટમ ઉમેરો" : "+ Add Action Item")}
             </Button>
           </div>
 
           {actionItems.length === 0 ? (
             <div className="p-4 rounded-2xl bg-[#FAF6E9] dark:bg-[#1E1916] border border-dashed border-[#49352F]/20 text-center">
               <p className="text-xs text-[#7A6862] dark:text-[#FAF6E9]/70">
-                No action items added yet. Click &quot;{vt.addActionItemBtn}&quot; to assign practice for home.
+                {language === "gu"
+                  ? `હજુ સુધી કોઈ કાર્ય આઇટમ્સ ઉમેરાયેલ નથી. પ્રેક્ટિસ સોંપવા માટે "${vt.addActionItemBtn || '+ કાર્ય આઇટમ ઉમેરો'}" પર ક્લિક કરો.`
+                  : `No action items added yet. Click "${vt.addActionItemBtn || '+ Add Action Item'}" to assign practice for home.`}
               </p>
             </div>
           ) : (
@@ -275,8 +288,8 @@ export function MeetingNotesModal({
                       type="text"
                       value={item.description}
                       onChange={(e) => handleActionChange(item.id, { description: e.target.value })}
-                      placeholder={vt.actionItemPlaceholder}
-                      className="flex-1 rounded-xl bg-transparent border border-[#49352F]/15 dark:border-[#F2CAB3]/20 px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#B26A1B]"
+                      placeholder={vt.actionItemPlaceholder || (language === "gu" ? "દા.ત. ૧૦ મિનિટ ૨-અંકના સરવાળાની કાર્ડ્સ સાથે પ્રેક્ટિસ" : "e.g. Practice 2-digit regrouping for 10 mins daily")}
+                      className="flex-1 rounded-xl bg-transparent border border-[#49352F]/15 dark:border-[#F2CAB3]/20 px-2.5 py-1.5 text-xs text-[#49352F] dark:text-[#FAF6E9] focus:outline-none focus:ring-2 focus:ring-[#B26A1B]"
                     />
                     <button
                       type="button"
@@ -291,7 +304,7 @@ export function MeetingNotesModal({
                   {/* Worksheet Link Dropdown */}
                   <div className="flex items-center gap-2 pl-7 text-[11px]">
                     <span className="text-[#7A6862] dark:text-[#FAF6E9]/70 shrink-0">
-                      {vt.linkWorksheetPrompt}:
+                      {vt.linkWorksheetPrompt || (language === "gu" ? "પૂરક કાર્યપત્રક જોડો" : "Link Remedial Worksheet")}:
                     </span>
                     <select
                       value={item.worksheetId || ""}
@@ -300,9 +313,9 @@ export function MeetingNotesModal({
                           worksheetId: e.target.value ? e.target.value : null,
                         })
                       }
-                      className="flex-1 rounded-lg bg-[#FAF6E9] dark:bg-[#26201C] border border-[#49352F]/15 px-2 py-1 text-[11px] focus:outline-none"
+                      className="flex-1 rounded-lg bg-[#FAF6E9] dark:bg-[#26201C] border border-[#49352F]/15 px-2 py-1 text-[11px] text-[#49352F] dark:text-[#FAF6E9] focus:outline-none"
                     >
-                      <option value="">{vt.noWorksheetLinked}</option>
+                      <option value="">{vt.noWorksheetLinked || (language === "gu" ? "કોઈ નહીં (સામાન્ય કાર્ય)" : "None (General Task)")}</option>
                       {worksheets.map((ws) => (
                         <option key={ws.id} value={ws.id}>
                           {ws.title} ({ws.subjectCode || "All"} • Grade {ws.grade})
@@ -319,7 +332,7 @@ export function MeetingNotesModal({
         {/* Modal Actions */}
         <div className="flex justify-end gap-2 pt-2 border-t border-[#49352F]/10 dark:border-[#F2CAB3]/15">
           <Button variant="outline" size="sm" onClick={onClose}>
-            {vt.closeBtn}
+            {vt.closeBtn || (language === "gu" ? "બંધ કરો" : "Close")}
           </Button>
           <Button
             variant="primary"
@@ -328,7 +341,7 @@ export function MeetingNotesModal({
             onClick={handleSave}
             leftIcon={<CheckCircle2 className="w-3.5 h-3.5" />}
           >
-            {vt.saveNotesBtn}
+            {vt.saveNotesBtn || (language === "gu" ? "નોંધો સાચવો" : "Save Notes")}
           </Button>
         </div>
       </div>

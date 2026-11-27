@@ -30,7 +30,8 @@
     "studentLearningView": "విద్యార్థి అభ్యసన మోడ్",
     "tutorial": "ట్యుటోరియల్ & సహాయం",
     "parentBridgeNotices": "తల్లిదండ్రుల వారధి & ప్రకటనలు",
-    "connectChat": "కనెక్ట్ చాట్"
+    "connectChat": "కనెక్ట్ చాట్",
+    "ptm": "తల్లిదండ్రుల-ఉపాధ్యాయుల సమావేశం (PTM)"
   },
   "theme": {
     "theme": "థీమ్",
@@ -745,5 +746,26 @@
     "cancelRecordTitle": "రికార్డింగ్ రద్దు చేయండి",
     "cancelRecordAria": "రికార్డింగ్ రద్దు చేయండి",
     "transcribing": "AIతో ప్రసంగాన్ని లిప్యంతరీకరిస్తోంది..."
+  },
+  "ptm": {
+    "title": "తల్లిదండ్రుల-ఉపాధ్యాయుల సమావేశం (PTM)",
+    "scheduleMeeting": "సమావేశాన్ని షెడ్యూల్ చేయండి",
+    "joinMeeting": "వీడియో సమావేశంలో చేరండి",
+    "upcomingMeetings": "రాబోయే సంప్రదింపులు",
+    "todayMeetings": "నేటి షెడ్యూల్",
+    "pastMeetings": "గత సమావేశాలు మరియు చరిత్ర",
+    "allMeetings": "అన్ని సమావేశాలు",
+    "waitingRoom": "వేచి ఉండే గది",
+    "consultationNotes": "సంప్రదింపుల గమనికలు",
+    "admit": "ప్రవేశం ఇవ్వండి",
+    "decline": "తిరస్కరించండి",
+    "micOn": "మైక్రోఫోన్ ఆన్",
+    "micMuted": "మైక్రోఫోన్ మ్యూట్",
+    "cameraOn": "కెమెరా ఆన్",
+    "cameraOff": "కెమెరా ఆఫ్",
+    "shareScreen": "స్క్రీన్ షేర్ చేయండి",
+    "stopSharing": "షేరింగ్ ఆపండి",
+    "chat": "సమావేశ చాట్",
+    "leaveMeeting": "సమావేశం నుండి నిష్క్రమించండి"
   }
 }

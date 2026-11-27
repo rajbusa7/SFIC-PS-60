@@ -450,3 +450,99 @@ ${update.content}
 
   return wrapHtmlEmail(update.title, "School Update", body, options);
 }
+
+/**
+ * Generates official Parent-Teacher Meeting (PTM) video invitation email.
+ */
+export function createPtmMeetingEmailTemplate(params: {
+  schoolName?: string;
+  teacherName: string;
+  studentName: string;
+  parentName: string;
+  meetingTitle: string;
+  meetingDate: string;
+  meetingTime: string;
+  durationMinutes: number;
+  agenda?: string;
+  joinUrl: string;
+  meetingCode: string;
+}): string {
+  const {
+    schoolName = DEFAULT_SCHOOL,
+    teacherName,
+    studentName,
+    parentName,
+    meetingTitle,
+    meetingDate,
+    meetingTime,
+    durationMinutes,
+    agenda,
+    joinUrl,
+    meetingCode,
+  } = params;
+
+  const content = `
+    <h2 style="font-size: 18px; font-weight: 800; margin: 0 0 12px 0; color: #49352F;">
+      Parent-Teacher Video Conference Invitation
+    </h2>
+    <p style="margin: 0 0 16px 0; color: #7A6862; font-size: 14px;">
+      Dear ${parentName}, you are invited to an official online Parent-Teacher Meeting regarding <strong>${studentName}</strong>'s pedagogical progress.
+    </p>
+
+    <div class="card" style="background-color: #FAF6E9; border: 1px solid rgba(73, 53, 47, 0.12); border-radius: 14px; padding: 20px; margin: 20px 0;">
+      <h3 style="font-size: 15px; font-weight: 700; margin: 0 0 14px 0; color: #49352F;">
+        ${meetingTitle}
+      </h3>
+      <table class="metric-table" style="width: 100%; border-collapse: collapse;">
+        <tr>
+          <td class="metric-label" style="padding: 6px 0; color: #7A6862; font-size: 13px;">Teacher:</td>
+          <td class="metric-value" style="padding: 6px 0; text-align: right; font-weight: 700; color: #49352F; font-size: 13px;">${teacherName}</td>
+        </tr>
+        <tr>
+          <td class="metric-label" style="padding: 6px 0; color: #7A6862; font-size: 13px;">Student:</td>
+          <td class="metric-value" style="padding: 6px 0; text-align: right; font-weight: 700; color: #49352F; font-size: 13px;">${studentName}</td>
+        </tr>
+        <tr>
+          <td class="metric-label" style="padding: 6px 0; color: #7A6862; font-size: 13px;">Date:</td>
+          <td class="metric-value" style="padding: 6px 0; text-align: right; font-weight: 700; color: #49352F; font-size: 13px;">${meetingDate}</td>
+        </tr>
+        <tr>
+          <td class="metric-label" style="padding: 6px 0; color: #7A6862; font-size: 13px;">Time:</td>
+          <td class="metric-value" style="padding: 6px 0; text-align: right; font-weight: 700; color: #49352F; font-size: 13px;">${meetingTime} IST (${durationMinutes} mins)</td>
+        </tr>
+        <tr>
+          <td class="metric-label" style="padding: 6px 0; color: #7A6862; font-size: 13px;">Meeting Code:</td>
+          <td class="metric-value" style="padding: 6px 0; text-align: right; font-weight: 700; color: #B26A1B; font-size: 13px;">${meetingCode}</td>
+        </tr>
+      </table>
+
+      ${
+        agenda
+          ? `<div style="margin-top: 14px; padding-top: 12px; border-top: 1px dashed rgba(73, 53, 47, 0.15);">
+               <strong style="font-size: 12px; color: #7A6862; text-transform: uppercase; letter-spacing: 0.5px;">Discussion Agenda:</strong>
+               <p style="margin: 4px 0 0 0; font-size: 13px; color: #49352F; line-height: 1.5;">${agenda}</p>
+             </div>`
+          : ""
+      }
+    </div>
+
+    <div style="text-align: center; margin: 28px 0 16px 0;">
+      <a href="${joinUrl}" class="cta-button" style="display: inline-block; background-color: #261B16; color: #FAF6E9 !important; font-size: 14px; font-weight: 700; padding: 14px 28px; border-radius: 9999px; text-decoration: none; box-shadow: 0 3px 10px rgba(38, 27, 22, 0.2);">
+        Join Video Meeting
+      </a>
+      <p style="margin: 12px 0 0 0; font-size: 11px; color: #7A6862;">
+        Direct link: <a href="${joinUrl}" style="color: #B26A1B; word-break: break-all;">${joinUrl}</a>
+      </p>
+    </div>
+
+    <div style="background-color: #F4F1E1; border-radius: 8px; padding: 12px; margin-top: 20px; font-size: 12px; color: #7A6862;">
+      <strong>Browser Tip:</strong> No app download required. Open this link directly in Chrome, Edge, Safari, or Firefox on your computer, tablet, or mobile phone. Please allow camera and microphone access when prompted.
+    </div>
+  `;
+
+  return wrapHtmlEmail(meetingTitle, "Live Video PTM", content, {
+    schoolName,
+    portalUrl: joinUrl,
+    studentName,
+  });
+}

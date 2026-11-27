@@ -30,7 +30,8 @@
     "studentLearningView": "विद्यार्थी अध्ययन पद्धत",
     "tutorial": "प्रशिक्षण व मदत",
     "parentBridgeNotices": "पालक सेतू व सूचना",
-    "connectChat": "थेट संवाद"
+    "connectChat": "थेट संवाद",
+    "ptm": "पालक-शिक्षक बैठक (PTM)"
   },
   "theme": {
     "theme": "थीम",
@@ -745,5 +746,26 @@
     "cancelRecordTitle": "रेकॉर्डिंग रद्द करा",
     "cancelRecordAria": "रेकॉर्डिंग रद्द करा",
     "transcribing": "AI द्वारे आवाजाचे मजकुरात रूपांतर करत आहे..."
+  },
+  "ptm": {
+    "title": "पालक-शिक्षक बैठक (PTM)",
+    "scheduleMeeting": "बैठक नियोजित करा",
+    "joinMeeting": "व्हिडिओ बैठकीत सामील व्हा",
+    "upcomingMeetings": "आगामी सल्लामसलत",
+    "todayMeetings": "आजचे वेळापत्रक",
+    "pastMeetings": "मागील बैठका आणि इतिहास",
+    "allMeetings": "सर्व बैठका",
+    "waitingRoom": "प्रतीक्षा कक्ष",
+    "consultationNotes": "सल्लामसलत टिपा",
+    "admit": "प्रवेश द्या",
+    "decline": "नाकारा",
+    "micOn": "माइक सुरू",
+    "micMuted": "माइक म्यूट",
+    "cameraOn": "कॅमेरा सुरू",
+    "cameraOff": "कॅमेरा बंद",
+    "shareScreen": "स्क्रीन शेअर करा",
+    "stopSharing": "शेअरिंग थांबवा",
+    "chat": "बैठकीतील चॅट",
+    "leaveMeeting": "बैठक सोडा"
   }
 }

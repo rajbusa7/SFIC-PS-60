@@ -30,7 +30,8 @@
     "studentLearningView": "শিক্ষার্থী শিখন মোড",
     "tutorial": "টিউটোরিয়াল ও সহায়তা",
     "parentBridgeNotices": "অভিভাবক সেতু ও বিজ্ঞপ্তি",
-    "connectChat": "সংযোগ চ্যাট"
+    "connectChat": "সংযোগ চ্যাট",
+    "ptm": "অভিভাবক-শিক্ষক বৈঠক (PTM)"
   },
   "theme": {
     "theme": "থিম",
@@ -745,5 +746,26 @@
     "cancelRecordTitle": "রেকর্ডিং বাতিল করুন",
     "cancelRecordAria": "রেকর্ডিং বাতিল করুন",
     "transcribing": "AI দিয়ে বক্তব্য প্রতিলিপি হচ্ছে..."
+  },
+  "ptm": {
+    "title": "অভিভাবক-শিক্ষক বৈঠক (PTM)",
+    "scheduleMeeting": "বৈঠক নির্ধারণ করুন",
+    "joinMeeting": "ভিডিও বৈঠকে যোগ দিন",
+    "upcomingMeetings": "আসন্ন বৈঠকসমূহ",
+    "todayMeetings": "আজকের সময়সূচী",
+    "pastMeetings": "অতীত বৈঠক ও ইতিহাস",
+    "allMeetings": "সকল বৈঠক",
+    "waitingRoom": "প্রতীক্ষালয়",
+    "consultationNotes": "পরামর্শ নোট",
+    "admit": "প্রবেশের অনুমতি দিন",
+    "decline": "প্রত্যাখ্যান করুন",
+    "micOn": "মাইক্রোফোন চালু",
+    "micMuted": "মাইক্রোফোন বন্ধ",
+    "cameraOn": "ক্যামেরা চালু",
+    "cameraOff": "ক্যামেরা বন্ধ",
+    "shareScreen": "স্ক্রিন শেয়ার করুন",
+    "stopSharing": "শেয়ারিং বন্ধ করুন",
+    "chat": "ইন-মিটিং চ্যাট",
+    "leaveMeeting": "বৈঠক ত্যাগ করুন"
   }
 }

@@ -30,7 +30,8 @@
     "studentLearningView": "Student Learning Mode",
     "tutorial": "Tutorial & Help",
     "parentBridgeNotices": "Parent Bridge & Notices",
-    "connectChat": "Connect Chat"
+    "connectChat": "Connect Chat",
+    "ptm": "Parent–Teacher Meetings"
   },
   "theme": {
     "theme": "Theme",
@@ -745,5 +746,26 @@
     "cancelRecordTitle": "Cancel recording",
     "cancelRecordAria": "Cancel recording",
     "transcribing": "Transcribing speech with AI..."
+  },
+  "ptm": {
+    "title": "Parent–Teacher Meetings (PTM)",
+    "scheduleMeeting": "Schedule Meeting",
+    "joinMeeting": "Join Video Meeting",
+    "upcomingMeetings": "Upcoming Consultations",
+    "todayMeetings": "Today's Schedule",
+    "pastMeetings": "Past Meetings & History",
+    "allMeetings": "All Consultations",
+    "waitingRoom": "Waiting Room",
+    "consultationNotes": "Consultation Notes",
+    "admit": "Admit",
+    "decline": "Decline",
+    "micOn": "Microphone On",
+    "micMuted": "Microphone Muted",
+    "cameraOn": "Camera On",
+    "cameraOff": "Camera Off",
+    "shareScreen": "Share Screen",
+    "stopSharing": "Stop Sharing",
+    "chat": "In-Meeting Chat",
+    "leaveMeeting": "Leave Meeting"
   }
 }

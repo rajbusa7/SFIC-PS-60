@@ -24,6 +24,7 @@ import {
   Languages,
   Bell,
   MessageSquare,
+  Video,
 } from "lucide-react";
 import { triggerPageTour } from "@/components/tutorial/SpotlightTour";
 
@@ -64,6 +65,11 @@ export function AppSidebar() {
       icon: MessageSquare,
       badge: unreadChatCount > 0 ? `${unreadChatCount}` : undefined,
       badgeColor: "bg-[#2E7D5E] text-white font-bold",
+    },
+    {
+      href: "/ptm",
+      label: (t.nav as any)?.ptm || "Parent–Teacher Meetings",
+      icon: Video,
     },
   ];
 

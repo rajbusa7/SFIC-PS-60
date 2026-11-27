@@ -30,7 +30,8 @@
     "studentLearningView": "विद्यार्थी अधिगम मोड",
     "tutorial": "ट्यूटोरियल और सहायता",
     "parentBridgeNotices": "अभिभावक सेतु और सूचनाएँ",
-    "connectChat": "कनेक्ट चैट"
+    "connectChat": "कनेक्ट चैट",
+    "ptm": "अभिभावक-शिक्षक बैठक (PTM)"
   },
   "theme": {
     "theme": "थीम",
@@ -745,5 +746,26 @@
     "cancelRecordTitle": "रिकॉर्डिंग रद्द करें",
     "cancelRecordAria": "रिकॉर्डिंग रद्द करें",
     "transcribing": "AI के साथ वाणी का प्रतिलेखन हो रहा है..."
+  },
+  "ptm": {
+    "title": "अभिभावक-शिक्षक बैठक (PTM)",
+    "scheduleMeeting": "बैठक निर्धारित करें",
+    "joinMeeting": "वीडियो बैठक में शामिल हों",
+    "upcomingMeetings": "आगामी परामर्श",
+    "todayMeetings": "आज की अनुसूची",
+    "pastMeetings": "पिछली बैठकें और इतिहास",
+    "allMeetings": "सभी बैठकें",
+    "waitingRoom": "प्रतीक्षा कक्ष",
+    "consultationNotes": "परामर्श नोट्स",
+    "admit": "प्रवेश दें",
+    "decline": "अस्वीकार करें",
+    "micOn": "माइक चालू",
+    "micMuted": "माइक म्यूट",
+    "cameraOn": "कैमरा चालू",
+    "cameraOff": "कैमरा बंद",
+    "shareScreen": "स्क्रीन साझा करें",
+    "stopSharing": "साझाकरण बंद करें",
+    "chat": "इन-मीटिंग चैट",
+    "leaveMeeting": "बैठक छोड़ें"
   }
 }

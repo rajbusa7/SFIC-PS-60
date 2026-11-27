@@ -16,6 +16,12 @@ import type {
   ParentLinkingCode,
   ParentMessage,
   TeacherAssignment,
+  PtmMeeting,
+  PtmMeetingNote,
+  PtmChatMessage,
+  PtmWaitingParticipant,
+  PtmMeetingStats,
+  PtmMeetingStatus,
 } from "../types";
 import {
   SEED_SCHOOL,
@@ -621,6 +627,138 @@ export async function ensurePostgresSchema(): Promise<void> {
          WHERE EXISTS (SELECT 1 FROM students WHERE id = 'std-diya')
            AND NOT EXISTS (SELECT 1 FROM parent_linking_codes WHERE id = 'plc-demo-diya' OR UPPER(code) = 'PAR-5219')`
       );
+
+      // 14. Parent-Teacher Meetings (PTM) System
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS ptm_meetings (
+            id VARCHAR(64) PRIMARY KEY,
+            meeting_code VARCHAR(32) UNIQUE NOT NULL,
+            title VARCHAR(255) NOT NULL,
+            description TEXT,
+            agenda TEXT,
+            teacher_notes TEXT,
+            teacher_id VARCHAR(64) REFERENCES users(id) ON DELETE SET NULL,
+            teacher_name VARCHAR(255) NOT NULL,
+            student_id VARCHAR(64) REFERENCES students(id) ON DELETE CASCADE,
+            student_name VARCHAR(255) NOT NULL,
+            parent_id VARCHAR(64) REFERENCES parent_profiles(id) ON DELETE SET NULL,
+            parent_name VARCHAR(255) NOT NULL,
+            parent_email VARCHAR(255),
+            parent_phone VARCHAR(32),
+            scheduled_date DATE NOT NULL,
+            start_time VARCHAR(8) NOT NULL,
+            duration_minutes INTEGER NOT NULL DEFAULT 30,
+            status VARCHAR(20) NOT NULL DEFAULT 'scheduled',
+            join_token_hash VARCHAR(128),
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS ptm_meeting_notes (
+            id VARCHAR(64) PRIMARY KEY,
+            meeting_id VARCHAR(64) REFERENCES ptm_meetings(id) ON DELETE CASCADE,
+            student_id VARCHAR(64) REFERENCES students(id) ON DELETE CASCADE,
+            teacher_id VARCHAR(64) REFERENCES users(id) ON DELETE SET NULL,
+            discussion_summary TEXT NOT NULL,
+            learning_concerns TEXT,
+            student_strengths TEXT,
+            agreed_actions TEXT,
+            follow_up_date DATE,
+            shared_with_parent BOOLEAN DEFAULT false,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS ptm_chat_messages (
+            id VARCHAR(64) PRIMARY KEY,
+            meeting_id VARCHAR(64) REFERENCES ptm_meetings(id) ON DELETE CASCADE,
+            sender_id VARCHAR(64) NOT NULL,
+            sender_name VARCHAR(255) NOT NULL,
+            sender_role VARCHAR(32) NOT NULL,
+            message TEXT NOT NULL,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS ptm_waiting_room (
+            id VARCHAR(64) PRIMARY KEY,
+            meeting_id VARCHAR(64) REFERENCES ptm_meetings(id) ON DELETE CASCADE,
+            participant_id VARCHAR(64) NOT NULL,
+            participant_name VARCHAR(255) NOT NULL,
+            participant_role VARCHAR(32) NOT NULL,
+            status VARCHAR(16) NOT NULL DEFAULT 'waiting',
+            joined_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            reviewed_at TIMESTAMP WITH TIME ZONE
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_ptm_meetings_teacher ON ptm_meetings(teacher_id);
+        CREATE INDEX IF NOT EXISTS idx_ptm_meetings_student ON ptm_meetings(student_id);
+        CREATE INDEX IF NOT EXISTS idx_ptm_meetings_parent ON ptm_meetings(parent_id);
+        CREATE INDEX IF NOT EXISTS idx_ptm_meetings_date ON ptm_meetings(scheduled_date, start_time);
+        CREATE INDEX IF NOT EXISTS idx_ptm_meetings_status ON ptm_meetings(status);
+        CREATE INDEX IF NOT EXISTS idx_ptm_meetings_code ON ptm_meetings(meeting_code);
+        CREATE INDEX IF NOT EXISTS idx_ptm_notes_meeting ON ptm_meeting_notes(meeting_id);
+        CREATE INDEX IF NOT EXISTS idx_ptm_chat_meeting ON ptm_chat_messages(meeting_id);
+        CREATE INDEX IF NOT EXISTS idx_ptm_waiting_meeting ON ptm_waiting_room(meeting_id, status);
+      `);
+
+      // Baseline PTM seeds
+      await client.query(`
+        INSERT INTO ptm_meetings (
+            id, meeting_code, title, agenda, teacher_id, teacher_name,
+            student_id, student_name, parent_id, parent_name, parent_email,
+            scheduled_date, start_time, duration_minutes, status, created_at, updated_at
+        )
+        SELECT 'ptm-today-aarav', 'ptm-704-291', 'Class 4 Mathematics Remedial Progress Review',
+               'Review 5-step concrete division manipulative activities, verify 85% accuracy milestone, plan home practice.',
+               'usr-teacher-01', 'Pooja Sharma', 'std-aarav', 'Aarav Patel', 'par-001', 'Dineshbhai Patel', 'parent.aarav@example.com',
+               CURRENT_DATE, '14:30', 30, 'scheduled', NOW(), NOW()
+        WHERE NOT EXISTS (SELECT 1 FROM ptm_meetings WHERE id = 'ptm-today-aarav');
+
+        INSERT INTO ptm_meetings (
+            id, meeting_code, title, agenda, teacher_id, teacher_name,
+            student_id, student_name, parent_id, parent_name, parent_email,
+            scheduled_date, start_time, duration_minutes, status, created_at, updated_at
+        )
+        SELECT 'ptm-upcoming-diya', 'ptm-819-332', 'Gujarati Reading & Phonemic Progress Discussion',
+               'Discuss Matra recognition development and bilingual reading exercises.',
+               'usr-teacher-01', 'Pooja Sharma', 'std-diya', 'Diya Joshi', 'par-002', 'Bhavikbhai Joshi', 'bhavik.joshi@example.com',
+               CURRENT_DATE + INTERVAL '2 days', '16:00', 45, 'scheduled', NOW(), NOW()
+        WHERE NOT EXISTS (SELECT 1 FROM ptm_meetings WHERE id = 'ptm-upcoming-diya');
+
+        INSERT INTO ptm_meetings (
+            id, meeting_code, title, agenda, teacher_id, teacher_name,
+            student_id, student_name, parent_id, parent_name, parent_email,
+            scheduled_date, start_time, duration_minutes, status, created_at, updated_at
+        )
+        SELECT 'ptm-past-ishaan', 'ptm-412-588', 'Foundational Number Sense Benchmark',
+               'Assess 2-digit addition and place value comprehension.',
+               'usr-teacher-01', 'Pooja Sharma', 'std-ishaan', 'Ishaan Solanki', 'par-003', 'Rameshbhai Solanki', 'ramesh.solanki@example.com',
+               CURRENT_DATE - INTERVAL '7 days', '11:00', 30, 'completed', NOW() - INTERVAL '7 days', NOW() - INTERVAL '7 days'
+        WHERE NOT EXISTS (SELECT 1 FROM ptm_meetings WHERE id = 'ptm-past-ishaan');
+
+        INSERT INTO ptm_meetings (
+            id, meeting_code, title, agenda, teacher_id, teacher_name,
+            student_id, student_name, parent_id, parent_name, parent_email,
+            scheduled_date, start_time, duration_minutes, status, created_at, updated_at
+        )
+        SELECT 'ptm-cancelled-anaya', 'ptm-301-419', 'Science Environmental Studies Check-in',
+               'Quarterly curriculum review on plant life cycles.',
+               'usr-teacher-01', 'Pooja Sharma', 'std-anaya', 'Anaya Patel', 'par-001', 'Dineshbhai Patel', 'parent.aarav@example.com',
+               CURRENT_DATE - INTERVAL '5 days', '15:00', 15, 'cancelled', NOW() - INTERVAL '5 days', NOW() - INTERVAL '5 days'
+        WHERE NOT EXISTS (SELECT 1 FROM ptm_meetings WHERE id = 'ptm-cancelled-anaya');
+
+        INSERT INTO ptm_meeting_notes (
+            id, meeting_id, student_id, teacher_id, discussion_summary,
+            learning_concerns, student_strengths, agreed_actions, follow_up_date, shared_with_parent, created_at, updated_at
+        )
+        SELECT 'note-past-ishaan', 'ptm-past-ishaan', 'std-ishaan', 'usr-teacher-01',
+               'Reviewed foundational number line concepts and 2-digit regrouping. Ishaan demonstrated improved confidence in single-digit operations.',
+               'Carrying over in double-digit column addition still causes occasional hesitation.',
+               'Highly engaged in visual dot-pattern exercises and oral calculations.',
+               'Parent agreed to practice 10 minutes of base-ten block manipulative cards daily before dinner.',
+               CURRENT_DATE + INTERVAL '14 days', true, NOW() - INTERVAL '7 days', NOW() - INTERVAL '7 days'
+        WHERE NOT EXISTS (SELECT 1 FROM ptm_meeting_notes WHERE id = 'note-past-ishaan');
+      `);
 
       await client.query("COMMIT");
       schemaInitialized = true;
@@ -2315,6 +2453,339 @@ export const postgresTeacherAssignmentDb = {
       [clean]
     );
     return res.rowCount ?? 0;
+  },
+};
+
+export const postgresPtmDb = {
+  async getMeetings(options?: {
+    teacherId?: string;
+    parentId?: string;
+    studentId?: string;
+    status?: PtmMeetingStatus;
+    date?: string;
+  }): Promise<PtmMeeting[]> {
+    const pool = getPostgresPool();
+    if (!pool) return [];
+    await ensurePostgresSchema();
+
+    let query = `
+      SELECT id, meeting_code as "meetingCode", title, description, agenda, teacher_notes as "teacherNotes",
+             teacher_id as "teacherId", teacher_name as "teacherName",
+             student_id as "studentId", student_name as "studentName",
+             parent_id as "parentId", parent_name as "parentName",
+             parent_email as "parentEmail", parent_phone as "parentPhone",
+             TO_CHAR(scheduled_date, 'YYYY-MM-DD') as "scheduledDate",
+             start_time as "startTime", duration_minutes as "durationMinutes",
+             status, join_token_hash as "joinTokenHash",
+             created_at as "createdAt", updated_at as "updatedAt"
+      FROM ptm_meetings
+      WHERE 1=1
+    `;
+    const params: any[] = [];
+    let pIdx = 1;
+
+    if (options?.teacherId) {
+      query += ` AND teacher_id = $${pIdx++}`;
+      params.push(options.teacherId);
+    }
+    if (options?.parentId) {
+      query += ` AND parent_id = $${pIdx++}`;
+      params.push(options.parentId);
+    }
+    if (options?.studentId) {
+      query += ` AND student_id = $${pIdx++}`;
+      params.push(options.studentId);
+    }
+    if (options?.status) {
+      query += ` AND status = $${pIdx++}`;
+      params.push(options.status);
+    }
+    if (options?.date) {
+      query += ` AND TO_CHAR(scheduled_date, 'YYYY-MM-DD') = $${pIdx++}`;
+      params.push(options.date);
+    }
+
+    query += ` ORDER BY scheduled_date ASC, start_time ASC`;
+
+    const { rows } = await pool.query(query, params);
+    return rows;
+  },
+
+  async getMeetingById(idOrCode: string): Promise<PtmMeeting | null> {
+    const pool = getPostgresPool();
+    if (!pool) return null;
+    await ensurePostgresSchema();
+
+    const { rows } = await pool.query(
+      `SELECT id, meeting_code as "meetingCode", title, description, agenda, teacher_notes as "teacherNotes",
+              teacher_id as "teacherId", teacher_name as "teacherName",
+              student_id as "studentId", student_name as "studentName",
+              parent_id as "parentId", parent_name as "parentName",
+              parent_email as "parentEmail", parent_phone as "parentPhone",
+              TO_CHAR(scheduled_date, 'YYYY-MM-DD') as "scheduledDate",
+              start_time as "startTime", duration_minutes as "durationMinutes",
+              status, join_token_hash as "joinTokenHash",
+              created_at as "createdAt", updated_at as "updatedAt"
+       FROM ptm_meetings
+       WHERE id = $1 OR meeting_code = $1`,
+      [idOrCode]
+    );
+    return rows[0] || null;
+  },
+
+  async createMeeting(meeting: PtmMeeting): Promise<PtmMeeting> {
+    const pool = getPostgresPool();
+    if (!pool) throw new Error("PostgreSQL not configured");
+    await ensurePostgresSchema();
+
+    const { rows } = await pool.query(
+      `INSERT INTO ptm_meetings (
+         id, meeting_code, title, description, agenda, teacher_notes,
+         teacher_id, teacher_name, student_id, student_name,
+         parent_id, parent_name, parent_email, parent_phone,
+         scheduled_date, start_time, duration_minutes, status, join_token_hash,
+         created_at, updated_at
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, NOW(), NOW())
+       RETURNING id, meeting_code as "meetingCode", title, description, agenda, teacher_notes as "teacherNotes",
+                 teacher_id as "teacherId", teacher_name as "teacherName",
+                 student_id as "studentId", student_name as "studentName",
+                 parent_id as "parentId", parent_name as "parentName",
+                 parent_email as "parentEmail", parent_phone as "parentPhone",
+                 TO_CHAR(scheduled_date, 'YYYY-MM-DD') as "scheduledDate",
+                 start_time as "startTime", duration_minutes as "durationMinutes",
+                 status, join_token_hash as "joinTokenHash",
+                 created_at as "createdAt", updated_at as "updatedAt"`,
+      [
+        meeting.id,
+        meeting.meetingCode,
+        meeting.title,
+        meeting.description || null,
+        meeting.agenda || null,
+        meeting.teacherNotes || null,
+        meeting.teacherId,
+        meeting.teacherName,
+        meeting.studentId,
+        meeting.studentName,
+        meeting.parentId,
+        meeting.parentName,
+        meeting.parentEmail || null,
+        meeting.parentPhone || null,
+        meeting.scheduledDate,
+        meeting.startTime,
+        meeting.durationMinutes || 30,
+        meeting.status || "scheduled",
+        meeting.joinTokenHash || null,
+      ]
+    );
+    return rows[0];
+  },
+
+  async updateMeetingStatus(id: string, status: PtmMeetingStatus): Promise<PtmMeeting | null> {
+    const pool = getPostgresPool();
+    if (!pool) return null;
+    await ensurePostgresSchema();
+
+    const { rows } = await pool.query(
+      `UPDATE ptm_meetings
+       SET status = $2, updated_at = NOW()
+       WHERE id = $1 OR meeting_code = $1
+       RETURNING id, meeting_code as "meetingCode", title, description, agenda, teacher_notes as "teacherNotes",
+                 teacher_id as "teacherId", teacher_name as "teacherName",
+                 student_id as "studentId", student_name as "studentName",
+                 parent_id as "parentId", parent_name as "parentName",
+                 parent_email as "parentEmail", parent_phone as "parentPhone",
+                 TO_CHAR(scheduled_date, 'YYYY-MM-DD') as "scheduledDate",
+                 start_time as "startTime", duration_minutes as "durationMinutes",
+                 status, join_token_hash as "joinTokenHash",
+                 created_at as "createdAt", updated_at as "updatedAt"`,
+      [id, status]
+    );
+    return rows[0] || null;
+  },
+
+  async getStats(teacherId?: string, parentId?: string): Promise<PtmMeetingStats> {
+    const pool = getPostgresPool();
+    if (!pool) return { total: 0, upcoming: 0, completed: 0, cancelled: 0 };
+    await ensurePostgresSchema();
+
+    let filter = "";
+    const params: any[] = [];
+    if (teacherId) {
+      filter += " AND teacher_id = $1";
+      params.push(teacherId);
+    } else if (parentId) {
+      filter += " AND parent_id = $1";
+      params.push(parentId);
+    }
+
+    const { rows } = await pool.query(
+      `SELECT
+         COUNT(*)::int as total,
+         COUNT(*) FILTER (WHERE status = 'scheduled' OR status = 'waiting' OR status = 'in_progress')::int as upcoming,
+         COUNT(*) FILTER (WHERE status = 'completed')::int as completed,
+         COUNT(*) FILTER (WHERE status = 'cancelled' OR status = 'no_show')::int as cancelled
+       FROM ptm_meetings
+       WHERE 1=1 ${filter}`,
+      params
+    );
+
+    const r = rows[0] || {};
+    return {
+      total: r.total || 0,
+      upcoming: r.upcoming || 0,
+      completed: r.completed || 0,
+      cancelled: r.cancelled || 0,
+    };
+  },
+
+  async getNotes(meetingId: string): Promise<PtmMeetingNote[]> {
+    const pool = getPostgresPool();
+    if (!pool) return [];
+    await ensurePostgresSchema();
+
+    const { rows } = await pool.query(
+      `SELECT id, meeting_id as "meetingId", student_id as "studentId", teacher_id as "teacherId",
+              discussion_summary as "discussionSummary", learning_concerns as "learningConcerns",
+              student_strengths as "studentStrengths", agreed_actions as "agreedActions",
+              TO_CHAR(follow_up_date, 'YYYY-MM-DD') as "followUpDate",
+              shared_with_parent as "sharedWithParent",
+              created_at as "createdAt", updated_at as "updatedAt"
+       FROM ptm_meeting_notes
+       WHERE meeting_id = $1
+       ORDER BY created_at DESC`,
+      [meetingId]
+    );
+    return rows;
+  },
+
+  async saveNote(note: PtmMeetingNote): Promise<PtmMeetingNote> {
+    const pool = getPostgresPool();
+    if (!pool) throw new Error("PostgreSQL not configured");
+    await ensurePostgresSchema();
+
+    const { rows } = await pool.query(
+      `INSERT INTO ptm_meeting_notes (
+         id, meeting_id, student_id, teacher_id, discussion_summary,
+         learning_concerns, student_strengths, agreed_actions, follow_up_date,
+         shared_with_parent, created_at, updated_at
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
+       ON CONFLICT (id) DO UPDATE SET
+         discussion_summary = EXCLUDED.discussion_summary,
+         learning_concerns = EXCLUDED.learning_concerns,
+         student_strengths = EXCLUDED.student_strengths,
+         agreed_actions = EXCLUDED.agreed_actions,
+         follow_up_date = EXCLUDED.follow_up_date,
+         shared_with_parent = EXCLUDED.shared_with_parent,
+         updated_at = NOW()
+       RETURNING id, meeting_id as "meetingId", student_id as "studentId", teacher_id as "teacherId",
+                 discussion_summary as "discussionSummary", learning_concerns as "learningConcerns",
+                 student_strengths as "studentStrengths", agreed_actions as "agreedActions",
+                 TO_CHAR(follow_up_date, 'YYYY-MM-DD') as "followUpDate",
+                 shared_with_parent as "sharedWithParent",
+                 created_at as "createdAt", updated_at as "updatedAt"`,
+      [
+        note.id,
+        note.meetingId,
+        note.studentId,
+        note.teacherId,
+        note.discussionSummary,
+        note.learningConcerns || null,
+        note.studentStrengths || null,
+        note.agreedActions || null,
+        note.followUpDate || null,
+        note.sharedWithParent ?? false,
+      ]
+    );
+    return rows[0];
+  },
+
+  async getChatMessages(meetingId: string): Promise<PtmChatMessage[]> {
+    const pool = getPostgresPool();
+    if (!pool) return [];
+    await ensurePostgresSchema();
+
+    const { rows } = await pool.query(
+      `SELECT id, meeting_id as "meetingId", sender_id as "senderId",
+              sender_name as "senderName", sender_role as "senderRole",
+              message, created_at as "createdAt"
+       FROM ptm_chat_messages
+       WHERE meeting_id = $1
+       ORDER BY created_at ASC`,
+      [meetingId]
+    );
+    return rows;
+  },
+
+  async saveChatMessage(msg: PtmChatMessage): Promise<PtmChatMessage> {
+    const pool = getPostgresPool();
+    if (!pool) throw new Error("PostgreSQL not configured");
+    await ensurePostgresSchema();
+
+    const { rows } = await pool.query(
+      `INSERT INTO ptm_chat_messages (id, meeting_id, sender_id, sender_name, sender_role, message, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, NOW())
+       RETURNING id, meeting_id as "meetingId", sender_id as "senderId",
+                 sender_name as "senderName", sender_role as "senderRole",
+                 message, created_at as "createdAt"`,
+      [msg.id, msg.meetingId, msg.senderId, msg.senderName, msg.senderRole, msg.message]
+    );
+    return rows[0];
+  },
+
+  async getWaitingParticipants(meetingId: string): Promise<PtmWaitingParticipant[]> {
+    const pool = getPostgresPool();
+    if (!pool) return [];
+    await ensurePostgresSchema();
+
+    const { rows } = await pool.query(
+      `SELECT id, meeting_id as "meetingId", participant_id as "participantId",
+              participant_name as "participantName", participant_role as "participantRole",
+              status, joined_at as "joinedAt", reviewed_at as "reviewedAt"
+       FROM ptm_waiting_room
+       WHERE meeting_id = $1 AND status = 'waiting'
+       ORDER BY joined_at ASC`,
+      [meetingId]
+    );
+    return rows;
+  },
+
+  async addWaitingParticipant(
+    meetingId: string,
+    participant: { participantId: string; participantName: string; participantRole: any }
+  ): Promise<PtmWaitingParticipant> {
+    const pool = getPostgresPool();
+    if (!pool) throw new Error("PostgreSQL not configured");
+    await ensurePostgresSchema();
+
+    const id = `wait-${meetingId}-${participant.participantId}`;
+    const { rows } = await pool.query(
+      `INSERT INTO ptm_waiting_room (id, meeting_id, participant_id, participant_name, participant_role, status, joined_at)
+       VALUES ($1, $2, $3, $4, $5, 'waiting', NOW())
+       ON CONFLICT (id) DO UPDATE SET status = 'waiting', joined_at = NOW(), reviewed_at = NULL
+       RETURNING id, meeting_id as "meetingId", participant_id as "participantId",
+                 participant_name as "participantName", participant_role as "participantRole",
+                 status, joined_at as "joinedAt", reviewed_at as "reviewedAt"`,
+      [id, meetingId, participant.participantId, participant.participantName, participant.participantRole]
+    );
+    return rows[0];
+  },
+
+  async updateWaitingStatus(
+    meetingId: string,
+    participantId: string,
+    status: "admitted" | "rejected"
+  ): Promise<boolean> {
+    const pool = getPostgresPool();
+    if (!pool) return false;
+    await ensurePostgresSchema();
+
+    const res = await pool.query(
+      `UPDATE ptm_waiting_room
+       SET status = $3, reviewed_at = NOW()
+       WHERE meeting_id = $1 AND participant_id = $2`,
+      [meetingId, participantId, status]
+    );
+    return (res.rowCount ?? 0) > 0;
   },
 };
 

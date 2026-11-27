@@ -8,3 +8,4 @@ export * from "./ai";
 export * from "./api";
 export * from "./notice";
 export * from "./connect";
+export * from "./ptm";

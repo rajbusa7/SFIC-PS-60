@@ -30,7 +30,8 @@
     "studentLearningView": "વિદ્યાર્થી અધ્યયન મોડ",
     "tutorial": "માર્ગદર્શિકા અને સહાય",
     "parentBridgeNotices": "વાલી સેતુ અને સૂચનાઓ",
-    "connectChat": "સેતુ કનેક્ટ (ચેટ)"
+    "connectChat": "સેતુ કનેક્ટ (ચેટ)",
+    "ptm": "વાલી-શિક્ષક મિટિંગ (PTM)"
   },
   "theme": {
     "theme": "થીમ",
@@ -745,5 +746,26 @@
     "cancelRecordTitle": "રેકોર્ડિંગ રદ કરો",
     "cancelRecordAria": "રેકોર્ડિંગ રદ કરો",
     "transcribing": "AI દ્વારા અવાજ લખાણમાં ફેરવાઈ રહ્યો છે..."
+  },
+  "ptm": {
+    "title": "વાલી-શિક્ષક મિટિંગ (PTM)",
+    "scheduleMeeting": "મિટિંગ ગોઠવો",
+    "joinMeeting": "વિડિયો મિટિંગમાં જોડાઓ",
+    "upcomingMeetings": "આગામી મિટિંગો",
+    "todayMeetings": "આજનું સમયપત્રક",
+    "pastMeetings": "ગત મિટિંગો અને ઇતિહાસ",
+    "allMeetings": "તમામ મિટિંગો",
+    "waitingRoom": "વેઇટિંગ રૂમ",
+    "consultationNotes": "પરામર્શ નોંધો",
+    "admit": "પ્રવેશ આપો",
+    "decline": "અસ્વીકાર કરો",
+    "micOn": "માઇક ચાલુ",
+    "micMuted": "માઇક મ્યૂટ",
+    "cameraOn": "કેમેરો ચાલુ",
+    "cameraOff": "કેમેરો બંધ",
+    "shareScreen": "સ્ક્રીન શેર કરો",
+    "stopSharing": "શેરિંગ બંધ કરો",
+    "chat": "મિટિંગ ચેટ",
+    "leaveMeeting": "મિટિંગમાંથી બહાર નીકળો"
   }
 }

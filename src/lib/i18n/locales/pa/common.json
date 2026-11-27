@@ -30,7 +30,8 @@
     "studentLearningView": "ਵਿਦਿਆਰਥੀ ਸਿੱਖਣ ਮੋਡ",
     "tutorial": "ਟਿਊਟੋਰੀਅਲ ਅਤੇ ਮਦਦ",
     "parentBridgeNotices": "ਮਾਪੇ ਸੇਤੂ ਅਤੇ ਸੂਚਨਾਵਾਂ",
-    "connectChat": "ਕਨੈਕਟ ਚੈਟ"
+    "connectChat": "ਕਨੈਕਟ ਚੈਟ",
+    "ptm": "ਮਾਪੇ-ਅਧਿਆਪਕ ਮੀਟਿੰਗ (PTM)"
   },
   "theme": {
     "theme": "ਥੀਮ",
@@ -745,5 +746,26 @@
     "cancelRecordTitle": "ਰਿਕਾਰਡਿੰਗ ਰੱਦ ਕਰੋ",
     "cancelRecordAria": "ਰਿਕਾਰਡਿੰਗ ਰੱਦ ਕਰੋ",
     "transcribing": "AI ਨਾਲ ਆਵਾਜ਼ ਨੂੰ ਲਿਖਤ ਵਿੱਚ ਬਦਲਿਆ ਜਾ ਰਿਹਾ ਹੈ..."
+  },
+  "ptm": {
+    "title": "ਮਾਪੇ-ਅਧਿਆਪਕ ਮੀਟਿੰਗ (PTM)",
+    "scheduleMeeting": "ਮੀਟਿੰਗ ਤਹਿ ਕਰੋ",
+    "joinMeeting": "ਵੀਡੀਓ ਮੀਟਿੰਗ ਵਿੱਚ ਸ਼ਾਮਲ ਹੋਵੋ",
+    "upcomingMeetings": "ਆਉਣ ਵਾਲੀਆਂ ਸਲਾਹ-ਮਸ਼ਵਰੇ",
+    "todayMeetings": "ਅੱਜ ਦਾ ਸਮਾਂ-ਸੂਚੀ",
+    "pastMeetings": "ਪਿਛਲੀਆਂ ਮੀਟਿੰਗਾਂ ਅਤੇ ਇਤਿਹਾਸ",
+    "allMeetings": "ਸਾਰੀਆਂ ਮੀਟਿੰਗਾਂ",
+    "waitingRoom": "ਉਡੀਕ ਕਮਰਾ",
+    "consultationNotes": "ਸਲਾਹ-ਮਸ਼ਵਰੇ ਨੋਟਸ",
+    "admit": "ਦਾਖਲ ਕਰੋ",
+    "decline": "ਇਨਕਾਰ ਕਰੋ",
+    "micOn": "ਮਾਈਕ੍ਰੋਫੋਨ ਚਾਲੂ",
+    "micMuted": "ਮਾਈਕ੍ਰੋਫੋਨ ਮਿਊਟ",
+    "cameraOn": "ਕੈਮਰਾ ਚਾਲੂ",
+    "cameraOff": "ਕੈਮਰਾ ਬੰਦ",
+    "shareScreen": "ਸਕ੍ਰੀਨ ਸਾਂਝੀ ਕਰੋ",
+    "stopSharing": "ਸਾਂਝਾਕਰਨ ਬੰਦ ਕਰੋ",
+    "chat": "ਇਨ-ਮੀਟਿੰਗ ਚੈਟ",
+    "leaveMeeting": "ਮੀਟਿੰਗ ਛੱਡੋ"
   }
 }

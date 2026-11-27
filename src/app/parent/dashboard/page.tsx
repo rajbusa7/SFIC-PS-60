@@ -39,6 +39,7 @@ import {
   ShieldCheck,
   Building,
   KeyRound,
+  Video,
   X,
   Check,
   CheckSquare,
@@ -91,6 +92,7 @@ function ParentDashboardContent() {
   const [msgSuccess, setMsgSuccess] = useState<string | null>(null);
   const [msgError, setMsgError] = useState<string | null>(null);
   const [pastMessages, setPastMessages] = useState<any[]>([]);
+  const [ptmMeetings, setPtmMeetings] = useState<any[]>([]);
 
   // 1. Fetch authenticated parent profile and linked students
   const fetchParentProfile = async (silent = false) => {
@@ -160,9 +162,20 @@ function ParentDashboardContent() {
     } catch (e) {}
   };
 
+  const fetchPtmMeetings = async () => {
+    try {
+      const res = await fetch("/api/ptm/meetings?tab=upcoming");
+      const data = await res.json();
+      if (data.success) {
+        setPtmMeetings(data.meetings || []);
+      }
+    } catch (e) {}
+  };
+
   useEffect(() => {
     fetchParentProfile();
     fetchMessages();
+    fetchPtmMeetings();
   }, []);
 
   useEffect(() => {
@@ -691,6 +704,43 @@ function ParentDashboardContent() {
                       </Button>
                     </div>
                   </div>
+
+                  {/* Live Parent-Teacher Video Meeting Alert */}
+                  {ptmMeetings.length > 0 && (
+                    <div className="p-4 rounded-2xl bg-linear-to-r from-[#FAF6E9] to-[#F4F1E1] border border-[#B26A1B]/25 shadow-xs space-y-2">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-[#B26A1B]/15 text-[#B26A1B] flex items-center justify-center shrink-0">
+                            <Video className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-[#B26A1B]">
+                                Online Video PTM Consultation
+                              </span>
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#2E7D5E]/15 text-[#2E7D5E]">
+                                Scheduled
+                              </span>
+                            </div>
+                            <h4 className="text-sm font-bold text-[#49352F] mt-0.5">
+                              {ptmMeetings[0].title}
+                            </h4>
+                            <p className="text-xs text-[#7A6862]">
+                              Teacher: {ptmMeetings[0].teacherName} • {ptmMeetings[0].scheduledDate} at {ptmMeetings[0].startTime} IST ({ptmMeetings[0].durationMinutes}m)
+                            </p>
+                          </div>
+                        </div>
+
+                        <Link
+                          href={`/ptm/room/${ptmMeetings[0].meetingCode}/lobby`}
+                          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#261B16] text-[#FAF6E9] text-xs font-bold hover:bg-[#49352F] transition-all shadow-xs shrink-0"
+                        >
+                          <Video className="w-3.5 h-3.5" />
+                          Join Video Meeting
+                        </Link>
+                      </div>
+                    </div>
+                  )}
 
                   {/* 4 Quick Stat Counters from Real Database */}
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-3 border-t border-[#49352F]/10">

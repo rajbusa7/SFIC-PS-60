@@ -30,7 +30,8 @@
     "studentLearningView": "ವಿದ್ಯಾರ್ಥಿ ಕಲಿಕಾ ಮೋಡ್",
     "tutorial": "ತರಬೇತಿ ಮತ್ತು ಸಹಾಯ",
     "parentBridgeNotices": "ಪೋಷಕ ಸೇತು ಮತ್ತು ಸೂಚನೆಗಳು",
-    "connectChat": "ಸಂಪರ್ಕ ಚಾಟ್"
+    "connectChat": "ಸಂಪರ್ಕ ಚಾಟ್",
+    "ptm": "ಪೋಷಕ-ಶಿಕ್ಷಕರ ಸಭೆ (PTM)"
   },
   "theme": {
     "theme": "ಥೀಮ್",
@@ -745,5 +746,26 @@
     "cancelRecordTitle": "ರೆಕಾರ್ಡಿಂಗ್ ರದ್ದುಮಾಡಿ",
     "cancelRecordAria": "ರೆಕಾರ್ಡಿಂಗ್ ರದ್ದುಮಾಡಿ",
     "transcribing": "AI ನೊಂದಿಗೆ ಧ್ವನಿಯನ್ನು ಪಠ್ಯವಾಗಿ ಪರಿವರ್ತಿಸಲಾಗುತ್ತಿದೆ..."
+  },
+  "ptm": {
+    "title": "ಪೋಷಕ-ಶಿಕ್ಷಕರ ಸಭೆ (PTM)",
+    "scheduleMeeting": "ಸಭೆಯನ್ನು ನಿಗದಿಪಡಿಸಿ",
+    "joinMeeting": "ವೀಡಿಯೊ ಸಭೆಗೆ ಸೇರಿ",
+    "upcomingMeetings": "ಮುಂಬರುವ ಸಮಾಲೋಚನೆಗಳು",
+    "todayMeetings": "ಇಂದಿನ ವೇಳಾಪಟ್ಟಿ",
+    "pastMeetings": "ಹಿಂದಿನ ಸಭೆಗಳು ಮತ್ತು ಇತಿಹಾಸ",
+    "allMeetings": "ಎಲ್ಲಾ ಸಭೆಗಳು",
+    "waitingRoom": "ಕಾಯುವ ಕೊಠಡಿ",
+    "consultationNotes": "ಸಮಾಲೋಚನಾ ಟಿಪ್ಪಣಿಗಳು",
+    "admit": "ಪ್ರವೇಶ ನೀಡಿ",
+    "decline": "ತಿರಸ್ಕರಿಸಿ",
+    "micOn": "ಮೈಕ್ರೊಫೋನ್ ಆನ್",
+    "micMuted": "ಮೈಕ್ರೊಫೋನ್ ಮ್ಯೂಟ್",
+    "cameraOn": "ಕ್ಯಾಮೆರಾ ಆನ್",
+    "cameraOff": "ಕ್ಯಾಮೆರಾ ಆಫ್",
+    "shareScreen": "ಪರದೆ ಹಂಚಿಕೊಳ್ಳಿ",
+    "stopSharing": "ಹಂಚಿಕೆಯನ್ನು ನಿಲ್ಲಿಸಿ",
+    "chat": "ಸಭೆಯ ಚಾಟ್",
+    "leaveMeeting": "ಸಭೆಯಿಂದ ನಿರ್ಗಮಿಸಿ"
   }
 }

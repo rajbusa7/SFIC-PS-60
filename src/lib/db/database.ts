@@ -37,6 +37,7 @@ import {
   postgresUserDb,
   postgresParentDb,
   postgresTeacherAssignmentDb,
+  postgresPtmDb,
 } from "./postgres";
 import type {
   School,
@@ -69,6 +70,12 @@ import type {
   ChatMessage,
   ChatNotification,
   ConversationParticipant,
+  PtmMeeting,
+  PtmMeetingNote,
+  PtmChatMessage,
+  PtmWaitingParticipant,
+  PtmMeetingStats,
+  PtmMeetingStatus,
 } from "../types";
 import { SEED_CONVERSATIONS, SEED_CHAT_MESSAGES } from "../connect/seedConnect";
 
@@ -106,6 +113,10 @@ interface DataStore {
   conversations?: Conversation[];
   chatMessages?: ChatMessage[];
   chatNotifications?: ChatNotification[];
+  ptmMeetings?: PtmMeeting[];
+  ptmMeetingNotes?: PtmMeetingNote[];
+  ptmChatMessages?: PtmChatMessage[];
+  ptmWaitingParticipants?: PtmWaitingParticipant[];
 }
 
 const DEFAULT_DATA_DIR = path.join(process.cwd(), "data");
@@ -163,6 +174,102 @@ function getInitialStore(): DataStore {
     conversations: JSON.parse(JSON.stringify(SEED_CONVERSATIONS)),
     chatMessages: JSON.parse(JSON.stringify(SEED_CHAT_MESSAGES)),
     chatNotifications: [],
+    ptmMeetings: [
+      {
+        id: "ptm-today-aarav",
+        meetingCode: "ptm-704-291",
+        title: "Class 4 Mathematics Remedial Progress Review",
+        agenda: "Review 5-step concrete division manipulative activities, verify 85% accuracy milestone, plan home practice.",
+        teacherId: "usr-teacher-01",
+        teacherName: "Pooja Sharma",
+        studentId: "std-aarav",
+        studentName: "Aarav Patel",
+        parentId: "par-001",
+        parentName: "Dineshbhai Patel",
+        parentEmail: "parent.aarav@example.com",
+        scheduledDate: new Date().toISOString().split("T")[0],
+        startTime: "14:30",
+        durationMinutes: 30,
+        status: "scheduled",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: "ptm-upcoming-diya",
+        meetingCode: "ptm-819-332",
+        title: "Gujarati Reading & Phonemic Progress Discussion",
+        agenda: "Discuss Matra recognition development and bilingual reading exercises.",
+        teacherId: "usr-teacher-01",
+        teacherName: "Pooja Sharma",
+        studentId: "std-diya",
+        studentName: "Diya Joshi",
+        parentId: "par-002",
+        parentName: "Bhavikbhai Joshi",
+        parentEmail: "bhavik.joshi@example.com",
+        scheduledDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+        startTime: "16:00",
+        durationMinutes: 45,
+        status: "scheduled",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: "ptm-past-ishaan",
+        meetingCode: "ptm-412-588",
+        title: "Foundational Number Sense Benchmark",
+        agenda: "Assess 2-digit addition and place value comprehension.",
+        teacherId: "usr-teacher-01",
+        teacherName: "Pooja Sharma",
+        studentId: "std-ishaan",
+        studentName: "Ishaan Solanki",
+        parentId: "par-003",
+        parentName: "Rameshbhai Solanki",
+        parentEmail: "ramesh.solanki@example.com",
+        scheduledDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+        startTime: "11:00",
+        durationMinutes: 30,
+        status: "completed",
+        createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: "ptm-cancelled-anaya",
+        meetingCode: "ptm-301-419",
+        title: "Science Environmental Studies Check-in",
+        agenda: "Quarterly curriculum review on plant life cycles.",
+        teacherId: "usr-teacher-01",
+        teacherName: "Pooja Sharma",
+        studentId: "std-anaya",
+        studentName: "Anaya Patel",
+        parentId: "par-001",
+        parentName: "Dineshbhai Patel",
+        parentEmail: "parent.aarav@example.com",
+        scheduledDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+        startTime: "15:00",
+        durationMinutes: 15,
+        status: "cancelled",
+        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+    ],
+    ptmMeetingNotes: [
+      {
+        id: "note-past-ishaan",
+        meetingId: "ptm-past-ishaan",
+        studentId: "std-ishaan",
+        teacherId: "usr-teacher-01",
+        discussionSummary: "Reviewed foundational number line concepts and 2-digit regrouping. Ishaan demonstrated improved confidence in single-digit operations.",
+        learningConcerns: "Carrying over in double-digit column addition still causes occasional hesitation.",
+        studentStrengths: "Highly engaged in visual dot-pattern exercises and oral calculations.",
+        agreedActions: "Parent agreed to practice 10 minutes of base-ten block manipulative cards daily before dinner.",
+        followUpDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+        sharedWithParent: true,
+        createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+        updatedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+    ],
+    ptmChatMessages: [],
+    ptmWaitingParticipants: [],
   };
 }
 
@@ -270,6 +377,25 @@ function loadStore(): DataStore {
             memoryStore.chatMessages = JSON.parse(JSON.stringify(SEED_CHAT_MESSAGES));
             storeNeedsSync = true;
           }
+          // Auto-sync PTM baseline meetings if missing
+          if (!memoryStore.ptmMeetings) memoryStore.ptmMeetings = [];
+          const initialStore = getInitialStore();
+          for (const m of initialStore.ptmMeetings || []) {
+            if (!memoryStore.ptmMeetings.some((existing) => existing.id === m.id)) {
+              memoryStore.ptmMeetings.push(JSON.parse(JSON.stringify(m)));
+              storeNeedsSync = true;
+            }
+          }
+          if (!memoryStore.ptmMeetingNotes) memoryStore.ptmMeetingNotes = [];
+          for (const n of initialStore.ptmMeetingNotes || []) {
+            if (!memoryStore.ptmMeetingNotes.some((existing) => existing.id === n.id)) {
+              memoryStore.ptmMeetingNotes.push(JSON.parse(JSON.stringify(n)));
+              storeNeedsSync = true;
+            }
+          }
+          if (!memoryStore.ptmChatMessages) memoryStore.ptmChatMessages = [];
+          if (!memoryStore.ptmWaitingParticipants) memoryStore.ptmWaitingParticipants = [];
+
           if (storeNeedsSync) {
             try {
               saveStore(memoryStore);
@@ -3278,6 +3404,258 @@ export const db = {
       })),
     ];
   },
+  // --------------------------------------------------------------------------
+  // Parent-Teacher Meetings (PTM) System
+  // --------------------------------------------------------------------------
+
+  getPtmMeetings(options?: {
+    teacherId?: string;
+    parentId?: string;
+    studentId?: string;
+    status?: PtmMeetingStatus;
+    date?: string;
+  }): PtmMeeting[] {
+    const store = loadStore();
+    let list = store.ptmMeetings || [];
+    if (options?.teacherId) {
+      list = list.filter((m) => m.teacherId === options.teacherId);
+    }
+    if (options?.parentId) {
+      list = list.filter((m) => m.parentId === options.parentId);
+    }
+    if (options?.studentId) {
+      list = list.filter((m) => m.studentId === options.studentId);
+    }
+    if (options?.status) {
+      list = list.filter((m) => m.status === options.status);
+    }
+    if (options?.date) {
+      list = list.filter((m) => m.scheduledDate === options.date);
+    }
+    return list.sort((a, b) => a.scheduledDate.localeCompare(b.scheduledDate) || a.startTime.localeCompare(b.startTime));
+  },
+
+  async getPtmMeetingsAsync(options?: {
+    teacherId?: string;
+    parentId?: string;
+    studentId?: string;
+    status?: PtmMeetingStatus;
+    date?: string;
+  }): Promise<PtmMeeting[]> {
+    if (isPostgresConfigured()) {
+      return postgresPtmDb.getMeetings(options);
+    }
+    return this.getPtmMeetings(options);
+  },
+
+  getPtmMeetingById(idOrCode: string): PtmMeeting | null {
+    const store = loadStore();
+    const list = store.ptmMeetings || [];
+    return list.find((m) => m.id === idOrCode || m.meetingCode === idOrCode) || null;
+  },
+
+  async getPtmMeetingByIdAsync(idOrCode: string): Promise<PtmMeeting | null> {
+    if (isPostgresConfigured()) {
+      return postgresPtmDb.getMeetingById(idOrCode);
+    }
+    return this.getPtmMeetingById(idOrCode);
+  },
+
+  createPtmMeeting(meeting: PtmMeeting): PtmMeeting {
+    const store = loadStore();
+    if (!store.ptmMeetings) store.ptmMeetings = [];
+    store.ptmMeetings.push(meeting);
+    saveStore(store);
+    return meeting;
+  },
+
+  async createPtmMeetingAsync(meeting: PtmMeeting): Promise<PtmMeeting> {
+    if (isPostgresConfigured()) {
+      return postgresPtmDb.createMeeting(meeting);
+    }
+    return this.createPtmMeeting(meeting);
+  },
+
+  updatePtmMeetingStatus(id: string, status: PtmMeetingStatus): PtmMeeting | null {
+    const store = loadStore();
+    if (!store.ptmMeetings) return null;
+    const item = store.ptmMeetings.find((m) => m.id === id || m.meetingCode === id);
+    if (!item) return null;
+    item.status = status;
+    item.updatedAt = new Date().toISOString();
+    saveStore(store);
+    return item;
+  },
+
+  async updatePtmMeetingStatusAsync(id: string, status: PtmMeetingStatus): Promise<PtmMeeting | null> {
+    if (isPostgresConfigured()) {
+      return postgresPtmDb.updateMeetingStatus(id, status);
+    }
+    return this.updatePtmMeetingStatus(id, status);
+  },
+
+  getPtmMeetingStats(teacherId?: string, parentId?: string): PtmMeetingStats {
+    const store = loadStore();
+    let list = store.ptmMeetings || [];
+    if (teacherId) list = list.filter((m) => m.teacherId === teacherId);
+    if (parentId) list = list.filter((m) => m.parentId === parentId);
+
+    return {
+      total: list.length,
+      upcoming: list.filter((m) => m.status === "scheduled" || m.status === "waiting" || m.status === "in_progress").length,
+      completed: list.filter((m) => m.status === "completed").length,
+      cancelled: list.filter((m) => m.status === "cancelled" || m.status === "no_show").length,
+    };
+  },
+
+  async getPtmMeetingStatsAsync(teacherId?: string, parentId?: string): Promise<PtmMeetingStats> {
+    if (isPostgresConfigured()) {
+      return postgresPtmDb.getStats(teacherId, parentId);
+    }
+    return this.getPtmMeetingStats(teacherId, parentId);
+  },
+
+  getPtmMeetingNotes(meetingId: string): PtmMeetingNote[] {
+    const store = loadStore();
+    const list = store.ptmMeetingNotes || [];
+    return list.filter((n) => n.meetingId === meetingId);
+  },
+
+  async getPtmMeetingNotesAsync(meetingId: string): Promise<PtmMeetingNote[]> {
+    if (isPostgresConfigured()) {
+      return postgresPtmDb.getNotes(meetingId);
+    }
+    return this.getPtmMeetingNotes(meetingId);
+  },
+
+  savePtmMeetingNote(note: PtmMeetingNote): PtmMeetingNote {
+    const store = loadStore();
+    if (!store.ptmMeetingNotes) store.ptmMeetingNotes = [];
+    const idx = store.ptmMeetingNotes.findIndex((n) => n.id === note.id);
+    if (idx >= 0) {
+      store.ptmMeetingNotes[idx] = note;
+    } else {
+      store.ptmMeetingNotes.push(note);
+    }
+    saveStore(store);
+    return note;
+  },
+
+  async savePtmMeetingNoteAsync(note: PtmMeetingNote): Promise<PtmMeetingNote> {
+    if (isPostgresConfigured()) {
+      return postgresPtmDb.saveNote(note);
+    }
+    return this.savePtmMeetingNote(note);
+  },
+
+  getPtmChatMessages(meetingId: string): PtmChatMessage[] {
+    const store = loadStore();
+    const list = store.ptmChatMessages || [];
+    return list.filter((m) => m.meetingId === meetingId).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  },
+
+  async getPtmChatMessagesAsync(meetingId: string): Promise<PtmChatMessage[]> {
+    if (isPostgresConfigured()) {
+      return postgresPtmDb.getChatMessages(meetingId);
+    }
+    return this.getPtmChatMessages(meetingId);
+  },
+
+  savePtmChatMessage(message: PtmChatMessage): PtmChatMessage {
+    const store = loadStore();
+    if (!store.ptmChatMessages) store.ptmChatMessages = [];
+    store.ptmChatMessages.push(message);
+    saveStore(store);
+    return message;
+  },
+
+  async savePtmChatMessageAsync(message: PtmChatMessage): Promise<PtmChatMessage> {
+    if (isPostgresConfigured()) {
+      return postgresPtmDb.saveChatMessage(message);
+    }
+    return this.savePtmChatMessage(message);
+  },
+
+  getPtmWaitingParticipants(meetingId: string): PtmWaitingParticipant[] {
+    const store = loadStore();
+    const list = store.ptmWaitingParticipants || [];
+    return list.filter((p) => p.meetingId === meetingId && p.status === "waiting");
+  },
+
+  async getPtmWaitingParticipantsAsync(meetingId: string): Promise<PtmWaitingParticipant[]> {
+    if (isPostgresConfigured()) {
+      return postgresPtmDb.getWaitingParticipants(meetingId);
+    }
+    return this.getPtmWaitingParticipants(meetingId);
+  },
+
+  addPtmWaitingParticipant(
+    meetingId: string,
+    participant: { participantId: string; participantName: string; participantRole: any }
+  ): PtmWaitingParticipant {
+    const store = loadStore();
+    if (!store.ptmWaitingParticipants) store.ptmWaitingParticipants = [];
+    const existing = store.ptmWaitingParticipants.find(
+      (p) => p.meetingId === meetingId && p.participantId === participant.participantId
+    );
+    if (existing) {
+      existing.status = "waiting";
+      existing.joinedAt = new Date().toISOString();
+      saveStore(store);
+      return existing;
+    }
+    const item: PtmWaitingParticipant = {
+      id: `wait-${meetingId}-${participant.participantId}`,
+      meetingId,
+      participantId: participant.participantId,
+      participantName: participant.participantName,
+      participantRole: participant.participantRole,
+      status: "waiting",
+      joinedAt: new Date().toISOString(),
+    };
+    store.ptmWaitingParticipants.push(item);
+    saveStore(store);
+    return item;
+  },
+
+  async addPtmWaitingParticipantAsync(
+    meetingId: string,
+    participant: { participantId: string; participantName: string; participantRole: any }
+  ): Promise<PtmWaitingParticipant> {
+    if (isPostgresConfigured()) {
+      return postgresPtmDb.addWaitingParticipant(meetingId, participant);
+    }
+    return this.addPtmWaitingParticipant(meetingId, participant);
+  },
+
+  updatePtmWaitingStatus(
+    meetingId: string,
+    participantId: string,
+    status: "admitted" | "rejected"
+  ): boolean {
+    const store = loadStore();
+    if (!store.ptmWaitingParticipants) return false;
+    const item = store.ptmWaitingParticipants.find(
+      (p) => p.meetingId === meetingId && p.participantId === participantId
+    );
+    if (!item) return false;
+    item.status = status;
+    item.reviewedAt = new Date().toISOString();
+    saveStore(store);
+    return true;
+  },
+
+  async updatePtmWaitingStatusAsync(
+    meetingId: string,
+    participantId: string,
+    status: "admitted" | "rejected"
+  ): Promise<boolean> {
+    if (isPostgresConfigured()) {
+      return postgresPtmDb.updateWaitingStatus(meetingId, participantId, status);
+    }
+    return this.updatePtmWaitingStatus(meetingId, participantId, status);
+  },
+
   resetToDemoData(): void {
     const fresh = getInitialStore();
     saveStore(fresh);

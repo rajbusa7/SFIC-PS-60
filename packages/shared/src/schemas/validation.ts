@@ -152,3 +152,49 @@ export function validateAiTutorRequest(body: any): ValidationResult<{
       : undefined,
   };
 }
+
+export function validateCreateMeeting(body: any): ValidationResult<{
+  title: string;
+  agenda?: string;
+  type?: "one_to_one" | "group";
+  startTime?: string;
+  durationMin?: number;
+  classId?: string;
+  studentIds?: string[];
+  parentIds?: string[];
+  scheduledDate?: string;
+}> {
+  const errors: ValidationError[] = [];
+  if (!body || typeof body !== "object") {
+    return { isValid: false, errors: [{ field: "body", message: "Request body is required" }] };
+  }
+  if (!body.title || typeof body.title !== "string" || !body.title.trim()) {
+    errors.push({ field: "title", message: "Meeting title is required" });
+  }
+  return {
+    isValid: errors.length === 0,
+    errors,
+    data: errors.length === 0 ? body : undefined,
+  };
+}
+
+export function validateMeetingRsvp(body: any): ValidationResult<{
+  rsvpStatus: "pending" | "accepted" | "declined" | "reschedule_requested";
+  slotTime?: string;
+  rescheduleNote?: string;
+  studentId?: string;
+}> {
+  const errors: ValidationError[] = [];
+  if (!body || typeof body !== "object") {
+    return { isValid: false, errors: [{ field: "body", message: "Request body is required" }] };
+  }
+  if (!body.rsvpStatus) {
+    errors.push({ field: "rsvpStatus", message: "RSVP status is required" });
+  }
+  return {
+    isValid: errors.length === 0,
+    errors,
+    data: errors.length === 0 ? body : undefined,
+  };
+}
+

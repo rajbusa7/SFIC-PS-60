@@ -177,17 +177,22 @@ export async function POST(request: Request) {
     }
 
     // Check for duplicate time conflicts for the teacher
-    const existing = await db.getPtmMeetingsAsync({
-      teacherId: user.id,
-      date: scheduledDate,
-    });
+    let hasConflict = false;
+    try {
+      const existing = await db.getPtmMeetingsAsync({
+        teacherId: user.id,
+        date: scheduledDate,
+      });
 
-    const hasConflict = existing.some(
-      (m) =>
-        m.status !== "cancelled" &&
-        m.status !== "completed" &&
-        m.startTime === startTime
-    );
+      hasConflict = existing.some(
+        (m) =>
+          m.status !== "cancelled" &&
+          m.status !== "completed" &&
+          m.startTime === startTime
+      );
+    } catch (conflictErr) {
+      console.warn("[PTM Conflict Check Non-blocking Warning]:", conflictErr);
+    }
 
     if (hasConflict) {
       return NextResponse.json(

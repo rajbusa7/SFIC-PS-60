@@ -66,7 +66,12 @@ function getMeetingDateParts(isoString: string, lang: string) {
 export default function TeacherMeetingsPage() {
   const router = useRouter();
   const { t: baseT, language, formatClass } = useLanguage();
-  const t: any = baseT;
+  const t: any = {
+    ...baseT,
+    ptm: (baseT as any)?.ptm || {},
+    video: (baseT as any)?.video || {},
+    common: (baseT as any)?.common || {},
+  };
   const { user } = useAuth();
 
   const [meetings, setMeetings] = useState<MeetingWithInvites[]>([]);
@@ -574,7 +579,7 @@ export default function TeacherMeetingsPage() {
                               className="w-full text-xs"
                               leftIcon={<Users className="w-3 h-3" />}
                             >
-                              {t.video.attendanceTab || "Attendance"}
+                              {t.video?.attendanceTab || "Attendance"}
                             </Button>
 
                             <Button
@@ -584,7 +589,7 @@ export default function TeacherMeetingsPage() {
                               className="w-full text-xs"
                               leftIcon={<Edit3 className="w-3 h-3" />}
                             >
-                              {t.video.addNotesBtn || "Notes"}
+                              {t.video?.addNotesBtn || "Notes"}
                             </Button>
                           </div>
 

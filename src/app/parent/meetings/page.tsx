@@ -61,7 +61,12 @@ function getMeetingDateParts(isoString: string, lang: string) {
 export default function ParentMeetingsPage() {
   const router = useRouter();
   const { t: baseT, language, formatClass } = useLanguage();
-  const t: any = baseT;
+  const t: any = {
+    ...baseT,
+    ptm: (baseT as any)?.ptm || {},
+    video: (baseT as any)?.video || {},
+    common: (baseT as any)?.common || {},
+  };
   const { logout } = useAuth();
 
   const [invites, setInvites] = useState<ParentMeetingInviteItem[]>([]);
@@ -540,7 +545,7 @@ export default function ParentMeetingsPage() {
                         <div className="mt-4 pt-4 border-t border-[#49352F]/10 dark:border-[#F2CAB3]/15 space-y-3">
                           <div className="flex items-center gap-2 text-xs font-bold text-[#B26A1B]">
                             <Sparkles className="w-4 h-4" />
-                            <span>{t.video.notesTitle}</span>
+                            <span>{t.video?.notesTitle || "Meeting Notes"}</span>
                           </div>
                           {meetingNotesMap[meeting.id].map((n: any) => (
                             <div key={n.id} className="space-y-2 text-xs">
@@ -552,7 +557,7 @@ export default function ParentMeetingsPage() {
                               {n.actionItems && n.actionItems.length > 0 && (
                                 <div className="space-y-1.5">
                                   <p className="text-[11px] font-bold uppercase tracking-wider text-[#7A6862]">
-                                    {t.video.actionItemsHeading}:
+                                    {t.video?.actionItemsHeading || "Agreed Action Items"}:
                                   </p>
                                   <ul className="space-y-1.5">
                                     {n.actionItems.map((act: any, idx: number) => {
@@ -571,7 +576,7 @@ export default function ParentMeetingsPage() {
                                           </div>
                                           {wsTitle && (
                                             <span className="px-2 py-0.5 rounded-md bg-[#2E7D5E]/10 text-[#2E7D5E] text-[10px] font-bold border border-[#2E7D5E]/20">
-                                              {t.video.remedialPracticeBadge}: {wsTitle}
+                                              {t.video?.remedialPracticeBadge || "Remedial Practice"}: {wsTitle}
                                             </span>
                                           )}
                                         </li>
